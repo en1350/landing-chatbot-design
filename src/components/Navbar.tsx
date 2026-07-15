@@ -20,7 +20,6 @@ interface NavbarProps {
 const NAV_LINKS = [
   { label: "Тренажёр", key: "trainer" },
   { label: "Декомпозитор компетенций", key: "decomposer" },
-  { label: "Тарифы", key: "pricing" },
 ];
 
 const Navbar = ({
@@ -74,10 +73,6 @@ const Navbar = ({
           <Button variant="ghost" size="sm" onClick={onOpenProfile} className="gap-1.5">
             <Icon name={user ? "User" : "LogIn"} size={16} />
             {user ? "Кабинет" : "Войти"}
-          </Button>
-          <Button size="sm" onClick={onOpenPricing} className="gap-1.5 bg-coral text-coral-foreground hover:bg-coral/90">
-            <Icon name="Sparkles" size={16} />
-            Тарифы
           </Button>
         </div>
 
