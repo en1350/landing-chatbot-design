@@ -1,15 +1,45 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import Navbar from "@/components/Navbar";
+import Hero from "@/components/Hero";
+import GeneratorsSection from "@/components/GeneratorsSection";
+import NotebookCheck from "@/components/NotebookCheck";
+import PricingSection from "@/components/PricingSection";
+import Footer from "@/components/Footer";
+import TrainerModal from "@/components/TrainerModal";
+import DecomposerModal from "@/components/DecomposerModal";
+import ProfileSheet from "@/components/ProfileSheet";
 
 const Index = () => {
+  const [trainerOpen, setTrainerOpen] = useState(false);
+  const [decomposerOpen, setDecomposerOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4 color-black text-black">Добро пожаловать!</h1>
-        <p className="text-xl text-gray-600">тут будет отображаться ваш проект</p>
-      </div>
-      <span className="absolute bottom-8 left-1/2 -translate-x-1/2 inline-block bg-[#FF6637] text-white text-sm px-4 py-2 rounded-full whitespace-nowrap">
-        Подождите 5 минут, Юра создает первую версию проекта с нуля
-      </span>
+    <div className="min-h-screen flex flex-col">
+      <Navbar
+        onOpenNotebook={() => scrollTo("notebook")}
+        onOpenTrainer={() => setTrainerOpen(true)}
+        onOpenDecomposer={() => setDecomposerOpen(true)}
+        onOpenProfile={() => setProfileOpen(true)}
+        onOpenPricing={() => scrollTo("pricing")}
+      />
+
+      <main className="flex-1">
+        <Hero onScrollToGenerators={() => scrollTo("generators")} />
+        <GeneratorsSection />
+        <NotebookCheck id="notebook" />
+        <PricingSection id="pricing" />
+      </main>
+
+      <Footer onOpenProfile={() => setProfileOpen(true)} />
+
+      <TrainerModal open={trainerOpen} onClose={() => setTrainerOpen(false)} />
+      <DecomposerModal open={decomposerOpen} onClose={() => setDecomposerOpen(false)} />
+      <ProfileSheet open={profileOpen} onClose={() => setProfileOpen(false)} />
     </div>
   );
 };
