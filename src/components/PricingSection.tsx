@@ -1,11 +1,12 @@
 import { useState } from "react";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
-import { useUsage } from "@/context/UsageContext";
+import { useAuth } from "@/context/AuthContext";
 import UpgradeModal from "@/components/UpgradeModal";
 
 interface PricingSectionProps {
   id?: string;
+  onNeedAuth: () => void;
 }
 
 const FEATURES = [
@@ -15,8 +16,8 @@ const FEATURES = [
   "Приоритетная поддержка",
 ];
 
-const PricingSection = ({ id }: PricingSectionProps) => {
-  const { isPaid } = useUsage();
+const PricingSection = ({ id, onNeedAuth }: PricingSectionProps) => {
+  const { isPaid } = useAuth();
   const [open, setOpen] = useState(false);
 
   return (
@@ -73,7 +74,7 @@ const PricingSection = ({ id }: PricingSectionProps) => {
         </div>
       </div>
 
-      <UpgradeModal open={open} onClose={() => setOpen(false)} />
+      <UpgradeModal open={open} onClose={() => setOpen(false)} onNeedAuth={onNeedAuth} />
     </section>
   );
 };

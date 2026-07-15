@@ -36,7 +36,11 @@ const GENERATORS: { type: GeneratorType; icon: string; title: string; desc: stri
   },
 ];
 
-const GeneratorsSection = () => {
+interface GeneratorsSectionProps {
+  onNeedAuth: () => void;
+}
+
+const GeneratorsSection = ({ onNeedAuth }: GeneratorsSectionProps) => {
   const { servicesCount } = useUsage();
   const [activeType, setActiveType] = useState<GeneratorType | null>(null);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
@@ -77,8 +81,9 @@ const GeneratorsSection = () => {
           setActiveType(null);
           setUpgradeOpen(true);
         }}
+        onNeedAuth={onNeedAuth}
       />
-      <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} />
+      <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} onNeedAuth={onNeedAuth} />
     </section>
   );
 };

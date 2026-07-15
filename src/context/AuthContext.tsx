@@ -1,0 +1,134 @@
+import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from "react";
+
+const AUTH_URL = "https://functions.poehali.dev/ae160342-bedb-4bc9-9b23-07195233be12";
+const TOKEN_KEY = "urokai_token_v1";
+
+export interface AuthUser {
+  id: number;
+  email: string;
+  name: string;
+}
+
+export type SubscriptionPlan = "free" | "30days" | "7days" | "year";
+
+interface AuthContextValue {
+  user: AuthUser | null;
+  token: string | null;
+  plan: SubscriptionPlan;
+  expiresAt: string | null;
+  loading: boolean;
+  isPaid: boolean;
+  register: (email: string, password: string, name: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  refresh: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextValue | null>(null);
+
+async function apiRequest(action: string, payload: Record<string, unknown> = {}, token?: string | null) {
+  const res = await fetch(AUTH_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { "X-Authorization": token } : {}),
+    },
+    body: JSON.stringify({ action, ...payload }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error || "Что-то пошло не так");
+  }
+  return data;
+}
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
+  const [plan, setPlan] = useState<SubscriptionPlan>("free");
+  const [expiresAt, setExpiresAt] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const applySession = (t: string | null) => {
+    setToken(t);
+    if (t) localStorage.setItem(TOKEN_KEY, t);
+    else localStorage.removeItem(TOKEN_KEY);
+  };
+
+  const refresh = useCallback(async () => {
+    const currentToken = localStorage.getItem(TOKEN_KEY);
+    if (!currentToken) {
+      setUser(null);
+      setPlan("free");
+      setExpiresAt(null);
+      setLoading(false);
+      return;
+    }
+    try {
+      const res = await fetch(AUTH_URL, {
+        method: "GET",
+        headers: { "X-Authorization": currentToken },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setUser(data.user);
+      setPlan(data.plan || "free");
+      setExpiresAt(data.expires_at || null);
+      setToken(currentToken);
+    } catch {
+      applySession(null);
+      setUser(null);
+      setPlan("free");
+      setExpiresAt(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  const register = async (email: string, password: string, name: string) => {
+    const data = await apiRequest("register", { email, password, name });
+    applySession(data.token);
+    setUser(data.user);
+    setPlan(data.plan || "free");
+  };
+
+  const login = async (email: string, password: string) => {
+    const data = await apiRequest("login", { email, password });
+    applySession(data.token);
+    setUser(data.user);
+    setPlan(data.plan || "free");
+  };
+
+  const logout = async () => {
+    try {
+      await apiRequest("logout", {}, token);
+    } finally {
+      applySession(null);
+      setUser(null);
+      setPlan("free");
+      setExpiresAt(null);
+    }
+  };
+
+  const isPaid = plan !== "free";
+
+  return (
+    <AuthContext.Provider
+      value={{ user, token, plan, expiresAt, loading, isPaid, register, login, logout, refresh }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
+}
+
+export { AUTH_URL };

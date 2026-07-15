@@ -7,6 +7,7 @@ import {
   SheetTrigger,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { useAuth } from "@/context/AuthContext";
 
 interface NavbarProps {
   onOpenNotebook: () => void;
@@ -30,6 +31,7 @@ const Navbar = ({
   onOpenPricing,
 }: NavbarProps) => {
   const [open, setOpen] = useState(false);
+  const { user } = useAuth();
 
   const handleClick = (key: string) => {
     setOpen(false);
@@ -70,8 +72,8 @@ const Navbar = ({
 
         <div className="hidden md:flex items-center gap-2">
           <Button variant="ghost" size="sm" onClick={onOpenProfile} className="gap-1.5">
-            <Icon name="User" size={16} />
-            Кабинет
+            <Icon name={user ? "User" : "LogIn"} size={16} />
+            {user ? "Кабинет" : "Войти"}
           </Button>
           <Button size="sm" onClick={onOpenPricing} className="gap-1.5 bg-coral text-coral-foreground hover:bg-coral/90">
             <Icon name="Sparkles" size={16} />
@@ -114,8 +116,8 @@ const Navbar = ({
                 }}
                 className="text-left px-3 py-3 rounded-lg text-base font-medium hover:bg-accent transition-colors flex items-center gap-2"
               >
-                <Icon name="User" size={18} />
-                Личный кабинет
+                <Icon name={user ? "User" : "LogIn"} size={18} />
+                {user ? "Личный кабинет" : "Войти"}
               </button>
             </div>
           </SheetContent>

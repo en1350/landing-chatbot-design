@@ -10,12 +10,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Icon from "@/components/ui/icon";
 import { useUsage, GeneratorType } from "@/context/UsageContext";
+import { useAuth, AUTH_URL } from "@/context/AuthContext";
+import { downloadTxt } from "@/lib/download";
 
 interface GeneratorModalProps {
   open: boolean;
   onClose: () => void;
   type: GeneratorType | null;
   onNeedUpgrade: () => void;
+  onNeedAuth: () => void;
 }
 
 const META: Record<GeneratorType, { title: string; icon: string; subject: string; resultLabel: string }> = {
@@ -67,12 +70,15 @@ function buildMockResult(type: GeneratorType, topic: string, grade: string): str
   }
 }
 
-const GeneratorModal = ({ open, onClose, type, onNeedUpgrade }: GeneratorModalProps) => {
+const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: GeneratorModalProps) => {
   const { canUse, registerUse, remaining, isPaid } = useUsage();
+  const { token, user } = useAuth();
   const [topic, setTopic] = useState("");
   const [grade, setGrade] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string[] | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   if (!type) return null;
   const meta = META[type];
@@ -82,6 +88,7 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade }: GeneratorModalPr
     setGrade("");
     setResult(null);
     setLoading(false);
+    setSaved(false);
   };
 
   const handleClose = () => {
@@ -100,6 +107,40 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade }: GeneratorModalPr
       registerUse(type);
       setLoading(false);
     }, 1100);
+  };
+
+  const resultTitle = `${meta.title}: ${topic || "без темы"}`;
+
+  const handleDownload = () => {
+    if (!result) return;
+    downloadTxt(resultTitle, [resultTitle, "", ...result]);
+  };
+
+  const handleSave = async () => {
+    if (!result) return;
+    if (!token || !user) {
+      onNeedAuth();
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch(AUTH_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Authorization": token },
+        body: JSON.stringify({
+          action: "save_material",
+          type,
+          title: resultTitle,
+          content: result.join("\n"),
+        }),
+      });
+      if (!res.ok) throw new Error();
+      setSaved(true);
+    } catch {
+      setSaved(false);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -173,9 +214,24 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade }: GeneratorModalPr
                 <Icon name="RotateCcw" size={16} />
                 Заново
               </Button>
-              <Button className="flex-1 gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+              <Button
+                variant="outline"
+                className="flex-1 gap-2"
+                onClick={handleSave}
+                disabled={saving || saved}
+              >
+                {saving ? (
+                  <Icon name="Loader2" size={16} className="animate-spin" />
+                ) : saved ? (
+                  <Icon name="CheckCircle2" size={16} className="text-primary" />
+                ) : (
+                  <Icon name="Save" size={16} />
+                )}
+                {saved ? "Сохранено" : "В кабинет"}
+              </Button>
+              <Button className="flex-1 gap-2 bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleDownload}>
                 <Icon name="Download" size={16} />
-                Скачать
+                Скачать .txt
               </Button>
             </div>
           </div>
