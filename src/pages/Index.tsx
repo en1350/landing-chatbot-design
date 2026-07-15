@@ -7,6 +7,7 @@ import PricingSection from "@/components/PricingSection";
 import Footer from "@/components/Footer";
 import TrainerModal from "@/components/TrainerModal";
 import DecomposerModal from "@/components/DecomposerModal";
+import RandomizerModal from "@/components/RandomizerModal";
 import ProfileSheet from "@/components/ProfileSheet";
 import AuthModal from "@/components/AuthModal";
 import { useAuth, AUTH_URL } from "@/context/AuthContext";
@@ -15,6 +16,7 @@ const Index = () => {
   const { token, refresh } = useAuth();
   const [trainerOpen, setTrainerOpen] = useState(false);
   const [decomposerOpen, setDecomposerOpen] = useState(false);
+  const [randomizerOpen, setRandomizerOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
 
@@ -54,6 +56,7 @@ const Index = () => {
         onOpenNotebook={() => scrollTo("notebook")}
         onOpenTrainer={() => setTrainerOpen(true)}
         onOpenDecomposer={() => setDecomposerOpen(true)}
+        onOpenRandomizer={() => setRandomizerOpen(true)}
         onOpenProfile={() => setProfileOpen(true)}
         onOpenPricing={() => scrollTo("pricing")}
       />
@@ -69,6 +72,7 @@ const Index = () => {
 
       <TrainerModal open={trainerOpen} onClose={() => setTrainerOpen(false)} />
       <DecomposerModal open={decomposerOpen} onClose={() => setDecomposerOpen(false)} />
+      <RandomizerModal open={randomizerOpen} onClose={() => setRandomizerOpen(false)} />
       <ProfileSheet open={profileOpen} onClose={() => setProfileOpen(false)} onNeedAuth={openAuth} />
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
     </div>

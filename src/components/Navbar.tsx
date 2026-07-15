@@ -13,6 +13,7 @@ interface NavbarProps {
   onOpenNotebook: () => void;
   onOpenTrainer: () => void;
   onOpenDecomposer: () => void;
+  onOpenRandomizer: () => void;
   onOpenProfile: () => void;
   onOpenPricing: () => void;
 }
@@ -20,12 +21,14 @@ interface NavbarProps {
 const NAV_LINKS = [
   { label: "Тренажёр", key: "trainer" },
   { label: "Декомпозитор компетенций", key: "decomposer" },
+  { label: "Рандомайзер", key: "randomizer" },
 ];
 
 const Navbar = ({
   onOpenNotebook,
   onOpenTrainer,
   onOpenDecomposer,
+  onOpenRandomizer,
   onOpenProfile,
   onOpenPricing,
 }: NavbarProps) => {
@@ -36,6 +39,7 @@ const Navbar = ({
     setOpen(false);
     if (key === "trainer") onOpenTrainer();
     if (key === "decomposer") onOpenDecomposer();
+    if (key === "randomizer") onOpenRandomizer();
     if (key === "pricing") onOpenPricing();
   };
 
