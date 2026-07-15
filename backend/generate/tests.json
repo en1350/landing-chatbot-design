@@ -40,6 +40,33 @@
       "expectedStatus": 400,
       "expectedBody": {"error": "string"},
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "Chat without message returns 400",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "chat", "message": ""},
+      "expectedStatus": 400,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Decompose without competency returns 400",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "decompose", "competency": ""},
+      "expectedStatus": 400,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Notebook check without image returns 400",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "notebook_check", "image_base64": ""},
+      "expectedStatus": 400,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
     }
   ]
 }

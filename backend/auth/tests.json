@@ -31,6 +31,24 @@
       "expectedStatus": 401,
       "expectedBody": {"error": "string"},
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "Register without privacy consent returns 400",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "register", "email": "consent_test@example.com", "password": "password123", "privacy_accepted": false},
+      "expectedStatus": 400,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Reset password with invalid token returns 404",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "reset_password", "token": "invalid_token_xyz", "new_password": "newpassword123"},
+      "expectedStatus": 404,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
     }
   ]
 }

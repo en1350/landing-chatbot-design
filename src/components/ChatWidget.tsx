@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import Icon from "@/components/ui/icon";
 
+const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
+
 interface Message {
   role: "bot" | "user";
   text: string;
@@ -17,21 +19,15 @@ const SUGGESTIONS = [
   "Как оценивать самостоятельные работы?",
 ];
 
-function mockReply(text: string): string {
-  const q = text.toLowerCase();
-  if (q.includes("план") || q.includes("урок")) {
-    return "Открой «Генератор уроков» ниже — укажи тему и класс, и я соберу план с целями, этапами и домашним заданием за 30 секунд ✏️";
-  }
-  if (q.includes("игр")) {
-    return "«Генератор игр» подберёт механику под тему и возраст: викторины, квесты, командные соревнования 🎲";
-  }
-  if (q.includes("интенсив") || q.includes("мастер")) {
-    return "Для больших форматов используй «Генератор интенсивов» — расписание по дням, блоки и материалы для мастер-классов 📅";
-  }
-  if (q.includes("задан") || q.includes("оцен") || q.includes("тетрад")) {
-    return "Для заданий — «Генератор заданий», а фото тетрадей можно загрузить в разделе «Проверка тетради»: ИИ найдёт ошибки и предложит оценку 📸";
-  }
-  return "Хороший вопрос! Опишите тему подробнее или воспользуйтесь одним из генераторов ниже — я подстроюсь под класс, предмет и цель урока.";
+async function requestChatReply(message: string, history: Message[]): Promise<string> {
+  const res = await fetch(GENERATE_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "chat", message, history }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Не удалось получить ответ");
+  return data.reply as string;
 }
 
 const ChatWidget = () => {
@@ -44,16 +40,24 @@ const ChatWidget = () => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, typing]);
 
-  const send = (text: string) => {
+  const send = async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
-    setMessages((m) => [...m, { role: "user", text: trimmed }]);
+    const nextMessages = [...messages, { role: "user" as const, text: trimmed }];
+    setMessages(nextMessages);
     setInput("");
     setTyping(true);
-    setTimeout(() => {
-      setMessages((m) => [...m, { role: "bot", text: mockReply(trimmed) }]);
+    try {
+      const reply = await requestChatReply(trimmed, nextMessages);
+      setMessages((m) => [...m, { role: "bot", text: reply }]);
+    } catch (err) {
+      setMessages((m) => [
+        ...m,
+        { role: "bot", text: err instanceof Error ? err.message : "Не получилось ответить, попробуйте ещё раз." },
+      ]);
+    } finally {
       setTyping(false);
-    }, 850 + Math.random() * 500);
+    }
   };
 
   return (
@@ -124,7 +128,7 @@ const ChatWidget = () => {
         <button
           type="submit"
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-40"
-          disabled={!input.trim()}
+          disabled={!input.trim() || typing}
         >
           <Icon name="ArrowUp" size={16} />
         </button>

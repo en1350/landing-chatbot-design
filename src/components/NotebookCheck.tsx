@@ -2,6 +2,8 @@ import { useRef, useState } from "react";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 
+const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
+
 interface NotebookCheckProps {
   id?: string;
 }
@@ -13,19 +15,24 @@ interface CheckResult {
   notes: string[];
 }
 
-function buildMockCheck(): CheckResult {
-  const total = 8;
-  const correct = 5 + Math.floor(Math.random() * 3);
-  return {
-    score: Math.round((correct / total) * 100),
-    correct,
-    total,
-    notes: [
-      "Задание 2: ошибка в вычислении — проверьте порядок действий",
-      "Задание 5: недостаточно развёрнутое пояснение ответа",
-      "Почерк аккуратный, оформление соответствует требованиям",
-    ],
-  };
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function requestNotebookCheck(imageBase64: string): Promise<CheckResult> {
+  const res = await fetch(GENERATE_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "notebook_check", image_base64: imageBase64 }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Не удалось проверить работу");
+  return data as CheckResult;
 }
 
 const NotebookCheck = ({ id }: NotebookCheckProps) => {
@@ -33,18 +40,25 @@ const NotebookCheck = ({ id }: NotebookCheckProps) => {
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<CheckResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
 
-  const handleFile = (file?: File) => {
+  const handleFile = async (file?: File) => {
     if (!file || !file.type.startsWith("image/")) return;
     const url = URL.createObjectURL(file);
     setPreview(url);
     setResult(null);
+    setError(null);
     setLoading(true);
-    setTimeout(() => {
-      setResult(buildMockCheck());
+    try {
+      const base64 = await fileToBase64(file);
+      const checkResult = await requestNotebookCheck(base64);
+      setResult(checkResult);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Не удалось проверить работу, попробуйте снова");
+    } finally {
       setLoading(false);
-    }, 1400);
+    }
   };
 
   return (
@@ -112,8 +126,14 @@ const NotebookCheck = ({ id }: NotebookCheckProps) => {
                 {loading && (
                   <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                     <Icon name="Loader2" size={16} className="animate-spin" />
-                    Анализирую работу...
+                    ИИ анализирует работу...
                   </div>
+                )}
+                {error && (
+                  <p className="text-sm text-destructive flex items-center justify-center gap-1.5">
+                    <Icon name="AlertCircle" size={14} />
+                    {error}
+                  </p>
                 )}
                 {result && (
                   <div className="text-left rounded-xl bg-secondary/60 p-4 animate-fade-in">
@@ -142,6 +162,7 @@ const NotebookCheck = ({ id }: NotebookCheckProps) => {
                     e.stopPropagation();
                     setPreview(null);
                     setResult(null);
+                    setError(null);
                   }}
                   className="gap-1.5"
                 >

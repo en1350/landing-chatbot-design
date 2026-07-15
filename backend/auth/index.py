@@ -4,12 +4,15 @@ import hashlib
 import secrets
 import base64
 import uuid
+import smtplib
 import urllib.request
 import urllib.error
+from email.mime.text import MIMEText
 from datetime import datetime, timezone, timedelta
 import psycopg2
 
 SCHEMA = os.environ.get('MAIN_DB_SCHEMA', 'public')
+DEFAULT_SITE_URL = os.environ.get('SITE_URL', 'https://urokai.ru')
 
 PLANS = {
     'month': {'days': 30, 'amount': '99.00', 'label': 'Подписка УрокАИ на 1 месяц'},
@@ -58,8 +61,35 @@ def yookassa_auth_header():
     return f"Basic {creds}"
 
 
+def send_reset_email(to_email: str, reset_link: str):
+    host = os.environ.get('SMTP_HOST')
+    port = int(os.environ.get('SMTP_PORT', '465'))
+    login = os.environ.get('SMTP_LOGIN')
+    password = os.environ.get('SMTP_PASSWORD')
+
+    if not host or not login or not password:
+        raise RuntimeError('SMTP не настроен')
+
+    subject = 'Восстановление доступа к УрокАИ'
+    text = (
+        f"Здравствуйте!\n\n"
+        f"Вы запросили восстановление доступа к личному кабинету УрокАИ.\n"
+        f"Перейдите по ссылке, чтобы задать новый пароль (ссылка действует 1 час):\n\n"
+        f"{reset_link}\n\n"
+        f"Если вы не запрашивали восстановление доступа, просто проигнорируйте это письмо."
+    )
+    msg = MIMEText(text, 'plain', 'utf-8')
+    msg['Subject'] = subject
+    msg['From'] = login
+    msg['To'] = to_email
+
+    with smtplib.SMTP_SSL(host, port, timeout=15) as server:
+        server.login(login, password)
+        server.sendmail(login, [to_email], msg.as_string())
+
+
 def handler(event: dict, context) -> dict:
-    """Личный кабинет УрокАИ: регистрация/вход/выход, сохранение материалов и оплата подписки через ЮКассу."""
+    """Личный кабинет УрокАИ: регистрация/вход/выход, восстановление доступа по email, сохранение материалов и оплата подписки через ЮКассу."""
     method = event.get('httpMethod', 'GET')
 
     if method == 'OPTIONS':
@@ -107,11 +137,14 @@ def handler(event: dict, context) -> dict:
             email = (body_data.get('email') or '').strip().lower()
             password = body_data.get('password') or ''
             name = (body_data.get('name') or '').strip()
+            privacy_accepted = bool(body_data.get('privacy_accepted'))
 
             if not email or '@' not in email:
                 return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Некорректный email'})}
             if len(password) < 6:
                 return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Пароль должен быть не короче 6 символов'})}
+            if not privacy_accepted:
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Необходимо согласиться с политикой обработки персональных данных'})}
 
             cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE email = %s", (email,))
             if cur.fetchone():
@@ -119,7 +152,7 @@ def handler(event: dict, context) -> dict:
 
             pw_hash = hash_password(password)
             cur.execute(
-                f"INSERT INTO {SCHEMA}.users (email, password_hash, name) VALUES (%s, %s, %s) RETURNING id",
+                f"INSERT INTO {SCHEMA}.users (email, password_hash, name, privacy_accepted_at) VALUES (%s, %s, %s, now()) RETURNING id",
                 (email, pw_hash, name or email.split('@')[0])
             )
             user_id = cur.fetchone()[0]
@@ -171,6 +204,91 @@ def handler(event: dict, context) -> dict:
                 cur.execute(f"DELETE FROM {SCHEMA}.sessions WHERE token = %s", (token,))
                 conn.commit()
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'ok': True})}
+
+        elif action == 'forgot_password':
+            email = (body_data.get('email') or '').strip().lower()
+            if not email or '@' not in email:
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Некорректный email'})}
+
+            cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE email = %s", (email,))
+            row = cur.fetchone()
+
+            # Не раскрываем, существует ли email — всегда одинаковый ответ
+            generic_response = {
+                'statusCode': 200,
+                'headers': cors_headers(),
+                'body': json.dumps({'ok': True, 'message': 'Если такой email зарегистрирован, на него отправлено письмо с инструкцией'})
+            }
+
+            if not row:
+                return generic_response
+
+            user_id = row[0]
+            reset_token = secrets.token_urlsafe(32)
+            expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
+            cur.execute(
+                f"INSERT INTO {SCHEMA}.password_resets (user_id, token, expires_at) VALUES (%s, %s, %s)",
+                (user_id, reset_token, expires_at)
+            )
+            conn.commit()
+
+            headers_in = event.get('headers') or {}
+            origin = (
+                body_data.get('origin')
+                or headers_in.get('Origin')
+                or headers_in.get('origin')
+                or headers_in.get('Referer')
+                or headers_in.get('referer')
+                or DEFAULT_SITE_URL
+            ).rstrip('/')
+            reset_link = f"{origin}/reset-password?token={reset_token}"
+            try:
+                send_reset_email(email, reset_link)
+            except Exception:
+                pass
+
+            return generic_response
+
+        elif action == 'reset_password':
+            reset_token = body_data.get('token') or ''
+            new_password = body_data.get('new_password') or ''
+
+            if not reset_token:
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Токен не передан'})}
+            if len(new_password) < 6:
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Пароль должен быть не короче 6 символов'})}
+
+            cur.execute(
+                f"SELECT id, user_id, expires_at, used FROM {SCHEMA}.password_resets WHERE token = %s",
+                (reset_token,)
+            )
+            row = cur.fetchone()
+            if not row:
+                return {'statusCode': 404, 'headers': cors_headers(), 'body': json.dumps({'error': 'Ссылка недействительна'})}
+
+            reset_id, user_id, expires_at, used = row
+            if used:
+                return {'statusCode': 410, 'headers': cors_headers(), 'body': json.dumps({'error': 'Ссылка уже была использована'})}
+            if expires_at < datetime.now(timezone.utc):
+                return {'statusCode': 410, 'headers': cors_headers(), 'body': json.dumps({'error': 'Срок действия ссылки истёк'})}
+
+            new_hash = hash_password(new_password)
+            cur.execute(f"UPDATE {SCHEMA}.users SET password_hash = %s WHERE id = %s", (new_hash, user_id))
+            cur.execute(f"UPDATE {SCHEMA}.password_resets SET used = true WHERE id = %s", (reset_id,))
+            cur.execute(f"DELETE FROM {SCHEMA}.sessions WHERE user_id = %s", (user_id,))
+
+            token = secrets.token_hex(32)
+            cur.execute(f"INSERT INTO {SCHEMA}.sessions (user_id, token) VALUES (%s, %s)", (user_id, token))
+            conn.commit()
+
+            cur.execute(f"SELECT email, name FROM {SCHEMA}.users WHERE id = %s", (user_id,))
+            email, name = cur.fetchone()
+
+            return {
+                'statusCode': 200,
+                'headers': cors_headers(),
+                'body': json.dumps({'ok': True, 'token': token, 'user': {'id': user_id, 'email': email, 'name': name}})
+            }
 
         elif action == 'save_material':
             user_id = get_user_id_by_token(cur, get_token(event))

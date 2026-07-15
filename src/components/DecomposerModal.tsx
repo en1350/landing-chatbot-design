@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Icon from "@/components/ui/icon";
 
+const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
+
 interface DecomposerModalProps {
   open: boolean;
   onClose: () => void;
@@ -20,35 +22,43 @@ interface Level {
   desc: string;
 }
 
-function buildLevels(competency: string): Level[] {
-  const c = competency || "выбранная компетенция";
-  return [
-    { level: "Знание", desc: `Ученик может назвать и описать основные понятия темы «${c}»` },
-    { level: "Понимание", desc: `Объясняет своими словами суть и логику «${c}»` },
-    { level: "Применение", desc: `Использует «${c}» для решения типовых задач` },
-    { level: "Анализ", desc: `Сравнивает и разбирает компоненты «${c}» в нестандартных ситуациях` },
-    { level: "Оценка", desc: `Аргументированно оценивает результат применения «${c}»` },
-  ];
+async function requestDecompose(competency: string): Promise<Level[]> {
+  const res = await fetch(GENERATE_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "decompose", competency }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Не удалось разложить компетенцию");
+  return data.levels as Level[];
 }
 
 const DecomposerModal = ({ open, onClose }: DecomposerModalProps) => {
   const [competency, setCompetency] = useState("");
   const [levels, setLevels] = useState<Level[] | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleClose = () => {
     setCompetency("");
     setLevels(null);
     setLoading(false);
+    setError(null);
     onClose();
   };
 
-  const decompose = () => {
+  const decompose = async () => {
+    if (!competency.trim()) return;
     setLoading(true);
-    setTimeout(() => {
-      setLevels(buildLevels(competency));
+    setError(null);
+    try {
+      const result = await requestDecompose(competency.trim());
+      setLevels(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Не удалось разложить компетенцию, попробуйте снова");
+    } finally {
       setLoading(false);
-    }, 900);
+    }
   };
 
   return (
@@ -69,11 +79,19 @@ const DecomposerModal = ({ open, onClose }: DecomposerModalProps) => {
             onChange={(e) => setCompetency(e.target.value)}
             placeholder="Например: работа с историческими источниками"
           />
-          <Button className="w-full h-11 gap-2 bg-primary hover:bg-primary/90" onClick={decompose} disabled={loading}>
+
+          {error && (
+            <p className="text-sm text-destructive flex items-center gap-1.5">
+              <Icon name="AlertCircle" size={14} />
+              {error}
+            </p>
+          )}
+
+          <Button className="w-full h-11 gap-2 bg-primary hover:bg-primary/90" onClick={decompose} disabled={loading || !competency.trim()}>
             {loading ? (
               <>
                 <Icon name="Loader2" size={17} className="animate-spin" />
-                Разбираю...
+                ИИ разбирает компетенцию...
               </>
             ) : (
               <>

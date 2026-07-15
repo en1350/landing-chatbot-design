@@ -5,6 +5,7 @@ import urllib.error
 
 AITUNNEL_URL = "https://api.aitunnel.ru/v1/chat/completions"
 MODEL = "gpt-4o-mini"
+VISION_MODEL = "gpt-4o-mini"
 
 
 def cors_headers():
@@ -16,10 +17,10 @@ def cors_headers():
     }
 
 
-def call_ai(messages: list, temperature: float = 0.7) -> str:
+def call_ai(messages: list, temperature: float = 0.7, model: str = MODEL) -> str:
     api_key = os.environ['AITUNNEL_API_KEY']
     payload = json.dumps({
-        'model': MODEL,
+        'model': model,
         'messages': messages,
         'temperature': temperature,
     }).encode('utf-8')
@@ -112,8 +113,44 @@ def build_task_prompt(f: dict) -> str:
 Сделай минимум 3 задания трёх уровней сложности (базовый, средний, продвинутый), для каждого укажи формулировку и критерии оценивания. Пиши конкретно и практично, без markdown-разметки (без **, #), обычным текстом с нумерацией."""
 
 
+CHAT_SYSTEM_PROMPT = """Ты ИИ-помощник УрокАИ для учителей и педагогов. Ты дружелюбно и по-деловому помогаешь с методическими вопросами: как составить план урока, придумать игру, оценить работу учеников, подобрать технологию обучения и т.д.
+
+Правила:
+- Отвечай кратко (3-6 предложений), по-деловому, дружелюбно, на русском языке
+- Если вопрос касается урока, игры, интенсива или задания — porекомендуй использовать соответствующий генератор на сайте (Генератор уроков / Генератор игры / Генератор интенсивов / Генератор заданий)
+- Если вопрос про проверку тетрадей — упомяни раздел «Проверка тетради по фото»
+- Не пиши markdown-разметку (без **, #)
+- Можешь использовать 1-2 уместных эмодзи"""
+
+
+def build_decompose_prompt(competency: str) -> str:
+    c = competency or 'выбранная компетенция'
+    return f"""Ты опытный методист, специалист по таксономии Блума. Разложи компетенцию «{c}» на 5 уровней освоения по таксономии Блума: Знание, Понимание, Применение, Анализ, Оценка.
+
+Для каждого уровня напиши одно развёрнутое предложение (что конкретно умеет ученик на этом уровне применительно к компетенции «{c}»).
+
+Верни ответ СТРОГО в формате JSON-массива без каких-либо дополнительных пояснений, markdown или текста до/после:
+[
+  {{"level": "Знание", "desc": "..."}},
+  {{"level": "Понимание", "desc": "..."}},
+  {{"level": "Применение", "desc": "..."}},
+  {{"level": "Анализ", "desc": "..."}},
+  {{"level": "Оценка", "desc": "..."}}
+]"""
+
+
+NOTEBOOK_SYSTEM_PROMPT = """Ты опытный педагог-эксперт, который проверяет фотографии тетрадей учеников. Проанализируй изображение: найди выполненные задания, определи ошибки, оцени качество и аккуратность оформления.
+
+Верни ответ СТРОГО в формате JSON без markdown, пояснений или текста до/после:
+{"score": <целое число 0-100, процент правильности>, "correct": <целое число, сколько заданий верно>, "total": <целое число, сколько всего заданий видно на фото>, "notes": ["замечание 1", "замечание 2", "замечание 3"]}
+
+Если на фото не видно учебной работы (тетради, заданий), верни: {"score": 0, "correct": 0, "total": 0, "notes": ["На фото не удалось распознать учебную работу. Попробуйте сделать снимок чётче и ближе."]}
+
+Замечания пиши кратко, конкретно, на русском языке, с указанием номера задания если возможно."""
+
+
 def handler(event: dict, context) -> dict:
-    """Генерация учебных материалов (урок, игра, интенсив, задание) и их доработка через ИИ AITunnel."""
+    """Генерация учебных материалов, ИИ-чат-помощник, проверка тетради по фото и декомпозитор компетенций через ИИ AITunnel."""
     method = event.get('httpMethod', 'GET')
 
     if method == 'OPTIONS':
@@ -171,6 +208,75 @@ def handler(event: dict, context) -> dict:
             ])
 
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'content': content}, ensure_ascii=False)}
+
+        elif action == 'chat':
+            history = body.get('history') or []
+            user_message = body.get('message') or ''
+
+            if not user_message.strip():
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Сообщение не может быть пустым'})}
+
+            messages = [{'role': 'system', 'content': CHAT_SYSTEM_PROMPT}]
+            for m in history[-10:]:
+                role = 'user' if m.get('role') == 'user' else 'assistant'
+                messages.append({'role': role, 'content': m.get('text', '')})
+            messages.append({'role': 'user', 'content': user_message})
+
+            reply = call_ai(messages, temperature=0.8)
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'reply': reply}, ensure_ascii=False)}
+
+        elif action == 'decompose':
+            competency = body.get('competency') or ''
+            if not competency.strip():
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите компетенцию'})}
+
+            raw = call_ai([
+                {'role': 'system', 'content': 'Ты эксперт-методист по таксономии Блума. Отвечаешь строго валидным JSON без markdown и пояснений.'},
+                {'role': 'user', 'content': build_decompose_prompt(competency)},
+            ], temperature=0.6)
+
+            cleaned = raw.strip()
+            if cleaned.startswith('```'):
+                cleaned = cleaned.strip('`')
+                if cleaned.lower().startswith('json'):
+                    cleaned = cleaned[4:]
+            try:
+                levels = json.loads(cleaned)
+            except json.JSONDecodeError:
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ вернул некорректный формат, попробуйте снова'})}
+
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'levels': levels}, ensure_ascii=False)}
+
+        elif action == 'notebook_check':
+            image_base64 = body.get('image_base64') or ''
+            if not image_base64:
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Не передано изображение'})}
+
+            if not image_base64.startswith('data:'):
+                image_base64 = f'data:image/jpeg;base64,{image_base64}'
+
+            raw = call_ai([
+                {'role': 'system', 'content': NOTEBOOK_SYSTEM_PROMPT},
+                {
+                    'role': 'user',
+                    'content': [
+                        {'type': 'text', 'text': 'Проверь эту работу ученика и верни результат строго в формате JSON, описанном в системном промпте.'},
+                        {'type': 'image_url', 'image_url': {'url': image_base64}},
+                    ],
+                },
+            ], temperature=0.4, model=VISION_MODEL)
+
+            cleaned = raw.strip()
+            if cleaned.startswith('```'):
+                cleaned = cleaned.strip('`')
+                if cleaned.lower().startswith('json'):
+                    cleaned = cleaned[4:]
+            try:
+                result = json.loads(cleaned)
+            except json.JSONDecodeError:
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ вернул некорректный формат, попробуйте снова'})}
+
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps(result, ensure_ascii=False)}
 
         return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Неизвестное действие'})}
 
