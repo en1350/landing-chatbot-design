@@ -21,6 +21,8 @@ import { useUsage, GeneratorType } from "@/context/UsageContext";
 import { useAuth, AUTH_URL } from "@/context/AuthContext";
 import { downloadTxt } from "@/lib/download";
 
+const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
+
 interface GeneratorModalProps {
   open: boolean;
   onClose: () => void;
@@ -57,102 +59,26 @@ interface SimpleFields {
   grade: string;
 }
 
-const LESSON_TIME_MAP: Record<"45" | "90", number[]> = {
-  "45": [3, 7, 15, 15, 3, 2],
-  "90": [5, 15, 30, 30, 7, 3],
-};
-
-function buildLessonResult(f: LessonFields): string[] {
-  const subject = f.subject || "дисциплина не указана";
-  const topic = f.topic || "новая тема";
-  const goal = f.goal || `сформировать понимание темы «${topic}»`;
-  const taskList = f.tasks
-    .split(/\n|,/)
-    .map((t) => t.trim())
-    .filter(Boolean);
-  const technology = f.technology || "смешанное обучение";
-  const ageCount = f.ageCount || "не указано";
-  const [t1, t2, t3, t4, t5, t6] = LESSON_TIME_MAP[f.duration];
-
-  const lines = [
-    `Предмет/дисциплина: ${subject}`,
-    `Тема: ${topic}`,
-    `Возраст / количество человек: ${ageCount}`,
-    `Технология обучения: ${technology}`,
-    `Время урока: ${f.duration} мин`,
-    `Цель: ${goal}`,
-  ];
-
-  if (taskList.length) {
-    lines.push("Задачи:");
-    taskList.forEach((t) => lines.push(`— ${t}`));
-  }
-
-  lines.push(
-    "",
-    "Структура урока:",
-    `1. Организационный момент — ${t1} мин: приветствие, проверка готовности, настрой на работу`,
-    `2. Актуализация темы — ${t2} мин: повторение опорных знаний, связь с темой «${topic}»`,
-    `3. Сообщение новой темы — ${t3} мин: объяснение материала по теме «${topic}» с использованием технологии «${technology}»`,
-    `4. Закрепление / выполнение практической части — ${t4} мин: практические задания, работа в парах или группах`,
-    `5. Рефлексия — ${t5} мин: обратная связь, самооценка, вывод по уроку`,
-    `6. Домашнее задание — ${t6} мин: закрепление темы «${topic}» дома`,
-  );
-
-  return lines;
+async function requestGeneration(type: GeneratorType, fields: Record<string, string>): Promise<string> {
+  const res = await fetch(GENERATE_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "generate", type, fields }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Не удалось сгенерировать материал");
+  return data.content as string;
 }
 
-const GAME_TEMPLATES: Record<"5" | "15" | "45", (subject: string, people: string) => string[]> = {
-  "5": (subject, people) => [
-    `Формат: блиц-разминка по предмету «${subject}»`,
-    `Участников: ${people}`,
-    "1. Быстрые вопросы на знание темы — 3 мин",
-    "2. Подсчёт очков и объявление победителя — 2 мин",
-  ],
-  "15": (subject, people) => [
-    `Формат: короткая командная игра по предмету «${subject}»`,
-    `Участников: ${people}`,
-    "1. Деление на команды и объяснение правил — 2 мин",
-    "2. Раунд 1 — вопросы на знание темы — 5 мин",
-    "3. Раунд 2 — практический кейс — 5 мин",
-    "4. Подведение итогов — 3 мин",
-  ],
-  "45": (subject, people) => [
-    `Формат: полноценная командная игра по предмету «${subject}»`,
-    `Участников: ${people}`,
-    "1. Деление на команды, объяснение правил — 5 мин",
-    "2. Раунд 1 — Разминка: быстрые вопросы на знание темы — 10 мин",
-    "3. Раунд 2 — Кейсы: разбор практических ситуаций — 15 мин",
-    "4. Раунд 3 — Финал: блиц на скорость реакции — 10 мин",
-    "5. Награждение и разбор ошибок — 5 мин",
-  ],
-};
-
-function buildGameResult(f: GameFields): string[] {
-  const subject = f.subject || "дисциплина не указана";
-  const people = f.peopleCount || "не указано";
-  return GAME_TEMPLATES[f.duration](subject, people);
-}
-
-function buildSimpleResult(type: "intensive" | "task", f: SimpleFields): string[] {
-  const t = f.topic || "новая тема";
-  const g = f.grade || "7";
-  if (type === "intensive") {
-    return [
-      `Интенсив «${t}» — 3 дня, ${g} класс`,
-      "День 1: погружение в тему, диагностика знаний",
-      "День 2: практикум в мини-группах, разбор кейсов",
-      "День 3: проектная защита и обратная связь",
-      "Материалы: рабочая тетрадь, чек-листы, итоговый тест",
-    ];
-  }
-  return [
-    `Комплект заданий по теме «${t}», ${g} класс`,
-    "Задание 1 (базовый уровень): найти и объяснить понятие",
-    "Задание 2 (средний уровень): применить знания на примере",
-    "Задание 3 (продвинутый уровень): проанализировать и аргументировать",
-    "Критерии оценивания приложены к каждому заданию",
-  ];
+async function requestRefine(content: string, instruction: string): Promise<string> {
+  const res = await fetch(GENERATE_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "refine", content, instruction }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Не удалось доработать материал");
+  return data.content as string;
 }
 
 const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: GeneratorModalProps) => {
@@ -176,9 +102,15 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
   const [simpleFields, setSimpleFields] = useState<SimpleFields>({ topic: "", grade: "" });
 
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<string[] | null>(null);
+  const [result, setResult] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  const [refineOpen, setRefineOpen] = useState(false);
+  const [refineInstruction, setRefineInstruction] = useState("");
+  const [refining, setRefining] = useState(false);
+  const [refineError, setRefineError] = useState<string | null>(null);
 
   if (!type) return null;
   const meta = META[type];
@@ -188,8 +120,12 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
     setGameFields({ subject: "", duration: "15", peopleCount: "" });
     setSimpleFields({ topic: "", grade: "" });
     setResult(null);
+    setError(null);
     setLoading(false);
     setSaved(false);
+    setRefineOpen(false);
+    setRefineInstruction("");
+    setRefineError(null);
   };
 
   const handleClose = () => {
@@ -197,19 +133,41 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
     onClose();
   };
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (!canUse(type)) {
       onNeedUpgrade();
       return;
     }
     setLoading(true);
-    setTimeout(() => {
-      if (type === "lesson") setResult(buildLessonResult(lessonFields));
-      else if (type === "game") setResult(buildGameResult(gameFields));
-      else setResult(buildSimpleResult(type, simpleFields));
+    setError(null);
+    try {
+      const fields: Record<string, string> =
+        type === "lesson" ? lessonFields : type === "game" ? gameFields : simpleFields;
+      const content = await requestGeneration(type, fields);
+      setResult(content);
       registerUse(type);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ошибка генерации, попробуйте снова");
+    } finally {
       setLoading(false);
-    }, 1100);
+    }
+  };
+
+  const handleRefine = async () => {
+    if (!result || !refineInstruction.trim()) return;
+    setRefining(true);
+    setRefineError(null);
+    try {
+      const updated = await requestRefine(result, refineInstruction.trim());
+      setResult(updated);
+      setRefineInstruction("");
+      setRefineOpen(false);
+      setSaved(false);
+    } catch (err) {
+      setRefineError(err instanceof Error ? err.message : "Не удалось доработать материал");
+    } finally {
+      setRefining(false);
+    }
   };
 
   const resultTopic =
@@ -218,7 +176,7 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
 
   const handleDownload = () => {
     if (!result) return;
-    downloadTxt(resultTitle, [resultTitle, "", ...result]);
+    downloadTxt(resultTitle, [resultTitle, "", result]);
   };
 
   const handleSave = async () => {
@@ -236,7 +194,7 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
           action: "save_material",
           type,
           title: resultTitle,
-          content: result.join("\n"),
+          content: result,
         }),
       });
       if (!res.ok) throw new Error();
@@ -394,6 +352,13 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
               </>
             )}
 
+            {error && (
+              <p className="text-sm text-destructive flex items-center gap-1.5">
+                <Icon name="AlertCircle" size={14} />
+                {error}
+              </p>
+            )}
+
             <Button
               className="w-full h-11 bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
               onClick={handleGenerate}
@@ -402,12 +367,12 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
               {loading ? (
                 <>
                   <Icon name="Loader2" size={17} className="animate-spin" />
-                  Генерирую...
+                  ИИ генерирует материал...
                 </>
               ) : (
                 <>
                   <Icon name="Wand2" size={17} />
-                  Сгенерировать
+                  Сгенерировать с ИИ
                 </>
               )}
             </Button>
@@ -418,19 +383,64 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
               <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-2">
                 Готовый {meta.resultLabel}
               </p>
-              <ul className="space-y-2 text-sm leading-relaxed">
-                {result.map((line, i) =>
-                  line === "" ? (
-                    <li key={i} className="h-1" />
-                  ) : (
-                    <li key={i} className="flex gap-2">
-                      <Icon name="CheckCircle2" size={15} className="text-primary shrink-0 mt-0.5" />
-                      <span>{line}</span>
-                    </li>
-                  )
-                )}
-              </ul>
+              <p className="text-sm leading-relaxed whitespace-pre-line">{result}</p>
             </div>
+
+            {!refineOpen ? (
+              <Button
+                variant="outline"
+                className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
+                onClick={() => setRefineOpen(true)}
+              >
+                <Icon name="Sparkles" size={16} />
+                Доработать с ИИ
+              </Button>
+            ) : (
+              <div className="rounded-xl border border-primary/30 bg-primary/5 p-3.5 space-y-2.5 animate-fade-in">
+                <label className="text-sm font-medium block">Что доработать или исправить?</label>
+                <Textarea
+                  value={refineInstruction}
+                  onChange={(e) => setRefineInstruction(e.target.value)}
+                  placeholder="Например: добавь ещё один пример, сократи практическую часть, исправь ошибку в задаче 2..."
+                  rows={3}
+                />
+                {refineError && (
+                  <p className="text-sm text-destructive flex items-center gap-1.5">
+                    <Icon name="AlertCircle" size={14} />
+                    {refineError}
+                  </p>
+                )}
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => {
+                      setRefineOpen(false);
+                      setRefineInstruction("");
+                      setRefineError(null);
+                    }}
+                    disabled={refining}
+                  >
+                    Отмена
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="flex-1 gap-1.5 bg-primary hover:bg-primary/90"
+                    onClick={handleRefine}
+                    disabled={refining || !refineInstruction.trim()}
+                  >
+                    {refining ? (
+                      <Icon name="Loader2" size={15} className="animate-spin" />
+                    ) : (
+                      <Icon name="Sparkles" size={15} />
+                    )}
+                    Применить
+                  </Button>
+                </div>
+              </div>
+            )}
+
             <div className="flex gap-2">
               <Button variant="outline" className="flex-1 gap-2" onClick={reset}>
                 <Icon name="RotateCcw" size={16} />

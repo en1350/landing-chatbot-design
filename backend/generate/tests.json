@@ -1,0 +1,45 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "GET method not allowed",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 405,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Unknown action returns 400",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "unknown_xyz"},
+      "expectedStatus": 400,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Generate unknown type returns 400",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "generate", "type": "unknown_type", "fields": {}},
+      "expectedStatus": 400,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Refine without content returns 400",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "refine", "content": "", "instruction": ""},
+      "expectedStatus": 400,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    }
+  ]
+}
