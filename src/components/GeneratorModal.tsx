@@ -34,7 +34,7 @@ interface GeneratorModalProps {
 const META: Record<GeneratorType, { title: string; icon: string; resultLabel: string }> = {
   lesson: { title: "Генератор уроков", icon: "📘", resultLabel: "план урока" },
   game: { title: "Генератор игры", icon: "🎲", resultLabel: "сценарий игры" },
-  intensive: { title: "Генератор интенсивов и мастер-классов", icon: "🚀", resultLabel: "программа интенсива" },
+  intensive: { title: "Генератор интенсивов и мастер-классов", icon: "🚀", resultLabel: "программа мероприятия" },
   task: { title: "Генератор заданий", icon: "📝", resultLabel: "комплект заданий" },
 };
 
@@ -54,10 +54,52 @@ interface GameFields {
   peopleCount: string;
 }
 
-interface SimpleFields {
+interface IntensiveFields {
   topic: string;
-  grade: string;
+  audience: "schoolchildren" | "students" | "adults";
+  duration: "15min" | "30min" | "45min" | "90min" | "1day" | "2days";
+  format: "intensive" | "masterclass" | "workshop" | "hackathon" | "project_lab" | "immersive";
+  goal: string;
 }
+
+interface TaskFields {
+  subject: string;
+  topic: string;
+  goal: string;
+  component: "cognitive" | "creative" | "critical" | "communicative" | "balanced";
+}
+
+const AUDIENCE_OPTIONS: { value: IntensiveFields["audience"]; label: string }[] = [
+  { value: "schoolchildren", label: "Школьники" },
+  { value: "students", label: "Студенты" },
+  { value: "adults", label: "Взрослые" },
+];
+
+const INTENSIVE_DURATION_OPTIONS: { value: IntensiveFields["duration"]; label: string }[] = [
+  { value: "15min", label: "15 минут" },
+  { value: "30min", label: "30 минут" },
+  { value: "45min", label: "45 минут" },
+  { value: "90min", label: "90 минут" },
+  { value: "1day", label: "1 день" },
+  { value: "2days", label: "2 дня" },
+];
+
+const FORMAT_OPTIONS: { value: IntensiveFields["format"]; label: string }[] = [
+  { value: "intensive", label: "Интенсив" },
+  { value: "masterclass", label: "Мастер-класс" },
+  { value: "workshop", label: "Воркшоп" },
+  { value: "hackathon", label: "Хакатон" },
+  { value: "project_lab", label: "Проектная лаборатория" },
+  { value: "immersive", label: "Иммерсивный интенсив" },
+];
+
+const COMPONENT_OPTIONS: { value: TaskFields["component"]; label: string }[] = [
+  { value: "balanced", label: "Все компоненты сбалансированно" },
+  { value: "cognitive", label: "Когнитивный компонент" },
+  { value: "creative", label: "Креативный компонент" },
+  { value: "critical", label: "Критический компонент" },
+  { value: "communicative", label: "Коммуникативный компонент" },
+];
 
 async function requestGeneration(type: GeneratorType, fields: Record<string, string>): Promise<string> {
   const res = await fetch(GENERATE_URL, {
@@ -99,7 +141,19 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
     duration: "15",
     peopleCount: "",
   });
-  const [simpleFields, setSimpleFields] = useState<SimpleFields>({ topic: "", grade: "" });
+  const [intensiveFields, setIntensiveFields] = useState<IntensiveFields>({
+    topic: "",
+    audience: "schoolchildren",
+    duration: "1day",
+    format: "intensive",
+    goal: "",
+  });
+  const [taskFields, setTaskFields] = useState<TaskFields>({
+    subject: "",
+    topic: "",
+    goal: "",
+    component: "balanced",
+  });
 
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
@@ -118,7 +172,8 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
   const reset = () => {
     setLessonFields({ subject: "", topic: "", goal: "", tasks: "", technology: "", ageCount: "", duration: "45" });
     setGameFields({ subject: "", duration: "15", peopleCount: "" });
-    setSimpleFields({ topic: "", grade: "" });
+    setIntensiveFields({ topic: "", audience: "schoolchildren", duration: "1day", format: "intensive", goal: "" });
+    setTaskFields({ subject: "", topic: "", goal: "", component: "balanced" });
     setResult(null);
     setError(null);
     setLoading(false);
@@ -142,7 +197,13 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
     setError(null);
     try {
       const fields: Record<string, string> =
-        type === "lesson" ? lessonFields : type === "game" ? gameFields : simpleFields;
+        type === "lesson"
+          ? lessonFields
+          : type === "game"
+          ? gameFields
+          : type === "intensive"
+          ? intensiveFields
+          : taskFields;
       const content = await requestGeneration(type, fields);
       setResult(content);
       registerUse(type);
@@ -171,7 +232,13 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
   };
 
   const resultTopic =
-    type === "lesson" ? lessonFields.topic : type === "game" ? gameFields.subject : simpleFields.topic;
+    type === "lesson"
+      ? lessonFields.topic
+      : type === "game"
+      ? gameFields.subject
+      : type === "intensive"
+      ? intensiveFields.topic
+      : taskFields.topic;
   const resultTitle = `${meta.title}: ${resultTopic || "без темы"}`;
 
   const handleDownload = () => {
@@ -329,25 +396,124 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
               </>
             )}
 
-            {(type === "intensive" || type === "task") && (
+            {type === "intensive" && (
               <>
                 <div>
-                  <label className="text-sm font-medium mb-1.5 block">
-                    {type === "intensive" ? "Тема интенсива" : "Тема задания"}
-                  </label>
+                  <label className="text-sm font-medium mb-1.5 block">Тема</label>
                   <Input
-                    value={simpleFields.topic}
-                    onChange={(e) => setSimpleFields((s) => ({ ...s, topic: e.target.value }))}
-                    placeholder="Например: Критическое мышление"
+                    value={intensiveFields.topic}
+                    onChange={(e) => setIntensiveFields((s) => ({ ...s, topic: e.target.value }))}
+                    placeholder="Например: Критическое мышление, Основы дизайна..."
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-1.5 block">Класс / возраст</label>
+                  <label className="text-sm font-medium mb-1.5 block">Целевая аудитория</label>
+                  <Select
+                    value={intensiveFields.audience}
+                    onValueChange={(v: IntensiveFields["audience"]) => setIntensiveFields((s) => ({ ...s, audience: v }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {AUDIENCE_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>
+                          {o.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Продолжительность</label>
+                  <Select
+                    value={intensiveFields.duration}
+                    onValueChange={(v: IntensiveFields["duration"]) => setIntensiveFields((s) => ({ ...s, duration: v }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {INTENSIVE_DURATION_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>
+                          {o.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Формат</label>
+                  <Select
+                    value={intensiveFields.format}
+                    onValueChange={(v: IntensiveFields["format"]) => setIntensiveFields((s) => ({ ...s, format: v }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {FORMAT_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>
+                          {o.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Цель</label>
                   <Input
-                    value={simpleFields.grade}
-                    onChange={(e) => setSimpleFields((s) => ({ ...s, grade: e.target.value }))}
-                    placeholder="Например: 7 класс"
+                    value={intensiveFields.goal}
+                    onChange={(e) => setIntensiveFields((s) => ({ ...s, goal: e.target.value }))}
+                    placeholder="Например: научить участников базовым принципам дизайна"
                   />
+                </div>
+              </>
+            )}
+
+            {type === "task" && (
+              <>
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Предмет/дисциплина</label>
+                  <Input
+                    value={taskFields.subject}
+                    onChange={(e) => setTaskFields((s) => ({ ...s, subject: e.target.value }))}
+                    placeholder="Например: Математика, Литература..."
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Тема</label>
+                  <Input
+                    value={taskFields.topic}
+                    onChange={(e) => setTaskFields((s) => ({ ...s, topic: e.target.value }))}
+                    placeholder="Например: Квадратные уравнения"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Цель</label>
+                  <Input
+                    value={taskFields.goal}
+                    onChange={(e) => setTaskFields((s) => ({ ...s, goal: e.target.value }))}
+                    placeholder="Например: закрепить навык решения уравнений"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Акцент на компонент мышления</label>
+                  <Select
+                    value={taskFields.component}
+                    onValueChange={(v: TaskFields["component"]) => setTaskFields((s) => ({ ...s, component: v }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COMPONENT_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>
+                          {o.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </>
             )}

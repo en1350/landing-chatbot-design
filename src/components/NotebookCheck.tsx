@@ -1,6 +1,13 @@
 import { useRef, useState } from "react";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
 
@@ -15,6 +22,17 @@ interface CheckResult {
   notes: string[];
 }
 
+const SUBJECTS = [
+  "Математика",
+  "Русский язык",
+  "Литература",
+  "Информатика",
+  "Физика",
+  "Химия",
+  "История",
+  "Обществознание",
+];
+
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -24,11 +42,11 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
-async function requestNotebookCheck(imageBase64: string): Promise<CheckResult> {
+async function requestNotebookCheck(imageBase64: string, subject: string): Promise<CheckResult> {
   const res = await fetch(GENERATE_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "notebook_check", image_base64: imageBase64 }),
+    body: JSON.stringify({ action: "notebook_check", image_base64: imageBase64, subject }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "Не удалось проверить работу");
@@ -37,6 +55,7 @@ async function requestNotebookCheck(imageBase64: string): Promise<CheckResult> {
 
 const NotebookCheck = ({ id }: NotebookCheckProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [subject, setSubject] = useState<string>(SUBJECTS[0]);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<CheckResult | null>(null);
@@ -52,7 +71,7 @@ const NotebookCheck = ({ id }: NotebookCheckProps) => {
     setLoading(true);
     try {
       const base64 = await fileToBase64(file);
-      const checkResult = await requestNotebookCheck(base64);
+      const checkResult = await requestNotebookCheck(base64, subject);
       setResult(checkResult);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Не удалось проверить работу, попробуйте снова");
@@ -70,7 +89,7 @@ const NotebookCheck = ({ id }: NotebookCheckProps) => {
             Проверка тетради по фото
           </h2>
           <p className="text-muted-foreground mt-4 leading-relaxed max-w-md">
-            Сфотографируйте работу ученика — ИИ найдёт ошибки, оценит уровень выполнения
+            Выберите предмет, сфотографируйте работу ученика — ИИ найдёт ошибки, оценит уровень выполнения
             и предложит комментарии для обратной связи. Экономит часы проверки тетрадей каждую неделю.
           </p>
           <ul className="mt-6 space-y-3">
@@ -84,6 +103,22 @@ const NotebookCheck = ({ id }: NotebookCheckProps) => {
         </div>
 
         <div className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
+          <div className="mb-4">
+            <label className="text-sm font-medium mb-1.5 block">Предмет</label>
+            <Select value={subject} onValueChange={setSubject}>
+              <SelectTrigger className="bg-card">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SUBJECTS.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div
             onDragOver={(e) => {
               e.preventDefault();
@@ -126,7 +161,7 @@ const NotebookCheck = ({ id }: NotebookCheckProps) => {
                 {loading && (
                   <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                     <Icon name="Loader2" size={16} className="animate-spin" />
-                    ИИ анализирует работу...
+                    ИИ анализирует работу по предмету «{subject}»...
                   </div>
                 )}
                 {error && (
@@ -138,7 +173,7 @@ const NotebookCheck = ({ id }: NotebookCheckProps) => {
                 {result && (
                   <div className="text-left rounded-xl bg-secondary/60 p-4 animate-fade-in">
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm font-semibold">Результат проверки</span>
+                      <span className="text-sm font-semibold">Результат проверки · {subject}</span>
                       <span className="font-display text-2xl font-bold text-primary">{result.score}%</span>
                     </div>
                     <p className="text-xs text-muted-foreground mb-3">

@@ -7,7 +7,7 @@ interface FooterProps {
 const Footer = ({ onOpenProfile }: FooterProps) => {
   return (
     <footer className="border-t border-border/60 bg-secondary/30">
-      <div className="container py-12 grid sm:grid-cols-3 gap-8">
+      <div className="container py-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
         <div>
           <div className="flex items-center gap-2 mb-3">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -43,6 +43,18 @@ const Footer = ({ onOpenProfile }: FooterProps) => {
               <button onClick={onOpenProfile} className="hover:text-foreground transition-colors">
                 Политика данных
               </button>
+            </li>
+          </ul>
+        </div>
+
+        <div>
+          <p className="text-sm font-semibold mb-3">Контакты</p>
+          <ul className="space-y-2 text-sm text-muted-foreground">
+            <li>
+              <a href="mailto:urokru@bot-flow.ru" className="hover:text-foreground transition-colors flex items-center gap-1.5">
+                <Icon name="Mail" size={14} />
+                urokru@bot-flow.ru
+              </a>
             </li>
           </ul>
         </div>
