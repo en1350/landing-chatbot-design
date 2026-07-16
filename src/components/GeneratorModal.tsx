@@ -46,12 +46,16 @@ interface LessonFields {
   technology: string;
   ageCount: string;
   duration: "45" | "90";
+  regionalComponent: string;
+  professionalOrientation: string;
 }
 
 interface GameFields {
   subject: string;
   duration: "5" | "15" | "45";
   peopleCount: string;
+  regionalComponent: string;
+  professionalOrientation: string;
 }
 
 interface IntensiveFields {
@@ -60,6 +64,8 @@ interface IntensiveFields {
   duration: "15min" | "30min" | "45min" | "90min" | "1day" | "2days";
   format: "intensive" | "masterclass" | "workshop" | "hackathon" | "project_lab" | "immersive";
   goal: string;
+  regionalComponent: string;
+  professionalOrientation: string;
 }
 
 interface TaskFields {
@@ -67,6 +73,8 @@ interface TaskFields {
   topic: string;
   goal: string;
   component: "cognitive" | "creative" | "critical" | "communicative" | "balanced";
+  regionalComponent: string;
+  professionalOrientation: string;
 }
 
 const AUDIENCE_OPTIONS: { value: IntensiveFields["audience"]; label: string }[] = [
@@ -135,11 +143,15 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
     technology: "",
     ageCount: "",
     duration: "45",
+    regionalComponent: "",
+    professionalOrientation: "",
   });
   const [gameFields, setGameFields] = useState<GameFields>({
     subject: "",
     duration: "15",
     peopleCount: "",
+    regionalComponent: "",
+    professionalOrientation: "",
   });
   const [intensiveFields, setIntensiveFields] = useState<IntensiveFields>({
     topic: "",
@@ -147,12 +159,16 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
     duration: "1day",
     format: "intensive",
     goal: "",
+    regionalComponent: "",
+    professionalOrientation: "",
   });
   const [taskFields, setTaskFields] = useState<TaskFields>({
     subject: "",
     topic: "",
     goal: "",
     component: "balanced",
+    regionalComponent: "",
+    professionalOrientation: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -170,10 +186,10 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
   const meta = META[type];
 
   const reset = () => {
-    setLessonFields({ subject: "", topic: "", goal: "", tasks: "", technology: "", ageCount: "", duration: "45" });
-    setGameFields({ subject: "", duration: "15", peopleCount: "" });
-    setIntensiveFields({ topic: "", audience: "schoolchildren", duration: "1day", format: "intensive", goal: "" });
-    setTaskFields({ subject: "", topic: "", goal: "", component: "balanced" });
+    setLessonFields({ subject: "", topic: "", goal: "", tasks: "", technology: "", ageCount: "", duration: "45", regionalComponent: "", professionalOrientation: "" });
+    setGameFields({ subject: "", duration: "15", peopleCount: "", regionalComponent: "", professionalOrientation: "" });
+    setIntensiveFields({ topic: "", audience: "schoolchildren", duration: "1day", format: "intensive", goal: "", regionalComponent: "", professionalOrientation: "" });
+    setTaskFields({ subject: "", topic: "", goal: "", component: "balanced", regionalComponent: "", professionalOrientation: "" });
     setResult(null);
     setError(null);
     setLoading(false);
@@ -356,6 +372,22 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
                     </SelectContent>
                   </Select>
                 </div>
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Региональный компонент</label>
+                  <Input
+                    value={lessonFields.regionalComponent}
+                    onChange={(e) => setLessonFields((s) => ({ ...s, regionalComponent: e.target.value }))}
+                    placeholder="Например: особенности региона, местные примеры (необязательно)"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Профессиональная направленность</label>
+                  <Input
+                    value={lessonFields.professionalOrientation}
+                    onChange={(e) => setLessonFields((s) => ({ ...s, professionalOrientation: e.target.value }))}
+                    placeholder="Например: инженерный класс, медицинский профиль (необязательно)"
+                  />
+                </div>
               </>
             )}
 
@@ -391,6 +423,22 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
                     value={gameFields.peopleCount}
                     onChange={(e) => setGameFields((s) => ({ ...s, peopleCount: e.target.value }))}
                     placeholder="Например: 20"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Региональный компонент</label>
+                  <Input
+                    value={gameFields.regionalComponent}
+                    onChange={(e) => setGameFields((s) => ({ ...s, regionalComponent: e.target.value }))}
+                    placeholder="Например: особенности региона, местные примеры (необязательно)"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Профессиональная направленность</label>
+                  <Input
+                    value={gameFields.professionalOrientation}
+                    onChange={(e) => setGameFields((s) => ({ ...s, professionalOrientation: e.target.value }))}
+                    placeholder="Например: инженерный класс, медицинский профиль (необязательно)"
                   />
                 </div>
               </>
@@ -468,6 +516,22 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
                     placeholder="Например: научить участников базовым принципам дизайна"
                   />
                 </div>
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Региональный компонент</label>
+                  <Input
+                    value={intensiveFields.regionalComponent}
+                    onChange={(e) => setIntensiveFields((s) => ({ ...s, regionalComponent: e.target.value }))}
+                    placeholder="Например: особенности региона, местные примеры (необязательно)"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Профессиональная направленность</label>
+                  <Input
+                    value={intensiveFields.professionalOrientation}
+                    onChange={(e) => setIntensiveFields((s) => ({ ...s, professionalOrientation: e.target.value }))}
+                    placeholder="Например: инженерный класс, медицинский профиль (необязательно)"
+                  />
+                </div>
               </>
             )}
 
@@ -514,6 +578,22 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Региональный компонент</label>
+                  <Input
+                    value={taskFields.regionalComponent}
+                    onChange={(e) => setTaskFields((s) => ({ ...s, regionalComponent: e.target.value }))}
+                    placeholder="Например: особенности региона, местные примеры (необязательно)"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Профессиональная направленность</label>
+                  <Input
+                    value={taskFields.professionalOrientation}
+                    onChange={(e) => setTaskFields((s) => ({ ...s, professionalOrientation: e.target.value }))}
+                    placeholder="Например: инженерный класс, медицинский профиль (необязательно)"
+                  />
                 </div>
               </>
             )}

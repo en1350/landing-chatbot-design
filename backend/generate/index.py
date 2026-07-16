@@ -45,6 +45,28 @@ LESSON_DURATION_MAP = {
 }
 
 
+def build_extra_context_lines(f: dict) -> str:
+    lines = []
+    regional = (f.get('regionalComponent') or '').strip()
+    professional = (f.get('professionalOrientation') or '').strip()
+    if regional:
+        lines.append(f"Региональный компонент: {regional}")
+    if professional:
+        lines.append(f"Профессиональная направленность: {professional}")
+    return ("\n" + "\n".join(lines)) if lines else ""
+
+
+def build_extra_context_instruction(f: dict) -> str:
+    regional = (f.get('regionalComponent') or '').strip()
+    professional = (f.get('professionalOrientation') or '').strip()
+    parts = []
+    if regional:
+        parts.append(f"обязательно учти региональный компонент «{regional}» (используй местные примеры, факты, реалии региона)")
+    if professional:
+        parts.append(f"обязательно учти профессиональную направленность «{professional}» (подбирай примеры и контекст под этот профиль)")
+    return (" Также " + "; ".join(parts) + ".") if parts else ""
+
+
 def build_lesson_prompt(f: dict) -> str:
     subject = f.get('subject') or 'дисциплина не указана'
     topic = f.get('topic') or 'новая тема'
@@ -54,6 +76,8 @@ def build_lesson_prompt(f: dict) -> str:
     age_count = f.get('ageCount') or 'не указано'
     duration = f.get('duration') or '45'
     t = LESSON_DURATION_MAP.get(duration, LESSON_DURATION_MAP['45'])
+    extra_lines = build_extra_context_lines(f)
+    extra_instruction = build_extra_context_instruction(f)
 
     return f"""Ты опытный методист-педагог. Составь подробный план урока на русском языке по следующим параметрам:
 
@@ -63,7 +87,7 @@ def build_lesson_prompt(f: dict) -> str:
 Задачи: {tasks}
 Технология обучения: {technology}
 Возраст / количество человек: {age_count}
-Время урока: {duration} минут
+Время урока: {duration} минут{extra_lines}
 
 Структура плана строго такая (не меняй порядок и названия этапов), укажи рекомендованное время по каждому этапу (в сумме {duration} мин, ориентируйся на: оргмомент {t['org']} мин, актуализация {t['act']} мин, новая тема {t['new']} мин, практика {t['practice']} мин, рефлексия {t['reflect']} мин, домашнее задание {t['homework']} мин):
 
@@ -74,7 +98,7 @@ def build_lesson_prompt(f: dict) -> str:
 5. Рефлексия
 6. Домашнее задание
 
-Для каждого этапа опиши конкретные действия учителя и учеников, а не общие фразы. Пиши развёрнуто, по-деловому, без markdown-разметки (без **, #), используй обычный текст с переносами строк и нумерацией."""
+Для каждого этапа опиши конкретные действия учителя и учеников, а не общие фразы.{extra_instruction} Пиши развёрнуто, по-деловому, без markdown-разметки (без **, #), используй обычный текст с переносами строк и нумерацией."""
 
 
 GAME_LABELS = {'5': '5 минут', '15': '15 минут', '45': '45 минут'}
@@ -85,14 +109,16 @@ def build_game_prompt(f: dict) -> str:
     duration = f.get('duration') or '15'
     people = f.get('peopleCount') or 'не указано'
     duration_label = GAME_LABELS.get(duration, duration + ' минут')
+    extra_lines = build_extra_context_lines(f)
+    extra_instruction = build_extra_context_instruction(f)
 
     return f"""Ты опытный педагог-игропрактик. Придумай образовательную игру на русском языке по параметрам:
 
 Предмет/дисциплина: {subject}
 Время игры: {duration_label}
-Количество участников: {people}
+Количество участников: {people}{extra_lines}
 
-Опиши: формат игры, деление на команды (если нужно), пошаговый сценарий с таймингом внутри отведённого времени, правила, критерии подведения итогов. Пиши конкретно и практично, без markdown-разметки (без **, #), обычным текстом с нумерацией шагов."""
+Опиши: формат игры, деление на команды (если нужно), пошаговый сценарий с таймингом внутри отведённого времени, правила, критерии подведения итогов.{extra_instruction} Пиши конкретно и практично, без markdown-разметки (без **, #), обычным текстом с нумерацией шагов."""
 
 
 INTENSIVE_AUDIENCE_LABELS = {
@@ -126,6 +152,8 @@ def build_intensive_prompt(f: dict) -> str:
     duration = INTENSIVE_DURATION_LABELS.get(f.get('duration'), '1 день')
     fmt = INTENSIVE_FORMAT_LABELS.get(f.get('format'), 'интенсив')
     goal = f.get('goal') or f'глубоко разобрать тему «{topic}» и получить практический результат'
+    extra_lines = build_extra_context_lines(f)
+    extra_instruction = build_extra_context_instruction(f)
 
     is_short = f.get('duration') in ('15min', '30min', '45min', '90min')
     structure_hint = (
@@ -140,11 +168,11 @@ def build_intensive_prompt(f: dict) -> str:
 Формат: {fmt}
 Целевая аудитория: {audience}
 Продолжительность: {duration}
-Цель: {goal}
+Цель: {goal}{extra_lines}
 
 {structure_hint}
 
-Обязательно укажи: структуру/сценарий с таймингом, форматы работы участников (лекция/практика/проект/дискуссия — подбери уместные для формата «{fmt}»), необходимые материалы и инструменты, ожидаемый результат для участников. Учитывай, что аудитория — {audience}, адаптируй сложность и подачу материала. Пиши конкретно, без markdown-разметки (без **, #), обычным текстом с нумерацией разделов."""
+Обязательно укажи: структуру/сценарий с таймингом, форматы работы участников (лекция/практика/проект/дискуссия — подбери уместные для формата «{fmt}»), необходимые материалы и инструменты, ожидаемый результат для участников. Учитывай, что аудитория — {audience}, адаптируй сложность и подачу материала.{extra_instruction} Пиши конкретно, без markdown-разметки (без **, #), обычным текстом с нумерацией разделов."""
 
 
 TASK_COMPONENT_LABELS = {
@@ -161,15 +189,17 @@ def build_task_prompt(f: dict) -> str:
     goal = f.get('goal') or f'закрепить материал по теме «{topic}»'
     component_key = f.get('component')
     component = TASK_COMPONENT_LABELS.get(component_key, 'сбалансированное сочетание всех компонентов (когнитивный, креативный, критический, коммуникативный)')
+    extra_lines = build_extra_context_lines(f)
+    extra_instruction = build_extra_context_instruction(f)
 
     return f"""Ты опытный педагог, специалист по разработке учебных заданий. Составь комплект учебных заданий на русском языке по параметрам:
 
 Предмет/дисциплина: {subject}
 Тема: {topic}
 Цель: {goal}
-Акцент на компонент мышления: {component}
+Акцент на компонент мышления: {component}{extra_lines}
 
-Сделай минимум 3 задания трёх уровней сложности (базовый, средний, продвинутый), каждое задание должно явно задействовать указанный акцентный компонент мышления. Для каждого задания укажи формулировку и критерии оценивания. Пиши конкретно и практично, без markdown-разметки (без **, #), обычным текстом с нумерацией."""
+Сделай минимум 3 задания трёх уровней сложности (базовый, средний, продвинутый), каждое задание должно явно задействовать указанный акцентный компонент мышления.{extra_instruction} Для каждого задания укажи формулировку и критерии оценивания. Пиши конкретно и практично, без markdown-разметки (без **, #), обычным текстом с нумерацией."""
 
 
 CHAT_SYSTEM_PROMPT = """Ты ИИ-помощник УрокАИ для учителей и педагогов. Ты дружелюбно и по-деловому помогаешь с методическими вопросами: как составить план урока, придумать игру, оценить работу учеников, подобрать технологию обучения и т.д.
