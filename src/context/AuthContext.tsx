@@ -11,6 +11,17 @@ export interface AuthUser {
 
 export type SubscriptionPlan = "free" | "30days" | "7days" | "year";
 
+export type GeneratorType = "lesson" | "game" | "intensive" | "task";
+
+export interface UsageState {
+  lesson: number;
+  game: number;
+  intensive: number;
+  task: number;
+}
+
+const defaultUsage: UsageState = { lesson: 0, game: 0, intensive: 0, task: 0 };
+
 interface AuthContextValue {
   user: AuthUser | null;
   token: string | null;
@@ -18,6 +29,11 @@ interface AuthContextValue {
   expiresAt: string | null;
   loading: boolean;
   isPaid: boolean;
+  usage: UsageState;
+  freeLimit: number;
+  remainingUse: (type: GeneratorType) => number;
+  canUseGenerator: (type: GeneratorType) => boolean;
+  registerGeneratorUse: (type: GeneratorType) => Promise<boolean>;
   register: (email: string, password: string, name: string, privacyAccepted: boolean) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -50,6 +66,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [plan, setPlan] = useState<SubscriptionPlan>("free");
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [usage, setUsage] = useState<UsageState>(defaultUsage);
+  const [freeLimit, setFreeLimit] = useState(3);
 
   const applySession = (t: string | null) => {
     setToken(t);
@@ -63,6 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setPlan("free");
       setExpiresAt(null);
+      setUsage(defaultUsage);
       setLoading(false);
       return;
     }
@@ -76,12 +95,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(data.user);
       setPlan(data.plan || "free");
       setExpiresAt(data.expires_at || null);
+      setUsage(data.usage || defaultUsage);
+      setFreeLimit(data.free_limit ?? 3);
       setToken(currentToken);
     } catch {
       applySession(null);
       setUser(null);
       setPlan("free");
       setExpiresAt(null);
+      setUsage(defaultUsage);
     } finally {
       setLoading(false);
     }
@@ -96,6 +118,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     applySession(data.token);
     setUser(data.user);
     setPlan(data.plan || "free");
+    setUsage(data.usage || defaultUsage);
+    setFreeLimit(data.free_limit ?? 3);
   };
 
   const login = async (email: string, password: string) => {
@@ -103,6 +127,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     applySession(data.token);
     setUser(data.user);
     setPlan(data.plan || "free");
+    setUsage(data.usage || defaultUsage);
+    setFreeLimit(data.free_limit ?? 3);
   };
 
   const logout = async () => {
@@ -113,6 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setPlan("free");
       setExpiresAt(null);
+      setUsage(defaultUsage);
     }
   };
 
@@ -130,9 +157,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isPaid = plan !== "free";
 
+  const remainingUse = (type: GeneratorType) => Math.max(0, freeLimit - usage[type]);
+  const canUseGenerator = (type: GeneratorType) => !!user && (isPaid || remainingUse(type) > 0);
+
+  const registerGeneratorUse = async (type: GeneratorType): Promise<boolean> => {
+    if (!token) return false;
+    try {
+      const data = await apiRequest("register_use", { type }, token);
+      setUsage(data.usage || defaultUsage);
+      setFreeLimit(data.free_limit ?? 3);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, token, plan, expiresAt, loading, isPaid, register, login, logout, refresh, forgotPassword, resetPassword }}
+      value={{
+        user,
+        token,
+        plan,
+        expiresAt,
+        loading,
+        isPaid,
+        usage,
+        freeLimit,
+        remainingUse,
+        canUseGenerator,
+        registerGeneratorUse,
+        register,
+        login,
+        logout,
+        refresh,
+        forgotPassword,
+        resetPassword,
+      }}
     >
       {children}
     </AuthContext.Provider>

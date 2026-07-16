@@ -2,10 +2,12 @@ import json
 import os
 import urllib.request
 import urllib.error
+import psycopg2
 
 AITUNNEL_URL = "https://api.aitunnel.ru/v1/chat/completions"
 MODEL = "gpt-4o-mini"
 VISION_MODEL = "gpt-4o-mini"
+SCHEMA = os.environ.get('MAIN_DB_SCHEMA', 'public')
 
 
 def cors_headers():
@@ -15,6 +17,39 @@ def cors_headers():
         'Access-Control-Allow-Headers': 'Content-Type, X-Authorization',
         'Content-Type': 'application/json'
     }
+
+
+def get_token(event):
+    headers = event.get('headers') or {}
+    return headers.get('X-Authorization') or headers.get('x-authorization')
+
+
+def is_user_paid(event) -> bool:
+    token = get_token(event)
+    if not token:
+        return False
+    try:
+        conn = psycopg2.connect(os.environ['DATABASE_URL'])
+        cur = conn.cursor()
+        cur.execute(
+            f"SELECT s.user_id FROM {SCHEMA}.sessions s WHERE s.token = %s AND s.expires_at > now()",
+            (token,)
+        )
+        row = cur.fetchone()
+        if not row:
+            return False
+        user_id = row[0]
+        cur.execute(
+            f"SELECT plan FROM {SCHEMA}.subscriptions WHERE user_id = %s AND is_active = true "
+            f"AND (expires_at IS NULL OR expires_at > now()) ORDER BY started_at DESC LIMIT 1",
+            (user_id,)
+        )
+        sub = cur.fetchone()
+        cur.close()
+        conn.close()
+        return bool(sub and sub[0] != 'free')
+    except Exception:
+        return False
 
 
 def call_ai(messages: list, temperature: float = 0.7, model: str = MODEL) -> str:
@@ -247,7 +282,7 @@ def build_notebook_system_prompt(subject: str) -> str:
 
 
 def handler(event: dict, context) -> dict:
-    """Генерация учебных материалов, ИИ-чат-помощник, проверка тетради по фото и декомпозитор компетенций через ИИ AITunnel."""
+    """Генерация учебных материалов, ИИ-чат-помощник через AITunnel. Декомпозитор компетенций и проверка тетради по фото доступны только пользователям с платной подпиской."""
     method = event.get('httpMethod', 'GET')
 
     if method == 'OPTIONS':
@@ -323,6 +358,9 @@ def handler(event: dict, context) -> dict:
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'reply': reply}, ensure_ascii=False)}
 
         elif action == 'decompose':
+            if not is_user_paid(event):
+                return {'statusCode': 403, 'headers': cors_headers(), 'body': json.dumps({'error': 'Декомпозитор компетенций доступен только по платной подписке'})}
+
             competency = body.get('competency') or ''
             if not competency.strip():
                 return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите компетенцию'})}
@@ -345,6 +383,9 @@ def handler(event: dict, context) -> dict:
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'levels': levels}, ensure_ascii=False)}
 
         elif action == 'notebook_check':
+            if not is_user_paid(event):
+                return {'statusCode': 403, 'headers': cors_headers(), 'body': json.dumps({'error': 'Проверка тетради доступна только по платной подписке'})}
+
             image_base64 = body.get('image_base64') or ''
             subject = body.get('subject') or ''
             if not image_base64:

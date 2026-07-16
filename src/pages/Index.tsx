@@ -10,6 +10,7 @@ import DecomposerModal from "@/components/DecomposerModal";
 import RandomizerModal from "@/components/RandomizerModal";
 import ProfileSheet from "@/components/ProfileSheet";
 import AuthModal from "@/components/AuthModal";
+import UpgradeModal from "@/components/UpgradeModal";
 import { useAuth, AUTH_URL } from "@/context/AuthContext";
 
 const Index = () => {
@@ -19,6 +20,7 @@ const Index = () => {
   const [randomizerOpen, setRandomizerOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
@@ -27,6 +29,11 @@ const Index = () => {
   const openAuth = () => {
     setProfileOpen(false);
     setAuthOpen(true);
+  };
+
+  const openUpgrade = () => {
+    setDecomposerOpen(false);
+    setUpgradeOpen(true);
   };
 
   // Проверяем платёж при возврате с ЮКассы
@@ -64,17 +71,23 @@ const Index = () => {
       <main className="flex-1">
         <Hero onScrollToGenerators={() => scrollTo("generators")} />
         <GeneratorsSection onNeedAuth={openAuth} />
-        <NotebookCheck id="notebook" />
+        <NotebookCheck id="notebook" onNeedAuth={openAuth} onNeedUpgrade={openUpgrade} />
         <PricingSection id="pricing" onNeedAuth={openAuth} />
       </main>
 
       <Footer onOpenProfile={() => setProfileOpen(true)} />
 
       <TrainerModal open={trainerOpen} onClose={() => setTrainerOpen(false)} />
-      <DecomposerModal open={decomposerOpen} onClose={() => setDecomposerOpen(false)} />
+      <DecomposerModal
+        open={decomposerOpen}
+        onClose={() => setDecomposerOpen(false)}
+        onNeedAuth={openAuth}
+        onNeedUpgrade={openUpgrade}
+      />
       <RandomizerModal open={randomizerOpen} onClose={() => setRandomizerOpen(false)} />
       <ProfileSheet open={profileOpen} onClose={() => setProfileOpen(false)} onNeedAuth={openAuth} />
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
+      <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} onNeedAuth={openAuth} />
     </div>
   );
 };

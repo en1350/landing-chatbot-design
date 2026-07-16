@@ -49,6 +49,15 @@
       "expectedStatus": 404,
       "expectedBody": {"error": "string"},
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "register_use without auth returns 401",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "register_use", "type": "lesson"},
+      "expectedStatus": 401,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
     }
   ]
 }

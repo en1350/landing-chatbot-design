@@ -35,8 +35,8 @@ const PLAN_LABELS: Record<string, string> = {
 };
 
 const ProfileSheet = ({ open, onClose, onNeedAuth }: ProfileSheetProps) => {
-  const { usage, freeLimit, servicesCount } = useUsage();
-  const { user, token, plan, isPaid, logout } = useAuth();
+  const { servicesCount } = useUsage();
+  const { user, token, plan, isPaid, logout, usage, freeLimit } = useAuth();
   const [materials, setMaterials] = useState<SavedMaterial[]>([]);
   const [loadingMaterials, setLoadingMaterials] = useState(false);
   const [downloadingId, setDownloadingId] = useState<number | null>(null);

@@ -17,8 +17,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Icon from "@/components/ui/icon";
-import { useUsage, GeneratorType } from "@/context/UsageContext";
-import { useAuth, AUTH_URL } from "@/context/AuthContext";
+import { useAuth, AUTH_URL, GeneratorType } from "@/context/AuthContext";
+import { useUsage } from "@/context/UsageContext";
 import { downloadTxt } from "@/lib/download";
 
 const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
@@ -132,8 +132,8 @@ async function requestRefine(content: string, instruction: string): Promise<stri
 }
 
 const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: GeneratorModalProps) => {
-  const { canUse, registerUse, remaining, isPaid } = useUsage();
-  const { token, user } = useAuth();
+  const { token, user, canUseGenerator, registerGeneratorUse, remainingUse, isPaid } = useAuth();
+  const { incrementServices } = useUsage();
 
   const [lessonFields, setLessonFields] = useState<LessonFields>({
     subject: "",
@@ -205,7 +205,11 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
   };
 
   const handleGenerate = async () => {
-    if (!canUse(type)) {
+    if (!user) {
+      onNeedAuth();
+      return;
+    }
+    if (!canUseGenerator(type)) {
       onNeedUpgrade();
       return;
     }
@@ -220,9 +224,15 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
           : type === "intensive"
           ? intensiveFields
           : taskFields;
+      const registered = await registerGeneratorUse(type);
+      if (!registered) {
+        onNeedUpgrade();
+        setLoading(false);
+        return;
+      }
       const content = await requestGeneration(type, fields);
       setResult(content);
-      registerUse(type);
+      incrementServices();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка генерации, попробуйте снова");
     } finally {
@@ -298,9 +308,11 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
             {meta.title}
           </DialogTitle>
           <DialogDescription>
-            {isPaid
+            {!user
+              ? "Войдите в личный кабинет, чтобы получить 3 бесплатные генерации"
+              : isPaid
               ? "Безлимитная генерация по вашему тарифу"
-              : `Осталось бесплатных генераций: ${remaining(type)} из 3`}
+              : `Осталось бесплатных генераций: ${remainingUse(type)} из 3`}
           </DialogDescription>
         </DialogHeader>
 
@@ -614,6 +626,11 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
                 <>
                   <Icon name="Loader2" size={17} className="animate-spin" />
                   ИИ генерирует материал...
+                </>
+              ) : !user ? (
+                <>
+                  <Icon name="LogIn" size={17} />
+                  Войти и сгенерировать
                 </>
               ) : (
                 <>

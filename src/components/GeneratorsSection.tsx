@@ -2,7 +2,8 @@ import { useState } from "react";
 import GeneratorCard from "@/components/GeneratorCard";
 import GeneratorModal from "@/components/GeneratorModal";
 import UpgradeModal from "@/components/UpgradeModal";
-import { GeneratorType, useUsage } from "@/context/UsageContext";
+import { GeneratorType } from "@/context/AuthContext";
+import { useUsage } from "@/context/UsageContext";
 import Icon from "@/components/ui/icon";
 
 const GENERATORS: { type: GeneratorType; icon: string; title: string; accent: string }[] = [

@@ -8,11 +8,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAuth } from "@/context/AuthContext";
 
 const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
 
 interface NotebookCheckProps {
   id?: string;
+  onNeedAuth: () => void;
+  onNeedUpgrade: () => void;
 }
 
 interface CheckResult {
@@ -53,7 +56,8 @@ async function requestNotebookCheck(imageBase64: string, subject: string): Promi
   return data as CheckResult;
 }
 
-const NotebookCheck = ({ id }: NotebookCheckProps) => {
+const NotebookCheck = ({ id, onNeedAuth, onNeedUpgrade }: NotebookCheckProps) => {
+  const { user, isPaid } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
   const [subject, setSubject] = useState<string>(SUBJECTS[0]);
   const [preview, setPreview] = useState<string | null>(null);
@@ -103,110 +107,132 @@ const NotebookCheck = ({ id }: NotebookCheckProps) => {
         </div>
 
         <div className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
-          <div className="mb-4">
-            <label className="text-sm font-medium mb-1.5 block">Предмет</label>
-            <Select value={subject} onValueChange={setSubject}>
-              <SelectTrigger className="bg-card">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {SUBJECTS.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDragOver(true);
-            }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={(e) => {
-              e.preventDefault();
-              setDragOver(false);
-              handleFile(e.dataTransfer.files?.[0]);
-            }}
-            className={`relative rounded-2xl border-2 border-dashed p-8 text-center transition-colors cursor-pointer ${
-              dragOver ? "border-primary bg-primary/5" : "border-border bg-card"
-            }`}
-            onClick={() => inputRef.current?.click()}
-          >
-            <input
-              ref={inputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => handleFile(e.target.files?.[0])}
-            />
-
-            {!preview ? (
-              <div className="py-8">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-4">
-                  <Icon name="Camera" size={26} />
-                </div>
-                <p className="font-medium mb-1">Загрузите фото работы</p>
-                <p className="text-sm text-muted-foreground mb-4">Перетащите файл сюда или нажмите для выбора</p>
-                <Button type="button" variant="outline" className="gap-2">
-                  <Icon name="Upload" size={16} />
-                  Выбрать фото
-                </Button>
+          {!isPaid ? (
+            <div className="rounded-2xl border-2 border-dashed border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-8 text-center">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15 text-3xl mb-4">
+                🔒
               </div>
-            ) : (
-              <div className="space-y-4">
-                <img src={preview} alt="Загруженная работа" className="mx-auto max-h-56 rounded-xl object-contain shadow-sm" />
-                {loading && (
-                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                    <Icon name="Loader2" size={16} className="animate-spin" />
-                    ИИ анализирует работу по предмету «{subject}»...
-                  </div>
-                )}
-                {error && (
-                  <p className="text-sm text-destructive flex items-center justify-center gap-1.5">
-                    <Icon name="AlertCircle" size={14} />
-                    {error}
-                  </p>
-                )}
-                {result && (
-                  <div className="text-left rounded-xl bg-secondary/60 p-4 animate-fade-in">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm font-semibold">Результат проверки · {subject}</span>
-                      <span className="font-display text-2xl font-bold text-primary">{result.score}%</span>
+              <p className="font-display text-lg font-bold mb-1.5">Доступно по подписке</p>
+              <p className="text-sm text-muted-foreground mb-5 leading-relaxed max-w-xs mx-auto">
+                Проверка тетради по фото — премиум-инструмент. Оформите подписку, чтобы ИИ проверял работы
+                учеников без ограничений.
+              </p>
+              <Button
+                className="gap-2 bg-primary hover:bg-primary/90 h-11 px-6"
+                onClick={user ? onNeedUpgrade : onNeedAuth}
+              >
+                <Icon name={user ? "Sparkles" : "LogIn"} size={17} />
+                {user ? "Оформить подписку" : "Войти и оформить подписку"}
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div className="mb-4">
+                <label className="text-sm font-medium mb-1.5 block">Предмет</label>
+                <Select value={subject} onValueChange={setSubject}>
+                  <SelectTrigger className="bg-card">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SUBJECTS.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragOver(true);
+                }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragOver(false);
+                  handleFile(e.dataTransfer.files?.[0]);
+                }}
+                className={`relative rounded-2xl border-2 border-dashed p-8 text-center transition-colors cursor-pointer ${
+                  dragOver ? "border-primary bg-primary/5" : "border-border bg-card"
+                }`}
+                onClick={() => inputRef.current?.click()}
+              >
+                <input
+                  ref={inputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleFile(e.target.files?.[0])}
+                />
+
+                {!preview ? (
+                  <div className="py-8">
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-4">
+                      <Icon name="Camera" size={26} />
                     </div>
-                    <p className="text-xs text-muted-foreground mb-3">
-                      Правильно выполнено {result.correct} из {result.total} заданий
-                    </p>
-                    <ul className="space-y-1.5">
-                      {result.notes.map((n, i) => (
-                        <li key={i} className="text-xs flex gap-1.5">
-                          <Icon name="MessageSquare" size={13} className="text-coral shrink-0 mt-0.5" />
-                          {n}
-                        </li>
-                      ))}
-                    </ul>
+                    <p className="font-medium mb-1">Загрузите фото работы</p>
+                    <p className="text-sm text-muted-foreground mb-4">Перетащите файл сюда или нажмите для выбора</p>
+                    <Button type="button" variant="outline" className="gap-2">
+                      <Icon name="Upload" size={16} />
+                      Выбрать фото
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <img src={preview} alt="Загруженная работа" className="mx-auto max-h-56 rounded-xl object-contain shadow-sm" />
+                    {loading && (
+                      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                        <Icon name="Loader2" size={16} className="animate-spin" />
+                        ИИ анализирует работу по предмету «{subject}»...
+                      </div>
+                    )}
+                    {error && (
+                      <p className="text-sm text-destructive flex items-center justify-center gap-1.5">
+                        <Icon name="AlertCircle" size={14} />
+                        {error}
+                      </p>
+                    )}
+                    {result && (
+                      <div className="text-left rounded-xl bg-secondary/60 p-4 animate-fade-in">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-sm font-semibold">Результат проверки · {subject}</span>
+                          <span className="font-display text-2xl font-bold text-primary">{result.score}%</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mb-3">
+                          Правильно выполнено {result.correct} из {result.total} заданий
+                        </p>
+                        <ul className="space-y-1.5">
+                          {result.notes.map((n, i) => (
+                            <li key={i} className="text-xs flex gap-1.5">
+                              <Icon name="MessageSquare" size={13} className="text-coral shrink-0 mt-0.5" />
+                              {n}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPreview(null);
+                        setResult(null);
+                        setError(null);
+                      }}
+                      className="gap-1.5"
+                    >
+                      <Icon name="RotateCcw" size={14} />
+                      Загрузить другое фото
+                    </Button>
                   </div>
                 )}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setPreview(null);
-                    setResult(null);
-                    setError(null);
-                  }}
-                  className="gap-1.5"
-                >
-                  <Icon name="RotateCcw" size={14} />
-                  Загрузить другое фото
-                </Button>
               </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
       </div>
     </section>

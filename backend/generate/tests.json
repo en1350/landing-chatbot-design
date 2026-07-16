@@ -51,20 +51,20 @@
       "bodyMatcher": "partial"
     },
     {
-      "name": "Decompose without competency returns 400",
+      "name": "Decompose without paid subscription returns 403",
       "method": "POST",
       "path": "/",
       "body": {"action": "decompose", "competency": ""},
-      "expectedStatus": 400,
+      "expectedStatus": 403,
       "expectedBody": {"error": "string"},
       "bodyMatcher": "partial"
     },
     {
-      "name": "Notebook check without image returns 400",
+      "name": "Notebook check without paid subscription returns 403",
       "method": "POST",
       "path": "/",
       "body": {"action": "notebook_check", "image_base64": ""},
-      "expectedStatus": 400,
+      "expectedStatus": 403,
       "expectedBody": {"error": "string"},
       "bodyMatcher": "partial"
     }

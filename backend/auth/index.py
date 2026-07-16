@@ -19,6 +19,41 @@ PLANS = {
     'year': {'days': 365, 'amount': '890.00', 'label': 'Подписка УрокАИ на 1 год'},
 }
 
+FREE_LIMIT = 3
+
+USAGE_COLUMNS = {
+    'lesson': 'lessons_used',
+    'game': 'games_used',
+    'intensive': 'intensives_used',
+    'task': 'tasks_used',
+}
+
+
+def get_plan_for_user(cur, user_id):
+    cur.execute(
+        f"SELECT plan, is_active, expires_at FROM {SCHEMA}.subscriptions "
+        f"WHERE user_id = %s ORDER BY started_at DESC LIMIT 1",
+        (user_id,)
+    )
+    sub = cur.fetchone()
+    plan = sub[0] if sub and sub[1] else 'free'
+    expires_at = sub[2].isoformat() if sub and sub[1] and sub[2] else None
+    return plan, expires_at
+
+
+def get_usage_for_user(cur, user_id):
+    cur.execute(
+        f"SELECT lessons_used, games_used, intensives_used, tasks_used "
+        f"FROM {SCHEMA}.usage_counts WHERE user_id = %s",
+        (user_id,)
+    )
+    row = cur.fetchone()
+    if not row:
+        cur.execute(f"INSERT INTO {SCHEMA}.usage_counts (user_id) VALUES (%s)", (user_id,))
+        return {'lesson': 0, 'game': 0, 'intensive': 0, 'task': 0}
+    lessons, games, intensives, tasks = row
+    return {'lesson': lessons or 0, 'game': games or 0, 'intensive': intensives or 0, 'task': tasks or 0}
+
 
 def get_conn():
     return psycopg2.connect(os.environ['DATABASE_URL'])
@@ -89,7 +124,7 @@ def send_reset_email(to_email: str, reset_link: str):
 
 
 def handler(event: dict, context) -> dict:
-    """Личный кабинет УрокАИ: регистрация/вход/выход, восстановление доступа по email, сохранение материалов и оплата подписки через ЮКассу."""
+    """Личный кабинет УрокАИ: регистрация/вход/выход, восстановление доступа по email, серверный учёт бесплатных генераций (лимит 3), сохранение материалов и оплата подписки через ЮКассу."""
     method = event.get('httpMethod', 'GET')
 
     if method == 'OPTIONS':
@@ -115,19 +150,20 @@ def handler(event: dict, context) -> dict:
                 return {'statusCode': 401, 'headers': cors_headers(), 'body': json.dumps({'error': 'Сессия истекла'})}
 
             user_id, email, name = row
-            cur.execute(
-                f"SELECT plan, is_active, expires_at FROM {SCHEMA}.subscriptions "
-                f"WHERE user_id = %s ORDER BY started_at DESC LIMIT 1",
-                (user_id,)
-            )
-            sub = cur.fetchone()
-            plan = sub[0] if sub and sub[1] else 'free'
-            expires_at = sub[2].isoformat() if sub and sub[1] and sub[2] else None
+            plan, expires_at = get_plan_for_user(cur, user_id)
+            usage = get_usage_for_user(cur, user_id)
+            conn.commit()
 
             return {
                 'statusCode': 200,
                 'headers': cors_headers(),
-                'body': json.dumps({'user': {'id': user_id, 'email': email, 'name': name}, 'plan': plan, 'expires_at': expires_at})
+                'body': json.dumps({
+                    'user': {'id': user_id, 'email': email, 'name': name},
+                    'plan': plan,
+                    'expires_at': expires_at,
+                    'usage': usage,
+                    'free_limit': FREE_LIMIT,
+                })
             }
 
         body_data = json.loads(event.get('body') or '{}')
@@ -167,7 +203,13 @@ def handler(event: dict, context) -> dict:
             return {
                 'statusCode': 200,
                 'headers': cors_headers(),
-                'body': json.dumps({'token': token, 'user': {'id': user_id, 'email': email, 'name': name}, 'plan': 'free'})
+                'body': json.dumps({
+                    'token': token,
+                    'user': {'id': user_id, 'email': email, 'name': name},
+                    'plan': 'free',
+                    'usage': {'lesson': 0, 'game': 0, 'intensive': 0, 'task': 0},
+                    'free_limit': FREE_LIMIT,
+                })
             }
 
         elif action == 'login':
@@ -183,7 +225,6 @@ def handler(event: dict, context) -> dict:
             user_id, name = row
             token = secrets.token_hex(32)
             cur.execute(f"INSERT INTO {SCHEMA}.sessions (user_id, token) VALUES (%s, %s)", (user_id, token))
-            conn.commit()
 
             cur.execute(
                 f"SELECT plan FROM {SCHEMA}.subscriptions WHERE user_id = %s AND is_active = true ORDER BY started_at DESC LIMIT 1",
@@ -191,11 +232,19 @@ def handler(event: dict, context) -> dict:
             )
             sub = cur.fetchone()
             plan = sub[0] if sub else 'free'
+            usage = get_usage_for_user(cur, user_id)
+            conn.commit()
 
             return {
                 'statusCode': 200,
                 'headers': cors_headers(),
-                'body': json.dumps({'token': token, 'user': {'id': user_id, 'email': email, 'name': name}, 'plan': plan})
+                'body': json.dumps({
+                    'token': token,
+                    'user': {'id': user_id, 'email': email, 'name': name},
+                    'plan': plan,
+                    'usage': usage,
+                    'free_limit': FREE_LIMIT,
+                })
             }
 
         elif action == 'logout':
@@ -288,6 +337,43 @@ def handler(event: dict, context) -> dict:
                 'statusCode': 200,
                 'headers': cors_headers(),
                 'body': json.dumps({'ok': True, 'token': token, 'user': {'id': user_id, 'email': email, 'name': name}})
+            }
+
+        elif action == 'register_use':
+            user_id = get_user_id_by_token(cur, get_token(event))
+            if not user_id:
+                return {'statusCode': 401, 'headers': cors_headers(), 'body': json.dumps({'error': 'Требуется вход в личный кабинет'})}
+
+            gen_type = body_data.get('type')
+            column = USAGE_COLUMNS.get(gen_type)
+            if not column:
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Неизвестный тип генератора'})}
+
+            plan, _ = get_plan_for_user(cur, user_id)
+            is_paid = plan != 'free'
+
+            usage = get_usage_for_user(cur, user_id)
+            current = usage.get(gen_type, 0)
+
+            if not is_paid and current >= FREE_LIMIT:
+                return {
+                    'statusCode': 403,
+                    'headers': cors_headers(),
+                    'body': json.dumps({'error': 'Бесплатный лимит исчерпан', 'usage': usage, 'free_limit': FREE_LIMIT})
+                }
+
+            cur.execute(
+                f"UPDATE {SCHEMA}.usage_counts SET {column} = {column} + 1, updated_at = now() WHERE user_id = %s",
+                (user_id,)
+            )
+            conn.commit()
+
+            usage[gen_type] = current + 1
+
+            return {
+                'statusCode': 200,
+                'headers': cors_headers(),
+                'body': json.dumps({'ok': True, 'usage': usage, 'free_limit': FREE_LIMIT})
             }
 
         elif action == 'save_material':
