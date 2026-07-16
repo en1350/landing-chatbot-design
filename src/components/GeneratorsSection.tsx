@@ -62,9 +62,9 @@ const GeneratorsSection = ({ onNeedAuth }: GeneratorsSectionProps) => {
         </span>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 items-stretch">
         {GENERATORS.map((g, i) => (
-          <div key={g.type} className="animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>
+          <div key={g.type} className="animate-fade-in h-full" style={{ animationDelay: `${i * 80}ms` }}>
             <GeneratorCard {...g} onOpen={() => setActiveType(g.type)} />
           </div>
         ))}
