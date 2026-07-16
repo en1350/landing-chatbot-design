@@ -5,34 +5,30 @@ import UpgradeModal from "@/components/UpgradeModal";
 import { GeneratorType, useUsage } from "@/context/UsageContext";
 import Icon from "@/components/ui/icon";
 
-const GENERATORS: { type: GeneratorType; icon: string; title: string; desc: string; accent: string }[] = [
+const GENERATORS: { type: GeneratorType; icon: string; title: string; accent: string }[] = [
   {
     type: "lesson",
     icon: "📘",
     title: "Генератор уроков",
-    desc: "Полный план урока по структуре: оргмомент, актуализация, новая тема, практика, рефлексия, домашнее задание.",
-    accent: "#1F5F52",
+    accent: "#2563EB",
   },
   {
     type: "game",
     icon: "🎲",
     title: "Генератор игры",
-    desc: "Игровой сценарий под предмет, время (5/15/45 мин) и количество участников.",
-    accent: "#E86A3C",
+    accent: "#E8483C",
   },
   {
     type: "intensive",
     icon: "🚀",
     title: "Генератор интенсивов и мастер-классов",
-    desc: "Интенсив, мастер-класс, воркшоп или хакатон под аудиторию, продолжительность и цель.",
-    accent: "#3D6E63",
+    accent: "#7C3AED",
   },
   {
     type: "task",
     icon: "📝",
     title: "Генератор заданий",
-    desc: "Комплект заданий с акцентом на когнитивный, креативный, критический или коммуникативный компонент.",
-    accent: "#C9612E",
+    accent: "#EA8C1F",
   },
 ];
 

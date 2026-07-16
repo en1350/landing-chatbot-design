@@ -5,47 +5,34 @@ interface GeneratorCardProps {
   type: GeneratorType;
   icon: string;
   title: string;
-  desc: string;
   accent: string;
   onOpen: () => void;
 }
 
-const GeneratorCard = ({ type, icon, title, desc, accent, onOpen }: GeneratorCardProps) => {
+const GeneratorCard = ({ type, icon, title, accent, onOpen }: GeneratorCardProps) => {
   const { remaining, isPaid } = useUsage();
   const left = remaining(type);
 
   return (
     <button
       onClick={onOpen}
-      className="group relative flex flex-col items-start text-left rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+      className="group relative flex flex-col items-center text-center rounded-2xl p-6 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden text-white"
+      style={{ backgroundColor: accent }}
     >
-      <div
-        className="absolute inset-x-0 top-0 h-1 opacity-80 group-hover:h-1.5 transition-all"
-        style={{ backgroundColor: accent }}
-      />
-      <div
-        className="flex h-12 w-12 items-center justify-center rounded-xl text-2xl mb-4 transition-transform group-hover:scale-110"
-        style={{ backgroundColor: `${accent}1a` }}
-      >
+      <span className="absolute top-3 right-3 flex h-6 min-w-6 items-center justify-center rounded-full bg-white/20 px-1.5 text-[11px] font-bold backdrop-blur-sm">
+        {isPaid ? <Icon name="Infinity" size={13} /> : left}
+      </span>
+
+      <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/15 text-3xl mb-3 transition-transform group-hover:scale-110">
         {icon}
       </div>
-      <h3 className="font-display text-lg font-bold mb-1.5">{title}</h3>
-      <p className="text-sm text-muted-foreground leading-relaxed mb-4">{desc}</p>
+      <h3 className="font-display text-base font-bold leading-snug">{title}</h3>
 
-      <div className="mt-auto flex items-center justify-between w-full pt-3 border-t border-border/60">
-        <span className="text-xs font-semibold text-muted-foreground">
-          {isPaid ? (
-            <span className="inline-flex items-center gap-1 text-primary">
-              <Icon name="Infinity" size={13} /> Безлимит
-            </span>
-          ) : (
-            `Осталось: ${left} из 3`
-          )}
-        </span>
-        <span className="flex items-center gap-1 text-sm font-semibold text-primary group-hover:gap-2 transition-all">
-          Создать <Icon name="ArrowRight" size={15} />
-        </span>
-      </div>
+      <Icon
+        name="ArrowRight"
+        size={18}
+        className="mt-3 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all"
+      />
     </button>
   );
 };
