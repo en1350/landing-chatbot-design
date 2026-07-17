@@ -105,8 +105,6 @@ def send_reset_email(to_email: str, reset_link: str):
     if not host or not login or not password:
         raise RuntimeError('SMTP не настроен')
 
-    print(f"[send_reset_email] connecting host={host!r} port={port} login={login!r}")
-
     subject = 'Восстановление доступа к УрокАИ'
     text = (
         f"Здравствуйте!\n\n"
