@@ -151,8 +151,8 @@ const UpgradeModal = ({ open, onClose, onNeedAuth }: UpgradeModalProps) => {
               </DialogDescription>
             </DialogHeader>
 
-            <div className="mx-auto flex h-56 w-56 items-center justify-center rounded-2xl border border-border bg-white p-3">
-              <QRCodeSVG value={qrData} size={208} />
+            <div className="mx-auto flex aspect-square w-full max-w-56 items-center justify-center rounded-2xl border border-border bg-white p-3">
+              <QRCodeSVG value={qrData} className="h-full w-full" />
             </div>
 
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">

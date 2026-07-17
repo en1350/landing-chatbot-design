@@ -129,9 +129,9 @@ const ProfileSheet = ({ open, onClose, onNeedAuth }: ProfileSheetProps) => {
 
           <Tabs defaultValue="usage">
             <TabsList className="grid grid-cols-3 w-full">
-              <TabsTrigger value="usage">Статистика</TabsTrigger>
-              <TabsTrigger value="materials">Материалы</TabsTrigger>
-              <TabsTrigger value="privacy">Данные</TabsTrigger>
+              <TabsTrigger value="usage" className="text-xs sm:text-sm px-1.5 sm:px-3">Статистика</TabsTrigger>
+              <TabsTrigger value="materials" className="text-xs sm:text-sm px-1.5 sm:px-3">Материалы</TabsTrigger>
+              <TabsTrigger value="privacy" className="text-xs sm:text-sm px-1.5 sm:px-3">Данные</TabsTrigger>
             </TabsList>
 
             <TabsContent value="usage" className="space-y-4 mt-4">

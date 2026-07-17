@@ -86,7 +86,7 @@ const NotebookCheck = ({ id, onNeedAuth, onNeedUpgrade }: NotebookCheckProps) =>
 
   return (
     <section id={id} className="container py-16 md:py-24">
-      <div className="grid md:grid-cols-2 gap-12 items-center">
+      <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
         <div className="animate-fade-in">
           <span className="text-xs font-bold uppercase tracking-widest text-coral">Автопроверка</span>
           <h2 className="font-display text-3xl md:text-4xl font-bold mt-2 leading-tight">
@@ -108,7 +108,7 @@ const NotebookCheck = ({ id, onNeedAuth, onNeedUpgrade }: NotebookCheckProps) =>
 
         <div className="animate-fade-in" style={{ animationDelay: "0.1s" }}>
           {!isPaid ? (
-            <div className="rounded-2xl border-2 border-dashed border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-8 text-center">
+            <div className="rounded-2xl border-2 border-dashed border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-5 sm:p-8 text-center">
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15 text-3xl mb-4">
                 🔒
               </div>
@@ -154,7 +154,7 @@ const NotebookCheck = ({ id, onNeedAuth, onNeedUpgrade }: NotebookCheckProps) =>
                   setDragOver(false);
                   handleFile(e.dataTransfer.files?.[0]);
                 }}
-                className={`relative rounded-2xl border-2 border-dashed p-8 text-center transition-colors cursor-pointer ${
+                className={`relative rounded-2xl border-2 border-dashed p-5 sm:p-8 text-center transition-colors cursor-pointer ${
                   dragOver ? "border-primary bg-primary/5" : "border-border bg-card"
                 }`}
                 onClick={() => inputRef.current?.click()}

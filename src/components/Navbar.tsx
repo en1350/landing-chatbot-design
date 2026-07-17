@@ -88,7 +88,7 @@ const Navbar = ({
               <Icon name="Menu" size={22} />
             </button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-72">
+          <SheetContent side="right" className="w-[85vw] max-w-72">
             <SheetTitle className="font-display">Меню</SheetTitle>
             <div className="mt-8 flex flex-col gap-1">
               {NAV_LINKS.map((l) => (

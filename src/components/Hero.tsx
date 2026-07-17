@@ -26,22 +26,22 @@ const Hero = ({ onScrollToGenerators }: HeroProps) => {
             3 бесплатные генерации на каждый инструмент
           </span>
 
-          <h1 className="font-display text-4xl md:text-5xl lg:text-[3.4rem] font-bold leading-[1.1] tracking-tight text-balance">
+          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-[3.4rem] font-bold leading-[1.15] sm:leading-[1.1] tracking-tight text-balance">
             ИИ-помощник,<br />
             который готовит уроки<br />
             <span className="text-coral">за вас</span>
           </h1>
 
-          <p className="mt-6 text-lg text-muted-foreground max-w-lg leading-relaxed">
+          <p className="mt-6 text-base sm:text-lg text-muted-foreground max-w-lg leading-relaxed">
             Планы уроков, игры, интенсивы и задания — за минуты вместо часов.
             Плюс проверка тетрадей по фото и тренажёры для учеников.
           </p>
 
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-8 flex flex-col sm:flex-row flex-wrap gap-3">
             <Button
               size="lg"
               onClick={onScrollToGenerators}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 h-12 px-6 text-base shadow-lg shadow-primary/20"
+              className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 gap-2 h-12 px-6 text-base shadow-lg shadow-primary/20"
             >
               <Icon name="Wand2" size={18} />
               Попробовать бесплатно
@@ -49,7 +49,7 @@ const Hero = ({ onScrollToGenerators }: HeroProps) => {
             <Button
               size="lg"
               variant="outline"
-              className="h-12 px-6 text-base gap-2 border-border"
+              className="w-full sm:w-auto h-12 px-6 text-base gap-2 border-border"
               onClick={() => document.getElementById("chat-anchor")?.scrollIntoView({ behavior: "smooth" })}
             >
               <Icon name="MessageCircle" size={18} />
@@ -57,19 +57,19 @@ const Hero = ({ onScrollToGenerators }: HeroProps) => {
             </Button>
           </div>
 
-          <div className="mt-10 flex items-center gap-6 text-sm text-muted-foreground">
+          <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
             <div className="flex items-center gap-1.5">
-              <Icon name="ShieldCheck" size={16} className="text-primary" />
+              <Icon name="ShieldCheck" size={16} className="text-primary shrink-0" />
               Без банковской карты
             </div>
             <div className="flex items-center gap-1.5">
-              <Icon name="Zap" size={16} className="text-primary" />
+              <Icon name="Zap" size={16} className="text-primary shrink-0" />
               Результат за 30 секунд
             </div>
           </div>
         </div>
 
-        <div id="chat-anchor" className="flex justify-center md:justify-end animate-fade-in" style={{ animationDelay: "0.15s" }}>
+        <div id="chat-anchor" className="flex justify-center md:justify-end animate-fade-in w-full" style={{ animationDelay: "0.15s" }}>
           <ChatWidget />
         </div>
       </div>
