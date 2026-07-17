@@ -36,9 +36,18 @@ def get_plan_for_user(cur, user_id):
         (user_id,)
     )
     sub = cur.fetchone()
-    plan = sub[0] if sub and sub[1] else 'free'
-    expires_at = sub[2].isoformat() if sub and sub[1] and sub[2] else None
-    return plan, expires_at
+    if not sub:
+        return 'free', None
+    plan_val, is_active, expires_at = sub
+    expired = expires_at is not None and expires_at < datetime.now(timezone.utc)
+    if not is_active or expired:
+        if is_active and expired:
+            cur.execute(
+                f"UPDATE {SCHEMA}.subscriptions SET is_active = false WHERE user_id = %s AND is_active = true",
+                (user_id,)
+            )
+        return 'free', None
+    return plan_val, expires_at.isoformat() if expires_at else None
 
 
 def get_usage_for_user(cur, user_id):
@@ -234,12 +243,7 @@ def handler(event: dict, context) -> dict:
             token = secrets.token_hex(32)
             cur.execute(f"INSERT INTO {SCHEMA}.sessions (user_id, token) VALUES (%s, %s)", (user_id, token))
 
-            cur.execute(
-                f"SELECT plan FROM {SCHEMA}.subscriptions WHERE user_id = %s AND is_active = true ORDER BY started_at DESC LIMIT 1",
-                (user_id,)
-            )
-            sub = cur.fetchone()
-            plan = sub[0] if sub else 'free'
+            plan, _ = get_plan_for_user(cur, user_id)
             usage = get_usage_for_user(cur, user_id)
             conn.commit()
 
