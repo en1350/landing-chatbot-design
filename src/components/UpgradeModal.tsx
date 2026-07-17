@@ -66,7 +66,7 @@ const UpgradeModal = ({ open, onClose, onNeedAuth }: UpgradeModalProps) => {
           </div>
           <DialogTitle className="font-display text-xl">Бесплатный лимит исчерпан</DialogTitle>
           <DialogDescription>
-            Оформите подписку — оплата картой или кошельком ЮMoney через ЮКассу.
+            Оформите подписку — оплата банковской картой через ЮКассу.
           </DialogDescription>
         </DialogHeader>
 
@@ -111,8 +111,8 @@ const UpgradeModal = ({ open, onClose, onNeedAuth }: UpgradeModalProps) => {
             </>
           ) : (
             <>
-              <Icon name="Wallet" size={17} />
-              Оплатить картой или кошельком ЮMoney
+              <Icon name="CreditCard" size={17} />
+              Оплатить банковской картой
             </>
           )}
         </Button>
