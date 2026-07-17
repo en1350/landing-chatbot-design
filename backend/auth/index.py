@@ -105,6 +105,8 @@ def send_reset_email(to_email: str, reset_link: str):
     if not host or not login or not password:
         raise RuntimeError('SMTP не настроен')
 
+    print(f"[send_reset_email] connecting host={host!r} port={port} login={login!r}")
+
     subject = 'Восстановление доступа к УрокАИ'
     text = (
         f"Здравствуйте!\n\n"
@@ -118,9 +120,17 @@ def send_reset_email(to_email: str, reset_link: str):
     msg['From'] = login
     msg['To'] = to_email
 
-    with smtplib.SMTP_SSL(host, port, timeout=15) as server:
-        server.login(login, password)
-        server.sendmail(login, [to_email], msg.as_string())
+    if port == 465:
+        with smtplib.SMTP_SSL(host, port, timeout=15) as server:
+            server.login(login, password)
+            server.sendmail(login, [to_email], msg.as_string())
+    else:
+        with smtplib.SMTP(host, port, timeout=15) as server:
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            server.login(login, password)
+            server.sendmail(login, [to_email], msg.as_string())
 
 
 def handler(event: dict, context) -> dict:
