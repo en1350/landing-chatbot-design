@@ -476,6 +476,7 @@ def handler(event: dict, context) -> dict:
 
             payment_payload = {
                 'amount': {'value': plan['amount'], 'currency': 'RUB'},
+                'payment_method_data': {'type': 'bank_card'},
                 'confirmation': {'type': 'redirect', 'return_url': return_url},
                 'capture': True,
                 'description': plan['label'],
