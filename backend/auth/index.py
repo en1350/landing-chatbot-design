@@ -495,12 +495,16 @@ def handler(event: dict, context) -> dict:
                 error_body = e.read().decode()
                 return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': f'ЮКасса: {error_body}'})}
 
+            confirmation = result.get('confirmation', {})
+            confirmation_url = confirmation.get('confirmation_url')
+
             return {
                 'statusCode': 200,
                 'headers': cors_headers(),
                 'body': json.dumps({
                     'payment_id': result.get('id'),
-                    'confirmation_url': result.get('confirmation', {}).get('confirmation_url'),
+                    'confirmation_url': confirmation_url,
+                    'qr_data': confirmation_url,
                 })
             }
 
