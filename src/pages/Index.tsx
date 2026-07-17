@@ -65,6 +65,7 @@ const Index = () => {
         onOpenDecomposer={() => setDecomposerOpen(true)}
         onOpenRandomizer={() => setRandomizerOpen(true)}
         onOpenProfile={() => setProfileOpen(true)}
+        onOpenAuth={openAuth}
         onOpenPricing={() => scrollTo("pricing")}
       />
 

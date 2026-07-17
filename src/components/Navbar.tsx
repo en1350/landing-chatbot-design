@@ -15,6 +15,7 @@ interface NavbarProps {
   onOpenDecomposer: () => void;
   onOpenRandomizer: () => void;
   onOpenProfile: () => void;
+  onOpenAuth: () => void;
   onOpenPricing: () => void;
 }
 
@@ -30,6 +31,7 @@ const Navbar = ({
   onOpenDecomposer,
   onOpenRandomizer,
   onOpenProfile,
+  onOpenAuth,
   onOpenPricing,
 }: NavbarProps) => {
   const [open, setOpen] = useState(false);
@@ -74,7 +76,7 @@ const Navbar = ({
         </nav>
 
         <div className="hidden md:flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={onOpenProfile} className="gap-1.5">
+          <Button variant="ghost" size="sm" onClick={user ? onOpenProfile : onOpenAuth} className="gap-1.5">
             <Icon name={user ? "User" : "LogIn"} size={16} />
             {user ? "Кабинет" : "Войти"}
           </Button>
@@ -111,7 +113,7 @@ const Navbar = ({
               <button
                 onClick={() => {
                   setOpen(false);
-                  onOpenProfile();
+                  user ? onOpenProfile() : onOpenAuth();
                 }}
                 className="text-left px-3 py-3 rounded-lg text-base font-medium hover:bg-accent transition-colors flex items-center gap-2"
               >
