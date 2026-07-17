@@ -59,10 +59,6 @@ const Hero = ({ onScrollToGenerators }: HeroProps) => {
 
           <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
             <div className="flex items-center gap-1.5">
-              <Icon name="ShieldCheck" size={16} className="text-primary shrink-0" />
-              Без банковской карты
-            </div>
-            <div className="flex items-center gap-1.5">
               <Icon name="Zap" size={16} className="text-primary shrink-0" />
               Результат за 30 секунд
             </div>
