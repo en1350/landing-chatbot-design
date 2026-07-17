@@ -476,7 +476,6 @@ def handler(event: dict, context) -> dict:
 
             payment_payload = {
                 'amount': {'value': plan['amount'], 'currency': 'RUB'},
-                'payment_method_data': {'type': 'bank_card'},
                 'confirmation': {'type': 'redirect', 'return_url': return_url},
                 'capture': True,
                 'description': plan['label'],
@@ -500,16 +499,12 @@ def handler(event: dict, context) -> dict:
                 error_body = e.read().decode()
                 return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': f'ЮКасса: {error_body}'})}
 
-            confirmation = result.get('confirmation', {})
-            confirmation_url = confirmation.get('confirmation_url')
-
             return {
                 'statusCode': 200,
                 'headers': cors_headers(),
                 'body': json.dumps({
                     'payment_id': result.get('id'),
-                    'confirmation_url': confirmation_url,
-                    'qr_data': confirmation_url,
+                    'confirmation_url': result.get('confirmation', {}).get('confirmation_url'),
                 })
             }
 
