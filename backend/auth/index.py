@@ -293,8 +293,8 @@ def handler(event: dict, context) -> dict:
             reset_link = f"{origin}/reset-password?token={reset_token}"
             try:
                 send_reset_email(email, reset_link)
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"[send_reset_email] FAILED to send to {email}: {type(e).__name__}: {e}")
 
             return generic_response
 
