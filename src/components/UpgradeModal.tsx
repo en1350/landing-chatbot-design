@@ -22,6 +22,20 @@ const UpgradeModal = ({ open, onClose, onNeedAuth }: UpgradeModalProps) => {
   const { token, refresh } = useAuth();
   const [loadingPlan, setLoadingPlan] = useState<PlanKey | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const reset = () => {
+    setLoadingPlan(null);
+    setError(null);
+    setPaymentUrl(null);
+    setCopied(false);
+  };
+
+  const handleClose = () => {
+    reset();
+    onClose();
+  };
 
   const pay = async (plan: PlanKey) => {
     if (!token) {
@@ -29,6 +43,7 @@ const UpgradeModal = ({ open, onClose, onNeedAuth }: UpgradeModalProps) => {
       return;
     }
     setError(null);
+    setPaymentUrl(null);
     setLoadingPlan(plan);
     try {
       const res = await fetch(AUTH_URL, {
@@ -47,6 +62,7 @@ const UpgradeModal = ({ open, onClose, onNeedAuth }: UpgradeModalProps) => {
         localStorage.setItem("urokai_pending_payment", data.payment_id);
       }
       if (data.confirmation_url) {
+        setPaymentUrl(data.confirmation_url);
         window.location.href = data.confirmation_url;
       }
     } catch (err) {
@@ -57,8 +73,19 @@ const UpgradeModal = ({ open, onClose, onNeedAuth }: UpgradeModalProps) => {
     }
   };
 
+  const copyLink = async () => {
+    if (!paymentUrl) return;
+    try {
+      await navigator.clipboard.writeText(paymentUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // игнорируем, если буфер обмена недоступен
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+    <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
       <DialogContent className="max-w-md text-center">
         <DialogHeader>
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-coral/15 text-3xl mb-2">
@@ -117,6 +144,30 @@ const UpgradeModal = ({ open, onClose, onNeedAuth }: UpgradeModalProps) => {
           )}
         </Button>
         <p className="text-xs text-muted-foreground mt-1">Безопасный платёж через ЮКассу</p>
+
+        {paymentUrl && (
+          <div className="rounded-xl border border-border bg-secondary/40 p-3.5 mt-2 text-left animate-fade-in">
+            <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1.5">
+              <Icon name="AlertTriangle" size={13} className="text-coral shrink-0" />
+              Страница оплаты не открылась? Возможно, её блокирует VPN или блокировщик рекламы в браузере (часто встречается в Opera).
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-1.5"
+                onClick={() => window.open(paymentUrl, "_blank", "noopener,noreferrer")}
+              >
+                <Icon name="ExternalLink" size={14} />
+                Открыть в новой вкладке
+              </Button>
+              <Button variant="outline" size="sm" className="flex-1 gap-1.5" onClick={copyLink}>
+                <Icon name={copied ? "Check" : "Copy"} size={14} />
+                {copied ? "Скопировано" : "Скопировать ссылку"}
+              </Button>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
