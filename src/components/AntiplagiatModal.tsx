@@ -26,6 +26,7 @@ interface SuspiciousFragment {
 }
 
 interface AntiplagiatResult {
+  originality_percent: number;
   risk_level: string;
   summary: string;
   originality_notes: string;
@@ -41,6 +42,12 @@ const RISK_STYLES: Record<string, { bg: string; text: string; icon: string }> = 
   "средний": { bg: "bg-amber-500/10", text: "text-amber-600", icon: "ShieldAlert" },
   "высокий": { bg: "bg-destructive/10", text: "text-destructive", icon: "ShieldX" },
 };
+
+function percentColor(percent: number): string {
+  if (percent >= 70) return "#16a34a";
+  if (percent >= 40) return "#d97706";
+  return "#dc2626";
+}
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -257,6 +264,29 @@ const AntiplagiatModal = ({ open, onClose, onNeedAuth, onNeedUpgrade }: Antiplag
 
           {result && riskStyle && (
             <div className="space-y-3 animate-fade-in">
+              <div className="rounded-xl border border-border p-4 flex items-center gap-4">
+                <div
+                  className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full"
+                  style={{
+                    background: `conic-gradient(${percentColor(result.originality_percent)} ${result.originality_percent * 3.6}deg, hsl(var(--secondary)) 0deg)`,
+                  }}
+                >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-card">
+                    <span className="text-sm font-display font-bold">{result.originality_percent}%</span>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Уникальность текста</p>
+                  <p className="text-sm font-semibold">
+                    {result.originality_percent >= 70
+                      ? "Высокая оригинальность"
+                      : result.originality_percent >= 40
+                      ? "Средняя оригинальность"
+                      : "Низкая оригинальность"}
+                  </p>
+                </div>
+              </div>
+
               <div className={`rounded-xl p-3.5 flex items-center gap-3 ${riskStyle.bg}`}>
                 <Icon name={riskStyle.icon} size={22} className={riskStyle.text} />
                 <div>
