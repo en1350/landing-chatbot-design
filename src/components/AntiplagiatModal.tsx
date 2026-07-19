@@ -129,18 +129,20 @@ const AntiplagiatModal = ({ open, onClose, onNeedAuth, onNeedUpgrade }: Antiplag
       onNeedAuth();
       return;
     }
-    if (!canUseGenerator("antiplagiat")) {
+    if (!isPaid && !canUseGenerator("antiplagiat")) {
       onNeedUpgrade();
       return;
     }
     setLoading(true);
     setError(null);
     try {
-      const registered = await registerGeneratorUse("antiplagiat");
-      if (!registered) {
-        onNeedUpgrade();
-        setLoading(false);
-        return;
+      if (!isPaid) {
+        const registered = await registerGeneratorUse("antiplagiat");
+        if (!registered) {
+          onNeedUpgrade();
+          setLoading(false);
+          return;
+        }
       }
       const r = await requestAntiplagiatCheck(text.trim());
       setResult(r);
