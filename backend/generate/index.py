@@ -1,3 +1,5 @@
+import base64
+import io
 import json
 import os
 import urllib.request
@@ -8,6 +10,28 @@ AITUNNEL_URL = "https://api.aitunnel.ru/v1/chat/completions"
 MODEL = "gpt-4o-mini"
 VISION_MODEL = "gpt-4o-mini"
 SCHEMA = os.environ.get('MAIN_DB_SCHEMA', 'public')
+
+
+def extract_text_from_file(file_base64: str, filename: str) -> str:
+    """Извлекает текст из base64-содержимого PDF или DOCX файла по расширению имени файла."""
+    if ',' in file_base64:
+        file_base64 = file_base64.split(',', 1)[1]
+    raw = base64.b64decode(file_base64)
+    ext = (filename or '').lower().rsplit('.', 1)[-1] if '.' in (filename or '') else ''
+
+    if ext == 'pdf':
+        from pypdf import PdfReader
+        reader = PdfReader(io.BytesIO(raw))
+        pages = [page.extract_text() or '' for page in reader.pages]
+        return '\n'.join(pages).strip()
+
+    if ext == 'docx':
+        from docx import Document
+        doc = Document(io.BytesIO(raw))
+        paragraphs = [p.text for p in doc.paragraphs]
+        return '\n'.join(paragraphs).strip()
+
+    raise ValueError('Поддерживаются только файлы PDF и DOCX')
 
 
 def cors_headers():
@@ -300,7 +324,7 @@ def build_notebook_system_prompt(subject: str) -> str:
 
 
 def handler(event: dict, context) -> dict:
-    """Генерация учебных материалов, ИИ-чат-помощник через AITunnel. Декомпозитор компетенций, проверка тетради по фото и проверка на антиплагиат доступны только пользователям с платной подпиской."""
+    """Генерация учебных материалов, ИИ-чат-помощник через AITunnel. Декомпозитор компетенций, проверка тетради по фото, проверка на антиплагиат и извлечение текста из PDF/DOCX доступны только пользователям с платной подпиской."""
     method = event.get('httpMethod', 'GET')
 
     if method == 'OPTIONS':
@@ -461,6 +485,25 @@ def handler(event: dict, context) -> dict:
                 return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ вернул некорректный формат, попробуйте снова'})}
 
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps(result, ensure_ascii=False)}
+
+        elif action == 'extract_text':
+            if not is_user_paid(event):
+                return {'statusCode': 403, 'headers': cors_headers(), 'body': json.dumps({'error': 'Загрузка файлов доступна только по платной подписке'})}
+
+            file_base64 = body.get('file_base64') or ''
+            filename = body.get('filename') or ''
+            if not file_base64:
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Файл не передан'})}
+
+            try:
+                text = extract_text_from_file(file_base64, filename)
+            except ValueError as e:
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': str(e)})}
+
+            if not text.strip():
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Не удалось извлечь текст из файла — возможно, он пустой или содержит только изображения'})}
+
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'text': text}, ensure_ascii=False)}
 
         return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Неизвестное действие'})}
 

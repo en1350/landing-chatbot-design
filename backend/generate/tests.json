@@ -76,6 +76,15 @@
       "expectedStatus": 403,
       "expectedBody": {"error": "string"},
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "Extract text without paid subscription returns 403",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "extract_text", "file_base64": "", "filename": "a.pdf"},
+      "expectedStatus": 403,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
     }
   ]
 }

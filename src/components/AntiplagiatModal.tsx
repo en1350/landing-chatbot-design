@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -42,6 +42,26 @@ const RISK_STYLES: Record<string, { bg: string; text: string; icon: string }> = 
   "высокий": { bg: "bg-destructive/10", text: "text-destructive", icon: "ShieldX" },
 };
 
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function requestExtractText(fileBase64: string, filename: string): Promise<string> {
+  const res = await fetch(GENERATE_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "extract_text", file_base64: fileBase64, filename }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Не удалось прочитать файл");
+  return data.text as string;
+}
+
 async function requestAntiplagiatCheck(text: string): Promise<AntiplagiatResult> {
   const res = await fetch(GENERATE_URL, {
     method: "POST",
@@ -53,19 +73,50 @@ async function requestAntiplagiatCheck(text: string): Promise<AntiplagiatResult>
   return data as AntiplagiatResult;
 }
 
+const ACCEPTED_EXT = [".pdf", ".docx"];
+
 const AntiplagiatModal = ({ open, onClose, onNeedAuth, onNeedUpgrade }: AntiplagiatModalProps) => {
   const { user, isPaid } = useAuth();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [text, setText] = useState("");
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [extracting, setExtracting] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const [result, setResult] = useState<AntiplagiatResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleClose = () => {
     setText("");
+    setFileName(null);
+    setExtracting(false);
     setResult(null);
     setLoading(false);
     setError(null);
     onClose();
+  };
+
+  const handleFile = async (file?: File) => {
+    if (!file) return;
+    const ext = "." + (file.name.split(".").pop() || "").toLowerCase();
+    if (!ACCEPTED_EXT.includes(ext)) {
+      setError("Поддерживаются только файлы PDF и DOCX");
+      return;
+    }
+    setError(null);
+    setResult(null);
+    setExtracting(true);
+    setFileName(file.name);
+    try {
+      const base64 = await fileToBase64(file);
+      const extracted = await requestExtractText(base64, file.name);
+      setText(extracted);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Не удалось прочитать файл, попробуйте снова");
+      setFileName(null);
+    } finally {
+      setExtracting(false);
+    }
   };
 
   const check = async () => {
@@ -116,11 +167,59 @@ const AntiplagiatModal = ({ open, onClose, onNeedAuth, onNeedUpgrade }: Antiplag
           </div>
         ) : (
           <div className="mt-2 space-y-4">
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragOver(true);
+              }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragOver(false);
+                handleFile(e.dataTransfer.files?.[0]);
+              }}
+              onClick={() => inputRef.current?.click()}
+              className={`relative rounded-2xl border-2 border-dashed p-4 text-center transition-colors cursor-pointer ${
+                dragOver ? "border-primary bg-primary/5" : "border-border bg-card"
+              }`}
+            >
+              <input
+                ref={inputRef}
+                type="file"
+                accept=".pdf,.docx"
+                className="hidden"
+                onChange={(e) => handleFile(e.target.files?.[0])}
+              />
+              <div className="flex items-center justify-center gap-2.5 py-2">
+                {extracting ? (
+                  <>
+                    <Icon name="Loader2" size={18} className="animate-spin text-primary" />
+                    <span className="text-sm text-muted-foreground">Читаем файл «{fileName}»...</span>
+                  </>
+                ) : fileName ? (
+                  <>
+                    <Icon name="FileCheck2" size={18} className="text-primary" />
+                    <span className="text-sm font-medium">{fileName}</span>
+                  </>
+                ) : (
+                  <>
+                    <Icon name="Upload" size={18} className="text-primary" />
+                    <span className="text-sm text-muted-foreground">
+                      Загрузите PDF или DOCX, или вставьте текст ниже
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+
             <div>
               <label className="text-sm font-medium mb-1.5 block">Текст работы</label>
               <Textarea
                 value={text}
-                onChange={(e) => setText(e.target.value)}
+                onChange={(e) => {
+                  setText(e.target.value);
+                  setFileName(null);
+                }}
                 placeholder="Вставьте текст работы студента для проверки..."
                 rows={8}
               />
@@ -133,7 +232,11 @@ const AntiplagiatModal = ({ open, onClose, onNeedAuth, onNeedUpgrade }: Antiplag
               </p>
             )}
 
-            <Button className="w-full h-11 gap-2 bg-primary hover:bg-primary/90" onClick={check} disabled={loading || !text.trim()}>
+            <Button
+              className="w-full h-11 gap-2 bg-primary hover:bg-primary/90"
+              onClick={check}
+              disabled={loading || extracting || !text.trim()}
+            >
               {loading ? (
                 <>
                   <Icon name="Loader2" size={17} className="animate-spin" />
