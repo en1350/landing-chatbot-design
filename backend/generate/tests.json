@@ -67,6 +67,15 @@
       "expectedStatus": 403,
       "expectedBody": {"error": "string"},
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "Antiplagiat check without paid subscription returns 403",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "antiplagiat_check", "text": ""},
+      "expectedStatus": 403,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
     }
   ]
 }

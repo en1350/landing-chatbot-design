@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import TrainerModal from "@/components/TrainerModal";
 import DecomposerModal from "@/components/DecomposerModal";
 import RandomizerModal from "@/components/RandomizerModal";
+import AntiplagiatModal from "@/components/AntiplagiatModal";
 import ProfileSheet from "@/components/ProfileSheet";
 import AuthModal from "@/components/AuthModal";
 import UpgradeModal from "@/components/UpgradeModal";
@@ -18,6 +19,7 @@ const Index = () => {
   const [trainerOpen, setTrainerOpen] = useState(false);
   const [decomposerOpen, setDecomposerOpen] = useState(false);
   const [randomizerOpen, setRandomizerOpen] = useState(false);
+  const [antiplagiatOpen, setAntiplagiatOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
@@ -33,6 +35,7 @@ const Index = () => {
 
   const openUpgrade = () => {
     setDecomposerOpen(false);
+    setAntiplagiatOpen(false);
     setUpgradeOpen(true);
   };
 
@@ -64,6 +67,7 @@ const Index = () => {
         onOpenTrainer={() => setTrainerOpen(true)}
         onOpenDecomposer={() => setDecomposerOpen(true)}
         onOpenRandomizer={() => setRandomizerOpen(true)}
+        onOpenAntiplagiat={() => setAntiplagiatOpen(true)}
         onOpenProfile={() => setProfileOpen(true)}
         onOpenAuth={openAuth}
         onOpenPricing={() => scrollTo("pricing")}
@@ -86,6 +90,12 @@ const Index = () => {
         onNeedUpgrade={openUpgrade}
       />
       <RandomizerModal open={randomizerOpen} onClose={() => setRandomizerOpen(false)} />
+      <AntiplagiatModal
+        open={antiplagiatOpen}
+        onClose={() => setAntiplagiatOpen(false)}
+        onNeedAuth={openAuth}
+        onNeedUpgrade={openUpgrade}
+      />
       <ProfileSheet open={profileOpen} onClose={() => setProfileOpen(false)} onNeedAuth={openAuth} />
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
       <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} onNeedAuth={openAuth} />
