@@ -45,10 +45,13 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
-async function requestNotebookCheck(imageBase64: string, subject: string): Promise<CheckResult> {
+async function requestNotebookCheck(imageBase64: string, subject: string, token: string | null): Promise<CheckResult> {
   const res = await fetch(GENERATE_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { "X-Authorization": token } : {}),
+    },
     body: JSON.stringify({ action: "notebook_check", image_base64: imageBase64, subject }),
   });
   const data = await res.json();
@@ -57,7 +60,7 @@ async function requestNotebookCheck(imageBase64: string, subject: string): Promi
 }
 
 const NotebookCheck = ({ id, onNeedAuth, onNeedUpgrade }: NotebookCheckProps) => {
-  const { user, isPaid } = useAuth();
+  const { user, isPaid, token } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
   const [subject, setSubject] = useState<string>(SUBJECTS[0]);
   const [preview, setPreview] = useState<string | null>(null);
@@ -75,7 +78,7 @@ const NotebookCheck = ({ id, onNeedAuth, onNeedUpgrade }: NotebookCheckProps) =>
     setLoading(true);
     try {
       const base64 = await fileToBase64(file);
-      const checkResult = await requestNotebookCheck(base64, subject);
+      const checkResult = await requestNotebookCheck(base64, subject, token);
       setResult(checkResult);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Не удалось проверить работу, попробуйте снова");

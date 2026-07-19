@@ -25,10 +25,13 @@ interface Level {
   desc: string;
 }
 
-async function requestDecompose(competency: string): Promise<Level[]> {
+async function requestDecompose(competency: string, token: string | null): Promise<Level[]> {
   const res = await fetch(GENERATE_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { "X-Authorization": token } : {}),
+    },
     body: JSON.stringify({ action: "decompose", competency }),
   });
   const data = await res.json();
@@ -37,7 +40,7 @@ async function requestDecompose(competency: string): Promise<Level[]> {
 }
 
 const DecomposerModal = ({ open, onClose, onNeedAuth, onNeedUpgrade }: DecomposerModalProps) => {
-  const { user, isPaid } = useAuth();
+  const { user, isPaid, token } = useAuth();
   const [competency, setCompetency] = useState("");
   const [levels, setLevels] = useState<Level[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -56,7 +59,7 @@ const DecomposerModal = ({ open, onClose, onNeedAuth, onNeedUpgrade }: Decompose
     setLoading(true);
     setError(null);
     try {
-      const result = await requestDecompose(competency.trim());
+      const result = await requestDecompose(competency.trim(), token);
       setLevels(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Не удалось разложить компетенцию, попробуйте снова");
