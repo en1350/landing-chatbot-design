@@ -1,0 +1,1 @@
+ALTER TABLE usage_counts ADD COLUMN IF NOT EXISTS antiplagiat_used integer NOT NULL DEFAULT 0;

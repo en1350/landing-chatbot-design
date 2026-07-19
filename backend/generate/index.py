@@ -324,7 +324,7 @@ def build_notebook_system_prompt(subject: str) -> str:
 
 
 def handler(event: dict, context) -> dict:
-    """Генерация учебных материалов, ИИ-чат-помощник через AITunnel. Декомпозитор компетенций, проверка тетради по фото, проверка на антиплагиат и извлечение текста из PDF/DOCX доступны только пользователям с платной подпиской."""
+    """Генерация учебных материалов, ИИ-чат-помощник через AITunnel. Декомпозитор компетенций и проверка тетради по фото доступны только пользователям с платной подпиской. Антиплагиат (проверка текста и извлечение из PDF/DOCX) доступен бесплатно с лимитом попыток, учёт которых ведётся в backend/auth."""
     method = event.get('httpMethod', 'GET')
 
     if method == 'OPTIONS':
@@ -460,9 +460,6 @@ def handler(event: dict, context) -> dict:
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps(result, ensure_ascii=False)}
 
         elif action == 'antiplagiat_check':
-            if not is_user_paid(event):
-                return {'statusCode': 403, 'headers': cors_headers(), 'body': json.dumps({'error': 'Антиплагиат доступен только по платной подписке'})}
-
             text = body.get('text') or ''
             if not text.strip():
                 return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Вставьте текст работы для проверки'})}
@@ -487,9 +484,6 @@ def handler(event: dict, context) -> dict:
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps(result, ensure_ascii=False)}
 
         elif action == 'extract_text':
-            if not is_user_paid(event):
-                return {'statusCode': 403, 'headers': cors_headers(), 'body': json.dumps({'error': 'Загрузка файлов доступна только по платной подписке'})}
-
             file_base64 = body.get('file_base64') or ''
             filename = body.get('filename') or ''
             if not file_base64:

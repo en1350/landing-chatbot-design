@@ -76,7 +76,7 @@ async function requestAntiplagiatCheck(text: string): Promise<AntiplagiatResult>
 const ACCEPTED_EXT = [".pdf", ".docx"];
 
 const AntiplagiatModal = ({ open, onClose, onNeedAuth, onNeedUpgrade }: AntiplagiatModalProps) => {
-  const { user, isPaid } = useAuth();
+  const { user, isPaid, canUseGenerator, registerGeneratorUse, remainingUse } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
   const [text, setText] = useState("");
   const [fileName, setFileName] = useState<string | null>(null);
@@ -98,6 +98,10 @@ const AntiplagiatModal = ({ open, onClose, onNeedAuth, onNeedUpgrade }: Antiplag
 
   const handleFile = async (file?: File) => {
     if (!file) return;
+    if (!user) {
+      onNeedAuth();
+      return;
+    }
     const ext = "." + (file.name.split(".").pop() || "").toLowerCase();
     if (!ACCEPTED_EXT.includes(ext)) {
       setError("Поддерживаются только файлы PDF и DOCX");
@@ -121,9 +125,23 @@ const AntiplagiatModal = ({ open, onClose, onNeedAuth, onNeedUpgrade }: Antiplag
 
   const check = async () => {
     if (!text.trim()) return;
+    if (!user) {
+      onNeedAuth();
+      return;
+    }
+    if (!canUseGenerator("antiplagiat")) {
+      onNeedUpgrade();
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
+      const registered = await registerGeneratorUse("antiplagiat");
+      if (!registered) {
+        onNeedUpgrade();
+        setLoading(false);
+        return;
+      }
       const r = await requestAntiplagiatCheck(text.trim());
       setResult(r);
     } catch (err) {
@@ -143,191 +161,175 @@ const AntiplagiatModal = ({ open, onClose, onNeedAuth, onNeedUpgrade }: Antiplag
             <span className="text-2xl">🔍</span> Антиплагиат
           </DialogTitle>
           <DialogDescription>
-            ИИ-проверка работы студента на оригинальность и признаки автоматической генерации
+            {!user
+              ? "Войдите в личный кабинет, чтобы получить 3 бесплатные проверки"
+              : isPaid
+              ? "Безлимитная проверка по вашему тарифу"
+              : `Осталось бесплатных проверок: ${remainingUse("antiplagiat")} из 3`}
           </DialogDescription>
         </DialogHeader>
 
-        {!isPaid ? (
-          <div className="mt-2 rounded-2xl border-2 border-dashed border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15 text-3xl mb-4">
-              🔒
-            </div>
-            <p className="font-display text-lg font-bold mb-1.5">Доступно по подписке</p>
-            <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
-              Антиплагиат — премиум-инструмент. Оформите подписку, чтобы проверять работы студентов
-              на оригинальность без ограничений.
-            </p>
-            <Button
-              className="w-full h-11 gap-2 bg-primary hover:bg-primary/90"
-              onClick={user ? onNeedUpgrade : onNeedAuth}
-            >
-              <Icon name={user ? "Sparkles" : "LogIn"} size={17} />
-              {user ? "Оформить подписку" : "Войти и оформить подписку"}
-            </Button>
-          </div>
-        ) : (
-          <div className="mt-2 space-y-4">
-            <div
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDragOver(true);
-              }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setDragOver(false);
-                handleFile(e.dataTransfer.files?.[0]);
-              }}
-              onClick={() => inputRef.current?.click()}
-              className={`relative rounded-2xl border-2 border-dashed p-4 text-center transition-colors cursor-pointer ${
-                dragOver ? "border-primary bg-primary/5" : "border-border bg-card"
-              }`}
-            >
-              <input
-                ref={inputRef}
-                type="file"
-                accept=".pdf,.docx"
-                className="hidden"
-                onChange={(e) => handleFile(e.target.files?.[0])}
-              />
-              <div className="flex items-center justify-center gap-2.5 py-2">
-                {extracting ? (
-                  <>
-                    <Icon name="Loader2" size={18} className="animate-spin text-primary" />
-                    <span className="text-sm text-muted-foreground">Читаем файл «{fileName}»...</span>
-                  </>
-                ) : fileName ? (
-                  <>
-                    <Icon name="FileCheck2" size={18} className="text-primary" />
-                    <span className="text-sm font-medium">{fileName}</span>
-                  </>
-                ) : (
-                  <>
-                    <Icon name="Upload" size={18} className="text-primary" />
-                    <span className="text-sm text-muted-foreground">
-                      Загрузите PDF или DOCX, или вставьте текст ниже
-                    </span>
-                  </>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">Текст работы</label>
-              <Textarea
-                value={text}
-                onChange={(e) => {
-                  setText(e.target.value);
-                  setFileName(null);
-                }}
-                placeholder="Вставьте текст работы студента для проверки..."
-                rows={8}
-              />
-            </div>
-
-            {error && (
-              <p className="text-sm text-destructive flex items-center gap-1.5">
-                <Icon name="AlertCircle" size={14} />
-                {error}
-              </p>
-            )}
-
-            <Button
-              className="w-full h-11 gap-2 bg-primary hover:bg-primary/90"
-              onClick={check}
-              disabled={loading || extracting || !text.trim()}
-            >
-              {loading ? (
+        <div className="mt-2 space-y-4">
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOver(true);
+            }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragOver(false);
+              handleFile(e.dataTransfer.files?.[0]);
+            }}
+            onClick={() => (user ? inputRef.current?.click() : onNeedAuth())}
+            className={`relative rounded-2xl border-2 border-dashed p-4 text-center transition-colors cursor-pointer ${
+              dragOver ? "border-primary bg-primary/5" : "border-border bg-card"
+            }`}
+          >
+            <input
+              ref={inputRef}
+              type="file"
+              accept=".pdf,.docx"
+              className="hidden"
+              onChange={(e) => handleFile(e.target.files?.[0])}
+            />
+            <div className="flex items-center justify-center gap-2.5 py-2">
+              {extracting ? (
                 <>
-                  <Icon name="Loader2" size={17} className="animate-spin" />
-                  ИИ проверяет работу...
+                  <Icon name="Loader2" size={18} className="animate-spin text-primary" />
+                  <span className="text-sm text-muted-foreground">Читаем файл «{fileName}»...</span>
+                </>
+              ) : fileName ? (
+                <>
+                  <Icon name="FileCheck2" size={18} className="text-primary" />
+                  <span className="text-sm font-medium">{fileName}</span>
                 </>
               ) : (
                 <>
-                  <Icon name="Search" size={17} />
-                  Проверить на оригинальность
+                  <Icon name="Upload" size={18} className="text-primary" />
+                  <span className="text-sm text-muted-foreground">
+                    Загрузите PDF или DOCX, или вставьте текст ниже
+                  </span>
                 </>
               )}
-            </Button>
-
-            {result && riskStyle && (
-              <div className="space-y-3 animate-fade-in">
-                <div className={`rounded-xl p-3.5 flex items-center gap-3 ${riskStyle.bg}`}>
-                  <Icon name={riskStyle.icon} size={22} className={riskStyle.text} />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Риск проблем с оригинальностью</p>
-                    <p className={`text-sm font-bold capitalize ${riskStyle.text}`}>{result.risk_level}</p>
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-border p-3.5">
-                  <p className="text-sm font-semibold mb-1">Заключение</p>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{result.summary}</p>
-                </div>
-
-                <div className="rounded-xl border border-border p-3.5 space-y-2.5">
-                  <div>
-                    <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">Оригинальность</p>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{result.originality_notes}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">Стиль</p>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{result.style_notes}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">Работа с источниками</p>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{result.sources_notes}</p>
-                  </div>
-                </div>
-
-                {result.suspicious_fragments?.length > 0 && (
-                  <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3.5">
-                    <p className="text-sm font-semibold mb-2 flex items-center gap-1.5">
-                      <Icon name="AlertTriangle" size={15} className="text-destructive" />
-                      Подозрительные фрагменты
-                    </p>
-                    <div className="space-y-2.5">
-                      {result.suspicious_fragments.map((f, i) => (
-                        <div key={i} className="text-sm">
-                          <p className="italic text-foreground/90">«{f.quote}»</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{f.reason}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {result.review_parts?.length > 0 && (
-                  <div className="rounded-xl border border-border p-3.5">
-                    <p className="text-sm font-semibold mb-2">Требует проверки преподавателем</p>
-                    <ul className="space-y-1.5">
-                      {result.review_parts.map((p, i) => (
-                        <li key={i} className="text-sm text-muted-foreground flex gap-2">
-                          <Icon name="Eye" size={14} className="text-primary shrink-0 mt-0.5" />
-                          {p}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {result.recommendations?.length > 0 && (
-                  <div className="rounded-xl border border-border p-3.5">
-                    <p className="text-sm font-semibold mb-2">Рекомендации</p>
-                    <ul className="space-y-1.5">
-                      {result.recommendations.map((r, i) => (
-                        <li key={i} className="text-sm text-muted-foreground flex gap-2">
-                          <Icon name="CheckCircle2" size={14} className="text-primary shrink-0 mt-0.5" />
-                          {r}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            )}
+            </div>
           </div>
-        )}
+
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Текст работы</label>
+            <Textarea
+              value={text}
+              onChange={(e) => {
+                setText(e.target.value);
+                setFileName(null);
+              }}
+              placeholder="Вставьте текст работы студента для проверки..."
+              rows={8}
+            />
+          </div>
+
+          {error && (
+            <p className="text-sm text-destructive flex items-center gap-1.5">
+              <Icon name="AlertCircle" size={14} />
+              {error}
+            </p>
+          )}
+
+          <Button
+            className="w-full h-11 gap-2 bg-primary hover:bg-primary/90"
+            onClick={check}
+            disabled={loading || extracting || !text.trim()}
+          >
+            {loading ? (
+              <>
+                <Icon name="Loader2" size={17} className="animate-spin" />
+                ИИ проверяет работу...
+              </>
+            ) : (
+              <>
+                <Icon name="Search" size={17} />
+                Проверить на оригинальность
+              </>
+            )}
+          </Button>
+
+          {result && riskStyle && (
+            <div className="space-y-3 animate-fade-in">
+              <div className={`rounded-xl p-3.5 flex items-center gap-3 ${riskStyle.bg}`}>
+                <Icon name={riskStyle.icon} size={22} className={riskStyle.text} />
+                <div>
+                  <p className="text-xs text-muted-foreground">Риск проблем с оригинальностью</p>
+                  <p className={`text-sm font-bold capitalize ${riskStyle.text}`}>{result.risk_level}</p>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-border p-3.5">
+                <p className="text-sm font-semibold mb-1">Заключение</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{result.summary}</p>
+              </div>
+
+              <div className="rounded-xl border border-border p-3.5 space-y-2.5">
+                <div>
+                  <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">Оригинальность</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{result.originality_notes}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">Стиль</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{result.style_notes}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">Работа с источниками</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{result.sources_notes}</p>
+                </div>
+              </div>
+
+              {result.suspicious_fragments?.length > 0 && (
+                <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3.5">
+                  <p className="text-sm font-semibold mb-2 flex items-center gap-1.5">
+                    <Icon name="AlertTriangle" size={15} className="text-destructive" />
+                    Подозрительные фрагменты
+                  </p>
+                  <div className="space-y-2.5">
+                    {result.suspicious_fragments.map((f, i) => (
+                      <div key={i} className="text-sm">
+                        <p className="italic text-foreground/90">«{f.quote}»</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{f.reason}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {result.review_parts?.length > 0 && (
+                <div className="rounded-xl border border-border p-3.5">
+                  <p className="text-sm font-semibold mb-2">Требует проверки преподавателем</p>
+                  <ul className="space-y-1.5">
+                    {result.review_parts.map((p, i) => (
+                      <li key={i} className="text-sm text-muted-foreground flex gap-2">
+                        <Icon name="Eye" size={14} className="text-primary shrink-0 mt-0.5" />
+                        {p}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {result.recommendations?.length > 0 && (
+                <div className="rounded-xl border border-border p-3.5">
+                  <p className="text-sm font-semibold mb-2">Рекомендации</p>
+                  <ul className="space-y-1.5">
+                    {result.recommendations.map((r, i) => (
+                      <li key={i} className="text-sm text-muted-foreground flex gap-2">
+                        <Icon name="CheckCircle2" size={14} className="text-primary shrink-0 mt-0.5" />
+                        {r}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );

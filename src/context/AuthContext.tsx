@@ -11,16 +11,17 @@ export interface AuthUser {
 
 export type SubscriptionPlan = "free" | "30days" | "7days" | "year";
 
-export type GeneratorType = "lesson" | "game" | "intensive" | "task";
+export type GeneratorType = "lesson" | "game" | "intensive" | "task" | "antiplagiat";
 
 export interface UsageState {
   lesson: number;
   game: number;
   intensive: number;
   task: number;
+  antiplagiat: number;
 }
 
-const defaultUsage: UsageState = { lesson: 0, game: 0, intensive: 0, task: 0 };
+const defaultUsage: UsageState = { lesson: 0, game: 0, intensive: 0, task: 0, antiplagiat: 0 };
 
 interface AuthContextValue {
   user: AuthUser | null;

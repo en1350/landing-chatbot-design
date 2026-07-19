@@ -26,6 +26,7 @@ USAGE_COLUMNS = {
     'game': 'games_used',
     'intensive': 'intensives_used',
     'task': 'tasks_used',
+    'antiplagiat': 'antiplagiat_used',
 }
 
 
@@ -52,16 +53,16 @@ def get_plan_for_user(cur, user_id):
 
 def get_usage_for_user(cur, user_id):
     cur.execute(
-        f"SELECT lessons_used, games_used, intensives_used, tasks_used "
+        f"SELECT lessons_used, games_used, intensives_used, tasks_used, antiplagiat_used "
         f"FROM {SCHEMA}.usage_counts WHERE user_id = %s",
         (user_id,)
     )
     row = cur.fetchone()
     if not row:
         cur.execute(f"INSERT INTO {SCHEMA}.usage_counts (user_id) VALUES (%s)", (user_id,))
-        return {'lesson': 0, 'game': 0, 'intensive': 0, 'task': 0}
-    lessons, games, intensives, tasks = row
-    return {'lesson': lessons or 0, 'game': games or 0, 'intensive': intensives or 0, 'task': tasks or 0}
+        return {'lesson': 0, 'game': 0, 'intensive': 0, 'task': 0, 'antiplagiat': 0}
+    lessons, games, intensives, tasks, antiplagiat = row
+    return {'lesson': lessons or 0, 'game': games or 0, 'intensive': intensives or 0, 'task': tasks or 0, 'antiplagiat': antiplagiat or 0}
 
 
 def get_conn():
@@ -141,7 +142,7 @@ def send_reset_email(to_email: str, reset_link: str):
 
 
 def handler(event: dict, context) -> dict:
-    """Личный кабинет УрокАИ: регистрация/вход/выход, восстановление доступа по email, серверный учёт бесплатных генераций (лимит 3), сохранение материалов и оплата подписки через ЮКассу."""
+    """Личный кабинет УрокАИ: регистрация/вход/выход, восстановление доступа по email, серверный учёт бесплатных генераций и проверок антиплагиата (лимит 3), сохранение материалов и оплата подписки через ЮКассу."""
     method = event.get('httpMethod', 'GET')
 
     if method == 'OPTIONS':
@@ -224,7 +225,7 @@ def handler(event: dict, context) -> dict:
                     'token': token,
                     'user': {'id': user_id, 'email': email, 'name': name},
                     'plan': 'free',
-                    'usage': {'lesson': 0, 'game': 0, 'intensive': 0, 'task': 0},
+                    'usage': {'lesson': 0, 'game': 0, 'intensive': 0, 'task': 0, 'antiplagiat': 0},
                     'free_limit': FREE_LIMIT,
                 })
             }

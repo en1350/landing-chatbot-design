@@ -69,20 +69,20 @@
       "bodyMatcher": "partial"
     },
     {
-      "name": "Antiplagiat check without paid subscription returns 403",
+      "name": "Antiplagiat check without text returns 400",
       "method": "POST",
       "path": "/",
       "body": {"action": "antiplagiat_check", "text": ""},
-      "expectedStatus": 403,
+      "expectedStatus": 400,
       "expectedBody": {"error": "string"},
       "bodyMatcher": "partial"
     },
     {
-      "name": "Extract text without paid subscription returns 403",
+      "name": "Extract text without file returns 400",
       "method": "POST",
       "path": "/",
       "body": {"action": "extract_text", "file_base64": "", "filename": "a.pdf"},
-      "expectedStatus": 403,
+      "expectedStatus": 400,
       "expectedBody": {"error": "string"},
       "bodyMatcher": "partial"
     }
