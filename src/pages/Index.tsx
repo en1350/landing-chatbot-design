@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
+import AutumnBanner from "@/components/AutumnBanner";
 import GeneratorsSection from "@/components/GeneratorsSection";
 import NotebookCheck from "@/components/NotebookCheck";
 import PricingSection from "@/components/PricingSection";
@@ -75,6 +76,7 @@ const Index = () => {
 
       <main className="flex-1">
         <Hero onScrollToGenerators={() => scrollTo("generators")} />
+        <AutumnBanner onScrollToGenerators={() => scrollTo("generators")} />
         <GeneratorsSection onNeedAuth={openAuth} />
         <NotebookCheck id="notebook" onNeedAuth={openAuth} onNeedUpgrade={openUpgrade} />
         <PricingSection id="pricing" onNeedAuth={openAuth} />
