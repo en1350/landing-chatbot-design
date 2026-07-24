@@ -2,9 +2,11 @@ import Icon from "@/components/ui/icon";
 
 interface FooterProps {
   onOpenProfile: () => void;
+  onOpenRandomizer: () => void;
+  onOpenAntiplagiat: () => void;
 }
 
-const Footer = ({ onOpenProfile }: FooterProps) => {
+const Footer = ({ onOpenProfile, onOpenRandomizer, onOpenAntiplagiat }: FooterProps) => {
   return (
     <footer className="border-t border-border/60 bg-secondary/30">
       <div className="container py-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -27,6 +29,17 @@ const Footer = ({ onOpenProfile }: FooterProps) => {
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li><a href="#generators" className="hover:text-foreground transition-colors">Генераторы</a></li>
             <li><a href="#notebook" className="hover:text-foreground transition-colors">Проверка тетради</a></li>
+            <li>
+              <button onClick={onOpenAntiplagiat} className="hover:text-foreground transition-colors">
+                Антиплагиат
+              </button>
+            </li>
+            <li>
+              <button onClick={onOpenRandomizer} className="hover:text-foreground transition-colors">
+                Рандомайзер
+              </button>
+            </li>
+            <li><a href="#chat-anchor" className="hover:text-foreground transition-colors">ИИ-помощник</a></li>
             <li><a href="#pricing" className="hover:text-foreground transition-colors">Тарифы</a></li>
           </ul>
         </div>

@@ -96,7 +96,11 @@ const Index = () => {
         <PricingSection id="pricing" onNeedAuth={openAuth} />
       </main>
 
-      <Footer onOpenProfile={() => setProfileOpen(true)} />
+      <Footer
+        onOpenProfile={() => setProfileOpen(true)}
+        onOpenRandomizer={() => setRandomizerOpen(true)}
+        onOpenAntiplagiat={() => setAntiplagiatOpen(true)}
+      />
 
       <TrainerModal open={trainerOpen} onClose={() => setTrainerOpen(false)} />
       <DecomposerModal
