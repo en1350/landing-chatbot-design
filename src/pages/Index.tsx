@@ -75,8 +75,8 @@ const Index = () => {
       />
 
       <main className="flex-1">
-        <Hero onScrollToGenerators={() => scrollTo("generators")} />
         <AutumnBanner onScrollToGenerators={() => scrollTo("generators")} />
+        <Hero onScrollToGenerators={() => scrollTo("generators")} />
         <GeneratorsSection onNeedAuth={openAuth} />
         <NotebookCheck id="notebook" onNeedAuth={openAuth} onNeedUpgrade={openUpgrade} />
         <PricingSection id="pricing" onNeedAuth={openAuth} />
