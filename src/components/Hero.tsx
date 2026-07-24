@@ -62,6 +62,10 @@ const Hero = ({ onScrollToGenerators }: HeroProps) => {
               <Icon name="Zap" size={16} className="text-primary shrink-0" />
               Результат за 30 секунд
             </div>
+            <div className="flex items-center gap-1.5">
+              <Icon name="ShieldCheck" size={16} className="text-primary shrink-0" />
+              Соответствует ФГОС
+            </div>
           </div>
         </div>
 
