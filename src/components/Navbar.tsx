@@ -15,7 +15,6 @@ interface NavbarProps {
   onOpenDecomposer: () => void;
   onOpenRandomizer: () => void;
   onOpenAntiplagiat: () => void;
-  onOpenWisdom: () => void;
   onOpenProfile: () => void;
   onOpenAuth: () => void;
   onOpenPricing: () => void;
@@ -26,7 +25,6 @@ const NAV_LINKS = [
   { label: "Декомпозитор компетенций", key: "decomposer" },
   { label: "Рандомайзер", key: "randomizer" },
   { label: "Антиплагиат", key: "antiplagiat" },
-  { label: "Мудрая минутка", key: "wisdom" },
 ];
 
 const Navbar = ({
@@ -35,7 +33,6 @@ const Navbar = ({
   onOpenDecomposer,
   onOpenRandomizer,
   onOpenAntiplagiat,
-  onOpenWisdom,
   onOpenProfile,
   onOpenAuth,
   onOpenPricing,
@@ -49,7 +46,6 @@ const Navbar = ({
     if (key === "decomposer") onOpenDecomposer();
     if (key === "randomizer") onOpenRandomizer();
     if (key === "antiplagiat") onOpenAntiplagiat();
-    if (key === "wisdom") onOpenWisdom();
     if (key === "pricing") onOpenPricing();
   };
 

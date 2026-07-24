@@ -73,7 +73,6 @@ const Index = () => {
         onOpenDecomposer={() => setDecomposerOpen(true)}
         onOpenRandomizer={() => setRandomizerOpen(true)}
         onOpenAntiplagiat={() => setAntiplagiatOpen(true)}
-        onOpenWisdom={() => setWisdomOpen(true)}
         onOpenProfile={() => setProfileOpen(true)}
         onOpenAuth={openAuth}
         onOpenPricing={() => scrollTo("pricing")}
