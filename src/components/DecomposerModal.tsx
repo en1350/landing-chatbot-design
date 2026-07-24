@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Icon from "@/components/ui/icon";
 import { useAuth } from "@/context/AuthContext";
+import { downloadTxt } from "@/lib/download";
 
 const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
 
@@ -66,6 +67,16 @@ const DecomposerModal = ({ open, onClose, onNeedAuth, onNeedUpgrade }: Decompose
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDownload = () => {
+    if (!levels) return;
+    const lines = [
+      `Декомпозиция компетенции: ${competency.trim()}`,
+      "",
+      ...levels.flatMap((l, i) => [`${i + 1}. ${l.level}`, l.desc, ""]),
+    ];
+    downloadTxt(`Декомпозиция — ${competency.trim()}`, lines);
   };
 
   return (
@@ -128,18 +139,24 @@ const DecomposerModal = ({ open, onClose, onNeedAuth, onNeedUpgrade }: Decompose
             </Button>
 
             {levels && (
-              <div className="space-y-2.5 animate-fade-in max-h-72 overflow-y-auto pr-1">
-                {levels.map((l, i) => (
-                  <div key={l.level} className="rounded-xl border border-border p-3.5 flex gap-3">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold">
-                      {i + 1}
-                    </span>
-                    <div>
-                      <p className="text-sm font-semibold">{l.level}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{l.desc}</p>
+              <div className="space-y-3 animate-fade-in">
+                <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                  {levels.map((l, i) => (
+                    <div key={l.level} className="rounded-xl border border-border p-3.5 flex gap-3">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold">
+                        {i + 1}
+                      </span>
+                      <div>
+                        <p className="text-sm font-semibold">{l.level}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{l.desc}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+                <Button variant="outline" className="w-full h-11 gap-2" onClick={handleDownload}>
+                  <Icon name="Download" size={17} />
+                  Скачать
+                </Button>
               </div>
             )}
           </div>
