@@ -10,6 +10,7 @@ import TrainerModal from "@/components/TrainerModal";
 import DecomposerModal from "@/components/DecomposerModal";
 import RandomizerModal from "@/components/RandomizerModal";
 import AntiplagiatModal from "@/components/AntiplagiatModal";
+import WisdomModal from "@/components/WisdomModal";
 import ProfileSheet from "@/components/ProfileSheet";
 import AuthModal from "@/components/AuthModal";
 import UpgradeModal from "@/components/UpgradeModal";
@@ -21,6 +22,7 @@ const Index = () => {
   const [decomposerOpen, setDecomposerOpen] = useState(false);
   const [randomizerOpen, setRandomizerOpen] = useState(false);
   const [antiplagiatOpen, setAntiplagiatOpen] = useState(false);
+  const [wisdomOpen, setWisdomOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
@@ -69,6 +71,7 @@ const Index = () => {
         onOpenDecomposer={() => setDecomposerOpen(true)}
         onOpenRandomizer={() => setRandomizerOpen(true)}
         onOpenAntiplagiat={() => setAntiplagiatOpen(true)}
+        onOpenWisdom={() => setWisdomOpen(true)}
         onOpenProfile={() => setProfileOpen(true)}
         onOpenAuth={openAuth}
         onOpenPricing={() => scrollTo("pricing")}
@@ -98,6 +101,7 @@ const Index = () => {
         onNeedAuth={openAuth}
         onNeedUpgrade={openUpgrade}
       />
+      <WisdomModal open={wisdomOpen} onClose={() => setWisdomOpen(false)} />
       <ProfileSheet open={profileOpen} onClose={() => setProfileOpen(false)} onNeedAuth={openAuth} />
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
       <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} onNeedAuth={openAuth} />
