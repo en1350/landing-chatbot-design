@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import AutumnBanner from "@/components/AutumnBanner";
+import { Button } from "@/components/ui/button";
+import Icon from "@/components/ui/icon";
 import GeneratorsSection from "@/components/GeneratorsSection";
 import NotebookCheck from "@/components/NotebookCheck";
 import PricingSection from "@/components/PricingSection";
@@ -79,6 +81,16 @@ const Index = () => {
 
       <main className="flex-1">
         <AutumnBanner onScrollToGenerators={() => scrollTo("generators")} />
+        <div className="container flex justify-center -mb-4 md:-mb-8">
+          <Button
+            variant="outline"
+            className="gap-2 rounded-full border-primary/30 bg-primary/5 hover:bg-primary/10"
+            onClick={() => setWisdomOpen(true)}
+          >
+            <Icon name="Lightbulb" size={16} className="text-primary" />
+            Мудрая минутка
+          </Button>
+        </div>
         <Hero onScrollToGenerators={() => scrollTo("generators")} />
         <GeneratorsSection onNeedAuth={openAuth} />
         <NotebookCheck id="notebook" onNeedAuth={openAuth} onNeedUpgrade={openUpgrade} />
