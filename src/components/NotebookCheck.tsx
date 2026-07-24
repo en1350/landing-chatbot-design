@@ -28,12 +28,9 @@ interface CheckResult {
 const SUBJECTS = [
   "Математика",
   "Русский язык",
-  "Литература",
   "Информатика",
   "Физика",
   "Химия",
-  "История",
-  "Обществознание",
 ];
 
 function fileToBase64(file: File): Promise<string> {
