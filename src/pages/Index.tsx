@@ -9,6 +9,7 @@ import NotebookCheck from "@/components/NotebookCheck";
 import PricingSection from "@/components/PricingSection";
 import Footer from "@/components/Footer";
 import TrainerModal from "@/components/TrainerModal";
+import StudentTrainerModal from "@/components/StudentTrainerModal";
 import DecomposerModal from "@/components/DecomposerModal";
 import RandomizerModal from "@/components/RandomizerModal";
 import AntiplagiatModal from "@/components/AntiplagiatModal";
@@ -21,6 +22,7 @@ import { useAuth, AUTH_URL } from "@/context/AuthContext";
 const Index = () => {
   const { token, refresh } = useAuth();
   const [trainerOpen, setTrainerOpen] = useState(false);
+  const [studentTrainerOpen, setStudentTrainerOpen] = useState(false);
   const [decomposerOpen, setDecomposerOpen] = useState(false);
   const [randomizerOpen, setRandomizerOpen] = useState(false);
   const [antiplagiatOpen, setAntiplagiatOpen] = useState(false);
@@ -70,6 +72,7 @@ const Index = () => {
       <Navbar
         onOpenNotebook={() => scrollTo("notebook")}
         onOpenTrainer={() => setTrainerOpen(true)}
+        onOpenStudentTrainer={() => setStudentTrainerOpen(true)}
         onOpenDecomposer={() => setDecomposerOpen(true)}
         onOpenRandomizer={() => setRandomizerOpen(true)}
         onOpenAntiplagiat={() => setAntiplagiatOpen(true)}
@@ -103,6 +106,7 @@ const Index = () => {
       />
 
       <TrainerModal open={trainerOpen} onClose={() => setTrainerOpen(false)} />
+      <StudentTrainerModal open={studentTrainerOpen} onClose={() => setStudentTrainerOpen(false)} />
       <DecomposerModal
         open={decomposerOpen}
         onClose={() => setDecomposerOpen(false)}

@@ -12,6 +12,7 @@ import { useAuth } from "@/context/AuthContext";
 interface NavbarProps {
   onOpenNotebook: () => void;
   onOpenTrainer: () => void;
+  onOpenStudentTrainer: () => void;
   onOpenDecomposer: () => void;
   onOpenRandomizer: () => void;
   onOpenAntiplagiat: () => void;
@@ -22,6 +23,7 @@ interface NavbarProps {
 
 const NAV_LINKS = [
   { label: "Тренажёр", key: "trainer" },
+  { label: "Тренажёр для учеников", key: "student-trainer" },
   { label: "Декомпозитор компетенций", key: "decomposer" },
   { label: "Рандомайзер", key: "randomizer" },
   { label: "Антиплагиат", key: "antiplagiat" },
@@ -30,6 +32,7 @@ const NAV_LINKS = [
 const Navbar = ({
   onOpenNotebook,
   onOpenTrainer,
+  onOpenStudentTrainer,
   onOpenDecomposer,
   onOpenRandomizer,
   onOpenAntiplagiat,
@@ -43,6 +46,7 @@ const Navbar = ({
   const handleClick = (key: string) => {
     setOpen(false);
     if (key === "trainer") onOpenTrainer();
+    if (key === "student-trainer") onOpenStudentTrainer();
     if (key === "decomposer") onOpenDecomposer();
     if (key === "randomizer") onOpenRandomizer();
     if (key === "antiplagiat") onOpenAntiplagiat();
