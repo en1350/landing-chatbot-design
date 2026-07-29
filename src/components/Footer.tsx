@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 
 interface FooterProps {
@@ -38,6 +39,11 @@ const Footer = ({ onOpenProfile, onOpenRandomizer, onOpenAntiplagiat }: FooterPr
               <button onClick={onOpenRandomizer} className="hover:text-foreground transition-colors">
                 Рандомайзер
               </button>
+            </li>
+            <li>
+              <Link to="/trenazher-dlya-uchenikov" className="hover:text-foreground transition-colors">
+                Тренажёр для учеников
+              </Link>
             </li>
             <li><a href="#chat-anchor" className="hover:text-foreground transition-colors">ИИ-помощник</a></li>
             <li><a href="#pricing" className="hover:text-foreground transition-colors">Тарифы</a></li>

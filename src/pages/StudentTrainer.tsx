@@ -1,11 +1,7 @@
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { Link } from "react-router-dom";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -18,11 +14,13 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import Icon from "@/components/ui/icon";
-
-interface StudentTrainerModalProps {
-  open: boolean;
-  onClose: () => void;
-}
+import TrainerModal from "@/components/TrainerModal";
+import DecomposerModal from "@/components/DecomposerModal";
+import RandomizerModal from "@/components/RandomizerModal";
+import AntiplagiatModal from "@/components/AntiplagiatModal";
+import ProfileSheet from "@/components/ProfileSheet";
+import AuthModal from "@/components/AuthModal";
+import UpgradeModal from "@/components/UpgradeModal";
 
 /* ---------- Задание 1: Тест ---------- */
 
@@ -664,59 +662,127 @@ const AlgorithmsTask = () => {
   );
 };
 
-/* ---------- Основной компонент ---------- */
+/* ---------- Страница ---------- */
 
-const StudentTrainerModal = ({ open, onClose }: StudentTrainerModalProps) => {
+const StudentTrainer = () => {
+  const [trainerOpen, setTrainerOpen] = useState(false);
+  const [decomposerOpen, setDecomposerOpen] = useState(false);
+  const [randomizerOpen, setRandomizerOpen] = useState(false);
+  const [antiplagiatOpen, setAntiplagiatOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+
+  const openAuth = () => {
+    setProfileOpen(false);
+    setAuthOpen(true);
+  };
+
+  const openUpgrade = () => {
+    setDecomposerOpen(false);
+    setAntiplagiatOpen(false);
+    setUpgradeOpen(true);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 font-display">
-            <span className="text-2xl">🧠</span> Тренажёр для учеников
-          </DialogTitle>
-          <DialogDescription>
-            Тема «Работа с информацией» — тест, классификация, сопоставление и обработка текста
-          </DialogDescription>
-        </DialogHeader>
+    <div className="min-h-screen flex flex-col">
+      <Navbar
+        onOpenNotebook={() => (window.location.href = "/#notebook")}
+        onOpenTrainer={() => setTrainerOpen(true)}
+        onOpenDecomposer={() => setDecomposerOpen(true)}
+        onOpenRandomizer={() => setRandomizerOpen(true)}
+        onOpenAntiplagiat={() => setAntiplagiatOpen(true)}
+        onOpenProfile={() => setProfileOpen(true)}
+        onOpenAuth={openAuth}
+        onOpenPricing={() => (window.location.href = "/#pricing")}
+      />
 
-        <Tabs defaultValue="quiz" className="mt-2">
-          <TabsList className="grid grid-cols-3 sm:grid-cols-5 w-full h-auto gap-1">
-            <TabsTrigger value="quiz" className="text-xs sm:text-sm py-2">
-              Тест
-            </TabsTrigger>
-            <TabsTrigger value="classify" className="text-xs sm:text-sm py-2">
-              Классификация
-            </TabsTrigger>
-            <TabsTrigger value="match" className="text-xs sm:text-sm py-2">
-              Сопоставление
-            </TabsTrigger>
-            <TabsTrigger value="processor" className="text-xs sm:text-sm py-2">
-              Обработчик
-            </TabsTrigger>
-            <TabsTrigger value="algorithms" className="text-xs sm:text-sm py-2">
-              Алгоритмы
-            </TabsTrigger>
-          </TabsList>
+      <main className="flex-1">
+        <div className="container py-10 md:py-14">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+          >
+            <Icon name="ArrowLeft" size={15} />
+            На главную
+          </Link>
 
-          <TabsContent value="quiz" className="mt-5">
-            <QuizTask />
-          </TabsContent>
-          <TabsContent value="classify" className="mt-5">
-            <ClassifyTask />
-          </TabsContent>
-          <TabsContent value="match" className="mt-5">
-            <MatchTask />
-          </TabsContent>
-          <TabsContent value="processor" className="mt-5">
-            <TextProcessorTask />
-          </TabsContent>
-          <TabsContent value="algorithms" className="mt-5">
-            <AlgorithmsTask />
-          </TabsContent>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
+          <div className="max-w-2xl mb-8">
+            <span className="text-xs font-bold uppercase tracking-widest text-coral">Для учеников</span>
+            <h1 className="font-display text-3xl md:text-4xl font-bold mt-2 flex items-center gap-3">
+              <span className="text-3xl">🧠</span> Тренажёр для учеников
+            </h1>
+            <p className="text-muted-foreground mt-3 leading-relaxed">
+              Тема «Работа с информацией» и «Алгоритмические конструкции» — тест, классификация,
+              сопоставление и обработка текста прямо в браузере.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-card p-5 md:p-8 shadow-sm">
+            <Tabs defaultValue="quiz">
+              <TabsList className="grid grid-cols-3 sm:grid-cols-5 w-full h-auto gap-1">
+                <TabsTrigger value="quiz" className="text-xs sm:text-sm py-2">
+                  Тест
+                </TabsTrigger>
+                <TabsTrigger value="classify" className="text-xs sm:text-sm py-2">
+                  Классификация
+                </TabsTrigger>
+                <TabsTrigger value="match" className="text-xs sm:text-sm py-2">
+                  Сопоставление
+                </TabsTrigger>
+                <TabsTrigger value="processor" className="text-xs sm:text-sm py-2">
+                  Обработчик
+                </TabsTrigger>
+                <TabsTrigger value="algorithms" className="text-xs sm:text-sm py-2">
+                  Алгоритмы
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="quiz" className="mt-6">
+                <QuizTask />
+              </TabsContent>
+              <TabsContent value="classify" className="mt-6">
+                <ClassifyTask />
+              </TabsContent>
+              <TabsContent value="match" className="mt-6">
+                <MatchTask />
+              </TabsContent>
+              <TabsContent value="processor" className="mt-6">
+                <TextProcessorTask />
+              </TabsContent>
+              <TabsContent value="algorithms" className="mt-6">
+                <AlgorithmsTask />
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
+      </main>
+
+      <Footer
+        onOpenProfile={() => setProfileOpen(true)}
+        onOpenRandomizer={() => setRandomizerOpen(true)}
+        onOpenAntiplagiat={() => setAntiplagiatOpen(true)}
+      />
+
+      <TrainerModal open={trainerOpen} onClose={() => setTrainerOpen(false)} />
+      <DecomposerModal
+        open={decomposerOpen}
+        onClose={() => setDecomposerOpen(false)}
+        onNeedAuth={openAuth}
+        onNeedUpgrade={openUpgrade}
+      />
+      <RandomizerModal open={randomizerOpen} onClose={() => setRandomizerOpen(false)} />
+      <AntiplagiatModal
+        open={antiplagiatOpen}
+        onClose={() => setAntiplagiatOpen(false)}
+        onNeedAuth={openAuth}
+        onNeedUpgrade={openUpgrade}
+      />
+      <ProfileSheet open={profileOpen} onClose={() => setProfileOpen(false)} onNeedAuth={openAuth} />
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
+      <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} onNeedAuth={openAuth} />
+    </div>
   );
 };
 
-export default StudentTrainerModal;
+export default StudentTrainer;

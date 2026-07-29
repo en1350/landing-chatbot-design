@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +13,6 @@ import { useAuth } from "@/context/AuthContext";
 interface NavbarProps {
   onOpenNotebook: () => void;
   onOpenTrainer: () => void;
-  onOpenStudentTrainer: () => void;
   onOpenDecomposer: () => void;
   onOpenRandomizer: () => void;
   onOpenAntiplagiat: () => void;
@@ -23,7 +23,6 @@ interface NavbarProps {
 
 const NAV_LINKS = [
   { label: "Тренажёр", key: "trainer" },
-  { label: "Тренажёр для учеников", key: "student-trainer" },
   { label: "Декомпозитор компетенций", key: "decomposer" },
   { label: "Рандомайзер", key: "randomizer" },
   { label: "Антиплагиат", key: "antiplagiat" },
@@ -32,7 +31,6 @@ const NAV_LINKS = [
 const Navbar = ({
   onOpenNotebook,
   onOpenTrainer,
-  onOpenStudentTrainer,
   onOpenDecomposer,
   onOpenRandomizer,
   onOpenAntiplagiat,
@@ -46,7 +44,6 @@ const Navbar = ({
   const handleClick = (key: string) => {
     setOpen(false);
     if (key === "trainer") onOpenTrainer();
-    if (key === "student-trainer") onOpenStudentTrainer();
     if (key === "decomposer") onOpenDecomposer();
     if (key === "randomizer") onOpenRandomizer();
     if (key === "antiplagiat") onOpenAntiplagiat();
@@ -75,6 +72,12 @@ const Navbar = ({
               {l.label}
             </button>
           ))}
+          <Link
+            to="/trenazher-dlya-uchenikov"
+            className="story-link px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
+          >
+            Тренажёр для учеников
+          </Link>
           <button
             onClick={onOpenNotebook}
             className="story-link px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
@@ -108,6 +111,13 @@ const Navbar = ({
                   {l.label}
                 </button>
               ))}
+              <Link
+                to="/trenazher-dlya-uchenikov"
+                onClick={() => setOpen(false)}
+                className="text-left px-3 py-3 rounded-lg text-base font-medium hover:bg-accent transition-colors"
+              >
+                Тренажёр для учеников
+              </Link>
               <button
                 onClick={() => {
                   setOpen(false);
