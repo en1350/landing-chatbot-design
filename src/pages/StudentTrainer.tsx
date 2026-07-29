@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
@@ -662,9 +661,60 @@ const AlgorithmsTask = () => {
   );
 };
 
+/* ---------- Список тренажёров ---------- */
+
+type TrainerKey = "quiz" | "classify" | "match" | "processor" | "algorithms";
+
+interface TrainerItem {
+  key: TrainerKey;
+  icon: string;
+  title: string;
+  description: string;
+  accent: string;
+}
+
+const TRAINERS: TrainerItem[] = [
+  {
+    key: "quiz",
+    icon: "📝",
+    title: "Тест: Работа с информацией",
+    description: "5 вопросов с выбором ответа и мгновенной проверкой",
+    accent: "#2563EB",
+  },
+  {
+    key: "classify",
+    icon: "🗂️",
+    title: "Классификация видов информации",
+    description: "Определите вид информации для каждого примера",
+    accent: "#7C3AED",
+  },
+  {
+    key: "match",
+    icon: "🔗",
+    title: "Сопоставление процессов",
+    description: "Соотнесите действия с процессами работы с информацией",
+    accent: "#E8483C",
+  },
+  {
+    key: "processor",
+    icon: "⌨️",
+    title: "Обработчик текста",
+    description: "Регистр, разворот, подсчёт длины и слов — вживую",
+    accent: "#EA8C1F",
+  },
+  {
+    key: "algorithms",
+    icon: "🧩",
+    title: "Алгоритмические конструкции",
+    description: "Теория и тест по линейным алгоритмам, ветвлению, циклам",
+    accent: "#16A34A",
+  },
+];
+
 /* ---------- Страница ---------- */
 
 const StudentTrainer = () => {
+  const [active, setActive] = useState<TrainerKey | null>(null);
   const [trainerOpen, setTrainerOpen] = useState(false);
   const [decomposerOpen, setDecomposerOpen] = useState(false);
   const [randomizerOpen, setRandomizerOpen] = useState(false);
@@ -707,54 +757,74 @@ const StudentTrainer = () => {
             На главную
           </Link>
 
-          <div className="max-w-2xl mb-8">
-            <span className="text-xs font-bold uppercase tracking-widest text-coral">Для учеников</span>
-            <h1 className="font-display text-3xl md:text-4xl font-bold mt-2 flex items-center gap-3">
-              <span className="text-3xl">🧠</span> Тренажёр для учеников
-            </h1>
-            <p className="text-muted-foreground mt-3 leading-relaxed">
-              Тема «Работа с информацией» и «Алгоритмические конструкции» — тест, классификация,
-              сопоставление и обработка текста прямо в браузере.
-            </p>
-          </div>
+          {!active ? (
+            <>
+              <div className="max-w-2xl mb-8">
+                <span className="text-xs font-bold uppercase tracking-widest text-coral">Для учеников</span>
+                <h1 className="font-display text-3xl md:text-4xl font-bold mt-2 flex items-center gap-3">
+                  <span className="text-3xl">🧠</span> Тренажёры для учеников
+                </h1>
+                <p className="text-muted-foreground mt-3 leading-relaxed">
+                  Выберите тренажёр — тесты, классификация, сопоставление и обработка текста
+                  прямо в браузере.
+                </p>
+              </div>
 
-          <div className="rounded-2xl border border-border bg-card p-5 md:p-8 shadow-sm">
-            <Tabs defaultValue="quiz">
-              <TabsList className="grid grid-cols-3 sm:grid-cols-5 w-full h-auto gap-1">
-                <TabsTrigger value="quiz" className="text-xs sm:text-sm py-2">
-                  Тест
-                </TabsTrigger>
-                <TabsTrigger value="classify" className="text-xs sm:text-sm py-2">
-                  Классификация
-                </TabsTrigger>
-                <TabsTrigger value="match" className="text-xs sm:text-sm py-2">
-                  Сопоставление
-                </TabsTrigger>
-                <TabsTrigger value="processor" className="text-xs sm:text-sm py-2">
-                  Обработчик
-                </TabsTrigger>
-                <TabsTrigger value="algorithms" className="text-xs sm:text-sm py-2">
-                  Алгоритмы
-                </TabsTrigger>
-              </TabsList>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {TRAINERS.map((t, i) => (
+                  <button
+                    key={t.key}
+                    onClick={() => setActive(t.key)}
+                    className="group text-left rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 animate-fade-in"
+                    style={{ animationDelay: `${i * 80}ms` }}
+                  >
+                    <div
+                      className="flex h-12 w-12 items-center justify-center rounded-xl text-2xl mb-4 transition-transform group-hover:scale-110"
+                      style={{ backgroundColor: `${t.accent}1A` }}
+                    >
+                      {t.icon}
+                    </div>
+                    <h3 className="font-display font-bold text-base mb-1.5">{t.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                      {t.description}
+                    </p>
+                    <span
+                      className="inline-flex items-center gap-1.5 text-sm font-semibold transition-transform group-hover:translate-x-1"
+                      style={{ color: t.accent }}
+                    >
+                      Начать
+                      <Icon name="ArrowRight" size={15} />
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => setActive(null)}
+                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+              >
+                <Icon name="ArrowLeft" size={15} />
+                Все тренажёры
+              </button>
 
-              <TabsContent value="quiz" className="mt-6">
-                <QuizTask />
-              </TabsContent>
-              <TabsContent value="classify" className="mt-6">
-                <ClassifyTask />
-              </TabsContent>
-              <TabsContent value="match" className="mt-6">
-                <MatchTask />
-              </TabsContent>
-              <TabsContent value="processor" className="mt-6">
-                <TextProcessorTask />
-              </TabsContent>
-              <TabsContent value="algorithms" className="mt-6">
-                <AlgorithmsTask />
-              </TabsContent>
-            </Tabs>
-          </div>
+              <div className="max-w-2xl mb-6">
+                <h1 className="font-display text-2xl md:text-3xl font-bold flex items-center gap-2.5">
+                  <span className="text-2xl">{TRAINERS.find((t) => t.key === active)?.icon}</span>
+                  {TRAINERS.find((t) => t.key === active)?.title}
+                </h1>
+              </div>
+
+              <div className="rounded-2xl border border-border bg-card p-5 md:p-8 shadow-sm max-w-2xl">
+                {active === "quiz" && <QuizTask />}
+                {active === "classify" && <ClassifyTask />}
+                {active === "match" && <MatchTask />}
+                {active === "processor" && <TextProcessorTask />}
+                {active === "algorithms" && <AlgorithmsTask />}
+              </div>
+            </>
+          )}
         </div>
       </main>
 
