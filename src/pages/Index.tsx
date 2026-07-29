@@ -8,7 +8,6 @@ import GeneratorsSection from "@/components/GeneratorsSection";
 import NotebookCheck from "@/components/NotebookCheck";
 import PricingSection from "@/components/PricingSection";
 import Footer from "@/components/Footer";
-import TrainerModal from "@/components/TrainerModal";
 import DecomposerModal from "@/components/DecomposerModal";
 import RandomizerModal from "@/components/RandomizerModal";
 import AntiplagiatModal from "@/components/AntiplagiatModal";
@@ -20,7 +19,6 @@ import { useAuth, AUTH_URL } from "@/context/AuthContext";
 
 const Index = () => {
   const { token, refresh } = useAuth();
-  const [trainerOpen, setTrainerOpen] = useState(false);
   const [decomposerOpen, setDecomposerOpen] = useState(false);
   const [randomizerOpen, setRandomizerOpen] = useState(false);
   const [antiplagiatOpen, setAntiplagiatOpen] = useState(false);
@@ -69,7 +67,6 @@ const Index = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar
         onOpenNotebook={() => scrollTo("notebook")}
-        onOpenTrainer={() => setTrainerOpen(true)}
         onOpenDecomposer={() => setDecomposerOpen(true)}
         onOpenRandomizer={() => setRandomizerOpen(true)}
         onOpenAntiplagiat={() => setAntiplagiatOpen(true)}
@@ -102,7 +99,6 @@ const Index = () => {
         onOpenAntiplagiat={() => setAntiplagiatOpen(true)}
       />
 
-      <TrainerModal open={trainerOpen} onClose={() => setTrainerOpen(false)} />
       <DecomposerModal
         open={decomposerOpen}
         onClose={() => setDecomposerOpen(false)}

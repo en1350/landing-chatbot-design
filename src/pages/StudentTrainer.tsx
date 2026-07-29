@@ -13,7 +13,6 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import Icon from "@/components/ui/icon";
-import TrainerModal from "@/components/TrainerModal";
 import DecomposerModal from "@/components/DecomposerModal";
 import RandomizerModal from "@/components/RandomizerModal";
 import AntiplagiatModal from "@/components/AntiplagiatModal";
@@ -960,7 +959,6 @@ const TRAINERS: TrainerItem[] = [
 
 const StudentTrainer = () => {
   const [active, setActive] = useState<TrainerKey | null>(null);
-  const [trainerOpen, setTrainerOpen] = useState(false);
   const [decomposerOpen, setDecomposerOpen] = useState(false);
   const [randomizerOpen, setRandomizerOpen] = useState(false);
   const [antiplagiatOpen, setAntiplagiatOpen] = useState(false);
@@ -983,7 +981,6 @@ const StudentTrainer = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar
         onOpenNotebook={() => (window.location.href = "/#notebook")}
-        onOpenTrainer={() => setTrainerOpen(true)}
         onOpenDecomposer={() => setDecomposerOpen(true)}
         onOpenRandomizer={() => setRandomizerOpen(true)}
         onOpenAntiplagiat={() => setAntiplagiatOpen(true)}
@@ -1080,7 +1077,6 @@ const StudentTrainer = () => {
         onOpenAntiplagiat={() => setAntiplagiatOpen(true)}
       />
 
-      <TrainerModal open={trainerOpen} onClose={() => setTrainerOpen(false)} />
       <DecomposerModal
         open={decomposerOpen}
         onClose={() => setDecomposerOpen(false)}
