@@ -76,6 +76,10 @@ const Footer = ({ onOpenProfile, onOpenRandomizer, onOpenAntiplagiat }: FooterPr
               </a>
             </li>
           </ul>
+          <p className="text-xs text-muted-foreground/70 mt-2 flex items-center gap-1.5">
+            <Icon name="Clock" size={12} />
+            Отвечаем в течение 24 часов
+          </p>
         </div>
       </div>
       <div className="border-t border-border/60 py-5">
