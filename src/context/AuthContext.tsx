@@ -158,8 +158,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isPaid = plan !== "free";
 
-  const remainingUse = (type: GeneratorType) => Math.max(0, freeLimit - usage[type]);
-  const canUseGenerator = (type: GeneratorType) => !!user && (isPaid || remainingUse(type) > 0);
+  const totalUsage = (u: UsageState) => u.lesson + u.game + u.intensive + u.task + u.antiplagiat;
+
+  // Единый лимит бесплатных генераций на все инструменты вместе (не по каждому отдельно)
+  const remainingUse = (_type: GeneratorType) => Math.max(0, freeLimit - totalUsage(usage));
+  const canUseGenerator = (_type: GeneratorType) => !!user && (isPaid || remainingUse(_type) > 0);
 
   const registerGeneratorUse = async (type: GeneratorType): Promise<boolean> => {
     if (!token) return false;

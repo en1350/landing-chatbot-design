@@ -309,10 +309,10 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
           </DialogTitle>
           <DialogDescription>
             {!user
-              ? "Войдите в личный кабинет, чтобы получить 3 бесплатные генерации"
+              ? "Войдите в личный кабинет, чтобы получить 3 бесплатные генерации на все инструменты"
               : isPaid
               ? "Безлимитная генерация по вашему тарифу"
-              : `Осталось бесплатных генераций: ${remainingUse(type)} из 3`}
+              : `Осталось бесплатных генераций (на все инструменты): ${remainingUse(type)} из 3`}
           </DialogDescription>
         </DialogHeader>
 

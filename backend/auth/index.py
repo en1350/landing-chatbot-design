@@ -65,6 +65,11 @@ def get_usage_for_user(cur, user_id):
     return {'lesson': lessons or 0, 'game': games or 0, 'intensive': intensives or 0, 'task': tasks or 0, 'antiplagiat': antiplagiat or 0}
 
 
+def total_usage(usage: dict) -> int:
+    """Единый счётчик: сумма использований по всем инструментам вместе (общий лимит на все генераторы)."""
+    return sum(usage.values())
+
+
 def get_conn():
     return psycopg2.connect(os.environ['DATABASE_URL'])
 
@@ -368,7 +373,8 @@ def handler(event: dict, context) -> dict:
             usage = get_usage_for_user(cur, user_id)
             current = usage.get(gen_type, 0)
 
-            if not is_paid and current >= FREE_LIMIT:
+            # Единый лимит на все инструменты вместе (не по каждому отдельно)
+            if not is_paid and total_usage(usage) >= FREE_LIMIT:
                 return {
                     'statusCode': 403,
                     'headers': cors_headers(),

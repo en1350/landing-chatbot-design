@@ -25,6 +25,7 @@ const USAGE_LABELS: Record<string, string> = {
   game: "Генератор игры",
   intensive: "Генератор интенсивов",
   task: "Генератор заданий",
+  antiplagiat: "Антиплагиат",
 };
 
 const PLAN_LABELS: Record<string, string> = {
@@ -37,6 +38,7 @@ const PLAN_LABELS: Record<string, string> = {
 const ProfileSheet = ({ open, onClose, onNeedAuth }: ProfileSheetProps) => {
   const { servicesCount } = useUsage();
   const { user, token, plan, isPaid, logout, usage, freeLimit } = useAuth();
+  const totalUsage = usage.lesson + usage.game + usage.intensive + usage.task + usage.antiplagiat;
   const [materials, setMaterials] = useState<SavedMaterial[]>([]);
   const [loadingMaterials, setLoadingMaterials] = useState(false);
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
@@ -140,23 +142,29 @@ const ProfileSheet = ({ open, onClose, onNeedAuth }: ProfileSheetProps) => {
                 <p className="font-display text-2xl font-bold">{servicesCount.toLocaleString("ru-RU")}</p>
               </div>
 
-              <div className="space-y-3">
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="font-medium">Бесплатные генерации (на все инструменты)</span>
+                  <span className="text-muted-foreground">
+                    {isPaid ? "безлимит" : `${totalUsage} / ${freeLimit}`}
+                  </span>
+                </div>
+                <div className="h-2 rounded-full bg-secondary overflow-hidden">
+                  <div
+                    className="h-full bg-primary rounded-full transition-all"
+                    style={{
+                      width: isPaid ? "100%" : `${Math.min(100, (totalUsage / freeLimit) * 100)}%`,
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-1">
+                <p className="text-xs text-muted-foreground">Из них потрачено на:</p>
                 {(Object.keys(USAGE_LABELS) as Array<keyof typeof usage>).map((k) => (
-                  <div key={k}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>{USAGE_LABELS[k]}</span>
-                      <span className="text-muted-foreground">
-                        {isPaid ? "безлимит" : `${usage[k]} / ${freeLimit}`}
-                      </span>
-                    </div>
-                    <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
-                      <div
-                        className="h-full bg-primary rounded-full transition-all"
-                        style={{
-                          width: isPaid ? "100%" : `${Math.min(100, (usage[k] / freeLimit) * 100)}%`,
-                        }}
-                      />
-                    </div>
+                  <div key={k} className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">{USAGE_LABELS[k]}</span>
+                    <span className="font-medium">{usage[k]}</span>
                   </div>
                 ))}
               </div>

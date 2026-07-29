@@ -171,10 +171,10 @@ const AntiplagiatModal = ({ open, onClose, onNeedAuth, onNeedUpgrade }: Antiplag
           </DialogTitle>
           <DialogDescription>
             {!user
-              ? "Войдите в личный кабинет, чтобы получить 3 бесплатные проверки"
+              ? "Войдите в личный кабинет, чтобы получить 3 бесплатные генерации на все инструменты"
               : isPaid
               ? "Безлимитная проверка по вашему тарифу"
-              : `Осталось бесплатных проверок: ${remainingUse("antiplagiat")} из 3`}
+              : `Осталось бесплатных генераций (на все инструменты): ${remainingUse("antiplagiat")} из 3`}
           </DialogDescription>
         </DialogHeader>
 

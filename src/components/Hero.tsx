@@ -23,7 +23,7 @@ const Hero = ({ onScrollToGenerators }: HeroProps) => {
         <div className="animate-fade-in">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary mb-6">
             <Icon name="Sparkles" size={13} />
-            3 бесплатные генерации на каждый инструмент
+            3 бесплатные генерации на все инструменты
           </span>
 
           <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-[3.4rem] font-bold leading-[1.15] sm:leading-[1.1] tracking-tight text-balance">
