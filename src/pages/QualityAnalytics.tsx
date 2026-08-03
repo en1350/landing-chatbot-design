@@ -161,6 +161,7 @@ const QualityAnalyticsTool = () => {
   const [aiPlan, setAiPlan] = useState<string | null>(null);
   const [aiPlanLoading, setAiPlanLoading] = useState(false);
   const [aiPlanError, setAiPlanError] = useState<string | null>(null);
+  const [aiPlanInExport, setAiPlanInExport] = useState(false);
 
   const initialized = skills.length > 0 && students.length > 0;
 
@@ -200,6 +201,7 @@ const QualityAnalyticsTool = () => {
     setTab("input");
     setAiPlan(null);
     setAiPlanError(null);
+    setAiPlanInExport(false);
   };
 
   const setGrade = (studentIdx: number, skillIdx: number, value: number) => {
@@ -246,6 +248,7 @@ const QualityAnalyticsTool = () => {
   const generateAiPlan = async () => {
     setAiPlanLoading(true);
     setAiPlanError(null);
+    setAiPlanInExport(false);
     try {
       const content = await requestCorrectionPlan(
         {
@@ -329,6 +332,7 @@ ${students.map((st, i) => {
 }).join("")}
 </table>
 <h2>4. План коррекционной работы</h2>
+${aiPlanInExport && aiPlan ? `<h3>План коррекционной работы (составлен ИИ)</h3><div class="plan-item">${aiPlan.split("\n").map((line) => `<p>${line}</p>`).join("")}</div><h3>Шаблонный план (автоматический расчёт)</h3>` : ""}
 <h3>I. Групповая работа</h3>
 ${groupDeficits.length === 0 ? "<p>Все навыки освоены на достаточном уровне</p>" : groupDeficits.map((def) => {
   const m = getMeasuresForSkill(def.name, def.avg);
@@ -787,6 +791,18 @@ ${riskStudents.length === 0 ? "<p>Студентов группы риска н�
                     <p className="text-sm leading-relaxed whitespace-pre-line">{aiPlan}</p>
                   </div>
                 )}
+                {aiPlan && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 mt-3"
+                    onClick={() => setAiPlanInExport(true)}
+                    disabled={aiPlanInExport}
+                  >
+                    <Icon name={aiPlanInExport ? "CheckCircle2" : "FilePlus2"} size={15} />
+                    {aiPlanInExport ? "Добавлено в документ на экспорт" : "Добавить в документ на экспорт"}
+                  </Button>
+                )}
               </div>
 
               <div className="rounded-xl bg-secondary/30 p-4">
@@ -891,6 +907,12 @@ ${riskStudents.length === 0 ? "<p>Студентов группы риска н�
               <p className="text-sm text-muted-foreground">
                 Выберите формат экспорта. HTML-отчёт можно открыть в браузере и сохранить в PDF через печать.
               </p>
+              {aiPlanInExport && aiPlan && (
+                <p className="text-xs text-primary flex items-center gap-1.5 bg-primary/5 rounded-lg px-3 py-2 w-fit">
+                  <Icon name="CheckCircle2" size={14} />
+                  План коррекционной работы от ИИ будет включён в HTML-отчёт
+                </p>
+              )}
               <div className="flex flex-wrap gap-2">
                 <Button className="gap-2" onClick={downloadHTMLReport}>
                   <Icon name="FileText" size={16} />
