@@ -15,6 +15,8 @@ import AuthModal from "@/components/AuthModal";
 import UpgradeModal from "@/components/UpgradeModal";
 import { useAuth } from "@/context/AuthContext";
 
+const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
+
 /* ---------- Типы и утилиты ---------- */
 
 type LevelInfo = { name: string; cls: string; priority: "low" | "medium" | "high"; color: string };
@@ -126,9 +128,24 @@ const DEMO_GRADES = [
   [4, 3, 3, 3, 3],
 ];
 
+async function requestCorrectionPlan(data: Record<string, unknown>, token: string | null): Promise<string> {
+  const res = await fetch(GENERATE_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { "X-Authorization": token } : {}),
+    },
+    body: JSON.stringify({ action: "correction_plan", data }),
+  });
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.error || "Не удалось сформировать план коррекционной работы");
+  return result.content as string;
+}
+
 /* ---------- Инструмент ---------- */
 
 const QualityAnalyticsTool = () => {
+  const { token } = useAuth();
   const [discipline, setDiscipline] = useState("Педагогика. Раздел: Теория обучения");
   const [group, setGroup] = useState("Пед-21, 2 курс");
   const [skillsText, setSkillsText] = useState(DEMO_SKILLS.join("\n"));
@@ -140,6 +157,10 @@ const QualityAnalyticsTool = () => {
 
   const [tab, setTab] = useState("input");
   const [selectedStudent, setSelectedStudent] = useState(0);
+
+  const [aiPlan, setAiPlan] = useState<string | null>(null);
+  const [aiPlanLoading, setAiPlanLoading] = useState(false);
+  const [aiPlanError, setAiPlanError] = useState<string | null>(null);
 
   const initialized = skills.length > 0 && students.length > 0;
 
@@ -177,6 +198,8 @@ const QualityAnalyticsTool = () => {
     setStudents([]);
     setGrades([]);
     setTab("input");
+    setAiPlan(null);
+    setAiPlanError(null);
   };
 
   const setGrade = (studentIdx: number, skillIdx: number, value: number) => {
@@ -219,6 +242,36 @@ const QualityAnalyticsTool = () => {
   const excellentStudents = students
     .map((name, i) => ({ name, avg: studentAvgs[i], level: getLevelByAvg(studentAvgs[i]) }))
     .filter((s) => s.level.priority === "low");
+
+  const generateAiPlan = async () => {
+    setAiPlanLoading(true);
+    setAiPlanError(null);
+    try {
+      const content = await requestCorrectionPlan(
+        {
+          discipline,
+          group,
+          groupAvg: groupAvg.toFixed(2),
+          quality,
+          skills: skills.map((s, k) => ({ name: s, avg: skillAvgs[k].toFixed(2), level: getLevelByAvg(skillAvgs[k]).name })),
+          groupDeficits: groupDeficits.map((d) => ({ name: d.name, avg: d.avg.toFixed(2), level: d.level.name })),
+          riskStudents: riskStudents.map((s) => ({
+            name: s.name,
+            avg: s.avg.toFixed(2),
+            level: s.level.name,
+            deficits: s.deficits.map((d) => ({ name: d.name, grade: d.grade })),
+          })),
+          excellentStudents: excellentStudents.map((s) => s.name),
+        },
+        token
+      );
+      setAiPlan(content);
+    } catch (err) {
+      setAiPlanError(err instanceof Error ? err.message : "Не удалось сформировать план, попробуйте снова");
+    } finally {
+      setAiPlanLoading(false);
+    }
+  };
 
   const downloadHTMLReport = () => {
     if (students.length === 0) return;
@@ -699,8 +752,45 @@ ${riskStudents.length === 0 ? "<p>Студентов группы риска н�
                 <p><strong>Цель:</strong> ликвидация выявленных дефицитов предметных умений и повышение качества освоения программы.</p>
               </div>
 
+              <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-4">
+                <div className="flex items-center justify-between gap-3 flex-wrap mb-1">
+                  <h3 className="font-display font-bold text-base flex items-center gap-2">
+                    <Icon name="Sparkles" size={17} className="text-primary" />
+                    План коррекционной работы от ИИ
+                  </h3>
+                  <Button size="sm" className="gap-2" onClick={generateAiPlan} disabled={aiPlanLoading}>
+                    {aiPlanLoading ? (
+                      <>
+                        <Icon name="Loader2" size={15} className="animate-spin" />
+                        ИИ формирует план...
+                      </>
+                    ) : (
+                      <>
+                        <Icon name="Wand2" size={15} />
+                        {aiPlan ? "Сформировать заново" : "Сформировать с ИИ"}
+                      </>
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">
+                  ИИ проанализирует диагностику по группе и предложит развёрнутые персональные рекомендации —
+                  точнее и подробнее, чем автоматический шаблон ниже.
+                </p>
+                {aiPlanError && (
+                  <p className="text-sm text-destructive flex items-center gap-1.5 mb-2">
+                    <Icon name="AlertCircle" size={14} />
+                    {aiPlanError}
+                  </p>
+                )}
+                {aiPlan && (
+                  <div className="rounded-lg border border-border bg-card p-4 max-h-96 overflow-y-auto animate-fade-in">
+                    <p className="text-sm leading-relaxed whitespace-pre-line">{aiPlan}</p>
+                  </div>
+                )}
+              </div>
+
               <div className="rounded-xl bg-secondary/30 p-4">
-                <h3 className="font-display font-bold text-base mb-1">🎯 I. Групповая коррекционная работа</h3>
+                <h3 className="font-display font-bold text-base mb-1">🎯 I. Групповая коррекционная работа (шаблон)</h3>
                 <p className="text-xs text-muted-foreground mb-3">Мероприятия для всей группы по дефицитным навыкам</p>
                 {groupDeficits.length === 0 ? (
                   <p className="text-sm text-emerald-600">✓ Все навыки освоены группой на достаточном уровне</p>

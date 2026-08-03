@@ -85,6 +85,15 @@
       "expectedStatus": 400,
       "expectedBody": {"error": "string"},
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "Correction plan without paid subscription returns 403",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "correction_plan", "data": {"skills": [{"name": "test", "avg": 3, "level": "Средний"}]}},
+      "expectedStatus": 403,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
     }
   ]
 }

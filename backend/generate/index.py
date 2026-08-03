@@ -313,6 +313,59 @@ def build_quiz_prompt(f: dict) -> str:
 В конце теста добавь отдельный раздел «Ключ ответов» со сводным списком правильных ответов по каждому вопросу.{extra_instruction} Пиши конкретно и практично, без markdown-разметки (без **, #), обычным текстом с чёткой нумерацией вопросов."""
 
 
+def build_correction_plan_prompt(data: dict) -> str:
+    discipline = data.get('discipline') or 'дисциплина не указана'
+    group = data.get('group') or 'группа не указана'
+    group_avg = data.get('groupAvg')
+    quality = data.get('quality')
+
+    skill_lines = []
+    for s in (data.get('skills') or []):
+        skill_lines.append(f"- {s.get('name')}: средний балл {s.get('avg')}, уровень «{s.get('level')}»")
+    skills_block = "\n".join(skill_lines) if skill_lines else "нет данных"
+
+    deficit_lines = []
+    for d in (data.get('groupDeficits') or []):
+        deficit_lines.append(f"- {d.get('name')} (ср. балл {d.get('avg')}, уровень «{d.get('level')}»)")
+    deficits_block = "\n".join(deficit_lines) if deficit_lines else "дефицитных навыков на уровне группы не выявлено"
+
+    risk_lines = []
+    for st in (data.get('riskStudents') or []):
+        deficits = "; ".join(f"{x.get('name')} ({x.get('grade')})" for x in (st.get('deficits') or []))
+        risk_lines.append(f"- {st.get('name')} (ср. балл {st.get('avg')}, уровень «{st.get('level')}»), дефицитные навыки: {deficits or 'не указаны'}")
+    risk_block = "\n".join(risk_lines) if risk_lines else "студентов группы риска не выявлено"
+
+    excellent_names = ", ".join((data.get('excellentStudents') or []))
+    excellent_block = excellent_names if excellent_names else "студентов с высоким уровнем не выявлено"
+
+    return f"""Ты опытный методист и эксперт по педагогической диагностике. На основе результатов уровневой диагностики качества освоения предметных умений составь развёрнутый план коррекционной работы на русском языке.
+
+Дисциплина: {discipline}
+Группа: {group}
+Средний балл группы: {group_avg} из 5
+Качественная успеваемость (оценки 4 и 5): {quality}%
+
+Освоение навыков группой:
+{skills_block}
+
+Дефицитные навыки группы (требуют коррекции):
+{deficits_block}
+
+Студенты группы риска (средний балл ниже 3.5) и их дефицитные навыки:
+{risk_block}
+
+Студенты с высоким уровнем освоения:
+{excellent_block}
+
+Составь план коррекционной работы из четырёх разделов со следующими заголовками (используй именно их):
+1. Групповая коррекционная работа — для каждого дефицитного навыка группы предложи 3-5 конкретных методических мероприятий (форматы занятий, методы, приёмы), адаптированных именно под этот навык и предмет.
+2. Индивидуальная работа со студентами группы риска — для каждого студента из списка дай персональные рекомендации с учётом именно его дефицитных навыков (не общие фразы, а конкретику по предмету и навыкам).
+3. Работа со студентами высокого уровня — предложи мероприятия для развития и вовлечения (олимпиады, наставничество, исследовательские задания и т.п.).
+4. Организационно-методические мероприятия — общие шаги для преподавателя и методической комиссии (сроки, ответственные, повторная диагностика).
+
+Пиши развёрнуто, конкретно, по-деловому, без markdown-разметки (без **, #), обычным текстом с нумерацией разделов и пунктов внутри них."""
+
+
 CHAT_SYSTEM_PROMPT = """Ты ИИ-помощник УрокАИ для учителей и педагогов. Ты дружелюбно и по-деловому помогаешь с методическими вопросами: как составить план урока, придумать игру, оценить работу учеников, подобрать технологию обучения и т.д.
 
 Правила:
@@ -377,7 +430,7 @@ def build_notebook_system_prompt(subject: str) -> str:
 
 
 def handler(event: dict, context) -> dict:
-    """Генерация учебных материалов, ИИ-чат-помощник через AITunnel. Декомпозитор компетенций и проверка тетради по фото доступны только пользователям с платной подпиской. Антиплагиат (проверка текста и извлечение из PDF/DOCX) доступен бесплатно с лимитом попыток, учёт которых ведётся в backend/auth."""
+    """Генерация учебных материалов, ИИ-чат-помощник через AITunnel. Декомпозитор компетенций, проверка тетради по фото и план коррекционной работы (аналитика качества обученности) доступны только пользователям с платной подпиской. Антиплагиат (проверка текста и извлечение из PDF/DOCX) доступен бесплатно с лимитом попыток, учёт которых ведётся в backend/auth."""
     method = event.get('httpMethod', 'GET')
 
     if method == 'OPTIONS':
@@ -552,6 +605,21 @@ def handler(event: dict, context) -> dict:
                 return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ вернул некорректный формат, попробуйте снова'})}
 
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps(result, ensure_ascii=False)}
+
+        elif action == 'correction_plan':
+            if not is_user_paid(event):
+                return {'statusCode': 403, 'headers': cors_headers(), 'body': json.dumps({'error': 'План коррекционной работы доступен только по платной подписке'})}
+
+            data = body.get('data') or {}
+            if not data.get('skills'):
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Недостаточно данных для формирования плана'})}
+
+            content = call_ai([
+                {'role': 'system', 'content': 'Ты опытный методист и эксперт по педагогической диагностике. Отвечай развёрнуто, по-деловому и всегда на русском языке.'},
+                {'role': 'user', 'content': build_correction_plan_prompt(data)},
+            ], temperature=0.6)
+
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'content': content}, ensure_ascii=False)}
 
         elif action == 'extract_text':
             file_base64 = body.get('file_base64') or ''

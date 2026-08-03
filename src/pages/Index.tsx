@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import Icon from "@/components/ui/icon";
 import GeneratorsSection from "@/components/GeneratorsSection";
 import NotebookCheck from "@/components/NotebookCheck";
+import QualityAnalyticsPromo from "@/components/QualityAnalyticsPromo";
 import PricingSection from "@/components/PricingSection";
 import Footer from "@/components/Footer";
 import DecomposerModal from "@/components/DecomposerModal";
@@ -90,6 +91,7 @@ const Index = () => {
         <Hero onScrollToGenerators={() => scrollTo("generators")} />
         <GeneratorsSection onNeedAuth={openAuth} />
         <NotebookCheck id="notebook" onNeedAuth={openAuth} onNeedUpgrade={openUpgrade} />
+        <QualityAnalyticsPromo id="quality-analytics" />
         <PricingSection id="pricing" onNeedAuth={openAuth} />
       </main>
 
