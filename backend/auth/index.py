@@ -27,6 +27,7 @@ USAGE_COLUMNS = {
     'intensive': 'intensives_used',
     'task': 'tasks_used',
     'antiplagiat': 'antiplagiat_used',
+    'quiz': 'quiz_used',
 }
 
 
@@ -53,16 +54,16 @@ def get_plan_for_user(cur, user_id):
 
 def get_usage_for_user(cur, user_id):
     cur.execute(
-        f"SELECT lessons_used, games_used, intensives_used, tasks_used, antiplagiat_used "
+        f"SELECT lessons_used, games_used, intensives_used, tasks_used, antiplagiat_used, quiz_used "
         f"FROM {SCHEMA}.usage_counts WHERE user_id = %s",
         (user_id,)
     )
     row = cur.fetchone()
     if not row:
         cur.execute(f"INSERT INTO {SCHEMA}.usage_counts (user_id) VALUES (%s)", (user_id,))
-        return {'lesson': 0, 'game': 0, 'intensive': 0, 'task': 0, 'antiplagiat': 0}
-    lessons, games, intensives, tasks, antiplagiat = row
-    return {'lesson': lessons or 0, 'game': games or 0, 'intensive': intensives or 0, 'task': tasks or 0, 'antiplagiat': antiplagiat or 0}
+        return {'lesson': 0, 'game': 0, 'intensive': 0, 'task': 0, 'antiplagiat': 0, 'quiz': 0}
+    lessons, games, intensives, tasks, antiplagiat, quiz = row
+    return {'lesson': lessons or 0, 'game': games or 0, 'intensive': intensives or 0, 'task': tasks or 0, 'antiplagiat': antiplagiat or 0, 'quiz': quiz or 0}
 
 
 def total_usage(usage: dict) -> int:

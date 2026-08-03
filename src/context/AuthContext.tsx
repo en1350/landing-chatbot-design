@@ -11,7 +11,7 @@ export interface AuthUser {
 
 export type SubscriptionPlan = "free" | "30days" | "7days" | "year";
 
-export type GeneratorType = "lesson" | "game" | "intensive" | "task" | "antiplagiat";
+export type GeneratorType = "lesson" | "game" | "intensive" | "task" | "antiplagiat" | "quiz";
 
 export interface UsageState {
   lesson: number;
@@ -19,9 +19,10 @@ export interface UsageState {
   intensive: number;
   task: number;
   antiplagiat: number;
+  quiz: number;
 }
 
-const defaultUsage: UsageState = { lesson: 0, game: 0, intensive: 0, task: 0, antiplagiat: 0 };
+const defaultUsage: UsageState = { lesson: 0, game: 0, intensive: 0, task: 0, antiplagiat: 0, quiz: 0 };
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -158,7 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isPaid = plan !== "free";
 
-  const totalUsage = (u: UsageState) => u.lesson + u.game + u.intensive + u.task + u.antiplagiat;
+  const totalUsage = (u: UsageState) => u.lesson + u.game + u.intensive + u.task + u.antiplagiat + u.quiz;
 
   // Единый лимит бесплатных генераций на все инструменты вместе (не по каждому отдельно)
   const remainingUse = (_type: GeneratorType) => Math.max(0, freeLimit - totalUsage(usage));

@@ -31,6 +31,12 @@ const GENERATORS: { type: GeneratorType; icon: string; title: string; accent: st
     title: "Генератор заданий",
     accent: "#EA8C1F",
   },
+  {
+    type: "quiz",
+    icon: "✅",
+    title: "Генератор тестовых заданий",
+    accent: "#16A34A",
+  },
 ];
 
 interface GeneratorsSectionProps {
@@ -47,7 +53,7 @@ const GeneratorsSection = ({ onNeedAuth }: GeneratorsSectionProps) => {
       <div className="text-center max-w-2xl mx-auto mb-4">
         <span className="text-xs font-bold uppercase tracking-widest text-coral">Инструменты</span>
         <h2 className="font-display text-3xl md:text-4xl font-bold mt-2">
-          Четыре генератора для педагога
+          Пять генераторов для педагога
         </h2>
         <p className="text-muted-foreground mt-3 leading-relaxed">
           Выберите нужный инструмент — заполните тему и класс, получите готовый результат за секунды.
@@ -62,7 +68,7 @@ const GeneratorsSection = ({ onNeedAuth }: GeneratorsSectionProps) => {
         </span>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 items-stretch">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5 items-stretch">
         {GENERATORS.map((g, i) => (
           <div key={g.type} className="animate-fade-in h-full" style={{ animationDelay: `${i * 80}ms` }}>
             <GeneratorCard {...g} onOpen={() => setActiveType(g.type)} />

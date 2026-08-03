@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -36,6 +37,8 @@ const META: Record<GeneratorType, { title: string; icon: string; resultLabel: st
   game: { title: "Генератор игры", icon: "🎲", resultLabel: "сценарий игры" },
   intensive: { title: "Генератор интенсивов и мастер-классов", icon: "🚀", resultLabel: "программа мероприятия" },
   task: { title: "Генератор заданий", icon: "📝", resultLabel: "комплект заданий" },
+  quiz: { title: "Генератор тестовых заданий", icon: "✅", resultLabel: "тест" },
+  antiplagiat: { title: "Антиплагиат", icon: "🔍", resultLabel: "заключение" },
 };
 
 interface LessonFields {
@@ -77,6 +80,16 @@ interface TaskFields {
   professionalOrientation: string;
 }
 
+interface QuizFields {
+  subject: string;
+  topic: string;
+  questionCount: string;
+  difficulty: "easy" | "medium" | "hard" | "mixed";
+  questionTypes: string[];
+  regionalComponent: string;
+  professionalOrientation: string;
+}
+
 const AUDIENCE_OPTIONS: { value: IntensiveFields["audience"]; label: string }[] = [
   { value: "schoolchildren", label: "Школьники" },
   { value: "students", label: "Студенты" },
@@ -107,6 +120,20 @@ const COMPONENT_OPTIONS: { value: TaskFields["component"]; label: string }[] = [
   { value: "creative", label: "Креативный компонент" },
   { value: "critical", label: "Критический компонент" },
   { value: "communicative", label: "Коммуникативный компонент" },
+];
+
+const QUIZ_DIFFICULTY_OPTIONS: { value: QuizFields["difficulty"]; label: string }[] = [
+  { value: "mixed", label: "Смешанный (базовый + средний + продвинутый)" },
+  { value: "easy", label: "Базовый" },
+  { value: "medium", label: "Средний" },
+  { value: "hard", label: "Продвинутый" },
+];
+
+const QUIZ_TYPE_OPTIONS: { value: string; label: string }[] = [
+  { value: "single", label: "Выбор одного ответа" },
+  { value: "multiple", label: "Выбор нескольких ответов" },
+  { value: "matching", label: "Установление соответствия" },
+  { value: "sequence", label: "Установление последовательности" },
 ];
 
 async function requestGeneration(type: GeneratorType, fields: Record<string, string>): Promise<string> {
@@ -170,6 +197,15 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
     regionalComponent: "",
     professionalOrientation: "",
   });
+  const [quizFields, setQuizFields] = useState<QuizFields>({
+    subject: "",
+    topic: "",
+    questionCount: "10",
+    difficulty: "mixed",
+    questionTypes: ["single"],
+    regionalComponent: "",
+    professionalOrientation: "",
+  });
 
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
@@ -190,6 +226,7 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
     setGameFields({ subject: "", duration: "15", peopleCount: "", regionalComponent: "", professionalOrientation: "" });
     setIntensiveFields({ topic: "", audience: "schoolchildren", duration: "1day", format: "intensive", goal: "", regionalComponent: "", professionalOrientation: "" });
     setTaskFields({ subject: "", topic: "", goal: "", component: "balanced", regionalComponent: "", professionalOrientation: "" });
+    setQuizFields({ subject: "", topic: "", questionCount: "10", difficulty: "mixed", questionTypes: ["single"], regionalComponent: "", professionalOrientation: "" });
     setResult(null);
     setError(null);
     setLoading(false);
@@ -223,6 +260,8 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
           ? gameFields
           : type === "intensive"
           ? intensiveFields
+          : type === "quiz"
+          ? { ...quizFields, questionTypes: quizFields.questionTypes.join(",") }
           : taskFields;
       const registered = await registerGeneratorUse(type);
       if (!registered) {
@@ -264,6 +303,8 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
       ? gameFields.subject
       : type === "intensive"
       ? intensiveFields.topic
+      : type === "quiz"
+      ? quizFields.topic
       : taskFields.topic;
   const resultTitle = `${meta.title}: ${resultTopic || "без темы"}`;
 
@@ -610,6 +651,93 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
               </>
             )}
 
+            {type === "quiz" && (
+              <>
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Предмет/дисциплина</label>
+                  <Input
+                    value={quizFields.subject}
+                    onChange={(e) => setQuizFields((s) => ({ ...s, subject: e.target.value }))}
+                    placeholder="Например: Биология, Математика, История..."
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Тема</label>
+                  <Input
+                    value={quizFields.topic}
+                    onChange={(e) => setQuizFields((s) => ({ ...s, topic: e.target.value }))}
+                    placeholder="Например: Фотосинтез, Дроби..."
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Количество вопросов</label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={30}
+                    value={quizFields.questionCount}
+                    onChange={(e) => setQuizFields((s) => ({ ...s, questionCount: e.target.value }))}
+                    placeholder="Например: 10"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Уровень сложности</label>
+                  <Select
+                    value={quizFields.difficulty}
+                    onValueChange={(v: QuizFields["difficulty"]) => setQuizFields((s) => ({ ...s, difficulty: v }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {QUIZ_DIFFICULTY_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>
+                          {o.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Типы вопросов</label>
+                  <div className="space-y-2 rounded-lg border border-border p-3">
+                    {QUIZ_TYPE_OPTIONS.map((o) => (
+                      <label key={o.value} className="flex items-center gap-2 text-sm cursor-pointer">
+                        <Checkbox
+                          checked={quizFields.questionTypes.includes(o.value)}
+                          onCheckedChange={(checked) =>
+                            setQuizFields((s) => ({
+                              ...s,
+                              questionTypes: checked
+                                ? [...s.questionTypes, o.value]
+                                : s.questionTypes.filter((t) => t !== o.value),
+                            }))
+                          }
+                        />
+                        {o.label}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Региональный компонент</label>
+                  <Input
+                    value={quizFields.regionalComponent}
+                    onChange={(e) => setQuizFields((s) => ({ ...s, regionalComponent: e.target.value }))}
+                    placeholder="Например: особенности региона, местные примеры (необязательно)"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Профессиональная направленность</label>
+                  <Input
+                    value={quizFields.professionalOrientation}
+                    onChange={(e) => setQuizFields((s) => ({ ...s, professionalOrientation: e.target.value }))}
+                    placeholder="Например: инженерный класс, медицинский профиль (необязательно)"
+                  />
+                </div>
+              </>
+            )}
+
             {error && (
               <p className="text-sm text-destructive flex items-center gap-1.5">
                 <Icon name="AlertCircle" size={14} />
@@ -620,7 +748,7 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
             <Button
               className="w-full h-11 bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
               onClick={handleGenerate}
-              disabled={loading}
+              disabled={loading || (type === "quiz" && quizFields.questionTypes.length === 0)}
             >
               {loading ? (
                 <>

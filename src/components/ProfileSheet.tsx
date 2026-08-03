@@ -25,6 +25,7 @@ const USAGE_LABELS: Record<string, string> = {
   game: "Генератор игры",
   intensive: "Генератор интенсивов",
   task: "Генератор заданий",
+  quiz: "Генератор тестовых заданий",
   antiplagiat: "Антиплагиат",
 };
 
@@ -38,7 +39,7 @@ const PLAN_LABELS: Record<string, string> = {
 const ProfileSheet = ({ open, onClose, onNeedAuth }: ProfileSheetProps) => {
   const { servicesCount } = useUsage();
   const { user, token, plan, isPaid, logout, usage, freeLimit, expiresAt } = useAuth();
-  const totalUsage = usage.lesson + usage.game + usage.intensive + usage.task + usage.antiplagiat;
+  const totalUsage = usage.lesson + usage.game + usage.intensive + usage.task + usage.antiplagiat + usage.quiz;
 
   const daysLeft = expiresAt
     ? Math.ceil((new Date(expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
