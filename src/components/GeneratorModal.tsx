@@ -20,7 +20,7 @@ import {
 import Icon from "@/components/ui/icon";
 import { useAuth, AUTH_URL, GeneratorType } from "@/context/AuthContext";
 import { useUsage } from "@/context/UsageContext";
-import { downloadTxt } from "@/lib/download";
+import { downloadTxt, downloadDocx } from "@/lib/download";
 
 const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
 
@@ -212,6 +212,7 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [downloadingDocx, setDownloadingDocx] = useState(false);
 
   const [refineOpen, setRefineOpen] = useState(false);
   const [refineInstruction, setRefineInstruction] = useState("");
@@ -231,6 +232,7 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
     setError(null);
     setLoading(false);
     setSaved(false);
+    setDownloadingDocx(false);
     setRefineOpen(false);
     setRefineInstruction("");
     setRefineError(null);
@@ -311,6 +313,16 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
   const handleDownload = () => {
     if (!result) return;
     downloadTxt(resultTitle, [resultTitle, "", result]);
+  };
+
+  const handleDownloadDocx = async () => {
+    if (!result) return;
+    setDownloadingDocx(true);
+    try {
+      await downloadDocx(resultTitle, resultTitle, result);
+    } finally {
+      setDownloadingDocx(false);
+    }
   };
 
   const handleSave = async () => {
@@ -857,6 +869,22 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
                 Скачать .txt
               </Button>
             </div>
+
+            {type === "quiz" && (
+              <Button
+                variant="outline"
+                className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
+                onClick={handleDownloadDocx}
+                disabled={downloadingDocx}
+              >
+                {downloadingDocx ? (
+                  <Icon name="Loader2" size={16} className="animate-spin" />
+                ) : (
+                  <Icon name="FileText" size={16} />
+                )}
+                Скачать в Word (.docx)
+              </Button>
+            )}
           </div>
         )}
       </DialogContent>
