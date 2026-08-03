@@ -126,6 +126,18 @@ def build_extra_context_instruction(f: dict) -> str:
     return (" Также " + "; ".join(parts) + ".") if parts else ""
 
 
+def build_competencies_lines(f: dict) -> str:
+    competencies = (f.get('competencies') or '').strip()
+    return f"\nФормируемые ОК/УУД (общие/универсальные учебные действия): {competencies}" if competencies else ""
+
+
+def build_competencies_instruction(f: dict) -> str:
+    competencies = (f.get('competencies') or '').strip()
+    if not competencies:
+        return ""
+    return f" Обязательно покажи, на каких этапах и как именно формируются выбранные ОК/УУД: {competencies}."
+
+
 def build_lesson_prompt(f: dict) -> str:
     subject = f.get('subject') or 'дисциплина не указана'
     topic = f.get('topic') or 'новая тема'
@@ -137,6 +149,8 @@ def build_lesson_prompt(f: dict) -> str:
     t = LESSON_DURATION_MAP.get(duration, LESSON_DURATION_MAP['45'])
     extra_lines = build_extra_context_lines(f)
     extra_instruction = build_extra_context_instruction(f)
+    competencies_lines = build_competencies_lines(f)
+    competencies_instruction = build_competencies_instruction(f)
 
     return f"""Ты опытный методист-педагог. Составь подробный план урока на русском языке по следующим параметрам:
 
@@ -146,7 +160,7 @@ def build_lesson_prompt(f: dict) -> str:
 Задачи: {tasks}
 Технология обучения: {technology}
 Возраст / количество человек: {age_count}
-Время урока: {duration} минут{extra_lines}
+Время урока: {duration} минут{extra_lines}{competencies_lines}
 
 Структура плана строго такая (не меняй порядок и названия этапов), укажи рекомендованное время по каждому этапу (в сумме {duration} мин, ориентируйся на: оргмомент {t['org']} мин, актуализация {t['act']} мин, новая тема {t['new']} мин, практика {t['practice']} мин, рефлексия {t['reflect']} мин, домашнее задание {t['homework']} мин):
 
@@ -157,7 +171,7 @@ def build_lesson_prompt(f: dict) -> str:
 5. Рефлексия
 6. Домашнее задание
 
-Для каждого этапа опиши конкретные действия учителя и учеников, а не общие фразы.{extra_instruction} Пиши развёрнуто, по-деловому, без markdown-разметки (без **, #), используй обычный текст с переносами строк и нумерацией."""
+Для каждого этапа опиши конкретные действия учителя и учеников, а не общие фразы.{extra_instruction}{competencies_instruction} Пиши развёрнуто, по-деловому, без markdown-разметки (без **, #), используй обычный текст с переносами строк и нумерацией."""
 
 
 GAME_LABELS = {'5': '5 минут', '15': '15 минут', '45': '45 минут'}
@@ -250,15 +264,17 @@ def build_task_prompt(f: dict) -> str:
     component = TASK_COMPONENT_LABELS.get(component_key, 'сбалансированное сочетание всех компонентов (когнитивный, креативный, критический, коммуникативный)')
     extra_lines = build_extra_context_lines(f)
     extra_instruction = build_extra_context_instruction(f)
+    competencies_lines = build_competencies_lines(f)
+    competencies_instruction = build_competencies_instruction(f)
 
     return f"""Ты опытный педагог, специалист по разработке учебных заданий. Составь комплект учебных заданий на русском языке по параметрам:
 
 Предмет/дисциплина: {subject}
 Тема: {topic}
 Цель: {goal}
-Акцент на компонент мышления: {component}{extra_lines}
+Акцент на компонент мышления: {component}{extra_lines}{competencies_lines}
 
-Сделай минимум 3 задания трёх уровней сложности (базовый, средний, продвинутый), каждое задание должно явно задействовать указанный акцентный компонент мышления.{extra_instruction} Для каждого задания укажи формулировку и критерии оценивания. Пиши конкретно и практично, без markdown-разметки (без **, #), обычным текстом с нумерацией."""
+Сделай минимум 3 задания трёх уровней сложности (базовый, средний, продвинутый), каждое задание должно явно задействовать указанный акцентный компонент мышления.{extra_instruction}{competencies_instruction} Для каждого задания укажи формулировку и критерии оценивания. Пиши конкретно и практично, без markdown-разметки (без **, #), обычным текстом с нумерацией."""
 
 
 QUIZ_DIFFICULTY_LABELS = {

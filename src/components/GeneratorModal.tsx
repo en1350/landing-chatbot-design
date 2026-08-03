@@ -49,6 +49,7 @@ interface LessonFields {
   technology: string;
   ageCount: string;
   duration: "45" | "90";
+  competencies: string[];
   regionalComponent: string;
   professionalOrientation: string;
 }
@@ -76,6 +77,7 @@ interface TaskFields {
   topic: string;
   goal: string;
   component: "cognitive" | "creative" | "critical" | "communicative" | "balanced";
+  competencies: string[];
   regionalComponent: string;
   professionalOrientation: string;
 }
@@ -136,6 +138,22 @@ const QUIZ_TYPE_OPTIONS: { value: string; label: string }[] = [
   { value: "sequence", label: "Установление последовательности" },
 ];
 
+const COMPETENCY_OPTIONS: string[] = [
+  "Применение современных средств поиска, анализа и интерпретации информации",
+  "ИИ-грамотность",
+  "ИКТ-грамотность",
+  "Решение сложных и комплексных задач",
+  "Работа в команде и распределение ролей в проекте",
+  "Стратегическая коммуникация",
+  "Мобильность, адаптивность и гибкость",
+  "Применение знаний по правовой и финансовой грамотности в различных жизненных ситуациях",
+  "Осуществление устной и письменной коммуникации на государственном языке",
+  "Проявление гражданско-патриотической позиции, демонстрация осознанного поведения",
+  "Применение знаний об изменении климата, принципы бережливого производства",
+  "Укрепление здоровья в процессе профессиональной деятельности",
+  "Оценка и самооценка собственной деятельности",
+];
+
 async function requestGeneration(type: GeneratorType, fields: Record<string, string>): Promise<string> {
   const res = await fetch(GENERATE_URL, {
     method: "POST",
@@ -170,6 +188,7 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
     technology: "",
     ageCount: "",
     duration: "45",
+    competencies: [],
     regionalComponent: "",
     professionalOrientation: "",
   });
@@ -194,6 +213,7 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
     topic: "",
     goal: "",
     component: "balanced",
+    competencies: [],
     regionalComponent: "",
     professionalOrientation: "",
   });
@@ -223,10 +243,10 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
   const meta = META[type];
 
   const reset = () => {
-    setLessonFields({ subject: "", topic: "", goal: "", tasks: "", technology: "", ageCount: "", duration: "45", regionalComponent: "", professionalOrientation: "" });
+    setLessonFields({ subject: "", topic: "", goal: "", tasks: "", technology: "", ageCount: "", duration: "45", competencies: [], regionalComponent: "", professionalOrientation: "" });
     setGameFields({ subject: "", duration: "15", peopleCount: "", regionalComponent: "", professionalOrientation: "" });
     setIntensiveFields({ topic: "", audience: "schoolchildren", duration: "1day", format: "intensive", goal: "", regionalComponent: "", professionalOrientation: "" });
-    setTaskFields({ subject: "", topic: "", goal: "", component: "balanced", regionalComponent: "", professionalOrientation: "" });
+    setTaskFields({ subject: "", topic: "", goal: "", component: "balanced", competencies: [], regionalComponent: "", professionalOrientation: "" });
     setQuizFields({ subject: "", topic: "", questionCount: "10", difficulty: "mixed", questionTypes: ["single"], regionalComponent: "", professionalOrientation: "" });
     setResult(null);
     setError(null);
@@ -257,14 +277,14 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
     try {
       const fields: Record<string, string> =
         type === "lesson"
-          ? lessonFields
+          ? { ...lessonFields, competencies: lessonFields.competencies.join(", ") }
           : type === "game"
           ? gameFields
           : type === "intensive"
           ? intensiveFields
           : type === "quiz"
           ? { ...quizFields, questionTypes: quizFields.questionTypes.join(",") }
-          : taskFields;
+          : { ...taskFields, competencies: taskFields.competencies.join(", ") };
       const registered = await registerGeneratorUse(type);
       if (!registered) {
         onNeedUpgrade();
@@ -436,6 +456,28 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
                       <SelectItem value="90">90 минут</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">ОК / УУД (необязательно)</label>
+                  <div className="space-y-2 rounded-lg border border-border p-3 max-h-52 overflow-y-auto">
+                    {COMPETENCY_OPTIONS.map((c) => (
+                      <label key={c} className="flex items-start gap-2 text-sm cursor-pointer">
+                        <Checkbox
+                          className="mt-0.5"
+                          checked={lessonFields.competencies.includes(c)}
+                          onCheckedChange={(checked) =>
+                            setLessonFields((s) => ({
+                              ...s,
+                              competencies: checked
+                                ? [...s.competencies, c]
+                                : s.competencies.filter((x) => x !== c),
+                            }))
+                          }
+                        />
+                        {c}
+                      </label>
+                    ))}
+                  </div>
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-1.5 block">Региональный компонент</label>
@@ -643,6 +685,28 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">ОК / УУД (необязательно)</label>
+                  <div className="space-y-2 rounded-lg border border-border p-3 max-h-52 overflow-y-auto">
+                    {COMPETENCY_OPTIONS.map((c) => (
+                      <label key={c} className="flex items-start gap-2 text-sm cursor-pointer">
+                        <Checkbox
+                          className="mt-0.5"
+                          checked={taskFields.competencies.includes(c)}
+                          onCheckedChange={(checked) =>
+                            setTaskFields((s) => ({
+                              ...s,
+                              competencies: checked
+                                ? [...s.competencies, c]
+                                : s.competencies.filter((x) => x !== c),
+                            }))
+                          }
+                        />
+                        {c}
+                      </label>
+                    ))}
+                  </div>
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-1.5 block">Региональный компонент</label>
