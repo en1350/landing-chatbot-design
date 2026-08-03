@@ -53,7 +53,7 @@ const GeneratorsSection = ({ onNeedAuth }: GeneratorsSectionProps) => {
       <div className="text-center max-w-2xl mx-auto mb-4">
         <span className="text-xs font-bold uppercase tracking-widest text-coral">Инструменты</span>
         <h2 className="font-display text-3xl md:text-4xl font-bold mt-2">
-          Пять генераторов для педагога
+          Генераторы для педагога
         </h2>
         <p className="text-muted-foreground mt-3 leading-relaxed">
           Выберите нужный инструмент — заполните тему и класс, получите готовый результат за секунды.
