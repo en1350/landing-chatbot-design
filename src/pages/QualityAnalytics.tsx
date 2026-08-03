@@ -276,10 +276,9 @@ const QualityAnalyticsTool = () => {
     }
   };
 
-  const downloadHTMLReport = () => {
-    if (students.length === 0) return;
+  const buildReportHtml = () => {
     let html = `<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8">
-<title>Отчёт: ${discipline}</title>
+<title>Аналитическая справка: ${discipline}</title>
 <style>
 body { font-family: 'Segoe UI', Arial, sans-serif; max-width: 1000px; margin: 20px auto; padding: 20px; color: #2c3e50; }
 h1 { color: #1e3c72; border-bottom: 3px solid #2a5298; padding-bottom: 10px; }
@@ -294,8 +293,13 @@ th { background: #f4f7fb; color: #1e3c72; }
 .plan-item.high { border-left-color: #e74c3c; }
 .plan-item.med { border-left-color: #f39c12; }
 ul { margin-left: 20px; line-height: 1.7; }
+@media print {
+  body { margin: 0; padding: 12px; }
+  h2 { break-after: avoid; }
+  table, .plan-item { break-inside: avoid; }
+}
 </style></head><body>
-<h1>Отчёт по уровневой аналитике качества освоения предметных умений</h1>
+<h1>Аналитическая справка качества обученности</h1>
 <div class="info">
 <strong>Дисциплина:</strong> ${discipline}<br>
 <strong>Группа:</strong> ${group}<br>
@@ -357,6 +361,12 @@ ${riskStudents.length === 0 ? "<p>Студентов группы риска н�
 </p>
 </body></html>`;
 
+    return html;
+  };
+
+  const downloadHTMLReport = () => {
+    if (students.length === 0) return;
+    const html = buildReportHtml();
     const blob = new Blob([html], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -364,6 +374,20 @@ ${riskStudents.length === 0 ? "<p>Студентов группы риска н�
     a.download = `Отчёт_${discipline.replace(/[^a-zA-Zа-яА-Я0-9]/g, "_")}_${new Date().toISOString().slice(0, 10)}.html`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const printReport = () => {
+    if (students.length === 0) return;
+    const html = buildReportHtml();
+    const win = window.open("", "_blank");
+    if (!win) return;
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+    win.onload = () => {
+      win.focus();
+      win.print();
+    };
   };
 
   const downloadCSV = () => {
@@ -384,18 +408,6 @@ ${riskStudents.length === 0 ? "<p>Студентов группы риска н�
     const a = document.createElement("a");
     a.href = url;
     a.download = `Оценки_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const downloadJSON = () => {
-    if (students.length === 0) return;
-    const data = { discipline, group, skills, students, grades };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `Данные_${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -905,16 +917,20 @@ ${riskStudents.length === 0 ? "<p>Студентов группы риска н�
           ) : (
             <>
               <p className="text-sm text-muted-foreground">
-                Выберите формат экспорта. HTML-отчёт можно открыть в браузере и сохранить в PDF через печать.
+                Скачайте HTML-отчёт, оценки в CSV или сразу распечатайте полноценную аналитическую справку.
               </p>
               {aiPlanInExport && aiPlan && (
                 <p className="text-xs text-primary flex items-center gap-1.5 bg-primary/5 rounded-lg px-3 py-2 w-fit">
                   <Icon name="CheckCircle2" size={14} />
-                  План коррекционной работы от ИИ будет включён в HTML-отчёт
+                  План коррекционной работы от ИИ будет включён в отчёт и печать
                 </p>
               )}
               <div className="flex flex-wrap gap-2">
-                <Button className="gap-2" onClick={downloadHTMLReport}>
+                <Button className="gap-2" onClick={printReport}>
+                  <Icon name="Printer" size={16} />
+                  Печать аналитической справки
+                </Button>
+                <Button variant="outline" className="gap-2" onClick={downloadHTMLReport}>
                   <Icon name="FileText" size={16} />
                   Скачать HTML-отчёт
                 </Button>
@@ -922,18 +938,11 @@ ${riskStudents.length === 0 ? "<p>Студентов группы риска н�
                   <Icon name="Table" size={16} />
                   Скачать оценки (CSV)
                 </Button>
-                <Button variant="secondary" className="gap-2 bg-amber-500 text-white hover:bg-amber-600" onClick={downloadJSON}>
-                  <Icon name="Database" size={16} />
-                  Скачать данные (JSON)
-                </Button>
-                <Button variant="outline" className="gap-2" onClick={() => window.print()}>
-                  <Icon name="Printer" size={16} />
-                  Печать / PDF
-                </Button>
               </div>
               <div className="rounded-xl bg-secondary/40 p-4 text-xs text-muted-foreground">
-                <strong>Подсказка:</strong> После скачивания HTML-отчёта откройте его в браузере и нажмите Ctrl+P (Cmd+P) для сохранения в PDF.
-                CSV-файл открывается в Excel, Google Sheets или LibreOffice Calc.
+                <strong>Подсказка:</strong> «Печать аналитической справки» откроет полный отчёт в новой вкладке и сразу
+                вызовет диалог печати — там же можно сохранить его как PDF. CSV-файл открывается в Excel, Google Sheets
+                или LibreOffice Calc.
               </div>
             </>
           )}
