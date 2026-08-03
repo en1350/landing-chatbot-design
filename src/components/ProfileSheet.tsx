@@ -37,8 +37,12 @@ const PLAN_LABELS: Record<string, string> = {
 
 const ProfileSheet = ({ open, onClose, onNeedAuth }: ProfileSheetProps) => {
   const { servicesCount } = useUsage();
-  const { user, token, plan, isPaid, logout, usage, freeLimit } = useAuth();
+  const { user, token, plan, isPaid, logout, usage, freeLimit, expiresAt } = useAuth();
   const totalUsage = usage.lesson + usage.game + usage.intensive + usage.task + usage.antiplagiat;
+
+  const daysLeft = expiresAt
+    ? Math.ceil((new Date(expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : null;
   const [materials, setMaterials] = useState<SavedMaterial[]>([]);
   const [loadingMaterials, setLoadingMaterials] = useState(false);
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
@@ -126,6 +130,28 @@ const ProfileSheet = ({ open, onClose, onNeedAuth }: ProfileSheetProps) => {
                 <Icon name="LogOut" size={15} />
                 Выйти
               </Button>
+            </div>
+          )}
+
+          {user && isPaid && expiresAt && (
+            <div
+              className={`flex items-start gap-2.5 rounded-xl border p-3.5 mb-6 text-xs leading-relaxed ${
+                daysLeft !== null && daysLeft <= 3
+                  ? "border-destructive/30 bg-destructive/5 text-destructive"
+                  : "border-amber-500/30 bg-amber-500/5 text-amber-700"
+              }`}
+            >
+              <Icon name="AlertTriangle" size={16} className="mt-0.5 shrink-0" />
+              <p>
+                Тариф действует до{" "}
+                <span className="font-semibold">
+                  {new Date(expiresAt).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" })}
+                </span>
+                {daysLeft !== null && daysLeft >= 0 && (
+                  <> (осталось {daysLeft} {daysLeft === 1 ? "день" : daysLeft < 5 ? "дня" : "дней"})</>
+                )}
+                . Подписка не продлевается автоматически — оплатите новый период заранее, чтобы не потерять безлимитный доступ.
+              </p>
             </div>
           )}
 
