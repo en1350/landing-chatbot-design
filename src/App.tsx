@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
 import StudentTrainer from "./pages/StudentTrainer";
+import QualityAnalytics from "./pages/QualityAnalytics";
 import { UsageProvider } from "./context/UsageContext";
 import { AuthProvider } from "./context/AuthContext";
 
@@ -25,6 +26,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/trenazher-dlya-uchenikov" element={<StudentTrainer />} />
+              <Route path="/analitika-kachestva" element={<QualityAnalytics />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -74,6 +74,12 @@ const Navbar = ({
           >
             Тренажёр для учеников
           </Link>
+          <Link
+            to="/analitika-kachestva"
+            className="story-link px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
+          >
+            Аналитика качества
+          </Link>
           <button
             onClick={onOpenNotebook}
             className="story-link px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
@@ -113,6 +119,13 @@ const Navbar = ({
                 className="text-left px-3 py-3 rounded-lg text-base font-medium hover:bg-accent transition-colors"
               >
                 Тренажёр для учеников
+              </Link>
+              <Link
+                to="/analitika-kachestva"
+                onClick={() => setOpen(false)}
+                className="text-left px-3 py-3 rounded-lg text-base font-medium hover:bg-accent transition-colors"
+              >
+                Аналитика качества
               </Link>
               <button
                 onClick={() => {

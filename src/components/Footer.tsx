@@ -45,6 +45,11 @@ const Footer = ({ onOpenProfile, onOpenRandomizer, onOpenAntiplagiat }: FooterPr
                 Тренажёр для учеников
               </Link>
             </li>
+            <li>
+              <Link to="/analitika-kachestva" className="hover:text-foreground transition-colors">
+                Аналитика качества
+              </Link>
+            </li>
             <li><a href="#chat-anchor" className="hover:text-foreground transition-colors">ИИ-помощник</a></li>
             <li><a href="#pricing" className="hover:text-foreground transition-colors">Тарифы</a></li>
           </ul>
