@@ -49,6 +49,7 @@ interface LessonFields {
   technology: string;
   ageCount: string;
   duration: "45" | "90";
+  lessonType: "theory" | "practice";
   competencies: string[];
   regionalComponent: string;
   professionalOrientation: string;
@@ -114,6 +115,11 @@ const FORMAT_OPTIONS: { value: IntensiveFields["format"]; label: string }[] = [
   { value: "hackathon", label: "Хакатон" },
   { value: "project_lab", label: "Проектная лаборатория" },
   { value: "immersive", label: "Иммерсивный интенсив" },
+];
+
+const LESSON_TYPE_OPTIONS: { value: LessonFields["lessonType"]; label: string }[] = [
+  { value: "theory", label: "Теоретическое занятие" },
+  { value: "practice", label: "Практическое занятие" },
 ];
 
 const COMPONENT_OPTIONS: { value: TaskFields["component"]; label: string }[] = [
@@ -188,6 +194,7 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
     technology: "",
     ageCount: "",
     duration: "45",
+    lessonType: "theory",
     competencies: [],
     regionalComponent: "",
     professionalOrientation: "",
@@ -243,7 +250,7 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
   const meta = META[type];
 
   const reset = () => {
-    setLessonFields({ subject: "", topic: "", goal: "", tasks: "", technology: "", ageCount: "", duration: "45", competencies: [], regionalComponent: "", professionalOrientation: "" });
+    setLessonFields({ subject: "", topic: "", goal: "", tasks: "", technology: "", ageCount: "", duration: "45", lessonType: "theory", competencies: [], regionalComponent: "", professionalOrientation: "" });
     setGameFields({ subject: "", duration: "15", peopleCount: "", regionalComponent: "", professionalOrientation: "" });
     setIntensiveFields({ topic: "", audience: "schoolchildren", duration: "1day", format: "intensive", goal: "", regionalComponent: "", professionalOrientation: "" });
     setTaskFields({ subject: "", topic: "", goal: "", component: "balanced", competencies: [], regionalComponent: "", professionalOrientation: "" });
@@ -393,6 +400,24 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
           <div className="space-y-4 mt-2">
             {type === "lesson" && (
               <>
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Тип занятия</label>
+                  <Select
+                    value={lessonFields.lessonType}
+                    onValueChange={(v: LessonFields["lessonType"]) => setLessonFields((s) => ({ ...s, lessonType: v }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LESSON_TYPE_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>
+                          {o.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div>
                   <label className="text-sm font-medium mb-1.5 block">Предмет/дисциплина</label>
                   <Input
