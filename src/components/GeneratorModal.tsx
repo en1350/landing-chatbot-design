@@ -575,11 +575,11 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
             {type === "game" && (
               <>
                 <div>
-                  <label className="text-sm font-medium mb-1.5 block">Предмет/дисциплина</label>
+                  <label className="text-sm font-medium mb-1.5 block">Тема урока</label>
                   <Input
                     value={gameFields.subject}
                     onChange={(e) => setGameFields((s) => ({ ...s, subject: e.target.value }))}
-                    placeholder="Например: Английский язык, Химия..."
+                    placeholder="Например: Прошедшее время в английском, Периодическая таблица..."
                   />
                 </div>
                 <div>
