@@ -1007,6 +1007,32 @@ const QualityAnalytics = () => {
             </p>
           </div>
 
+          <div className="max-w-2xl mb-8 rounded-2xl border border-border bg-muted/30 p-5 sm:p-6">
+            <p className="text-sm font-semibold mb-3">Порядок формирования аналитической справки</p>
+            <ol className="space-y-2.5 text-sm text-muted-foreground leading-relaxed">
+              <li className="flex gap-2.5">
+                <span className="shrink-0 font-semibold text-foreground">1.</span>
+                <span>Перейдите во вкладку «Данные» и укажите дисциплину, группу, предметные умения и список студентов.</span>
+              </li>
+              <li className="flex gap-2.5">
+                <span className="shrink-0 font-semibold text-foreground">2.</span>
+                <span>
+                  Внесите результаты контроля (оценки) в индивидуальные карточки обучающихся во вкладке «Оценки».
+                  Чем подробнее заданы учебные элементы (знания, умения, навыки), тем точнее система проведёт
+                  поэлементный анализ усвоения материала каждым обучающимся.
+                </span>
+              </li>
+              <li className="flex gap-2.5">
+                <span className="shrink-0 font-semibold text-foreground">3.</span>
+                <span>
+                  Система автоматически сформирует сводную статистику качества обученности, выявит типичные пробелы
+                  в знаниях и предложит методические рекомендации для индивидуальных планов коррекционной работы —
+                  во вкладках «Группа», «Студенты» и «План».
+                </span>
+              </li>
+            </ol>
+          </div>
+
           {!isPaid ? (
             <div className="max-w-xl rounded-2xl border-2 border-dashed border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 sm:p-10 text-center">
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15 text-3xl mb-4">
