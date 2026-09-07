@@ -1207,7 +1207,7 @@ const NetworkProtocolsTask = () => {
 
 /* ---------- Список тренажёров ---------- */
 
-type TrainerKey = "info-basics" | "algorithms" | "backwards" | "network-protocols";
+type TrainerKey = "info-basics" | "algorithms" | "backwards" | "network-protocols" | "ai-arcade";
 
 type InfoBasicsStep = "quiz" | "classify" | "match" | "processor" | "done";
 
@@ -1345,6 +1345,13 @@ const TRAINERS: TrainerItem[] = [
     description: "Теория по модели OSI и TCP/IP, тест и именной сертификат по итогам",
     accent: "#0891B2",
   },
+  {
+    key: "ai-arcade",
+    icon: "🤖",
+    title: "AI Arcade: Путь Интеллекта",
+    description: "Аркада на 5 уровней про сбор данных, обучение весов и архитектуру нейросети — с сертификатом",
+    accent: "#ff00e6",
+  },
 ];
 
 /* ---------- Страница ---------- */
@@ -1450,12 +1457,22 @@ const StudentTrainer = () => {
                 </h1>
               </div>
 
-              <div className="rounded-2xl border border-border bg-card p-5 md:p-8 shadow-sm max-w-2xl">
-                {active === "info-basics" && <InfoBasicsInteractive />}
-                {active === "algorithms" && <AlgorithmsTask />}
-                {active === "backwards" && <BackwardsAnalysisTask />}
-                {active === "network-protocols" && <NetworkProtocolsTask />}
-              </div>
+              {active === "ai-arcade" ? (
+                <div className="rounded-2xl border border-border bg-card p-3 md:p-5 shadow-sm max-w-[840px] overflow-x-auto">
+                  <iframe
+                    src="/ai-arcade.html"
+                    title="AI Arcade: Путь Интеллекта"
+                    className="w-[800px] h-[600px] rounded-xl border-0"
+                  />
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-border bg-card p-5 md:p-8 shadow-sm max-w-2xl">
+                  {active === "info-basics" && <InfoBasicsInteractive />}
+                  {active === "algorithms" && <AlgorithmsTask />}
+                  {active === "backwards" && <BackwardsAnalysisTask />}
+                  {active === "network-protocols" && <NetworkProtocolsTask />}
+                </div>
+              )}
             </>
           )}
         </div>

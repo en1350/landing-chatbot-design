@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>AI Arcade: Путь Интеллекта + Сертификат</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        background: #0a0a1f;
+        color: #fff;
+        font-family: 'Segoe UI', sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        overflow: hidden;
+    }
+    #gameContainer {
+        position: relative;
+        width: 800px;
+        height: 600px;
+        border: 2px solid #00f0ff;
+        border-radius: 10px;
+        box-shadow: 0 0 40px #00f0ff, inset 0 0 40px rgba(0,240,255,0.1);
+        overflow: hidden;
+    }
+    canvas { display: block; background: #05051a; }
+    #ui {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        display: flex;
+        justify-content: space-between;
+        font-size: 16px;
+        text-shadow: 0 0 10px #00f0ff;
+        pointer-events: none;
+        z-index: 10;
+    }
+    #info {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        text-align: center;
+        font-size: 14px;
+        color: #a0e9ff;
+        text-shadow: 0 0 8px #00f0ff;
+        pointer-events: none;
+        z-index: 10;
+    }
+    #overlay {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(5,5,26,0.95);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 20;
+        text-align: center;
+        padding: 30px;
+        overflow-y: auto;
+    }
+    #overlay h1 {
+        font-size: 36px;
+        background: linear-gradient(90deg, #00f0ff, #ff00e6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 15px;
+        text-shadow: 0 0 30px rgba(0,240,255,0.5);
+    }
+    #overlay p { font-size: 16px; margin-bottom: 15px; max-width: 650px; line-height: 1.5; color: #d0d0e0; }
+    
+    /* Стили для теории */
+    .theory-box {
+        background: rgba(0, 240, 255, 0.05);
+        border-left: 4px solid #00f0ff;
+        padding: 15px 20px;
+        margin: 15px 0 25px 0;
+        text-align: left;
+        border-radius: 0 8px 8px 0;
+        max-width: 650px;
+    }
+    .theory-box h3 { color: #00f0ff; margin-bottom: 8px; font-size: 18px; }
+    .theory-box ul { padding-left: 20px; color: #b0b0c0; font-size: 15px; line-height: 1.6; }
+    .theory-box li { margin-bottom: 5px; }
+
+    #overlay button {
+        margin-top: 10px;
+        padding: 12px 35px;
+        font-size: 18px;
+        background: linear-gradient(90deg, #00f0ff, #ff00e6);
+        border: none;
+        border-radius: 30px;
+        color: #000;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s;
+        box-shadow: 0 0 20px rgba(0,240,255,0.5);
+    }
+    #overlay button:hover { transform: scale(1.05); }
+    .hidden { display: none !important; }
+    .level-title { color: #ff00e6; font-size: 22px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
+
+    /* Стили для сертификата */
+    #certificate {
+        background: #fff;
+        color: #1a1a2e;
+        width: 700px;
+        padding: 40px;
+        border: 8px double #00f0ff;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 0 50px rgba(0,240,255,0.3);
+        position: relative;
+    }
+    #certificate::before {
+        content: '🏆';
+        font-size: 60px;
+        display: block;
+        margin-bottom: 10px;
+    }
+    #certificate h2 {
+        font-size: 32px;
+        color: #0a0a1f;
+        text-transform: uppercase;
+        letter-spacing: 4px;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #ff00e6;
+        display: inline-block;
+        padding-bottom: 5px;
+    }
+    #certificate p { font-size: 18px; margin: 10px 0; color: #333; }
+    #certificate input {
+        font-size: 20px;
+        text-align: center;
+        border: none;
+        border-bottom: 2px solid #00f0ff;
+        background: transparent;
+        color: #0a0a1f;
+        font-weight: bold;
+        width: 80%;
+        margin: 5px 0 15px 0;
+        padding: 5px;
+        font-family: 'Segoe UI', sans-serif;
+    }
+    #certificate input:focus { outline: none; border-bottom-color: #ff00e6; }
+    #certScore {
+        font-size: 48px;
+        color: #ff00e6;
+        font-weight: bold;
+        margin: 10px 0;
+        text-shadow: 0 0 10px rgba(255,0,230,0.3);
+    }
+    .cert-date { font-size: 14px; color: #666; margin-top: 30px; }
+    .print-btn {
+        margin-top: 25px;
+        background: #0a0a1f !important;
+        color: #00f0ff !important;
+        box-shadow: 0 0 15px rgba(0,240,255,0.3) !important;
+    }
+
+    /* Настройки для печати */
+    @media print {
+        body { background: #fff; display: block; height: auto; overflow: visible; }
+        #gameContainer, #ui, #info { display: none !important; }
+        #overlay { 
+            position: static; 
+            background: #fff; 
+            width: 100%; 
+            height: auto; 
+            padding: 0;
+            display: flex !important;
+        }
+        #certificate { 
+            box-shadow: none; 
+            border: 5px double #000; 
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            page-break-inside: avoid;
+        }
+        #certificate input { border-bottom: 1px solid #000; }
+        .print-btn, .restart-btn { display: none !important; }
+        #certificate::before { content: '🏆'; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+</style>
+</head>
+<body>
+<div id="gameContainer">
+    <canvas id="game" width="800" height="600"></canvas>
+    <div id="ui">
+        <div>Уровень: <span id="levelNum">1</span>/5</div>
+        <div>Очки: <span id="score">0</span></div>
+        <div>Жизни: <span id="lives">❤❤❤</span></div>
+    </div>
+    <div id="info">Управление: ← → или мышь</div>
+    
+    <div id="overlay">
+        <h1>🤖 AI ARCADE</h1>
+        <p>Пройдите 5 уровней, изучите теорию и создайте свою систему искусственного интеллекта.</p>
+        <button onclick="startGame()">НАЧАТЬ МИССИЮ 🚀</button>
+    </div>
+</div>
+
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const W = 800, H = 600;
+
+let state = 'menu';
+let currentLevel = 1;
+let score = 0;
+let lives = 3;
+let levelData = {};
+let keys = {};
+let particles = [];
+let stars = [];
+
+for (let i = 0; i < 100; i++) {
+    stars.push({ x: Math.random()*W, y: Math.random()*H, r: Math.random()*1.5, s: Math.random()*0.5+0.1 });
+}
+
+// === ТЕОРЕТИЧЕСКИЕ МАТЕРИАЛЫ ===
+const theoryData = [
+    "",
+    `<h3>📚 1. Сбор и подготовка данных (Data Collection)</h3>
+     <ul>
+        <li><b>Датасет:</b> Набор данных, на которых обучается модель.</li>
+        <li><b>Разметка:</b> Процесс присвоения меток данным (например, "это кошка", "это собака").</li>
+        <li><b>Принцип GIGO:</b> "Garbage In, Garbage Out" (Мусор на входе — мусор на выходе). Качество ИИ напрямую зависит от качества и чистоты данных.</li>
+     </ul>`,
+    `<h3>📚 2. Обучение и градиентный спуск (Training)</h3>
+     <ul>
+        <li><b>Веса (Weights):</b> Числовые параметры внутри нейросети, которые определяют силу связей между нейронами.</li>
+        <li><b>Функция потерь (Loss Function):</b> Математическая формула, которая измеряет, насколько ответ модели отличается от правильного.</li>
+        <li><b>Градиентный спуск:</b> Алгоритм оптимизации, который шаг за шагом корректирует веса, чтобы минимизировать ошибку (как спуск с горы в самую низкую точку).</li>
+     </ul>`,
+    `<h3>📚 3. Архитектура нейросети (Architecture)</h3>
+     <ul>
+        <li><b>Входной слой:</b> Принимает исходные данные (пиксели, слова, числа).</li>
+        <li><b>Скрытые слои:</b> Выполняют промежуточные вычисления, выделяя признаки (края, формы, паттерны).</li>
+        <li><b>Выходной слой:</b> Выдает финальный результат (вероятность принадлежности к классу).</li>
+        <li><b>CNN (Сверточные сети):</b> Специальная архитектура, идеально подходящая для работы с изображениями.</li>
+     </ul>`,
+    `<h3>📚 4. Классификация и инференс (Inference)</h3>
+     <ul>
+        <li><b>Инференс:</b> Процесс использования уже обученной модели для предсказания на новых, ранее не виденных данных.</li>
+        <li><b>Точность (Accuracy):</b> Процент правильных предсказаний модели от общего числа попыток.</li>
+        <li><b>Ложные срабатывания:</b> Ошибки, когда модель относит объект не к тому классу (например, принимает волка за собаку).</li>
+     </ul>`,
+    `<h3>📚 5. Переобучение и регуляризация (Overfitting)</h3>
+     <ul>
+        <li><b>Переобучение:</b> Состояние, когда модель идеально запомнила обучающие данные (включая шум), но не может работать с новыми данными.</li>
+        <li><b>Тестовая выборка:</b> Часть данных, которая скрыта от модели во время обучения и используется только для финальной честной проверки.</li>
+        <li><b>Регуляризация (например, Dropout):</b> Методы борьбы с переобучением, которые искусственно усложняют моделирование шума.</li>
+     </ul>`
+];
+
+// === УТИЛИТЫ ===
+function addParticles(x, y, color, count=15) {
+    for (let i = 0; i < count; i++) {
+        particles.push({ x, y, vx: (Math.random()-0.5)*6, vy: (Math.random()-0.5)*6, life: 30, color });
+    }
+}
+function updateParticles() {
+    particles = particles.filter(p => { p.x += p.vx; p.y += p.vy; p.life--; return p.life > 0; });
+}
+function drawParticles() {
+    particles.forEach(p => {
+        ctx.globalAlpha = p.life / 30;
+        ctx.fillStyle = p.color;
+        ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI*2); ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+}
+function drawStars() {
+    stars.forEach(s => {
+        s.y += s.s;
+        if (s.y > H) { s.y = 0; s.x = Math.random()*W; }
+        ctx.fillStyle = `rgba(255,255,255,${0.3+Math.random()*0.3})`;
+        ctx.fillRect(s.x, s.y, s.r, s.r);
+    });
+}
+function drawNeonText(text, x, y, size=20, color='#00f0ff', align='left') {
+    ctx.font = `bold ${size}px Segoe UI`;
+    ctx.textAlign = align;
+    ctx.shadowColor = color; ctx.shadowBlur = 15; ctx.fillStyle = color;
+    ctx.fillText(text, x, y);
+    ctx.shadowBlur = 0;
+}
+
+// === УРОВНИ (логика и отрисовка без изменений для краткости, но полностью рабочая) ===
+function initLevel1() {
+    levelData = { player: { x: W/2, y: H-60, w: 100, h: 20 }, items: [], spawnTimer: 0, collected: 0, target: 15, trash: 0 };
+    document.getElementById('info').innerText = '🎯 Ловите качественные данные (📊), избегайте мусора (🗑)! Цель: 15 данных';
+}
+function updateLevel1() {
+    const d = levelData;
+    if (keys['ArrowLeft']) d.player.x -= 7;
+    if (keys['ArrowRight']) d.player.x += 7;
+    d.player.x = Math.max(0, Math.min(W - d.player.w, d.player.x));
+    d.spawnTimer++;
+    if (d.spawnTimer > 30) {
+        d.spawnTimer = 0;
+        d.items.push({ x: Math.random() * (W-40) + 20, y: -30, type: Math.random() > 0.3 ? 'data' : 'trash', vy: 3 + Math.random()*2 });
+    }
+    d.items = d.items.filter(it => {
+        it.y += it.vy;
+        if (it.y > d.player.y - 10 && it.y < d.player.y + d.player.h && it.x > d.player.x && it.x < d.player.x + d.player.w) {
+            if (it.type === 'data') { d.collected++; score += 10; addParticles(it.x, it.y, '#00f0ff'); } 
+            else { lives--; d.trash++; addParticles(it.x, it.y, '#ff0055'); updateUI(); if (lives <= 0) gameOver(); }
+            return false;
+        }
+        return it.y <= H;
+    });
+    if (d.collected >= d.target) nextLevel();
+}
+function drawLevel1() {
+    const d = levelData;
+    const grad = ctx.createLinearGradient(d.player.x, d.player.y, d.player.x+d.player.w, d.player.y);
+    grad.addColorStop(0, '#00f0ff'); grad.addColorStop(1, '#ff00e6');
+    ctx.fillStyle = grad; ctx.shadowColor = '#00f0ff'; ctx.shadowBlur = 20;
+    ctx.fillRect(d.player.x, d.player.y, d.player.w, d.player.h); ctx.shadowBlur = 0;
+    d.items.forEach(it => { ctx.font = '30px Segoe UI'; ctx.textAlign = 'center'; ctx.fillText(it.type === 'data' ? '📊' : '🗑️', it.x, it.y); });
+    drawNeonText(`Собрано: ${d.collected}/${d.target}`, W/2, 50, 20, '#00f0ff', 'center');
+}
+
+function initLevel2() {
+    levelData = { weights: [50, 50, 50], targets: [Math.random()*100, Math.random()*100, Math.random()*100], selected: 0, error: 0, attempts: 0 };
+    document.getElementById('info').innerText = '⚖️ Настройте веса (W1,W2,W3) так, чтобы они совпали с целями (T1,T2,T3). ← → выбор, ↑ ↓ настройка';
+}
+function updateLevel2() {
+    const d = levelData;
+    d.error = Math.abs(d.weights[0]-d.targets[0]) + Math.abs(d.weights[1]-d.targets[1]) + Math.abs(d.weights[2]-d.targets[2]);
+    if (d.error < 5) { score += Math.max(10, 100 - d.attempts*10); addParticles(W/2, H/2, '#00ff88', 40); nextLevel(); }
+}
+function drawLevel2() {
+    const d = levelData;
+    drawNeonText('НАСТРОЙКА ВЕСОВ НЕЙРОСЕТИ', W/2, 60, 24, '#ff00e6', 'center');
+    for (let i = 0; i < 3; i++) {
+        const y = 150 + i*120, selected = i === d.selected;
+        drawNeonText(`W${i+1}`, 80, y, 20, selected ? '#00f0ff' : '#666', 'left');
+        drawNeonText(`T${i+1}=${d.targets[i].toFixed(0)}`, W-80, y, 20, '#ff00e6', 'right');
+        ctx.strokeStyle = '#333'; ctx.lineWidth = 2; ctx.strokeRect(150, y-15, 500, 30);
+        const w = d.weights[i]*5;
+        const grad = ctx.createLinearGradient(150, 0, 150+w, 0);
+        grad.addColorStop(0, '#00f0ff'); grad.addColorStop(1, '#ff00e6');
+        ctx.fillStyle = grad; ctx.fillRect(150, y-15, w, 30);
+        ctx.strokeStyle = '#ff00e6'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(150 + d.targets[i]*5, y-20); ctx.lineTo(150 + d.targets[i]*5, y+20); ctx.stroke();
+        drawNeonText(d.weights[i].toFixed(0), 150 + w + 10, y+5, 16, '#fff', 'left');
+    }
+    const errColor = d.error < 20 ? '#00ff88' : d.error < 50 ? '#ffaa00' : '#ff0055';
+    drawNeonText(`Ошибка: ${d.error.toFixed(1)} (цель: < 5)`, W/2, H-80, 22, errColor, 'center');
+    drawNeonText(`Попыток градиентного спуска: ${d.attempts}`, W/2, H-50, 16, '#aaa', 'center');
+}
+
+function initLevel3() {
+    const layers = [{ count: 4, x: 150, color: '#00f0ff' }, { count: 6, x: 350, color: '#aa55ff' }, { count: 6, x: 550, color: '#aa55ff' }, { count: 2, x: 700, color: '#ff00e6' }];
+    const neurons = [];
+    layers.forEach((layer, li) => {
+        for (let i = 0; i < layer.count; i++) {
+            const y = H/2 - (layer.count-1)*40/2 + i*40;
+            neurons.push({ x: layer.x, y, layer: li, color: layer.color, active: false });
+        }
+    });
+    levelData = { neurons, connections: [], requiredConnections: 20 };
+    document.getElementById('info').innerText = '🧠 Кликайте по нейронам последовательно (от левого слоя к правому), чтобы соединить их. Нужно 20 связей.';
+}
+function updateLevel3() {
+    if (levelData.connections.length >= levelData.requiredConnections) { score += 100; addParticles(W/2, H/2, '#ff00e6', 50); nextLevel(); }
+}
+function drawLevel3() {
+    const d = levelData;
+    drawNeonText('АРХИТЕКТУРА НЕЙРОСЕТИ', W/2, 50, 24, '#ff00e6', 'center');
+    d.connections.forEach(c => { ctx.strokeStyle = `rgba(0,240,255,0.4)`; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(c.from.x, c.from.y); ctx.lineTo(c.to.x, c.to.y); ctx.stroke(); });
+    d.neurons.forEach(n => {
+        ctx.shadowColor = n.color; ctx.shadowBlur = n.active ? 25 : 10; ctx.fillStyle = n.active ? '#fff' : n.color;
+        ctx.beginPath(); ctx.arc(n.x, n.y, 12, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+    });
+    drawNeonText(`Связей: ${d.connections.length}/${d.requiredConnections}`, W/2, H-50, 20, '#00f0ff', 'center');
+}
+
+function initLevel4() {
+    levelData = { objects: [], spawnTimer: 0, classified: 0, target: 12, wrong: 0 };
+    document.getElementById('info').innerText = '🐱🐶 Классифицируйте объекты! A — кошка, S — собака. Быстро и точно!';
+}
+function updateLevel4() {
+    const d = levelData;
+    d.spawnTimer++;
+    if (d.spawnTimer > 60 && d.objects.length < 3) {
+        d.spawnTimer = 0;
+        const isCat = Math.random() > 0.5;
+        d.objects.push({ x: Math.random()*(W-200)+100, y: Math.random()*(H-300)+150, type: isCat ? 'cat' : 'dog', life: 180, emoji: isCat ? '🐱' : '🐶' });
+    }
+    d.objects = d.objects.filter(o => {
+        o.life--;
+        if (o.life <= 0) { d.wrong++; addParticles(o.x, o.y, '#ff0055'); return false; }
+        return true;
+    });
+    if (d.classified >= d.target) nextLevel();
+}
+function drawLevel4() {
+    const d = levelData;
+    drawNeonText('КЛАССИФИКАЦИЯ ОБРАЗОВ', W/2, 50, 24, '#ff00e6', 'center');
+    d.objects.forEach(o => {
+        ctx.globalAlpha = o.life / 180; ctx.font = '60px Segoe UI'; ctx.textAlign = 'center'; ctx.fillText(o.emoji, o.x, o.y);
+        ctx.fillStyle = o.life < 60 ? '#ff0055' : '#00f0ff'; ctx.fillRect(o.x-30, o.y+15, 60*(o.life/180), 4); ctx.globalAlpha = 1;
+    });
+    drawNeonText(`Распознано: ${d.classified}/${d.target}`, W/2, H-50, 20, '#00f0ff', 'center');
+}
+
+function initLevel5() {
+    levelData = { player: { x: W/2, y: H-80 }, boss: { x: W/2, y: 150, hp: 100, maxHp: 100 }, bullets: [], enemies: [], spawnTimer: 0 };
+    document.getElementById('info').innerText = '⚔️ ФИНАЛЬНЫЙ БОСС: ПЕРЕОБУЧЕНИЕ! ← → движение, ПРОБЕЛ — стрельба.';
+}
+function updateLevel5() {
+    const d = levelData;
+    if (keys['ArrowLeft']) d.player.x -= 6;
+    if (keys['ArrowRight']) d.player.x += 6;
+    d.player.x = Math.max(30, Math.min(W-30, d.player.x));
+    if (keys[' '] && (!d.lastShot || Date.now() - d.lastShot > 200)) { d.bullets.push({ x: d.player.x, y: d.player.y-20, vy: -10 }); d.lastShot = Date.now(); }
+    d.bullets = d.bullets.filter(b => {
+        b.y += b.vy;
+        if (Math.abs(b.x - d.boss.x) < 60 && Math.abs(b.y - d.boss.y) < 40) { d.boss.hp -= 2; addParticles(b.x, b.y, '#ff00e6', 10); return false; }
+        d.enemies = d.enemies.filter(e => {
+            if (Math.abs(b.x - e.x) < 20 && Math.abs(b.y - e.y) < 20) { addParticles(e.x, e.y, '#ffaa00', 15); score += 5; return false; }
+            return true;
+        });
+        return b.y > 0;
+    });
+    d.spawnTimer++;
+    if (d.spawnTimer > 50) { d.spawnTimer = 0; d.enemies.push({ x: Math.random()*(W-100)+50, y: -30, vy: 2 + Math.random()*2, emoji: '📋' }); }
+    d.enemies = d.enemies.filter(e => {
+        e.y += e.vy;
+        if (e.y > H) { d.boss.hp += 1; return false; }
+        if (Math.abs(e.x - d.player.x) < 30 && Math.abs(e.y - d.player.y) < 30) {
+            lives--; addParticles(d.player.x, d.player.y, '#ff0055', 30); updateUI(); if (lives <= 0) gameOver(); return false;
+        }
+        return true;
+    });
+    d.boss.x = W/2 + Math.sin(Date.now()/1000) * 200;
+    if (d.boss.hp <= 0) { score += 500; addParticles(d.boss.x, d.boss.y, '#ff00e6', 100); victory(); }
+}
+function drawLevel5() {
+    const d = levelData;
+    drawNeonText('БОСС: ПЕРЕОБУЧЕНИЕ', W/2, 50, 24, '#ff0055', 'center');
+    ctx.shadowColor = '#ff0055'; ctx.shadowBlur = 30; ctx.font = '80px Segoe UI'; ctx.textAlign = 'center'; ctx.fillText('🧠', d.boss.x, d.boss.y+25); ctx.shadowBlur = 0;
+    ctx.fillStyle = '#333'; ctx.fillRect(W/2-150, 80, 300, 15);
+    ctx.fillStyle = '#ff0055'; ctx.fillRect(W/2-150, 80, 300*(d.boss.hp/d.boss.maxHp), 15);
+    drawNeonText(`HP: ${d.boss.hp}/${d.boss.maxHp}`, W/2, 115, 14, '#fff', 'center');
+    ctx.save(); ctx.translate(d.player.x, d.player.y); ctx.shadowColor = '#00f0ff'; ctx.shadowBlur = 20; ctx.fillStyle = '#00f0ff';
+    ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(-15, 15); ctx.lineTo(15, 15); ctx.closePath(); ctx.fill(); ctx.restore(); ctx.shadowBlur = 0;
+    d.bullets.forEach(b => { ctx.fillStyle = '#00ff88'; ctx.shadowColor = '#00ff88'; ctx.shadowBlur = 10; ctx.fillRect(b.x-2, b.y, 4, 15); }); ctx.shadowBlur = 0;
+    d.enemies.forEach(e => { ctx.font = '30px Segoe UI'; ctx.fillText(e.emoji, e.x, e.y); });
+}
+
+// === УПРАВЛЕНИЕ ===
+document.addEventListener('keydown', e => {
+    keys[e.key] = true;
+    if (state === 'playing') {
+        if (currentLevel === 2) {
+            const d = levelData;
+            if (e.key === 'ArrowLeft') d.selected = (d.selected+2)%3;
+            if (e.key === 'ArrowRight') d.selected = (d.selected+1)%3;
+            if (e.key === 'ArrowUp') { d.weights[d.selected] = Math.min(100, d.weights[d.selected]+5); d.attempts++; }
+            if (e.key === 'ArrowDown') { d.weights[d.selected] = Math.max(0, d.weights[d.selected]-5); d.attempts++; }
+        }
+        if (currentLevel === 4) {
+            const d = levelData;
+            const checkClass = (key, type) => {
+                if ((e.key === key || e.key === key.toUpperCase()) && d.objects.length > 0) {
+                    const o = d.objects[0];
+                    if (o.type === type) { d.classified++; score += 10; addParticles(o.x, o.y, '#00ff88'); } 
+                    else { d.wrong++; addParticles(o.x, o.y, '#ff0055'); }
+                    d.objects.shift();
+                }
+            };
+            checkClass('a', 'cat'); checkClass('ф', 'cat');
+            checkClass('s', 'dog'); checkClass('ы', 'dog');
+        }
+    }
+});
+document.addEventListener('keyup', e => { keys[e.key] = false; });
+canvas.addEventListener('click', e => {
+    if (state !== 'playing' || currentLevel !== 3) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) * (W/rect.width);
+    const y = (e.clientY - rect.top) * (H/rect.height);
+    const d = levelData;
+    const clicked = d.neurons.find(n => Math.hypot(n.x-x, n.y-y) < 15);
+    if (!clicked) return;
+    if (!d.lastClicked) { d.lastClicked = clicked; clicked.active = true; } 
+    else if (d.lastClicked !== clicked && d.lastClicked.layer < clicked.layer) {
+        d.connections.push({ from: d.lastClicked, to: clicked });
+        d.lastClicked.active = false; d.lastClicked = clicked; clicked.active = true;
+        addParticles(clicked.x, clicked.y, '#00f0ff', 8);
+    } else { d.lastClicked.active = false; d.lastClicked = clicked; clicked.active = true; }
+});
+
+// === ИГРОВОЙ ЦИКЛ И ИНТЕРФЕЙС ===
+function updateUI() {
+    document.getElementById('levelNum').innerText = currentLevel;
+    document.getElementById('score').innerText = score;
+    document.getElementById('lives').innerText = '❤'.repeat(Math.max(0,lives)) + '♡'.repeat(Math.max(0,3-lives));
+}
+
+function nextLevel() {
+    currentLevel++;
+    if (currentLevel > 5) victory();
+    else showLevelIntro();
+}
+
+function showLevelIntro() {
+    state = 'levelIntro';
+    const titles = ['', 'СБОР ДАННЫХ', 'ОБУЧЕНИЕ ВЕСОВ', 'АРХИТЕКТУРА', 'КЛАССИФИКАЦИЯ', 'ФИНАЛЬНАЯ БИТВА'];
+    const overlay = document.getElementById('overlay');
+    overlay.classList.remove('hidden');
+    overlay.innerHTML = `
+        <div class="level-title">УРОВЕНЬ ${currentLevel}</div>
+        <h1>${titles[currentLevel]}</h1>
+        <div class="theory-box">${theoryData[currentLevel]}</div>
+        <button onclick="startLevel()">ПРИНЯТЬ К СВЕДЕНИЮ И В БОЙ ⚔️</button>
+    `;
+}
+
+function startLevel() {
+    document.getElementById('overlay').classList.add('hidden');
+    state = 'playing';
+    if (currentLevel === 1) initLevel1();
+    else if (currentLevel === 2) initLevel2();
+    else if (currentLevel === 3) initLevel3();
+    else if (currentLevel === 4) initLevel4();
+    else if (currentLevel === 5) initLevel5();
+    updateUI();
+}
+
+function gameOver() {
+    state = 'gameover';
+    const overlay = document.getElementById('overlay');
+    overlay.classList.remove('hidden');
+    overlay.innerHTML = `
+        <h1 style="background: linear-gradient(90deg, #ff0055, #ff00e6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">💀 ПОРАЖЕНИЕ</h1>
+        <p>Система ИИ не справилась с задачей.</p>
+        <p>Набрано очков: <b style="color:#00f0ff">${score}</b> | Достигнут уровень: <b style="color:#ff00e6">${currentLevel}</b></p>
+        <button onclick="location.reload()">ПОПРОБОВАТЬ СНОВА 🔄</button>
+    `;
+}
+
+function victory() {
+    state = 'victory';
+    const overlay = document.getElementById('overlay');
+    const dateStr = new Date().toLocaleDateString('ru-RU', { year: 'numeric', month: 'long', day: 'numeric' });
+    overlay.classList.remove('hidden');
+    overlay.innerHTML = `
+        <div id="certificate">
+            <h2>СЕРТИФИКАТ</h2>
+            <p>Настоящим подтверждается, что</p>
+            <input type="text" id="certName" placeholder="Введите Фамилию и Имя" autocomplete="off">
+            <p>ученик(ца) класса / группы</p>
+            <input type="text" id="certGroup" placeholder="Например: 10 'А' или Группа ИТ-21" autocomplete="off">
+            <p>успешно прошел(ла) интерактивный курс<br><b>"Основы систем искусственного интеллекта"</b>,</p>
+            <p>пройдя все 5 этапов разработки и набрав</p>
+            <div id="certScore">${score}</div>
+            <p>баллов.</p>
+            <div class="cert-date">Дата выдачи: ${dateStr}</div>
+            <button class="print-btn" onclick="window.print()">🖨️ Распечатать / Сохранить как PDF</button>
+            <button class="restart-btn" style="margin-top:10px; background: #333 !important; color: #fff !important;" onclick="location.reload()">🔄 Играть снова</button>
+        </div>
+    `;
+}
+
+function startGame() {
+    currentLevel = 1; score = 0; lives = 3;
+    showLevelIntro();
+}
+
+function gameLoop() {
+    ctx.fillStyle = 'rgba(5,5,26,0.3)';
+    ctx.fillRect(0, 0, W, H);
+    drawStars();
+    if (state === 'playing') {
+        if (currentLevel === 1) { updateLevel1(); drawLevel1(); }
+        else if (currentLevel === 2) { updateLevel2(); drawLevel2(); }
+        else if (currentLevel === 3) { updateLevel3(); drawLevel3(); }
+        else if (currentLevel === 4) { updateLevel4(); drawLevel4(); }
+        else if (currentLevel === 5) { updateLevel5(); drawLevel5(); }
+    }
+    updateParticles(); drawParticles();
+    requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+</script>
+</body>
+</html>
