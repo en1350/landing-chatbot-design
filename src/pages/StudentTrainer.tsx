@@ -1348,7 +1348,7 @@ const TRAINERS: TrainerItem[] = [
   {
     key: "ai-arcade",
     icon: "🤖",
-    title: "AI Arcade: Путь Интеллекта",
+    title: "AI Arcade: Архитектура нейросети",
     description: "Аркада на 5 уровней про сбор данных, обучение весов и архитектуру нейросети — с сертификатом",
     accent: "#ff00e6",
   },
@@ -1461,7 +1461,7 @@ const StudentTrainer = () => {
                 <div className="rounded-2xl border border-border bg-card p-3 md:p-5 shadow-sm max-w-[840px] overflow-x-auto">
                   <iframe
                     src="/ai-arcade.html"
-                    title="AI Arcade: Путь Интеллекта"
+                    title="AI Arcade: Архитектура нейросети"
                     className="w-[800px] h-[600px] rounded-xl border-0"
                   />
                 </div>
