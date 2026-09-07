@@ -19,6 +19,7 @@ import AntiplagiatModal from "@/components/AntiplagiatModal";
 import ProfileSheet from "@/components/ProfileSheet";
 import AuthModal from "@/components/AuthModal";
 import UpgradeModal from "@/components/UpgradeModal";
+import { useAuth } from "@/context/AuthContext";
 
 /* ---------- Задание 1: Тест ---------- */
 
@@ -1314,6 +1315,7 @@ interface TrainerItem {
   title: string;
   description: string;
   accent: string;
+  paid?: boolean;
 }
 
 const TRAINERS: TrainerItem[] = [
@@ -1337,6 +1339,7 @@ const TRAINERS: TrainerItem[] = [
     title: "Анализ с конца",
     description: "Логические задачи на монеты, яблоки и улитку с решением и псевдокодом",
     accent: "#0EA5E9",
+    paid: true,
   },
   {
     key: "network-protocols",
@@ -1351,12 +1354,14 @@ const TRAINERS: TrainerItem[] = [
     title: "AI Arcade: Архитектура нейросети",
     description: "Аркада на 5 уровней про сбор данных, обучение весов и архитектуру нейросети — с сертификатом",
     accent: "#ff00e6",
+    paid: true,
   },
 ];
 
 /* ---------- Страница ---------- */
 
 const StudentTrainer = () => {
+  const { user, isPaid } = useAuth();
   const [active, setActive] = useState<TrainerKey | null>(null);
   const [decomposerOpen, setDecomposerOpen] = useState(false);
   const [randomizerOpen, setRandomizerOpen] = useState(false);
@@ -1374,6 +1379,14 @@ const StudentTrainer = () => {
     setDecomposerOpen(false);
     setAntiplagiatOpen(false);
     setUpgradeOpen(true);
+  };
+
+  const handleSelect = (t: TrainerItem) => {
+    if (t.paid && !isPaid) {
+      user ? openUpgrade() : openAuth();
+      return;
+    }
+    setActive(t.key);
   };
 
   return (
@@ -1412,32 +1425,47 @@ const StudentTrainer = () => {
               </div>
 
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {TRAINERS.map((t, i) => (
-                  <button
-                    key={t.key}
-                    onClick={() => setActive(t.key)}
-                    className="group text-left rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 animate-fade-in"
-                    style={{ animationDelay: `${i * 80}ms` }}
-                  >
-                    <div
-                      className="flex h-12 w-12 items-center justify-center rounded-xl text-2xl mb-4 transition-transform group-hover:scale-110"
-                      style={{ backgroundColor: `${t.accent}1A` }}
+                {TRAINERS.map((t, i) => {
+                  const locked = t.paid && !isPaid;
+                  return (
+                    <button
+                      key={t.key}
+                      onClick={() => handleSelect(t)}
+                      className="group relative text-left rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 animate-fade-in"
+                      style={{ animationDelay: `${i * 80}ms` }}
                     >
-                      {t.icon}
-                    </div>
-                    <h3 className="font-display font-bold text-base mb-1.5">{t.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                      {t.description}
-                    </p>
-                    <span
-                      className="inline-flex items-center gap-1.5 text-sm font-semibold transition-transform group-hover:translate-x-1"
-                      style={{ color: t.accent }}
-                    >
-                      Начать
-                      <Icon name="ArrowRight" size={15} />
-                    </span>
-                  </button>
-                ))}
+                      {locked && (
+                        <span className="absolute top-4 right-4 flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
+                          <Icon name="Lock" size={13} />
+                        </span>
+                      )}
+                      <div
+                        className="flex h-12 w-12 items-center justify-center rounded-xl text-2xl mb-4 transition-transform group-hover:scale-110"
+                        style={{ backgroundColor: `${t.accent}1A` }}
+                      >
+                        {t.icon}
+                      </div>
+                      <h3 className="font-display font-bold text-base mb-1.5">{t.title}</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                        {t.description}
+                      </p>
+                      {locked ? (
+                        <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
+                          <Icon name="Sparkles" size={15} />
+                          Доступно по подписке
+                        </span>
+                      ) : (
+                        <span
+                          className="inline-flex items-center gap-1.5 text-sm font-semibold transition-transform group-hover:translate-x-1"
+                          style={{ color: t.accent }}
+                        >
+                          Начать
+                          <Icon name="ArrowRight" size={15} />
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </>
           ) : (
@@ -1457,7 +1485,25 @@ const StudentTrainer = () => {
                 </h1>
               </div>
 
-              {active === "ai-arcade" ? (
+              {TRAINERS.find((t) => t.key === active)?.paid && !isPaid ? (
+                <div className="max-w-xl rounded-2xl border-2 border-dashed border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 sm:p-10 text-center">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15 text-3xl mb-4">
+                    🔒
+                  </div>
+                  <p className="font-display text-lg font-bold mb-1.5">Доступно по подписке</p>
+                  <p className="text-sm text-muted-foreground mb-5 leading-relaxed max-w-sm mx-auto">
+                    Этот тренажёр — премиум-инструмент. Оформите подписку, чтобы открыть его без
+                    ограничений.
+                  </p>
+                  <Button
+                    className="h-11 px-6 gap-2 bg-primary hover:bg-primary/90"
+                    onClick={user ? openUpgrade : openAuth}
+                  >
+                    <Icon name={user ? "Sparkles" : "LogIn"} size={17} />
+                    {user ? "Оформить подписку" : "Войти и оформить подписку"}
+                  </Button>
+                </div>
+              ) : active === "ai-arcade" ? (
                 <div className="rounded-2xl border border-border bg-card p-3 md:p-5 shadow-sm max-w-[840px] overflow-x-auto">
                   <iframe
                     src="/ai-arcade.html"
