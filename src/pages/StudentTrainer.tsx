@@ -56,16 +56,15 @@ const QUIZ: QuizQuestion[] = [
   },
 ];
 
-const QuizTask = () => {
+interface QuizStepProps {
+  onNext: (score: number) => void;
+}
+
+const QuizStep = ({ onNext }: QuizStepProps) => {
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [checked, setChecked] = useState(false);
 
   const score = QUIZ.reduce((acc, item, i) => (answers[i] === item.correct ? acc + 1 : acc), 0);
-
-  const reset = () => {
-    setAnswers({});
-    setChecked(false);
-  };
 
   return (
     <div className="space-y-5">
@@ -116,9 +115,9 @@ const QuizTask = () => {
             {score} из {QUIZ.length}
           </p>
           <p className="text-sm text-muted-foreground">правильных ответов</p>
-          <Button variant="outline" size="sm" className="gap-2" onClick={reset}>
-            <Icon name="RotateCcw" size={14} />
-            Пройти ещё раз
+          <Button className="gap-2" onClick={() => onNext(score)}>
+            Дальше: классификация
+            <Icon name="ArrowRight" size={14} />
           </Button>
         </div>
       )}
@@ -142,7 +141,11 @@ const CLASSIFY_OPTIONS = [
   { value: "sound", label: "Звуковая" },
 ];
 
-const ClassifyTask = () => {
+interface ClassifyStepProps {
+  onNext: (score: number) => void;
+}
+
+const ClassifyStep = ({ onNext }: ClassifyStepProps) => {
   const [values, setValues] = useState<Record<number, string>>({});
   const [checked, setChecked] = useState(false);
 
@@ -150,11 +153,6 @@ const ClassifyTask = () => {
     (acc, item, i) => (values[i] === item.correct ? acc + 1 : acc),
     0
   );
-
-  const reset = () => {
-    setValues({});
-    setChecked(false);
-  };
 
   return (
     <div className="space-y-4">
@@ -211,9 +209,9 @@ const ClassifyTask = () => {
             {correctCount} из {CLASSIFY_ITEMS.length}
           </p>
           <p className="text-sm text-muted-foreground">верных ответов</p>
-          <Button variant="outline" size="sm" className="gap-2" onClick={reset}>
-            <Icon name="RotateCcw" size={14} />
-            Попробовать снова
+          <Button className="gap-2" onClick={() => onNext(correctCount)}>
+            Дальше: сопоставление
+            <Icon name="ArrowRight" size={14} />
           </Button>
         </div>
       )}
@@ -238,7 +236,11 @@ const MATCH_OPTIONS = [
   { value: "protection", label: "Защита" },
 ];
 
-const MatchTask = () => {
+interface MatchStepProps {
+  onNext: (score: number) => void;
+}
+
+const MatchStep = ({ onNext }: MatchStepProps) => {
   const [values, setValues] = useState<Record<number, string>>({});
   const [checked, setChecked] = useState(false);
 
@@ -246,11 +248,6 @@ const MatchTask = () => {
     (acc, item, i) => (values[i] === item.correct ? acc + 1 : acc),
     0
   );
-
-  const reset = () => {
-    setValues({});
-    setChecked(false);
-  };
 
   return (
     <div className="space-y-4">
@@ -307,9 +304,9 @@ const MatchTask = () => {
             {correctCount} из {MATCH_ITEMS.length}
           </p>
           <p className="text-sm text-muted-foreground">верных сопоставлений</p>
-          <Button variant="outline" size="sm" className="gap-2" onClick={reset}>
-            <Icon name="RotateCcw" size={14} />
-            Попробовать снова
+          <Button className="gap-2" onClick={() => onNext(correctCount)}>
+            Дальше: обработчик текста
+            <Icon name="ArrowRight" size={14} />
           </Button>
         </div>
       )}
@@ -330,7 +327,11 @@ const TEXT_OPS: { value: TextOp; label: string }[] = [
   { value: "removeSpaces", label: "Удалить пробелы" },
 ];
 
-const TextProcessorTask = () => {
+interface TextProcessorStepProps {
+  onFinish: () => void;
+}
+
+const TextProcessorStep = ({ onFinish }: TextProcessorStepProps) => {
   const [input, setInput] = useState("");
   const [op, setOp] = useState<TextOp>("uppercase");
   const [result, setResult] = useState<string | null>(null);
@@ -400,6 +401,11 @@ const TextProcessorTask = () => {
         </p>
         <p className="text-sm break-words">{result ?? "Здесь появится результат..."}</p>
       </div>
+
+      <Button className="w-full h-11 gap-2" onClick={onFinish}>
+        <Icon name="CheckCircle2" size={16} />
+        Завершить интерактив
+      </Button>
     </div>
   );
 };
@@ -1201,14 +1207,106 @@ const NetworkProtocolsTask = () => {
 
 /* ---------- Список тренажёров ---------- */
 
-type TrainerKey =
-  | "quiz"
-  | "classify"
-  | "match"
-  | "processor"
-  | "algorithms"
-  | "backwards"
-  | "network-protocols";
+type TrainerKey = "info-basics" | "algorithms" | "backwards" | "network-protocols";
+
+type InfoBasicsStep = "quiz" | "classify" | "match" | "processor" | "done";
+
+const INFO_BASICS_STEPS: { key: InfoBasicsStep; label: string }[] = [
+  { key: "quiz", label: "Тест" },
+  { key: "classify", label: "Классификация" },
+  { key: "match", label: "Сопоставление" },
+  { key: "processor", label: "Обработчик текста" },
+];
+
+const InfoBasicsInteractive = () => {
+  const [step, setStep] = useState<InfoBasicsStep>("quiz");
+  const [quizScore, setQuizScore] = useState(0);
+  const [classifyScore, setClassifyScore] = useState(0);
+  const [matchScore, setMatchScore] = useState(0);
+
+  const stepIndex = INFO_BASICS_STEPS.findIndex((s) => s.key === step);
+
+  const restart = () => {
+    setQuizScore(0);
+    setClassifyScore(0);
+    setMatchScore(0);
+    setStep("quiz");
+  };
+
+  if (step === "done") {
+    const total = quizScore + classifyScore + matchScore;
+    const max = QUIZ.length + CLASSIFY_ITEMS.length + MATCH_ITEMS.length;
+    return (
+      <div className="space-y-5">
+        <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-5 text-center space-y-3 animate-fade-in">
+          <p className="text-2xl">🎉</p>
+          <h3 className="font-display text-xl font-bold">Интерактив пройден!</h3>
+          <p className="font-display text-3xl font-bold text-primary">
+            {total} из {max}
+          </p>
+          <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground pt-2">
+            <div>
+              <p className="font-semibold text-foreground">{quizScore}/{QUIZ.length}</p>
+              Тест
+            </div>
+            <div>
+              <p className="font-semibold text-foreground">{classifyScore}/{CLASSIFY_ITEMS.length}</p>
+              Классификация
+            </div>
+            <div>
+              <p className="font-semibold text-foreground">{matchScore}/{MATCH_ITEMS.length}</p>
+              Сопоставление
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground pt-1">
+            Обработчик текста — практический шаг, баллы не начисляются.
+          </p>
+          <Button variant="outline" size="sm" className="gap-2" onClick={restart}>
+            <Icon name="RotateCcw" size={14} />
+            Пройти заново
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <Progress value={((stepIndex + 1) / INFO_BASICS_STEPS.length) * 100} className="h-2" />
+        <p className="text-xs text-muted-foreground text-right mt-1.5">
+          Шаг {stepIndex + 1} из {INFO_BASICS_STEPS.length}: {INFO_BASICS_STEPS[stepIndex]?.label}
+        </p>
+      </div>
+
+      {step === "quiz" && (
+        <QuizStep
+          onNext={(score) => {
+            setQuizScore(score);
+            setStep("classify");
+          }}
+        />
+      )}
+      {step === "classify" && (
+        <ClassifyStep
+          onNext={(score) => {
+            setClassifyScore(score);
+            setStep("match");
+          }}
+        />
+      )}
+      {step === "match" && (
+        <MatchStep
+          onNext={(score) => {
+            setMatchScore(score);
+            setStep("processor");
+          }}
+        />
+      )}
+      {step === "processor" && <TextProcessorStep onFinish={() => setStep("done")} />}
+    </div>
+  );
+};
 
 interface TrainerItem {
   key: TrainerKey;
@@ -1220,32 +1318,11 @@ interface TrainerItem {
 
 const TRAINERS: TrainerItem[] = [
   {
-    key: "quiz",
-    icon: "📝",
-    title: "Тест: Работа с информацией",
-    description: "5 вопросов с выбором ответа и мгновенной проверкой",
+    key: "info-basics",
+    icon: "📚",
+    title: "Работа с информацией",
+    description: "Тест, классификация, сопоставление и обработчик текста — один интерактив в 4 шага",
     accent: "#2563EB",
-  },
-  {
-    key: "classify",
-    icon: "🗂️",
-    title: "Классификация видов информации",
-    description: "Определите вид информации для каждого примера",
-    accent: "#7C3AED",
-  },
-  {
-    key: "match",
-    icon: "🔗",
-    title: "Сопоставление процессов",
-    description: "Соотнесите действия с процессами работы с информацией",
-    accent: "#E8483C",
-  },
-  {
-    key: "processor",
-    icon: "⌨️",
-    title: "Обработчик текста",
-    description: "Регистр, разворот, подсчёт длины и слов — вживую",
-    accent: "#EA8C1F",
   },
   {
     key: "algorithms",
@@ -1374,10 +1451,7 @@ const StudentTrainer = () => {
               </div>
 
               <div className="rounded-2xl border border-border bg-card p-5 md:p-8 shadow-sm max-w-2xl">
-                {active === "quiz" && <QuizTask />}
-                {active === "classify" && <ClassifyTask />}
-                {active === "match" && <MatchTask />}
-                {active === "processor" && <TextProcessorTask />}
+                {active === "info-basics" && <InfoBasicsInteractive />}
                 {active === "algorithms" && <AlgorithmsTask />}
                 {active === "backwards" && <BackwardsAnalysisTask />}
                 {active === "network-protocols" && <NetworkProtocolsTask />}
