@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Project Simulator: Командная игра</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            padding: 30px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+        }
+        .header h1 { font-size: 1.8em; margin-bottom: 8px; }
+        .header p { color: #bfdbfe; font-size: 1em; }
+
+        /* Screens */
+        .screen { display: none; padding: 30px; animation: fadeIn 0.4s ease; }
+        .screen.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Setup Screen */
+        .team-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .input-group label { display: block; margin-bottom: 6px; color: var(--text-muted); font-size: 0.9em; }
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-size: 1em;
+        }
+        .input-group input:focus { outline: 2px solid var(--primary); border-color: transparent; }
+
+        /* Game Screen */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        .stage-badge {
+            background: var(--primary);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        .progress-bar {
+            flex-grow: 1;
+            height: 8px;
+            background: var(--bg-color);
+            border-radius: 4px;
+            margin: 0 20px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--success);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .scenario-card {
+            background: var(--bg-color);
+            border-left: 4px solid var(--warning);
+            padding: 20px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+        .scenario-card h3 { color: var(--warning); margin-bottom: 10px; }
+
+        .best-practice {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            display: none;
+        }
+        .best-practice h4 { color: var(--success); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+
+        /* Scoring Panel */
+        .scoring-panel {
+            background: var(--bg-color);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        .scoring-panel h4 { margin-bottom: 15px; color: var(--text-muted); }
+        .team-score-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .team-score-row:last-child { border-bottom: none; }
+        .score-buttons { display: flex; gap: 8px; }
+        .score-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .score-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+        .score-btn.selected { background: var(--success); color: white; border-color: var(--success); transform: scale(1.1); }
+
+        /* Reflection Screen */
+        .reflection-card {
+            background: var(--bg-color);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+        .reflection-card h3 { color: var(--primary); margin-bottom: 15px; }
+        .reflection-card ul { padding-left: 20px; line-height: 1.8; color: var(--text-muted); }
+        
+        .leaderboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .lb-card {
+            background: linear-gradient(135deg, var(--card-bg), var(--bg-color));
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .lb-card .rank { font-size: 2em; font-weight: bold; color: var(--warning); }
+        .lb-card .name { font-size: 1.2em; margin: 10px 0; font-weight: 600; }
+        .lb-card .total { font-size: 1.5em; color: var(--success); font-weight: bold; }
+
+        /* Buttons */
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { background: #059669; }
+        .btn:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; }
+
+        .controls { display: flex; gap: 15px; margin-top: 25px; }
+
+        @media (max-width: 600px) {
+            .team-inputs { grid-template-columns: 1fr; }
+            .team-score-row { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .controls { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>🚀 IT Project Simulator</h1>
+        <p>Командная игра по управлению IT-проектами</p>
+    </div>
+
+    <!-- ЭКРАН 1: Настройка -->
+    <div id="screen-setup" class="screen active">
+        <h2 style="margin-bottom: 10px;">Регистрация команд</h2>
+        <p style="color: var(--text-muted); margin-bottom: 20px;">Введите названия команд (от 2 до 4). Пустые поля будут игнорироваться.</p>
+        
+        <div class="team-inputs">
+            <div class="input-group">
+                <label>Команда 1</label>
+                <input type="text" id="team1" value="Alpha Devs" placeholder="Название команды">
+            </div>
+            <div class="input-group">
+                <label>Команда 2</label>
+                <input type="text" id="team2" value="Bug Hunters" placeholder="Название команды">
+            </div>
+            <div class="input-group">
+                <label>Команда 3</label>
+                <input type="text" id="team3" value="Agile Ninjas" placeholder="Название команды">
+            </div>
+            <div class="input-group">
+                <label>Команда 4</label>
+                <input type="text" id="team4" value="" placeholder="Название команды (необязательно)">
+            </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="startGame()">Начать разработку проекта 🚀</button>
+    </div>
+
+    <!-- ЭКРАН 2: Игровой процесс -->
+    <div id="screen-game" class="screen">
+        <div class="game-header">
+            <span class="stage-badge" id="stage-badge">Этап 1: Инициация</span>
+            <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+            <span style="color: var(--text-muted); font-size: 0.9em;" id="stage-counter">1 / 4</span>
+        </div>
+
+        <div class="scenario-card">
+            <h3 id="scenario-title">Ситуация</h3>
+            <p id="scenario-text">Текст ситуации...</p>
+        </div>
+
+        <button class="btn btn-primary" id="reveal-btn" onclick="revealBestPractice()">💡 Показать эталонное решение (Best Practice)</button>
+
+        <div class="best-practice" id="best-practice-block">
+            <h4>✅ Эталонное решение / Best Practice</h4>
+            <p id="best-practice-text" style="line-height: 1.6; color: var(--text-muted);"></p>
+        </div>
+
+        <div class="scoring-panel" id="scoring-panel" style="display: none;">
+            <h4>⚖️ Оценка решений команд (1–5 баллов)</h4>
+            <div id="scoring-rows"></div>
+            <button class="btn btn-success" style="margin-top: 20px;" onclick="nextStage()">Перейти к следующему этапу →</button>
+        </div>
+    </div>
+
+    <!-- ЭКРАН 3: Рефлексия и итоги -->
+    <div id="screen-reflection" class="screen">
+        <h2 style="text-align: center; margin-bottom: 25px;">🏆 Итоги проекта и Рефлексия</h2>
+        
+        <div class="leaderboard" id="leaderboard"></div>
+
+        <div class="reflection-card">
+            <h3>🤔 Вопросы для командной рефлексии</h3>
+            <p style="margin-bottom: 15px; color: var(--text-muted);">Обсудите в командах и озвучьте ответы:</p>
+            <ul>
+                <li><strong>Коммуникация:</strong> На каком этапе вашей команде было сложнее всего договориться и почему?</li>
+                <li><strong>Управление рисками:</strong> Какое решение в игре было самым рискованным? Как бы вы минимизировали этот риск в реальности?</li>
+                <li><strong>Ретроспектива:</strong> Если бы вы начинали этот «проект» заново, какой один процесс вы бы изменили в своей команде?</li>
+            </ul>
+        </div>
+
+        <button class="btn btn-primary" onclick="location.reload()">🔄 Начать новую игру</button>
+    </div>
+</div>
+
+<script>
+    // === ДАННЫЕ ИГРЫ ===
+    const stages = [
+        {
+            title: "Этап 1: Инициация и Заказчик",
+            scenario: "Заказчик хочет 'приложение как Uber, но для выгула собак'. Бюджета почти нет, а срок — 2 недели. Он говорит: 'Сделайте хоть что-то, а там доплатим'.",
+            bestPractice: "Нельзя соглашаться на размытые требования. Необходимо: 1) Провести интервью для выявления истинной боли (CustDev). 2) Предложить MVP (минимально жизнеспособный продукт) с 1-2 ключевыми функциями. 3) Зафиксировать требования и бюджет в письменном виде. Управление ожиданиями заказчика — ключ к успеху."
+        },
+        {
+            title: "Этап 2: Планирование и Стек",
+            scenario: "Команда спорит: Backend-разработчик хочет писать на новом модном фреймворке, который он только учит. Frontend требует React. Менеджер давит: 'Нам нужно всё сделать за 1 спринт!'.",
+            bestPractice: "Выбор стека должен опираться на экспертизу команды и требования проекта, а не на хайп. Необходимо: 1) Оценить риски использования непроверенной технологии. 2) Разбить работу на реалистичные задачи. 3) Менеджер должен защитить команду от нереалистичных сроков, аргументируя это перед заказчиком (trade-off: сроки vs качество vs скоуп)."
+        },
+        {
+            title: "Этап 3: Разработка и Кризис",
+            scenario: "За неделю до релиза ключевой разработчик (Middle) внезапно увольняется/уходит на больничный. Код частично задокументирован. Дедлайн горит.",
+            bestPractice: "Это классический 'Bus Factor'. Действия: 1) Немедленно сообщить заказчику о рисках срыва срока (прозрачность). 2) Провести аудит кода оставшейся командой. 3) Урезать скоуп (отложить второстепенные фичи) ради выпуска стабильного ядра продукта. 4) Внедрить практику парного программирования или кросс-ревью на будущее."
+        },
+        {
+            title: "Этап 4: Тестирование и Релиз",
+            scenario: "QA-инженер нашел 30 багов. Из них 3 — критические (потеря данных пользователя), 27 — косметические. Завтра презентация инвесторам. Что делаем?",
+            bestPractice: "Релиз с критическими багами недопустим (No-Go). Действия: 1) Остановить релиз. 2) Бросить все силы на исправление 3-х критических багов. 3) Косметические баги занести в бэклог. 4) Если критические баги не удается исправить к сроку — перенести презентацию, честно объяснив причину. Репутация дороже одноразового шоу."
+        }
+    ];
+
+    // === СОСТОЯНИЕ ===
+    let teams = [];
+    let currentStageIndex = 0;
+    let stageScores = {}; // { teamIndex: [score1, score2, score3, score4] }
+
+    // === DOM ЭЛЕМЕНТЫ ===
+    const screenSetup = document.getElementById('screen-setup');
+    const screenGame = document.getElementById('screen-game');
+    const screenReflection = document.getElementById('screen-reflection');
+
+    function startGame() {
+        teams = [];
+        for (let i = 1; i <= 4; i++) {
+            const name = document.getElementById(`team${i}`).value.trim();
+            if (name) {
+                teams.push({ name: name, score: 0, id: i });
+                stageScores[i] = [];
+            }
+        }
+
+        if (teams.length < 2) {
+            alert("Пожалуйста, введите названия минимум для 2 команд!");
+            return;
+        }
+
+        screenSetup.classList.remove('active');
+        screenGame.classList.add('active');
+        renderStage();
+    }
+
+    function renderStage() {
+        const stage = stages[currentStageIndex];
+        
+        document.getElementById('stage-badge').textContent = stage.title;
+        document.getElementById('stage-counter').textContent = `${currentStageIndex + 1} / ${stages.length}`;
+        document.getElementById('progress-fill').style.width = `${((currentStageIndex) / stages.length) * 100}%`;
+        
+        document.getElementById('scenario-title').textContent = `Ситуация: ${stage.title}`;
+        document.getElementById('scenario-text').textContent = stage.scenario;
+        
+        // Сброс UI
+        document.getElementById('best-practice-block').style.display = 'none';
+        document.getElementById('scoring-panel').style.display = 'none';
+        document.getElementById('reveal-btn').style.display = 'block';
+        document.getElementById('reveal-btn').disabled = false;
+
+        renderScoringRows();
+    }
+
+    function revealBestPractice() {
+        const stage = stages[currentStageIndex];
+        document.getElementById('best-practice-text').textContent = stage.bestPractice;
+        document.getElementById('best-practice-block').style.display = 'block';
+        document.getElementById('reveal-btn').style.display = 'none';
+        document.getElementById('scoring-panel').style.display = 'block';
+        
+        // Плавная прокрутка к оценке
+        document.getElementById('scoring-panel').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function renderScoringRows() {
+        const container = document.getElementById('scoring-rows');
+        container.innerHTML = '';
+
+        teams.forEach((team, index) => {
+            const row = document.createElement('div');
+            row.className = 'team-score-row';
+            
+            let buttonsHtml = '';
+            for (let i = 1; i <= 5; i++) {
+                buttonsHtml += `<button class="score-btn" onclick="setScore(${index}, ${i}, this)">${i}</button>`;
+            }
+
+            row.innerHTML = `
+                <div style="font-weight: 600; font-size: 1.1em;">${team.name}</div>
+                <div class="score-buttons" id="score-btns-${index}">
+                    ${buttonsHtml}
+                </div>
+            `;
+            container.appendChild(row);
+        });
+    }
+
+    function setScore(teamIndex, score, btnElement) {
+        // Убираем выделение со всех кнопок в этой строке
+        const parent = document.getElementById(`score-btns-${teamIndex}`);
+        parent.querySelectorAll('.score-btn').forEach(b => b.classList.remove('selected'));
+        
+        // Выделяем нажатую
+        btnElement.classList.add('selected');
+        
+        // Сохраняем оценку (перезаписываем оценку за текущий этап)
+        stageScores[teams[teamIndex].id][currentStageIndex] = score;
+    }
+
+    function nextStage() {
+        // Проверка, все ли оценки выставлены
+        let allScored = true;
+        teams.forEach((team, index) => {
+            if (stageScores[team.id][currentStageIndex] === undefined) {
+                allScored = false;
+            }
+        });
+
+        if (!allScored) {
+            alert("Пожалуйста, выставьте оценку (от 1 до 5) каждой команде перед переходом дальше!");
+            return;
+        }
+
+        currentStageIndex++;
+        if (currentStageIndex < stages.length) {
+            renderStage();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            finishGame();
+        }
+    }
+
+    function finishGame() {
+        // Подсчет итоговых баллов
+        teams.forEach(team => {
+            let total = 0;
+            for (let i = 0; i < stages.length; i++) {
+                total += (stageScores[team.id][i] || 0);
+            }
+            team.score = total;
+        });
+
+        // Сортировка по убыванию баллов
+        teams.sort((a, b) => b.score - a.score);
+
+        // Рендер лидерборда
+        const lbContainer = document.getElementById('leaderboard');
+        lbContainer.innerHTML = '';
+        teams.forEach((team, index) => {
+            const card = document.createElement('div');
+            card.className = 'lb-card';
+            card.innerHTML = `
+                <div class="rank">#${index + 1}</div>
+                <div class="name">${team.name}</div>
+                <div class="total">${team.score} / ${stages.length * 5} баллов</div>
+            `;
+            lbContainer.appendChild(card);
+        });
+
+        screenGame.classList.remove('active');
+        screenReflection.classList.add('active');
+    }
+</script>
+
+</body>
+</html>

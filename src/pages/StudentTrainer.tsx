@@ -1208,7 +1208,13 @@ const NetworkProtocolsTask = () => {
 
 /* ---------- Список тренажёров ---------- */
 
-type TrainerKey = "info-basics" | "algorithms" | "backwards" | "network-protocols" | "ai-arcade";
+type TrainerKey =
+  | "info-basics"
+  | "algorithms"
+  | "backwards"
+  | "network-protocols"
+  | "ai-arcade"
+  | "it-project-simulator";
 
 type InfoBasicsStep = "quiz" | "classify" | "match" | "processor" | "done";
 
@@ -1354,6 +1360,14 @@ const TRAINERS: TrainerItem[] = [
     title: "AI Arcade: Архитектура нейросети",
     description: "Аркада на 5 уровней про сбор данных, обучение весов и архитектуру нейросети — с сертификатом",
     accent: "#ff00e6",
+    paid: true,
+  },
+  {
+    key: "it-project-simulator",
+    icon: "🚀",
+    title: "IT Project Simulator",
+    description: "Командная игра по управлению IT-проектами: 4 кризисных этапа, оценка решений и лидерборд",
+    accent: "#3B82F6",
     paid: true,
   },
 ];
@@ -1509,6 +1523,14 @@ const StudentTrainer = () => {
                     src="/ai-arcade.html"
                     title="AI Arcade: Архитектура нейросети"
                     className="w-[800px] h-[600px] rounded-xl border-0"
+                  />
+                </div>
+              ) : active === "it-project-simulator" ? (
+                <div className="rounded-2xl border border-border bg-card p-3 md:p-5 shadow-sm max-w-[940px] overflow-x-auto">
+                  <iframe
+                    src="/it-project-simulator.html"
+                    title="IT Project Simulator"
+                    className="w-full min-w-[600px] h-[900px] rounded-xl border-0"
                   />
                 </div>
               ) : (
