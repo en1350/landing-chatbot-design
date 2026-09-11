@@ -24,7 +24,8 @@ type TrainerKey =
   | "backwards"
   | "network-protocols"
   | "ai-arcade"
-  | "it-project-simulator";
+  | "it-project-simulator"
+  | "python-java-types";
 
 interface TrainerItem {
   key: TrainerKey;
@@ -79,6 +80,14 @@ const TRAINERS: TrainerItem[] = [
     title: "IT Project Simulator",
     description: "Командная игра по управлению IT-проектами: 4 кризисных этапа, оценка решений и лидерборд",
     accent: "#3B82F6",
+    paid: true,
+  },
+  {
+    key: "python-java-types",
+    icon: "💻",
+    title: "Типы данных: Python и Java",
+    description: "Теория, 9 практических заданий и именной сертификат по теме «Типы данных»",
+    accent: "#F59E0B",
     paid: true,
   },
 ];
@@ -242,6 +251,14 @@ const StudentTrainer = () => {
                     src="/it-project-simulator.html"
                     title="IT Project Simulator"
                     className="w-full min-w-[600px] h-[900px] rounded-xl border-0"
+                  />
+                </div>
+              ) : active === "python-java-types" ? (
+                <div className="rounded-2xl border border-border bg-card p-3 md:p-5 shadow-sm max-w-[1180px] overflow-x-auto">
+                  <iframe
+                    src="/python-java-types.html"
+                    title="Типы данных: Python и Java"
+                    className="w-full min-w-[700px] h-[1000px] rounded-xl border-0"
                   />
                 </div>
               ) : (

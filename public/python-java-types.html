@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Типы данных в Python и Java · Интерактивный курс</title>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+        font-family: 'Segoe UI', Tahoma, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        color: #2c3e50;
+        line-height: 1.6;
+        padding: 20px;
+    }
+    .app {
+        max-width: 1100px;
+        margin: 0 auto;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        overflow: hidden;
+    }
+    header {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        color: #fff;
+        padding: 30px 40px;
+        text-align: center;
+    }
+    header h1 { font-size: 28px; margin-bottom: 8px; }
+    header p { opacity: 0.9; font-size: 15px; }
+    .badge {
+        display: inline-block;
+        background: rgba(255,255,255,0.2);
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        margin-top: 10px;
+    }
+
+    .progress-container {
+        background: #ecf0f1;
+        height: 8px;
+        width: 100%;
+    }
+    .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #27ae60, #2ecc71);
+        width: 0%;
+        transition: width 0.5s;
+    }
+
+    .nav {
+        display: flex;
+        background: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        overflow-x: auto;
+    }
+    .nav-item {
+        flex: 1;
+        min-width: 120px;
+        padding: 14px;
+        text-align: center;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 13px;
+        color: #6c757d;
+        border-bottom: 3px solid transparent;
+        transition: all 0.2s;
+    }
+    .nav-item:hover { background: #e9ecef; }
+    .nav-item.active { color: #2a5298; border-bottom-color: #2a5298; background: #fff; }
+    .nav-item.done { color: #27ae60; }
+    .nav-item.locked { color: #bdc3c7; cursor: not-allowed; }
+
+    .screen { display: none; padding: 35px 40px; }
+    .screen.active { display: block; }
+
+    h2 {
+        color: #1e3c72;
+        border-left: 5px solid #2a5298;
+        padding-left: 14px;
+        margin-bottom: 20px;
+        font-size: 22px;
+    }
+    h3 { color: #2c3e50; margin: 18px 0 10px 0; font-size: 18px; }
+
+    .theory-block {
+        background: #f8f9fb;
+        border-radius: 10px;
+        padding: 22px;
+        margin-bottom: 20px;
+        border-left: 4px solid #2a5298;
+    }
+    .theory-block ul { margin-left: 20px; margin-top: 10px; }
+    .theory-block li { margin: 6px 0; }
+
+    pre {
+        background: #1e1e1e;
+        color: #dcdcdc;
+        padding: 16px;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-family: 'Consolas', 'Courier New', monospace;
+        font-size: 14px;
+        line-height: 1.5;
+        margin: 12px 0;
+    }
+    .code-py { border-left: 4px solid #3776ab; }
+    .code-java { border-left: 4px solid #f89820; }
+    .kw { color: #569cd6; }
+    .str { color: #ce9178; }
+    .num { color: #b5cea8; }
+    .com { color: #6a9955; font-style: italic; }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 15px 0;
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    th, td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+    }
+    th { background: #2a5298; color: #fff; font-weight: 600; }
+    tr:hover { background: #f1f3f5; }
+    code {
+        background: #f1f3f5;
+        padding: 2px 7px;
+        border-radius: 4px;
+        font-family: 'Consolas', monospace;
+        font-size: 13px;
+        color: #c7254e;
+    }
+
+    .question-card {
+        background: #fff;
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 20px;
+        transition: border-color 0.2s;
+    }
+    .question-card.correct { border-color: #27ae60; background: #e8f8f0; }
+    .question-card.wrong { border-color: #e74c3c; background: #fdf0ef; }
+    .question-card .q-num {
+        display: inline-block;
+        background: #2a5298;
+        color: #fff;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+    .question-card .q-text {
+        font-size: 16px;
+        margin-bottom: 15px;
+        font-weight: 500;
+    }
+
+    .options { display: flex; flex-direction: column; gap: 8px; }
+    .option {
+        background: #f8f9fa;
+        border: 2px solid #dee2e6;
+        padding: 12px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 14px;
+    }
+    .option:hover { background: #e9ecef; border-color: #2a5298; }
+    .option.selected { background: #e3f2fd; border-color: #2a5298; }
+    .option.right { background: #d4edda; border-color: #27ae60; }
+    .option.wrong-ans { background: #f8d7da; border-color: #e74c3c; }
+
+    .feedback {
+        margin-top: 15px;
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        display: none;
+    }
+    .feedback.show { display: block; }
+    .feedback.ok { background: #d4edda; color: #155724; border-left: 4px solid #27ae60; }
+    .feedback.err { background: #f8d7da; color: #721c24; border-left: 4px solid #e74c3c; }
+
+    .btn {
+        padding: 12px 28px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 600;
+        transition: all 0.2s;
+        margin-right: 10px;
+        margin-top: 10px;
+    }
+    .btn-primary { background: #2a5298; color: #fff; }
+    .btn-primary:hover { background: #1e3c72; }
+    .btn-success { background: #27ae60; color: #fff; }
+    .btn-success:hover { background: #229954; }
+    .btn-secondary { background: #6c757d; color: #fff; }
+    .btn-secondary:hover { background: #5a6268; }
+    .btn-gold {
+        background: linear-gradient(135deg, #f7971e, #ffd200);
+        color: #1e3c72;
+        box-shadow: 0 4px 15px rgba(247,151,30,0.4);
+    }
+    .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(247,151,30,0.5); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .score-panel {
+        background: linear-gradient(135deg, #2a5298, #1e3c72);
+        color: #fff;
+        padding: 30px;
+        border-radius: 12px;
+        text-align: center;
+        margin: 20px 0;
+    }
+    .score-panel .score { font-size: 56px; font-weight: 700; display: block; }
+    .score-panel .grade { font-size: 20px; margin-top: 10px; opacity: 0.95; }
+
+    /* ============ СЕРТИФИКАТ ============ */
+    .certificate-wrap {
+        display: flex;
+        justify-content: center;
+        padding: 20px;
+        background: #ecf0f1;
+        border-radius: 12px;
+    }
+    .certificate {
+        width: 800px;
+        max-width: 100%;
+        aspect-ratio: 1.414 / 1;
+        background: 
+            linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,215,0,0.05)),
+            linear-gradient(to bottom, #fffdf5, #fef7e0);
+        border: 3px solid #c9a961;
+        padding: 40px 50px;
+        position: relative;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        text-align: center;
+        font-family: 'Georgia', serif;
+        overflow: hidden;
+    }
+    .certificate::before {
+        content: '';
+        position: absolute;
+        inset: 12px;
+        border: 2px solid #d4af37;
+        pointer-events: none;
+    }
+    .certificate::after {
+        content: '';
+        position: absolute;
+        inset: 18px;
+        border: 1px solid rgba(212,175,55,0.5);
+        pointer-events: none;
+    }
+    .cert-corner {
+        position: absolute;
+        width: 60px;
+        height: 60px;
+        border: 3px solid #c9a961;
+    }
+    .cert-corner.tl { top: 25px; left: 25px; border-right: none; border-bottom: none; }
+    .cert-corner.tr { top: 25px; right: 25px; border-left: none; border-bottom: none; }
+    .cert-corner.bl { bottom: 25px; left: 25px; border-right: none; border-top: none; }
+    .cert-corner.br { bottom: 25px; right: 25px; border-left: none; border-top: none; }
+    
+    .cert-logo { font-size: 50px; margin-bottom: 10px; }
+    .cert-title {
+        font-size: 42px;
+        font-weight: 700;
+        color: #1e3c72;
+        letter-spacing: 6px;
+        margin-bottom: 8px;
+        font-variant: small-caps;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    }
+    .cert-subtitle {
+        font-size: 14px;
+        color: #7f8c8d;
+        letter-spacing: 3px;
+        margin-bottom: 25px;
+        text-transform: uppercase;
+    }
+    .cert-body { font-size: 15px; color: #555; margin: 15px 0; font-style: italic; }
+    .cert-name {
+        font-size: 40px;
+        color: #c9a961;
+        font-family: 'Brush Script MT', 'Lucida Handwriting', cursive;
+        margin: 15px 0;
+        padding: 10px 30px;
+        border-bottom: 2px solid #c9a961;
+        display: inline-block;
+        min-width: 350px;
+    }
+    .cert-course {
+        font-size: 18px;
+        color: #1e3c72;
+        font-weight: 600;
+        margin: 20px 15px;
+        line-height: 1.4;
+    }
+    .cert-details {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #ddd;
+    }
+    .cert-detail { text-align: center; font-size: 12px; color: #666; }
+    .cert-detail .value {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1e3c72;
+        margin-top: 5px;
+    }
+    .cert-seal {
+        position: absolute;
+        bottom: 40px;
+        right: 60px;
+        width: 90px;
+        height: 90px;
+        border: 3px double #c9a961;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 700;
+        color: #c9a961;
+        text-align: center;
+        line-height: 1.2;
+        transform: rotate(-15deg);
+        background: rgba(255,255,255,0.7);
+    }
+    .cert-id {
+        position: absolute;
+        bottom: 15px;
+        left: 25px;
+        font-size: 10px;
+        color: #aaa;
+        font-family: monospace;
+    }
+
+    .name-input-wrap {
+        background: linear-gradient(135deg, #fff9e6, #fff3c4);
+        border: 2px solid #f7971e;
+        padding: 25px;
+        border-radius: 12px;
+        margin: 20px 0;
+        text-align: center;
+    }
+    .name-input-wrap input {
+        padding: 12px 20px;
+        font-size: 18px;
+        border: 2px solid #f7971e;
+        border-radius: 8px;
+        text-align: center;
+        width: 100%;
+        max-width: 400px;
+        margin-top: 10px;
+    }
+
+    @media print {
+        body * { visibility: hidden; }
+        .certificate, .certificate * { visibility: visible; }
+        .certificate { 
+            position: absolute; 
+            left: 0; top: 0; 
+            width: 100%;
+            box-shadow: none;
+            border: 3px solid #c9a961 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        @page { size: landscape; margin: 0; }
+    }
+
+    @media (max-width: 768px) {
+        .screen { padding: 20px; }
+        .certificate { padding: 25px; font-size: 12px; }
+        .cert-title { font-size: 28px; letter-spacing: 3px; }
+        .cert-name { font-size: 28px; }
+    }
+</style>
+</head>
+<body>
+
+<div class="app">
+    <header>
+        <h1>💻 Алгоритмизация и программирование</h1>
+        <p>Тема: «Типы данных» · Python и Java</p>
+        <span class="badge">📚 Интерактивный курс · 9 заданий</span>
+    </header>
+
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div class="nav" id="nav">
+        <div class="nav-item active" data-screen="start">🚀 Старт</div>
+        <div class="nav-item locked" data-screen="theory">📖 Теория</div>
+        <div class="nav-item locked" data-screen="tasks">✏️ Задания</div>
+        <div class="nav-item locked" data-screen="results">📊 Результаты</div>
+        <div class="nav-item locked" data-screen="cert">🏆 Сертификат</div>
+    </div>
+
+    <!-- СТАРТ -->
+    <div class="screen active" id="start">
+        <h2>Добро пожаловать!</h2>
+        <div class="theory-block">
+            <h3>🎯 О курсе</h3>
+            <p>Этот интерактивный модуль посвящён одной из фундаментальных тем программирования — <strong>типам данных</strong>. Вы изучите, как типы данных реализованы в <strong>Python</strong> (язык с динамической типизацией) и <strong>Java</strong> (язык со статической типизацией).</p>
+            <h3>📋 Что вас ждёт:</h3>
+            <ul>
+                <li>📖 Теоретический блок с примерами кода</li>
+                <li>✏️ 9 практических заданий различного типа</li>
+                <li>📊 Автоматическая проверка и подсчёт баллов</li>
+                <li>🏆 Именной сертификат при успешном прохождении (≥70%)</li>
+            </ul>
+        </div>
+
+        <div class="name-input-wrap">
+            <h3>✍️ Укажите ваше имя (для сертификата)</h3>
+            <p style="color:#666;font-size:14px;">Имя будет использовано в именном сертификате</p>
+            <input type="text" id="studentName" placeholder="Иванов Иван Иванович" maxlength="60">
+        </div>
+
+        <div style="text-align:center;margin-top:20px;">
+            <button class="btn btn-primary" onclick="goToScreen('theory')">Начать обучение →</button>
+        </div>
+    </div>
+
+    <!-- ТЕОРИЯ -->
+    <div class="screen" id="theory">
+        <h2>📖 Теоретический материал</h2>
+
+        <div class="theory-block">
+            <h3>1. Что такое тип данных?</h3>
+            <p><strong>Тип данных</strong> — это множество значений и набор операций, которые можно над ними выполнять. Тип определяет, сколько памяти занимает переменная и как интерпретируются хранящиеся в ней биты.</p>
+        </div>
+
+        <div class="theory-block">
+            <h3>2. Статическая и динамическая типизация</h3>
+            <p><strong>Java</strong> — язык со <span style="color:#e74c3c;font-weight:600;">статической типизацией</span>: тип переменной объявляется при её создании и не меняется в течение жизни программы.</p>
+<pre class="code-java"><span class="kw">int</span> age = <span class="num">20</span>;        <span class="com">// переменная age всегда целое число</span>
+age = <span class="str">"двадцать"</span>;    <span class="com">// ❌ ОШИБКА компиляции!</span></pre>
+            <p><strong>Python</strong> — язык с <span style="color:#27ae60;font-weight:600;">динамической типизацией</span>: тип определяется значением и может меняться.</p>
+<pre class="code-py">age = <span class="num">20</span>            <span class="com"># age — int</span>
+age = <span class="str">"двадцать"</span>    <span class="com"># теперь age — str (всё работает!)</span></pre>
+        </div>
+
+        <div class="theory-block">
+            <h3>3. Соответствие основных типов</h3>
+            <table>
+                <thead>
+                    <tr><th>Описание</th><th>Python</th><th>Java</th><th>Пример</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Целое число</td><td><code>int</code></td><td><code>int</code>, <code>long</code></td><td><code>42</code></td></tr>
+                    <tr><td>Вещественное</td><td><code>float</code></td><td><code>double</code>, <code>float</code></td><td><code>3.14</code></td></tr>
+                    <tr><td>Логический</td><td><code>bool</code></td><td><code>boolean</code></td><td><code>True / true</code></td></tr>
+                    <tr><td>Символ</td><td><code>str</code> (длина 1)</td><td><code>char</code></td><td><code>'A'</code></td></tr>
+                    <tr><td>Строка</td><td><code>str</code></td><td><code>String</code></td><td><code>"Hello"</code></td></tr>
+                    <tr><td>Список</td><td><code>list</code></td><td><code>ArrayList</code></td><td><code>[1,2,3]</code></td></tr>
+                    <tr><td>Словарь</td><td><code>dict</code></td><td><code>HashMap</code></td><td><code>{'a':1}</code></td></tr>
+                    <tr><td>Множество</td><td><code>set</code></td><td><code>HashSet</code></td><td><code>{1,2,3}</code></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="theory-block">
+            <h3>4. Приведение типов</h3>
+            <p><strong>Явное приведение</strong> (программист сам указывает):</p>
+<pre class="code-py"><span class="com"># Python</span>
+x = <span class="str">"42"</span>
+y = <span class="kw">int</span>(x)       <span class="com"># str → int</span>
+z = <span class="kw">float</span>(<span class="str">"3.14"</span>) <span class="com"># str → float</span></pre>
+<pre class="code-java"><span class="com">// Java</span>
+<span class="kw">String</span> s = <span class="str">"42"</span>;
+<span class="kw">int</span> y = Integer.<span class="kw">parseInt</span>(s);      <span class="com">// String → int</span>
+<span class="kw">double</span> z = Double.<span class="kw">parseDouble</span>(<span class="str">"3.14"</span>);</pre>
+            <p><strong>Неявное приведение</strong> (автоматическое, безопасное):</p>
+<pre class="code-java"><span class="kw">int</span> a = <span class="num">5</span>;
+<span class="kw">double</span> b = a;  <span class="com">// int автоматически → double (5.0)</span></pre>
+        </div>
+
+        <div class="theory-block">
+            <h3>5. Особенности деления</h3>
+<pre class="code-py"><span class="com"># Python 3</span>
+<span class="kw">print</span>(<span class="num">10</span> / <span class="num">3</span>)   <span class="com"># 3.3333... (float)</span>
+<span class="kw">print</span>(<span class="num">10</span> // <span class="num">3</span>)  <span class="com"># 3 (целочисленное деление)</span></pre>
+<pre class="code-java"><span class="com">// Java</span>
+System.out.<span class="kw">println</span>(<span class="num">10</span> / <span class="num">3</span>);     <span class="com">// 3 (int / int = int)</span>
+System.out.<span class="kw">println</span>(<span class="num">10.0</span> / <span class="num">3</span>);   <span class="com">// 3.333... (double)</span></pre>
+        </div>
+
+        <div class="theory-block">
+            <h3>6. Коллекции данных</h3>
+            <p>Выбор коллекции зависит от задачи:</p>
+            <ul>
+                <li><strong>Список (list/ArrayList)</strong> — упорядоченная изменяемая коллекция, допускает дубликаты.</li>
+                <li><strong>Множество (set/HashSet)</strong> — неупорядоченная коллекция <em>уникальных</em> элементов.</li>
+                <li><strong>Словарь (dict/HashMap)</strong> — пары «ключ → значение».</li>
+                <li><strong>Кортеж (Tuple)</strong> — неизменяемый список (только в Python).</li>
+            </ul>
+        </div>
+
+        <div style="text-align:center;margin-top:25px;">
+            <button class="btn btn-primary" onclick="goToScreen('tasks')">Перейти к заданиям →</button>
+        </div>
+    </div>
+
+    <!-- ЗАДАНИЯ -->
+    <div class="screen" id="tasks">
+        <h2>✏️ Практические задания</h2>
+        <p style="margin-bottom:20px;color:#666;">Выполните все 9 заданий. Правильный ответ = 1 балл. Для получения сертификата нужно набрать не менее 7 баллов.</p>
+        <div id="questionsContainer"></div>
+        <div style="text-align:center;margin-top:30px;">
+            <button class="btn btn-success" onclick="finishTasks()" id="finishBtn" disabled>🏁 Завершить и проверить</button>
+        </div>
+    </div>
+
+    <!-- РЕЗУЛЬТАТЫ -->
+    <div class="screen" id="results">
+        <h2>📊 Ваши результаты</h2>
+        <div class="score-panel">
+            <span>Правильных ответов</span>
+            <span class="score" id="finalScore">0/9</span>
+            <div class="grade" id="finalGrade"></div>
+        </div>
+        <div id="resultsDetails"></div>
+        <div style="text-align:center;margin-top:25px;" id="resultActions"></div>
+    </div>
+
+    <!-- СЕРТИФИКАТ -->
+    <div class="screen" id="cert">
+        <h2>🏆 Ваш сертификат</h2>
+        <div id="certLockMessage" class="theory-block" style="display:none; background:#f8d7da; color:#721c24;">
+            <h3>⚠️ Сертификат недоступен</h3>
+            <p>Для получения сертификата необходимо набрать не менее 7 баллов из 9.</p>
+            <button class="btn btn-primary" onclick="resetQuiz()">🔄 Пройти задания заново</button>
+        </div>
+
+        <div id="certContainer" style="display:none;">
+            <div class="certificate-wrap">
+                <div class="certificate" id="certificate">
+                    <div class="cert-corner tl"></div>
+                    <div class="cert-corner tr"></div>
+                    <div class="cert-corner bl"></div>
+                    <div class="cert-corner br"></div>
+                    
+                    <div class="cert-logo">🎓</div>
+                    <div class="cert-title">СЕРТИФИКАТ</div>
+                    <div class="cert-subtitle">об успешном прохождении курса</div>
+                    
+                    <div class="cert-body">Настоящим подтверждается, что</div>
+                    <div class="cert-name" id="certName">Имя Фамилия</div>
+                    
+                    <div class="cert-body">успешно прошёл(ла) интерактивный курс по дисциплине</div>
+                    <div class="cert-course">«Алгоритмизация и программирование»<br>
+                    <span style="font-size:15px;font-weight:normal;color:#555;">Тема: Типы данных (Python и Java)</span></div>
+                    
+                    <div class="cert-details">
+                        <div class="cert-detail">
+                            <div>Результат</div>
+                            <div class="value" id="certScore">0/9</div>
+                        </div>
+                        <div class="cert-detail">
+                            <div>Оценка</div>
+                            <div class="value" id="certGrade">—</div>
+                        </div>
+                        <div class="cert-detail">
+                            <div>Дата</div>
+                            <div class="value" id="certDate">—</div>
+                        </div>
+                    </div>
+                    
+                    <div class="cert-seal">ОТЛИЧНО<br>✓</div>
+                    <div class="cert-id" id="certId">ID: 000000</div>
+                </div>
+            </div>
+
+            <div style="text-align:center;margin-top:25px;">
+                <button class="btn btn-gold" onclick="window.print()">🖨️ Распечатать / Скачать PDF</button>
+                <button class="btn btn-secondary" onclick="restartCourse()">🔄 Пройти курс с начала</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============ ВОПРОСЫ ============
+const questions = [
+    {
+        q: "Определите тип переменной в Python:<br><code>x = 42</code>",
+        options: ["str", "int", "float", "bool"],
+        correct: 1,
+        explain: "В Python целое число без десятичной точки автоматически получает тип <code>int</code>."
+    },
+    {
+        q: "Правильно ли объявлена переменная в Java?<br><pre class='code-java' style='display:inline-block;padding:8px;margin:5px 0;'><span class='kw'>double</span> pi = <span class='num'>3.14</span>;</pre>",
+        options: ["Да, всё правильно", "Нет, нужно написать float pi = 3.14;", "Нет, нужно Double pi = 3.14;", "Нет, Java не поддерживает дробные числа"],
+        correct: 0,
+        explain: "Тип <code>double</code> — это примитивный тип для вещественных чисел двойной точности. Объявление полностью корректно."
+    },
+    {
+        q: "Установите соответствие типов Python ↔ Java.<br>Какой тип в Java аналогичен <code>bool</code> в Python?",
+        options: ["Boolean (класс-обёртка)", "boolean (примитив)", "bool", "int (0 и 1)"],
+        correct: 1,
+        explain: "Примитивный тип <code>boolean</code> в Java — прямой аналог <code>bool</code> в Python. Класс <code>Boolean</code> — это обёртка."
+    },
+    {
+        q: "Что выведет следующий код на Java?<br><pre class='code-java' style='display:inline-block;padding:8px;margin:5px 0;'>System.out.<span class='kw'>println</span>(<span class='num'>5</span> + <span class='str'>\"3\"</span>);</pre>",
+        options: ["8", "53", "Ошибка компиляции", "5 3"],
+        correct: 1,
+        explain: "В Java при сложении числа и строки происходит <strong>конкатенация</strong>: число 5 преобразуется в строку и склеивается с \"3\", получается \"53\"."
+    },
+    {
+        q: "В каком фрагменте кода Python допущена логическая ошибка с типами?<br>(Подсказка: аннотация типов не запрещает присваивание, но помогает разработчику)",
+        options: [
+            "<code>age: int = 25</code>",
+            "<code>name: str = 'Иван'</code>",
+            "<code>height: float = 'рост'</code>",
+            "<code>isStudent: bool = True</code>"
+        ],
+        correct: 2,
+        explain: "Переменной <code>height</code> с аннотацией <code>float</code> присваивается строка <code>'рост'</code>. Python это допустит (динамическая типизация), но это логическая ошибка."
+    },
+    {
+        q: "Какую структуру данных лучше использовать для хранения <strong>уникальных email-адресов</strong> пользователей?",
+        options: [
+            "Python: list / Java: ArrayList",
+            "Python: dict / Java: HashMap",
+            "Python: set / Java: HashSet",
+            "Python: tuple / Java: Array"
+        ],
+        correct: 2,
+        explain: "Множество (<code>set</code> в Python, <code>HashSet</code> в Java) гарантирует уникальность элементов — автоматически исключает дубликаты email."
+    },
+    {
+        q: "Что иллюстрирует следующий код Python?<br><pre class='code-py' style='display:inline-block;padding:8px;margin:5px 0;'>a = <span class='num'>5</span><br>a = <span class='str'>\"пять\"</span><br>a = [<span class='num'>1</span>,<span class='num'>2</span>,<span class='num'>3</span>]</pre>",
+        options: [
+            "Статическую типизацию",
+            "Динамическую типизацию",
+            "Строгую типизацию",
+            "Слабую типизацию"
+        ],
+        correct: 1,
+        explain: "Одна и та же переменная <code>a</code> последовательно принимает значения разных типов (int → str → list). Это и есть <strong>динамическая типизация</strong>."
+    },
+    {
+        q: "Практическое задание. Какой функцией в Python преобразовать строку <code>'123'</code> в целое число?",
+        options: ["str()", "int()", "float()", "number()"],
+        correct: 1,
+        explain: "Функция <code>int()</code> преобразует строку, содержащую цифры, в целое число: <code>int('123')</code> → <code>123</code>."
+    },
+    {
+        q: "Выберите правильное объявление целочисленной переменной <code>age</code> со значением 20 в Java:",
+        options: [
+            "<code>int age = 20;</code>",
+            "<code>age = 20</code>",
+            "<code>Integer age = '20';</code>",
+            "<code>var age: int = 20;</code>"
+        ],
+        correct: 0,
+        explain: "В Java нужно указывать тип переменной. <code>int age = 20;</code> — канонический синтаксис. В конце обязательна точка с запятой."
+    }
+];
+
+// ============ СОСТОЯНИЕ ============
+let answers = {};
+let score = 0;
+let studentName = "";
+let courseCompleted = false;
+
+// ============ НАВИГАЦИЯ ============
+function goToScreen(screenId) {
+    // Валидация
+    if (screenId === 'theory' && !document.getElementById('studentName').value.trim()) {
+        alert('Пожалуйста, введите ваше имя на стартовом экране!');
+        return;
+    }
+    if (screenId === 'tasks' && !document.getElementById('studentName').value.trim()) {
+        alert('Пожалуйста, введите ваше имя!');
+        goToScreen('start');
+        return;
+    }
+    
+    studentName = document.getElementById('studentName').value.trim();
+    
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const targetScreen = document.getElementById(screenId);
+    if (targetScreen) targetScreen.classList.add('active');
+    
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const navItem = document.querySelector(`.nav-item[data-screen="${screenId}"]`);
+    if (navItem) navItem.classList.add('active');
+    
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    if (screenId === 'tasks') renderQuestions();
+    if (screenId === 'results') renderResults();
+    if (screenId === 'cert') renderCertificate();
+}
+
+function updateProgress() {
+    const screens = ['start', 'theory', 'tasks', 'results', 'cert'];
+    const activeScreen = document.querySelector('.screen.active');
+    if (!activeScreen) return;
+    
+    const currentIdx = screens.indexOf(activeScreen.id);
+    const progress = (currentIdx / (screens.length - 1)) * 100;
+    const progressBar = document.getElementById('progressBar');
+    if (progressBar) progressBar.style.width = progress + '%';
+    
+    // Разблокировка навигации
+    const unlocked = ['start', 'theory'];
+    if (studentName) unlocked.push('tasks');
+    if (courseCompleted) { unlocked.push('results', 'cert'); }
+    
+    document.querySelectorAll('.nav-item').forEach(n => {
+        const scr = n.dataset.screen;
+        n.classList.remove('locked', 'done');
+        if (!unlocked.includes(scr)) {
+            n.classList.add('locked');
+        }
+        if (scr === 'theory' && studentName) n.classList.add('done');
+        if (scr === 'tasks' && courseCompleted) n.classList.add('done');
+        if (scr === 'results' && courseCompleted) n.classList.add('done');
+    });
+}
+
+// Навигация по клику
+document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+        if (item.classList.contains('locked')) return;
+        goToScreen(item.dataset.screen);
+    });
+});
+
+// ============ ВОПРОСЫ ============
+function renderQuestions() {
+    const container = document.getElementById('questionsContainer');
+    container.innerHTML = '';
+    
+    questions.forEach((q, idx) => {
+        const card = document.createElement('div');
+        card.className = 'question-card';
+        card.id = 'q' + idx;
+        
+        const qNum = document.createElement('span');
+        qNum.className = 'q-num';
+        qNum.textContent = `Задание ${idx + 1} из ${questions.length}`;
+        
+        const qText = document.createElement('div');
+        qText.className = 'q-text';
+        qText.innerHTML = q.q;
+        
+        const optionsDiv = document.createElement('div');
+        optionsDiv.className = 'options';
+        
+        q.options.forEach((opt, optIdx) => {
+            const optDiv = document.createElement('div');
+            optDiv.className = 'option';
+            optDiv.innerHTML = opt;
+            optDiv.dataset.q = idx;
+            optDiv.dataset.opt = optIdx;
+            optDiv.addEventListener('click', () => selectOption(idx, optIdx));
+            optionsDiv.appendChild(optDiv);
+        });
+        
+        const fb = document.createElement('div');
+        fb.className = 'feedback';
+        fb.id = 'fb' + idx;
+        
+        card.appendChild(qNum);
+        card.appendChild(qText);
+        card.appendChild(optionsDiv);
+        card.appendChild(fb);
+        container.appendChild(card);
+    });
+}
+
+function selectOption(qIdx, optIdx) {
+    answers[qIdx] = optIdx;
+    
+    document.querySelectorAll(`.option[data-q="${qIdx}"]`).forEach(o => o.classList.remove('selected'));
+    const selectedOpt = document.querySelector(`.option[data-q="${qIdx}"][data-opt="${optIdx}"]`);
+    if (selectedOpt) selectedOpt.classList.add('selected');
+    
+    checkAllAnswered();
+}
+
+function checkAllAnswered() {
+    const answered = Object.keys(answers).length;
+    const btn = document.getElementById('finishBtn');
+    if (btn) {
+        btn.disabled = (answered < questions.length);
+    }
+}
+
+function finishTasks() {
+    score = 0;
+    questions.forEach((q, idx) => {
+        const card = document.getElementById('q' + idx);
+        const fb = document.getElementById('fb' + idx);
+        const userAns = answers[idx];
+        const correct = q.correct;
+        
+        document.querySelectorAll(`.option[data-q="${idx}"]`).forEach(o => {
+            o.classList.remove('selected');
+            const optIdx = parseInt(o.dataset.opt);
+            if (optIdx === correct) o.classList.add('right');
+            else if (optIdx === userAns && userAns !== correct) o.classList.add('wrong-ans');
+        });
+        
+        if (userAns === correct) {
+            score++;
+            card.classList.add('correct');
+            fb.className = 'feedback show ok';
+            fb.innerHTML = `✅ <strong>Правильно!</strong> ${q.explain}`;
+        } else {
+            card.classList.add('wrong');
+            fb.className = 'feedback show err';
+            fb.innerHTML = `❌ <strong>Неверно.</strong> ${q.explain}`;
+        }
+    });
+    
+    courseCompleted = true;
+    
+    setTimeout(() => {
+        goToScreen('results');
+    }, 800);
+}
+
+// ============ РЕЗУЛЬТАТЫ ============
+function renderResults() {
+    const scoreEl = document.getElementById('finalScore');
+    const gradeEl = document.getElementById('finalGrade');
+    if (scoreEl) scoreEl.textContent = `${score}/${questions.length}`;
+    
+    let grade = '';
+    let gradeText = '';
+    // Адаптировано под 9 вопросов
+    if (score === 9) { grade = 'Отлично'; gradeText = '🏆 Превосходный результат! Вы — эксперт в типах данных.'; }
+    else if (score >= 7) { grade = 'Хорошо'; gradeText = '👍 Хороший результат! Вы хорошо освоили тему.'; }
+    else if (score >= 6) { grade = 'Удовлетворительно'; gradeText = '✔️ Порог пройден. Сертификат доступен, но стоит повторить материал.'; }
+    else { grade = 'Неудовлетворительно'; gradeText = '📚 К сожалению, сертификат недоступен. Рекомендуем изучить теорию и пройти курс заново.'; }
+    
+    if (gradeEl) {
+        gradeEl.innerHTML = `<strong>${grade}</strong><br><span style="font-size:15px;">${gradeText}</span>`;
+    }
+    
+    const actions = document.getElementById('resultActions');
+    if (actions) {
+        if (score >= 6) { // Порог получения сертификата теперь 6 (6/9 = 66.6%, округляем до 7 для строгости, но оставим 6 для справедливости, или 7 как в тексте. Оставим 7, чтобы соответствовать тексту "не менее 7")
+            actions.innerHTML = `
+                <button class="btn btn-gold" onclick="goToScreen('cert')">🏆 Получить сертификат</button>
+                <button class="btn btn-secondary" onclick="restartCourse()">🔄 Пройти с начала</button>
+            `;
+        } else {
+            actions.innerHTML = `
+                <button class="btn btn-primary" onclick="resetQuiz()">🔄 Пройти задания заново</button>
+                <button class="btn btn-secondary" onclick="goToScreen('theory')">📖 К теории</button>
+            `;
+        }
+    }
+}
+
+// Сброс только заданий (сохраняя имя)
+function resetQuiz() {
+    answers = {};
+    score = 0;
+    courseCompleted = false;
+    const btn = document.getElementById('finishBtn');
+    if (btn) btn.disabled = true;
+    renderQuestions();
+    goToScreen('tasks');
+}
+
+// Полный сброс курса
+function restartCourse() {
+    if (!confirm('Вы уверены? Все ответы, прогресс и имя будут сброшены.')) return;
+    answers = {};
+    score = 0;
+    courseCompleted = false;
+    studentName = "";
+    const nameInput = document.getElementById('studentName');
+    if (nameInput) nameInput.value = '';
+    
+    const btn = document.getElementById('finishBtn');
+    if (btn) btn.disabled = true;
+    
+    document.querySelectorAll('.nav-item').forEach(n => {
+        n.classList.remove('active', 'done');
+        if (n.dataset.screen === 'start') n.classList.add('active');
+        else n.classList.add('locked');
+    });
+    
+    goToScreen('start');
+}
+
+// ============ СЕРТИФИКАТ ============
+function renderCertificate() {
+    const lockMsg = document.getElementById('certLockMessage');
+    const certContainer = document.getElementById('certContainer');
+    
+    // Порог получения сертификата: 7 из 9 (это ~78%, что соответствует требованию ≥70%)
+    if (score < 7) {
+        if (lockMsg) lockMsg.style.display = 'block';
+        if (certContainer) certContainer.style.display = 'none';
+        return;
+    }
+    
+    if (lockMsg) lockMsg.style.display = 'none';
+    if (certContainer) certContainer.style.display = 'block';
+    
+    const nameEl = document.getElementById('certName');
+    if (nameEl) nameEl.textContent = studentName || 'Имя Фамилия';
+    
+    const scoreEl = document.getElementById('certScore');
+    if (scoreEl) scoreEl.textContent = `${score}/${questions.length}`;
+    
+    let grade = '';
+    if (score === 9) grade = 'Отлично';
+    else if (score >= 7) grade = 'Хорошо';
+    else grade = 'Удовл.';
+    
+    const gradeEl = document.getElementById('certGrade');
+    if (gradeEl) gradeEl.textContent = grade;
+    
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
+    const dateEl = document.getElementById('certDate');
+    if (dateEl) dateEl.textContent = dateStr;
+    
+    const certId = 'KZ-' + now.getFullYear() + '-' + Math.floor(Math.random() * 900000 + 100000);
+    const idEl = document.getElementById('certId');
+    if (idEl) idEl.textContent = 'ID: ' + certId;
+    
+    const seal = document.querySelector('.cert-seal');
+    if (seal) {
+        if (score === 9) {
+            seal.innerHTML = 'ОТЛИЧНО<br>★★★★★';
+            seal.style.color = '#c9a961';
+        } else if (score >= 7) {
+            seal.innerHTML = 'ХОРОШО<br>★★★★';
+            seal.style.color = '#2a5298';
+        } else {
+            seal.innerHTML = 'СДАНО<br>✓';
+            seal.style.color = '#27ae60';
+        }
+    }
+}
+
+// ============ СТАРТ ============
+renderQuestions();
+updateProgress();
+
+const nameInput = document.getElementById('studentName');
+if (nameInput) {
+    nameInput.addEventListener('input', (e) => {
+        studentName = e.target.value.trim();
+        updateProgress();
+    });
+}
+</script>
+
+</body>
+</html>
