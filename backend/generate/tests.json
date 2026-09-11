@@ -94,6 +94,15 @@
       "expectedStatus": 403,
       "expectedBody": {"error": "string"},
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "KZ analysis without paid subscription returns 403",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "kz_analysis", "data": {"rows": [{"discipline": "test", "group": "test"}]}},
+      "expectedStatus": 403,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
     }
   ]
 }

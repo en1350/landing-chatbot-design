@@ -271,6 +271,42 @@
         .form-grid { grid-template-columns: 1fr; }
         .tab { font-size: 12px; padding: 10px 5px; }
     }
+
+    .ai-block {
+        margin-top: 25px;
+    }
+    .ai-locked {
+        text-align: center;
+        padding: 35px 25px;
+        background: linear-gradient(135deg, rgba(41,128,185,0.08), rgba(142,68,173,0.08));
+        border: 2px dashed #b8c6d8;
+        border-radius: 12px;
+    }
+    .ai-locked .ai-icon { font-size: 40px; margin-bottom: 10px; }
+    .ai-locked p.ai-title { font-weight: 700; font-size: 16px; margin-bottom: 6px; color: #2c3e50; }
+    .ai-locked p.ai-desc { color: #7f8c8d; font-size: 13px; max-width: 420px; margin: 0 auto 18px; }
+    .ai-result {
+        background: #f8f9fb;
+        border-left: 4px solid #8e44ad;
+        padding: 20px;
+        border-radius: 6px;
+        white-space: pre-wrap;
+        line-height: 1.7;
+        font-size: 14px;
+        color: #2c3e50;
+    }
+    .ai-spinner {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255,255,255,0.5);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        margin-right: 6px;
+        vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -374,6 +410,11 @@
         <h2>Аналитический отчёт</h2>
         <div id="summary-cards" class="summary-cards"></div>
         <div id="analytics-container"></div>
+
+        <div class="ai-block">
+            <h2>🤖 ИИ-анализ качества знаний</h2>
+            <div id="ai-analysis-container"></div>
+        </div>
     </div>
 
     <!-- УПРАВЛЕНИЕ -->
@@ -398,6 +439,18 @@
 </div>
 
 <script>
+// ============ ИИ-АНАЛИЗ (через backend УрокАИ) ============
+const AI_GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
+const TOKEN_KEY = "urokai_token_v1";
+let aiAnalysisText = null;
+let aiAnalysisLoading = false;
+let aiAnalysisError = null;
+let aiAnalysisNeedsUpgrade = false;
+
+function getAuthToken() {
+    try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
+}
+
 // ============ ХРАНИЛИЩЕ ============
 // Гарантированно начинаем с пустой таблицы (очищает старые тестовые данные)
 localStorage.removeItem('kz_records');
@@ -589,6 +642,7 @@ function renderAnalytics() {
     if (records.length === 0) {
         cards.innerHTML = '';
         container.innerHTML = '<div class="empty-state">Внесите данные для формирования аналитического отчёта</div>';
+        document.getElementById('ai-analysis-container').innerHTML = '';
         return;
     }
 
@@ -601,6 +655,7 @@ function renderAnalytics() {
     });
 
     const entries = Object.values(grouped).filter(e => e.start && e.end);
+    renderAiAnalysisBlock();
     const avgKzEnd = entries.length ? entries.reduce((s,e) => s + calcMetrics(e.end).kz, 0) / entries.length : 0;
     const avgDelta = entries.length ? entries.reduce((s,e) => s + (calcMetrics(e.end).kz - calcMetrics(e.start).kz), 0) / entries.length : 0;
     const bestGroup = entries.length ? entries.reduce((best, e) => {
@@ -631,6 +686,110 @@ function renderAnalytics() {
         </div>`;
     });
     container.innerHTML = html;
+}
+
+// ============ ИИ-АНАЛИЗ: РЕНДЕР И ЗАПРОС ============
+function collectAiRows() {
+    const grouped = {};
+    records.forEach(r => {
+        const key = `${r.discipline}|||${r.group}`;
+        if (!grouped[key]) grouped[key] = { discipline: r.discipline, group: r.group, start: null, end: null };
+        if (r.period === 'начало') grouped[key].start = r;
+        else grouped[key].end = r;
+    });
+    return Object.values(grouped).map(e => {
+        const row = { discipline: e.discipline, group: e.group };
+        if (e.start) {
+            const m = calcMetrics(e.start);
+            row.start = { N: m.N, kz: +m.kz.toFixed(1), usp: +m.usp.toFixed(1), so: +m.so.toFixed(2), n2: e.start.n2 };
+        }
+        if (e.end) {
+            const m = calcMetrics(e.end);
+            row.end = { N: m.N, kz: +m.kz.toFixed(1), usp: +m.usp.toFixed(1), so: +m.so.toFixed(2), n2: e.end.n2 };
+        }
+        return row;
+    });
+}
+
+function renderAiAnalysisBlock() {
+    const container = document.getElementById('ai-analysis-container');
+    const token = getAuthToken();
+
+    if (!token) {
+        container.innerHTML = `
+            <div class="ai-locked">
+                <div class="ai-icon">🔒</div>
+                <p class="ai-title">Доступно по подписке</p>
+                <p class="ai-desc">Войдите в личный кабинет на сайте УрокАИ и оформите подписку, чтобы получить развёрнутый ИИ-анализ качества знаний с рекомендациями.</p>
+                <button class="btn btn-primary" onclick="window.open('/', '_blank')">Перейти на сайт УрокАИ</button>
+            </div>`;
+        return;
+    }
+
+    if (aiAnalysisLoading) {
+        container.innerHTML = `<div class="ai-locked"><span class="ai-spinner" style="border-top-color:#2980b9;border-color:rgba(41,128,185,0.25)"></span> ИИ анализирует данные…</div>`;
+        return;
+    }
+
+    if (aiAnalysisNeedsUpgrade) {
+        container.innerHTML = `
+            <div class="ai-locked">
+                <div class="ai-icon">🔒</div>
+                <p class="ai-title">Доступно по подписке</p>
+                <p class="ai-desc">ИИ-анализ качества знаний — премиум-функция. Оформите подписку в личном кабинете на сайте УрокАИ.</p>
+                <button class="btn btn-primary" onclick="window.open('/#pricing', '_blank')">Оформить подписку</button>
+            </div>`;
+        return;
+    }
+
+    if (aiAnalysisError) {
+        container.innerHTML = `
+            <div class="alert alert-warning">⚠️ ${escapeHtml(aiAnalysisError)}</div>
+            <button class="btn btn-primary" onclick="runAiAnalysis()">🔄 Повторить попытку</button>`;
+        return;
+    }
+
+    if (aiAnalysisText) {
+        container.innerHTML = `
+            <div class="ai-result">${escapeHtml(aiAnalysisText)}</div>
+            <button class="btn btn-primary" style="margin-top:15px" onclick="runAiAnalysis()">🔄 Сформировать заново</button>`;
+        return;
+    }
+
+    container.innerHTML = `
+        <p style="color:#7f8c8d;margin-bottom:12px;font-size:14px;">ИИ разберёт все внесённые данные по дисциплинам и группам, выделит проблемные зоны и даст конкретные рекомендации.</p>
+        <button class="btn btn-primary" onclick="runAiAnalysis()">✨ Сформировать ИИ-анализ</button>`;
+}
+
+async function runAiAnalysis() {
+    const token = getAuthToken();
+    if (!token) { renderAiAnalysisBlock(); return; }
+
+    aiAnalysisLoading = true;
+    aiAnalysisError = null;
+    aiAnalysisNeedsUpgrade = false;
+    renderAiAnalysisBlock();
+
+    try {
+        const res = await fetch(AI_GENERATE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Authorization': token },
+            body: JSON.stringify({ action: 'kz_analysis', data: { rows: collectAiRows() } }),
+        });
+        const data = await res.json();
+        if (res.status === 403) {
+            aiAnalysisNeedsUpgrade = true;
+        } else if (!res.ok) {
+            throw new Error(data.error || 'Не удалось сформировать ИИ-анализ');
+        } else {
+            aiAnalysisText = data.content || '';
+        }
+    } catch (err) {
+        aiAnalysisError = err instanceof Error ? err.message : 'Не удалось сформировать ИИ-анализ, попробуйте снова';
+    } finally {
+        aiAnalysisLoading = false;
+        renderAiAnalysisBlock();
+    }
 }
 
 // ============ ЭКСПОРТ / ИМПОРТ ============
