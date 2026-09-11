@@ -752,13 +752,22 @@ function renderAiAnalysisBlock() {
     if (aiAnalysisText) {
         container.innerHTML = `
             <div class="ai-result">${escapeHtml(aiAnalysisText)}</div>
-            <button class="btn btn-primary" style="margin-top:15px" onclick="runAiAnalysis()">🔄 Сформировать заново</button>`;
+            <div style="margin-top:15px">
+                <button class="btn btn-secondary" onclick="runAiAnalysis()">🔄 Сформировать заново</button>
+                <button class="btn btn-success" onclick="downloadAiAnalysis()">📥 Скачать документ</button>
+            </div>`;
         return;
     }
 
     container.innerHTML = `
         <p style="color:#7f8c8d;margin-bottom:12px;font-size:14px;">ИИ разберёт все внесённые данные по дисциплинам и группам, выделит проблемные зоны и даст конкретные рекомендации.</p>
-        <button class="btn btn-primary" onclick="runAiAnalysis()">✨ Сформировать ИИ-анализ</button>`;
+        <button class="btn btn-primary" onclick="runAiAnalysis()">📄 Сформировать документ</button>`;
+}
+
+function downloadAiAnalysis() {
+    if (!aiAnalysisText) return;
+    const header = `ИИ-АНАЛИЗ КАЧЕСТВА ЗНАНИЙ (${getToday()})\n========================================================\n\n`;
+    downloadFile(header + aiAnalysisText, `ии-анализ-качества-знаний_${getToday()}.txt`, 'text/plain;charset=utf-8');
 }
 
 async function runAiAnalysis() {
