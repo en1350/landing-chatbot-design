@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Качественный анализ по предметам и дисциплинам</title>
+<style>
+    * { box-sizing: border-box; }
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.5;
+        color: #2c3e50;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        margin: 0;
+        padding: 20px;
+        min-height: 100vh;
+    }
+    .container {
+        max-width: 1300px;
+        margin: 0 auto;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        overflow: hidden;
+    }
+    header {
+        background: linear-gradient(135deg, #2c3e50, #3498db);
+        color: #fff;
+        padding: 25px 35px;
+    }
+    header h1 { margin: 0 0 5px 0; font-size: 24px; }
+    header p { margin: 0; opacity: 0.9; font-size: 14px; }
+
+    .tabs {
+        display: flex;
+        background: #ecf0f1;
+        border-bottom: 1px solid #bdc3c7;
+    }
+    .tab {
+        flex: 1;
+        padding: 14px;
+        text-align: center;
+        cursor: pointer;
+        font-weight: 600;
+        color: #7f8c8d;
+        transition: all 0.2s;
+        border: none;
+        background: transparent;
+        font-size: 14px;
+    }
+    .tab:hover { background: #d5dbdb; }
+    .tab.active {
+        background: #fff;
+        color: #2980b9;
+        border-bottom: 3px solid #2980b9;
+    }
+
+    .tab-content { display: none; padding: 30px 35px; }
+    .tab-content.active { display: block; }
+
+    h2 {
+        color: #2c3e50;
+        border-left: 5px solid #2980b9;
+        padding-left: 12px;
+        margin-top: 0;
+        font-size: 20px;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    .form-group label {
+        display: block;
+        font-size: 13px;
+        color: #555;
+        margin-bottom: 5px;
+        font-weight: 600;
+    }
+    .form-group input, .form-group select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #bdc3c7;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus {
+        outline: none;
+        border-color: #2980b9;
+        box-shadow: 0 0 0 3px rgba(41,128,185,0.15);
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.2s;
+        margin-right: 8px;
+        margin-top: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .btn-primary { background: #2980b9; color: #fff; }
+    .btn-primary:hover { background: #2471a3; }
+    .btn-success { background: #27ae60; color: #fff; }
+    .btn-success:hover { background: #229954; }
+    .btn-danger { background: #e74c3c; color: #fff; }
+    .btn-danger:hover { background: #c0392b; }
+    .btn-warning { background: #f39c12; color: #fff; }
+    .btn-warning:hover { background: #d68910; }
+    .btn-info { background: #17a2b8; color: #fff; }
+    .btn-info:hover { background: #138496; }
+    .btn-secondary { background: #6c757d; color: #fff; }
+    .btn-secondary:hover { background: #5a6268; }
+    
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 15px 0;
+        font-size: 13px;
+    }
+    th, td {
+        border: 1px solid #dfe6e9;
+        padding: 10px 8px;
+        text-align: center;
+    }
+    th {
+        background: #34495e;
+        color: #fff;
+        font-weight: 600;
+    }
+    tr:nth-child(even) { background: #f8f9fb; }
+    tr:hover { background: #eaf4fb; }
+    .cell-good { color: #27ae60; font-weight: 700; }
+    .cell-bad { color: #e74c3c; font-weight: 700; }
+    .cell-neutral { color: #f39c12; font-weight: 700; }
+
+    .progress-bar {
+        display: inline-block;
+        width: 80px;
+        height: 10px;
+        background: #ecf0f1;
+        border-radius: 5px;
+        overflow: hidden;
+        vertical-align: middle;
+        margin-left: 5px;
+    }
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #27ae60, #2ecc71);
+        transition: width 0.5s;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #95a5a6;
+        background: #f8f9fb;
+        border-radius: 8px;
+        margin: 20px 0;
+    }
+    .empty-state::before {
+        content: "📊";
+        display: block;
+        font-size: 48px;
+        margin-bottom: 10px;
+    }
+
+    .alert {
+        padding: 12px 18px;
+        border-radius: 6px;
+        margin: 15px 0;
+        font-size: 14px;
+    }
+    .alert-info { background: #eaf4fb; border-left: 4px solid #2980b9; }
+    .alert-success { background: #e8f6ef; border-left: 4px solid #27ae60; }
+    .alert-warning { background: #fef5e7; border-left: 4px solid #f39c12; }
+
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin: 20px 0;
+    }
+    .summary-card {
+        background: linear-gradient(135deg, #2980b9, #3498db);
+        color: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+    }
+    .summary-card .value {
+        font-size: 32px;
+        font-weight: 700;
+        display: block;
+        margin: 5px 0;
+    }
+    .summary-card .label {
+        font-size: 12px;
+        opacity: 0.9;
+        text-transform: uppercase;
+    }
+    .summary-card.green { background: linear-gradient(135deg, #27ae60, #2ecc71); }
+    .summary-card.orange { background: linear-gradient(135deg, #f39c12, #e67e22); }
+    .summary-card.purple { background: linear-gradient(135deg, #8e44ad, #9b59b6); }
+
+    .analytics-text {
+        background: #f8f9fb;
+        border-left: 4px solid #2980b9;
+        padding: 20px;
+        border-radius: 6px;
+        margin: 15px 0;
+        line-height: 1.7;
+        font-size: 14px;
+    }
+    .analytics-text p { margin: 8px 0; }
+    .analytics-text strong { color: #2c3e50; }
+
+    .filter-bar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 15px;
+        align-items: center;
+    }
+    .filter-bar select, .filter-bar input {
+        padding: 8px 12px;
+        border: 1px solid #bdc3c7;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+
+    #notification {
+        display: none;
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: #27ae60;
+        color: #fff;
+        padding: 15px 25px;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        z-index: 1000;
+        font-weight: 600;
+        font-size: 15px;
+        animation: slideIn 0.3s ease-out;
+    }
+    @keyframes slideIn {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+
+    @media print {
+        body { background: #fff; padding: 0; }
+        .container { box-shadow: none; }
+        .tabs, .btn, .filter-bar, #notification { display: none !important; }
+        .tab-content { display: block !important; padding: 15px; }
+        .tab-content:not(.print-show) { display: none !important; }
+    }
+
+    @media (max-width: 768px) {
+        .form-grid { grid-template-columns: 1fr; }
+        .tab { font-size: 12px; padding: 10px 5px; }
+    }
+</style>
+</head>
+<body>
+
+<div id="notification">✅ Данные успешно сохранены!</div>
+
+<div class="container">
+    <header>
+        <h1>📊 Автоматизированный расчёт качества знаний</h1>
+        <p>Учёт успеваемости по группам и дисциплинам · Расчёт КЗ, успеваемости, СО · Динамика · Аналитика</p>
+    </header>
+
+    <div class="tabs">
+        <button class="tab active" data-tab="input">📝 Ввод данных</button>
+        <button class="tab" data-tab="table">📋 Сводная таблица</button>
+        <button class="tab" data-tab="analytics">📈 Аналитика</button>
+        <button class="tab" data-tab="settings">⚙️ Управление</button>
+    </div>
+
+    <!-- ВВОД ДАННЫХ -->
+    <div class="tab-content active" id="input">
+        <h2>Внесение данных об успеваемости</h2>
+        <div class="alert alert-info">
+            Заполните форму и нажмите «Добавить запись». Качество знаний (КЗ) рассчитывается автоматически: <strong>КЗ = (n₄ + n₅) / N × 100%</strong>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Дисциплина</label>
+                <input type="text" id="discipline" placeholder="Например: Сестринский уход" list="disciplines-list">
+                <datalist id="disciplines-list"></datalist>
+            </div>
+            <div class="form-group">
+                <label>Группа</label>
+                <input type="text" id="group" placeholder="Например: 231д" list="groups-list">
+                <datalist id="groups-list"></datalist>
+            </div>
+            <div class="form-group">
+                <label>Период контроля</label>
+                <select id="period">
+                    <option value="начало">Начало курса (входной контроль)</option>
+                    <option value="окончание">Окончание курса (итоговый контроль)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Оценка «2» (неуд.)</label>
+                <input type="number" id="n2" min="0" value="" placeholder="0">
+            </div>
+            <div class="form-group">
+                <label>Оценка «3» (удовл.)</label>
+                <input type="number" id="n3" min="0" value="" placeholder="0">
+            </div>
+            <div class="form-group">
+                <label>Оценка «4» (хор.)</label>
+                <input type="number" id="n4" min="0" value="" placeholder="0">
+            </div>
+            <div class="form-group">
+                <label>Оценка «5» (отл.)</label>
+                <input type="number" id="n5" min="0" value="" placeholder="0">
+            </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="addRecord()">➕ Добавить запись</button>
+        <button class="btn btn-success" onclick="save(); showNotification('Данные успешно сохранены в браузере!')">💾 Сохранить</button>
+        <button class="btn btn-secondary" onclick="clearForm()">🔄 Очистить форму</button>
+
+        <h2 style="margin-top:30px;">Внесённые записи</h2>
+        <div id="records-container"></div>
+    </div>
+
+    <!-- СВОДНАЯ ТАБЛИЦА -->
+    <div class="tab-content" id="table">
+        <h2>Сводная таблица успеваемости</h2>
+        <div class="filter-bar">
+            <label>Дисциплина:
+                <select id="filter-discipline" onchange="renderSummary()">
+                    <option value="">Все</option>
+                </select>
+            </label>
+            <label>Группа:
+                <select id="filter-group" onchange="renderSummary()">
+                    <option value="">Все</option>
+                </select>
+            </label>
+        </div>
+        
+        <div class="filter-bar" style="border-top: 1px solid #eee; padding-top: 15px; margin-top: 5px;">
+            <span style="font-weight: bold; margin-right: 10px;">Скачать отчёт:</span>
+            <button class="btn btn-success btn-sm" onclick="exportCSV()">📥 CSV</button>
+            <button class="btn btn-info btn-sm" onclick="exportExcel()">📊 Excel</button>
+            <button class="btn btn-secondary btn-sm" onclick="exportTXT()">📄 TXT</button>
+            <button class="btn btn-warning btn-sm" onclick="exportHTML()">🌐 HTML</button>
+            <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Печать</button>
+        </div>
+
+        <div id="summary-container"></div>
+    </div>
+
+    <!-- АНАЛИТИКА -->
+    <div class="tab-content" id="analytics">
+        <h2>Аналитический отчёт</h2>
+        <div id="summary-cards" class="summary-cards"></div>
+        <div id="analytics-container"></div>
+    </div>
+
+    <!-- УПРАВЛЕНИЕ -->
+    <div class="tab-content" id="settings">
+        <h2>Управление данными</h2>
+        <div class="alert alert-warning">
+            ⚠️ Все данные сохраняются локально в браузере (localStorage). 
+        </div>
+        <button class="btn btn-success" onclick="exportJSON()">💾 Экспорт в JSON</button>
+        <button class="btn btn-primary" onclick="document.getElementById('import-file').click()">📂 Импорт из JSON</button>
+        <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)">
+        <button class="btn btn-danger" onclick="clearAllData()">🗑️ Очистить все данные</button>
+
+        <h2 style="margin-top:30px;">Формулы расчёта</h2>
+        <div class="analytics-text">
+            <p><strong>Качество знаний (КЗ):</strong> КЗ = (n₄ + n₅) / N × 100%</p>
+            <p><strong>Успеваемость (У):</strong> У = (N − n₂) / N × 100%</p>
+            <p><strong>Средний балл (СО):</strong> СО = (2·n₂ + 3·n₃ + 4·n₄ + 5·n₅) / N</p>
+            <p><strong>Прирост КЗ (Δ):</strong> Δ = КЗ(окончание) − КЗ(начало)</p>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============ ХРАНИЛИЩЕ ============
+// Гарантированно начинаем с пустой таблицы (очищает старые тестовые данные)
+localStorage.removeItem('kz_records');
+let records = [];
+
+function save() {
+    localStorage.setItem('kz_records', JSON.stringify(records));
+}
+
+function showNotification(message) {
+    const el = document.getElementById('notification');
+    el.textContent = '✅ ' + message;
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 2500);
+}
+
+// ============ ВКЛАДКИ ============
+document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+        if (tab.dataset.tab === 'table') renderSummary();
+        if (tab.dataset.tab === 'analytics') renderAnalytics();
+    });
+});
+
+// ============ ОЧИСТКА ФОРМЫ ============
+function clearForm() {
+    document.getElementById('discipline').value = '';
+    document.getElementById('group').value = '';
+    document.getElementById('period').value = 'начало';
+    ['n2', 'n3', 'n4', 'n5'].forEach(id => document.getElementById(id).value = '');
+}
+
+// ============ ДОБАВЛЕНИЕ ЗАПИСИ ============
+function addRecord() {
+    const discipline = document.getElementById('discipline').value.trim();
+    const group = document.getElementById('group').value.trim();
+    const period = document.getElementById('period').value;
+    const n2 = parseInt(document.getElementById('n2').value) || 0;
+    const n3 = parseInt(document.getElementById('n3').value) || 0;
+    const n4 = parseInt(document.getElementById('n4').value) || 0;
+    const n5 = parseInt(document.getElementById('n5').value) || 0;
+
+    if (!discipline || !group) {
+        alert('Укажите дисциплину и группу!');
+        return;
+    }
+    const N = n2 + n3 + n4 + n5;
+    if (N === 0) {
+        alert('Введите хотя бы одну оценку!');
+        return;
+    }
+
+    const existing = records.find(r => r.discipline === discipline && r.group === group && r.period === period);
+    if (existing) {
+        if (!confirm(`Запись для "${discipline}" / группа "${group}" / "${period}" уже существует. Заменить?`)) return;
+        records = records.filter(r => r !== existing);
+    }
+
+    records.push({
+        id: Date.now() + Math.random(),
+        discipline, group, period, n2, n3, n4, n5, N,
+        date: new Date().toISOString()
+    });
+    save();
+    renderRecords();
+    updateDataLists();
+    showNotification('Запись успешно добавлена!');
+    clearForm();
+}
+
+function deleteRecord(id) {
+    if (!confirm('Удалить эту запись?')) return;
+    records = records.filter(r => String(r.id) !== String(id));
+    save();
+    renderRecords();
+    updateDataLists();
+    showNotification('Запись удалена');
+}
+
+// ============ РАСЧЁТЫ ============
+function calcMetrics(r) {
+    const N = r.N;
+    const kz = ((r.n4 + r.n5) / N * 100);
+    const usp = ((N - r.n2) / N * 100);
+    const so = (2*r.n2 + 3*r.n3 + 4*r.n4 + 5*r.n5) / N;
+    return { kz, usp, so, N };
+}
+
+// ============ ГЕНЕРАЦИЯ HTML СВОДНОЙ ТАБЛИЦЫ (универсальная для отображения и экспорта) ============
+function generateSummaryTableHTML() {
+    const filterD = document.getElementById('filter-discipline').value;
+    const filterG = document.getElementById('filter-group').value;
+
+    const grouped = {};
+    records.forEach(r => {
+        if (filterD && r.discipline !== filterD) return;
+        if (filterG && r.group !== filterG) return;
+        const key = `${r.discipline}|||${r.group}`;
+        if (!grouped[key]) grouped[key] = { discipline: r.discipline, group: r.group, start: null, end: null };
+        if (r.period === 'начало') grouped[key].start = r;
+        else grouped[key].end = r;
+    });
+
+    const entries = Object.values(grouped);
+    if (entries.length === 0) return '<div class="empty-state">Нет данных для отображения</div>';
+
+    let html = '<table id="summary-table"><thead><tr><th rowspan="2">Дисциплина</th><th rowspan="2">Группа</th><th colspan="5">Начало курса</th><th colspan="5">Окончание курса</th><th rowspan="2">Δ КЗ, п.п.</th></tr>';
+    html += '<tr><th>N</th><th>КЗ, %</th><th>Усп., %</th><th>СО</th><th>«5», %</th><th>N</th><th>КЗ, %</th><th>Усп., %</th><th>СО</th><th>«5», %</th></tr></thead><tbody>';
+
+    entries.forEach(e => {
+        html += `<tr><td>${escapeHtml(e.discipline)}</td><td><strong>${escapeHtml(e.group)}</strong></td>`;
+        if (e.start) {
+            const m = calcMetrics(e.start);
+            const pct5 = (e.start.n5 / m.N * 100).toFixed(1);
+            html += `<td>${m.N}</td><td>${m.kz.toFixed(1)}</td><td>${m.usp.toFixed(1)}</td><td>${m.so.toFixed(2)}</td><td>${pct5}</td>`;
+        } else html += '<td colspan="5" style="color:#95a5a6">—</td>';
+
+        if (e.end) {
+            const m = calcMetrics(e.end);
+            const pct5 = (e.end.n5 / m.N * 100).toFixed(1);
+            html += `<td>${m.N}</td><td>${m.kz.toFixed(1)}</td><td>${m.usp.toFixed(1)}</td><td>${m.so.toFixed(2)}</td><td>${pct5}</td>`;
+        } else html += '<td colspan="5" style="color:#95a5a6">—</td>';
+
+        if (e.start && e.end) {
+            const delta = calcMetrics(e.end).kz - calcMetrics(e.start).kz;
+            const cls = delta > 0 ? 'cell-good' : (delta < 0 ? 'cell-bad' : '');
+            html += `<td class="${cls}"><strong>${delta > 0 ? '+' : ''}${delta.toFixed(1)}</strong></td>`;
+        } else html += '<td>—</td>';
+        html += '</tr>';
+    });
+    html += '</tbody></table>';
+    return html;
+}
+
+// ============ ОТОБРАЖЕНИЕ ЗАПИСЕЙ ============
+function renderRecords() {
+    const container = document.getElementById('records-container');
+    if (records.length === 0) {
+        container.innerHTML = '<div class="empty-state">Таблица пуста. Введите данные выше и нажмите "Добавить запись".</div>';
+        return;
+    }
+
+    let html = '<table><thead><tr><th>Дисциплина</th><th>Группа</th><th>Период</th><th>N</th><th>«2»</th><th>«3»</th><th>«4»</th><th>«5»</th><th>КЗ, %</th><th>Усп., %</th><th>СО</th><th>Действие</th></tr></thead><tbody>';
+
+    records.forEach(r => {
+        const m = calcMetrics(r);
+        const kzClass = m.kz >= 70 ? 'cell-good' : (m.kz >= 50 ? 'cell-neutral' : 'cell-bad');
+        html += `<tr>
+            <td>${escapeHtml(r.discipline)}</td>
+            <td><strong>${escapeHtml(r.group)}</strong></td>
+            <td>${r.period}</td>
+            <td>${m.N}</td>
+            <td>${r.n2 || '-'}</td>
+            <td>${r.n3}</td>
+            <td>${r.n4}</td>
+            <td>${r.n5}</td>
+            <td class="${kzClass}">${m.kz.toFixed(1)}<div class="progress-bar"><div class="progress-fill" style="width:${m.kz}%"></div></div></td>
+            <td>${m.usp.toFixed(1)}</td>
+            <td>${m.so.toFixed(2)}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteRecord('${r.id}')">✕</button></td>
+        </tr>`;
+    });
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+// ============ СВОДНАЯ ТАБЛИЦА ============
+function renderSummary() {
+    const disciplines = [...new Set(records.map(r => r.discipline))];
+    const groups = [...new Set(records.map(r => r.group))];
+    const selD = document.getElementById('filter-discipline');
+    const selG = document.getElementById('filter-group');
+    const curD = selD.value, curG = selG.value;
+    selD.innerHTML = '<option value="">Все</option>' + disciplines.map(d => `<option ${d===curD?'selected':''}>${escapeHtml(d)}</option>`).join('');
+    selG.innerHTML = '<option value="">Все</option>' + groups.map(g => `<option ${g===curG?'selected':''}>${escapeHtml(g)}</option>`).join('');
+
+    document.getElementById('summary-container').innerHTML = generateSummaryTableHTML();
+}
+
+// ============ АНАЛИТИКА ============
+function renderAnalytics() {
+    const cards = document.getElementById('summary-cards');
+    const container = document.getElementById('analytics-container');
+
+    if (records.length === 0) {
+        cards.innerHTML = '';
+        container.innerHTML = '<div class="empty-state">Внесите данные для формирования аналитического отчёта</div>';
+        return;
+    }
+
+    const grouped = {};
+    records.forEach(r => {
+        const key = `${r.discipline}|||${r.group}`;
+        if (!grouped[key]) grouped[key] = { discipline: r.discipline, group: r.group, start: null, end: null };
+        if (r.period === 'начало') grouped[key].start = r;
+        else grouped[key].end = r;
+    });
+
+    const entries = Object.values(grouped).filter(e => e.start && e.end);
+    const avgKzEnd = entries.length ? entries.reduce((s,e) => s + calcMetrics(e.end).kz, 0) / entries.length : 0;
+    const avgDelta = entries.length ? entries.reduce((s,e) => s + (calcMetrics(e.end).kz - calcMetrics(e.start).kz), 0) / entries.length : 0;
+    const bestGroup = entries.length ? entries.reduce((best, e) => {
+        const d = calcMetrics(e.end).kz - calcMetrics(e.start).kz;
+        const bd = calcMetrics(best.end).kz - calcMetrics(best.start).kz;
+        return d > bd ? e : best;
+    }) : null;
+
+    cards.innerHTML = `
+        <div class="summary-card"><span class="label">Всего записей</span><span class="value">${records.length}</span><span class="label">${Object.keys(grouped).length} пар</span></div>
+        <div class="summary-card green"><span class="label">Средний КЗ (итог)</span><span class="value">${avgKzEnd.toFixed(1)}%</span><span class="label">по всем группам</span></div>
+        <div class="summary-card orange"><span class="label">Средний прирост</span><span class="value">${avgDelta > 0 ? '+' : ''}${avgDelta.toFixed(1)}</span><span class="label">процентных пунктов</span></div>
+        <div class="summary-card purple"><span class="label">Лидер динамики</span><span class="value" style="font-size:20px">${bestGroup ? escapeHtml(bestGroup.group) : '—'}</span><span class="label">${bestGroup ? escapeHtml(bestGroup.discipline) : ''}</span></div>
+    `;
+
+    let html = '<h2>Аналитические комментарии по группам</h2>';
+    entries.forEach(e => {
+        const ms = calcMetrics(e.start);
+        const me = calcMetrics(e.end);
+        const delta = me.kz - ms.kz;
+        let trend = delta >= 30 ? 'выраженный положительный рост' : delta >= 15 ? 'умеренный положительный рост' : delta > 0 ? 'незначительное улучшение' : delta === 0 ? 'стабильность показателей' : 'отрицательная динамика';
+
+        html += `<div class="analytics-text">
+            <h3 style="margin-top:0;color:#2980b9">📌 ${escapeHtml(e.discipline)} — группа ${escapeHtml(e.group)}</h3>
+            <p><strong>Исходный уровень:</strong> КЗ = ${ms.kz.toFixed(1)}%, средний балл = ${ms.so.toFixed(2)}, неуспевающих = ${e.start.n2}.</p>
+            <p><strong>Итоговый уровень:</strong> КЗ = ${me.kz.toFixed(1)}%, средний балл = ${me.so.toFixed(2)}, неуспевающих = ${e.end.n2}.</p>
+            <p><strong>Динамика:</strong> прирост КЗ составил <strong>${delta > 0 ? '+' : ''}${delta.toFixed(1)} п.п.</strong> — ${trend}.</p>
+        </div>`;
+    });
+    container.innerHTML = html;
+}
+
+// ============ ЭКСПОРТ / ИМПОРТ ============
+function exportCSV() {
+    if (records.length === 0) { alert('Нет данных для экспорта'); return; }
+    let csv = '\uFEFFДисциплина;Группа;Период;N;2;3;4;5;КЗ%;Усп%;СО\n';
+    records.forEach(r => {
+        const m = calcMetrics(r);
+        csv += `${r.discipline};${r.group};${r.period};${m.N};${r.n2};${r.n3};${r.n4};${r.n5};${m.kz.toFixed(1)};${m.usp.toFixed(1)};${m.so.toFixed(2)}\n`;
+    });
+    downloadFile(csv, `успеваемость_${getToday()}.csv`, 'text/csv;charset=utf-8');
+}
+
+function exportExcel() {
+    if (records.length === 0) { alert('Нет данных для экспорта'); return; }
+    const tableHTML = generateSummaryTableHTML();
+    if (tableHTML.includes('empty-state')) { alert('Нет данных для сводной таблицы. Добавьте записи с периодами "начало" и "окончание".'); return; }
+
+    const template = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-HTML40">
+        <head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <style>table { border-collapse: collapse; } td, th { border: 1px solid #000; padding: 5px; text-align: center; } th { background-color: #d9d9d9; font-weight: bold; }</style>
+        </head>
+        <body>${tableHTML}</body></html>
+    `;
+    downloadFile(template, `Отчет_Успеваемость_${getToday()}.xls`, 'application/vnd.ms-excel');
+}
+
+function exportTXT() {
+    if (records.length === 0) { alert('Нет данных для экспорта'); return; }
+    let txt = `ОТЧЕТ ПО КАЧЕСТВУ ЗНАНИЙ (${getToday()})\n========================================================\n\n`;
+    records.forEach(r => {
+        const m = calcMetrics(r);
+        txt += `Дисциплина: ${r.discipline}\nГруппа: ${r.group}\nПериод: ${r.period}\nСтудентов: ${m.N}\nОценки: 2=${r.n2}, 3=${r.n3}, 4=${r.n4}, 5=${r.n5}\nКЗ: ${m.kz.toFixed(1)}%\nСр. балл: ${m.so.toFixed(2)}\n--------------------------------------------------------\n`;
+    });
+    downloadFile(txt, `отчет_${getToday()}.txt`, 'text/plain;charset=utf-8');
+}
+
+function exportHTML() {
+    if (records.length === 0) { alert('Нет данных для экспорта'); return; }
+    // Принудительно обновляем все вкладки, чтобы в экспорт попал полный актуальный контент
+    renderSummary();
+    renderAnalytics();
+    
+    const content = document.querySelector('.container').innerHTML;
+    const fullHtml = `<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><title>Отчет КЗ</title>
+    <style>body { font-family: sans-serif; padding: 20px; } table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; } th { background-color: #f2f2f2; }
+    h1, h2 { color: #333; } .btn, .tabs, .filter-bar, input, select, #notification { display: none !important; }
+    .tab-content { display: block !important; padding: 15px; border-bottom: 1px solid #eee; margin-bottom: 20px; }</style>
+    </head><body>${content}</body></html>`;
+    
+    downloadFile(fullHtml, `отчет_полный_${getToday()}.html`, 'text/html;charset=utf-8');
+}
+
+function downloadFile(content, fileName, mimeType) {
+    const blob = new Blob(['\uFEFF' + content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function getToday() { return new Date().toISOString().slice(0,10); }
+
+function exportJSON() {
+    downloadFile(JSON.stringify(records, null, 2), `kz_data_${getToday()}.json`, 'application/json');
+}
+
+function importJSON(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (!Array.isArray(data)) throw new Error();
+            if (confirm(`Импортировать ${data.length} записей? Текущие данные будут заменены.`)) {
+                records = data;
+                save();
+                renderRecords();
+                updateDataLists();
+                showNotification('Данные успешно импортированы!');
+            }
+        } catch { alert('Ошибка формата файла'); }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+}
+
+function clearAllData() {
+    if (!confirm('Удалить ВСЕ данные? Это действие необратимо.')) return;
+    records = [];
+    save();
+    renderRecords();
+    updateDataLists();
+    showNotification('Все данные очищены');
+}
+
+// ============ УТИЛИТЫ ============
+function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function updateDataLists() {
+    document.getElementById('disciplines-list').innerHTML = [...new Set(records.map(r => r.discipline))].map(d => `<option value="${escapeHtml(d)}">`).join('');
+    document.getElementById('groups-list').innerHTML = [...new Set(records.map(r => r.group))].map(g => `<option value="${escapeHtml(g)}">`).join('');
+}
+
+// ============ ИНИЦИАЛИЗАЦИЯ ============
+renderRecords();
+updateDataLists();
+</script>
+</body>
+</html>
