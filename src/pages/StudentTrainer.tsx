@@ -25,7 +25,8 @@ type TrainerKey =
   | "network-protocols"
   | "ai-arcade"
   | "it-project-simulator"
-  | "python-java-types";
+  | "python-java-types"
+  | "os-components";
 
 interface TrainerItem {
   key: TrainerKey;
@@ -88,6 +89,14 @@ const TRAINERS: TrainerItem[] = [
     title: "Типы данных: Python и Java",
     description: "Теория, 9 практических заданий и именной сертификат по теме «Типы данных»",
     accent: "#F59E0B",
+    paid: true,
+  },
+  {
+    key: "os-components",
+    icon: "🖥️",
+    title: "Функциональные компоненты ОС",
+    description: "Урок из 8 разделов про ядро, процессы, память и файловые системы, тест на 10 вопросов и сертификат",
+    accent: "#8B5CF6",
     paid: true,
   },
 ];
@@ -259,6 +268,14 @@ const StudentTrainer = () => {
                     src="/python-java-types.html"
                     title="Типы данных: Python и Java"
                     className="w-full min-w-[700px] h-[1000px] rounded-xl border-0"
+                  />
+                </div>
+              ) : active === "os-components" ? (
+                <div className="rounded-2xl border border-border bg-card p-3 md:p-5 shadow-sm max-w-[1000px] overflow-x-auto">
+                  <iframe
+                    src="/os-components.html"
+                    title="Функциональные компоненты ОС"
+                    className="w-full min-w-[600px] h-[1000px] rounded-xl border-0"
                   />
                 </div>
               ) : (

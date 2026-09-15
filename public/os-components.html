@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Функциональные компоненты ОС — Интерактивный урок</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+    color: #333;
+  }
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    overflow: hidden;
+  }
+  header {
+    background: linear-gradient(135deg, #4a00e0, #8e2de2);
+    color: #fff;
+    padding: 30px;
+    text-align: center;
+  }
+  header h1 { font-size: 28px; margin-bottom: 8px; }
+  header p { opacity: 0.9; }
+  .progress-bar {
+    height: 8px;
+    background: rgba(255,255,255,0.2);
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: #4ade80;
+    width: 0%;
+    transition: width 0.4s;
+  }
+  .section {
+    padding: 30px;
+    display: none;
+    animation: fadeIn 0.4s;
+  }
+  .section.active { display: block; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  h2 {
+    color: #4a00e0;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 8px;
+  }
+  h3 { color: #6d28d9; margin: 15px 0 8px; }
+  p, li { line-height: 1.7; margin-bottom: 10px; }
+  ul, ol { padding-left: 25px; margin-bottom: 15px; }
+  .card {
+    background: #f8f7ff;
+    border-left: 4px solid #8e2de2;
+    padding: 15px 20px;
+    margin: 15px 0;
+    border-radius: 8px;
+  }
+  .card.info { border-left-color: #3b82f6; background: #eff6ff; }
+  .card.warning { border-left-color: #f59e0b; background: #fffbeb; }
+  .btn {
+    background: linear-gradient(135deg, #4a00e0, #8e2de2);
+    color: #fff;
+    border: none;
+    padding: 12px 28px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(138,43,226,0.4); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .question {
+    background: #f9fafb;
+    padding: 20px;
+    border-radius: 10px;
+    margin: 15px 0;
+    border: 2px solid transparent;
+    transition: border-color 0.3s;
+  }
+  .question.correct { border-color: #10b981; background: #ecfdf5; }
+  .question.wrong { border-color: #ef4444; background: #fef2f2; }
+  .question p.q-text { font-weight: 600; margin-bottom: 12px; }
+  .option {
+    display: block;
+    padding: 10px 15px;
+    margin: 6px 0;
+    background: #fff;
+    border: 2px solid #e5e7eb;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .option:hover { border-color: #8e2de2; background: #f5f3ff; }
+  .option.selected { border-color: #8e2de2; background: #ede9fe; }
+  .option input { margin-right: 10px; }
+  .feedback { margin-top: 10px; font-size: 14px; font-weight: 500; }
+  .feedback.ok { color: #059669; }
+  .feedback.bad { color: #dc2626; }
+  .result-box {
+    text-align: center;
+    padding: 30px;
+  }
+  .grade {
+    font-size: 80px;
+    font-weight: bold;
+    background: linear-gradient(135deg, #4a00e0, #8e2de2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 20px 0;
+  }
+  .grade-label { font-size: 22px; color: #555; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+  }
+  th, td {
+    padding: 10px;
+    border: 1px solid #e5e7eb;
+    text-align: left;
+  }
+  th { background: #ede9fe; color: #4a00e0; }
+  
+  /* Поле ввода имени */
+  .name-input {
+    width: 100%;
+    padding: 12px;
+    margin-top: 8px;
+    border: 2px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+  }
+  .name-input:focus {
+    outline: none;
+    border-color: #8e2de2;
+    background: #f5f3ff;
+  }
+
+  /* Сертификат */
+  .certificate {
+    border: 8px double #8e2de2;
+    padding: 40px;
+    text-align: center;
+    background: linear-gradient(135deg, #fff 0%, #f5f3ff 100%);
+    margin: 20px auto;
+    max-width: 700px;
+    position: relative;
+  }
+  .certificate::before, .certificate::after {
+    content: "★";
+    position: absolute;
+    font-size: 40px;
+    color: #f59e0b;
+  }
+  .certificate::before { top: 15px; left: 20px; }
+  .certificate::after { top: 15px; right: 20px; }
+  .certificate h2 {
+    color: #4a00e0;
+    font-size: 32px;
+    border: none;
+    margin-bottom: 10px;
+  }
+  .cert-name {
+    font-size: 32px;
+    font-family: 'Georgia', serif;
+    color: #8e2de2;
+    margin: 15px 0;
+    font-style: italic;
+    border-bottom: 2px solid #8e2de2;
+    display: inline-block;
+    padding: 0 20px 5px;
+  }
+  .cert-date { color: #666; margin-top: 20px; font-size: 16px; }
+  .cert-seal {
+    display: inline-block;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #f59e0b, #d97706);
+    color: #fff;
+    line-height: 80px;
+    font-weight: bold;
+    font-size: 36px;
+    margin-top: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  }
+  .nav-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 15px;
+    background: #f9fafb;
+  }
+  .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #d1d5db;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .dot.active { background: #8e2de2; transform: scale(1.3); }
+  .dot.done { background: #10b981; }
+  code {
+    background: #f3f4f6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Consolas', monospace;
+    color: #dc2626;
+  }
+  .print-btn {
+    background: #10b981;
+    margin-left: 10px;
+  }
+
+  /* Стили для печати: скрываем всё, кроме сертификата */
+  @media print {
+    body * { visibility: hidden; }
+    .certificate, .certificate * { visibility: visible; }
+    .certificate {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+      border: 6px double #8e2de2;
+      box-shadow: none;
+    }
+    .btn, header, .nav-dots { display: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🖥️ Функциональные компоненты ОС</h1>
+    <p>Интерактивный урок с теорией, тестом и персональным сертификатом</p>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  </header>
+
+  <div class="nav-dots" id="navDots"></div>
+
+  <!-- РАЗДЕЛ 1: ВВЕДЕНИЕ + ВВОД ИМЕНИ -->
+  <div class="section active" data-step="0">
+    <h2>📚 Введение</h2>
+    <p><b>Операционная система (ОС)</b> — это комплекс взаимосвязанных программ, которые управляют аппаратными ресурсами компьютера и предоставляют среду для выполнения прикладных программ.</p>
+    
+    <div class="card info">
+      <label for="userName"><b>👤 Введите ваше имя для сертификата:</b></label>
+      <input type="text" id="userName" class="name-input" placeholder="Например: Еленка Великолепная">
+    </div>
+
+    <div class="card info" style="margin-top: 15px;">
+      <b>💡 Примеры ОС:</b> Windows, Linux, macOS, Android, iOS
+    </div>
+    <h3>Основные функции ОС:</h3>
+    <ul>
+      <li>Управление процессами</li>
+      <li>Управление памятью</li>
+      <li>Управление файловой системой</li>
+      <li>Управление устройствами ввода-вывода</li>
+      <li>Предоставление пользовательского интерфейса</li>
+      <li>Обеспечение безопасности</li>
+    </ul>
+    <button class="btn" onclick="nextStep()">Начать обучение →</button>
+  </div>
+
+  <!-- РАЗДЕЛ 2: ЯДРО -->
+  <div class="section" data-step="1">
+    <h2>⚙️ 1. Ядро операционной системы</h2>
+    <p><b>Ядро (kernel)</b> — центральная часть ОС, работающая в привилегированном режиме (режим ядра). Оно обеспечивает взаимодействие между аппаратным обеспечением и программным.</p>
+    <h3>Типы ядер:</h3>
+    <table>
+      <tr><th>Тип</th><th>Описание</th><th>Пример</th></tr>
+      <tr><td>Монолитное</td><td>Все функции в одном модуле</td><td>Linux, классический UNIX</td></tr>
+      <tr><td>Микроядро</td><td>Минимум функций в ядре</td><td>Minix, QNX</td></tr>
+      <tr><td>Гибридное</td><td>Комбинация подходов</td><td>Windows NT, macOS XNU</td></tr>
+    </table>
+    <div class="card">
+      <b>🔧 Задачи ядра:</b> управление процессами, памятью, прерываниями, системными вызовами.
+    </div>
+    <button class="btn" onclick="nextStep()">Далее →</button>
+  </div>
+
+  <!-- РАЗДЕЛ 3: ПРОЦЕССЫ -->
+  <div class="section" data-step="2">
+    <h2>🔄 2. Управление процессами</h2>
+    <p><b>Процесс</b> — выполняющаяся программа вместе с её окружением (память, ресурсы, состояние).</p>
+    <h3>Состояния процесса:</h3>
+    <ol>
+      <li><b>Новый</b> — создан, но ещё не запущен</li>
+      <li><b>Готов</b> — ожидает выделения процессора</li>
+      <li><b>Выполняется</b> — работает на CPU</li>
+      <li><b>Ожидание</b> — ждёт события (ввод/вывод)</li>
+      <li><b>Завершён</b> — выполнение окончено</li>
+    </ol>
+    <div class="card warning">
+      <b>⚠️ Планировщик</b> — компонент ОС, определяющий, какой процесс получит процессор в каждый момент времени. Алгоритмы: FIFO, Round Robin, приоритетный.
+    </div>
+    <button class="btn" onclick="nextStep()">Далее →</button>
+  </div>
+
+  <!-- РАЗДЕЛ 4: ПАМЯТЬ -->
+  <div class="section" data-step="3">
+    <h2>💾 3. Управление памятью</h2>
+    <p>Менеджер памяти распределяет оперативную память между процессами и обеспечивает их изоляцию.</p>
+    <h3>Основные методы:</h3>
+    <ul>
+      <li><b>Разбиение на разделы</b> — память делится на фиксированные/динамические блоки</li>
+      <li><b>Страничная организация</b> — память делится на страницы (обычно 4 КБ)</li>
+      <li><b>Сегментная организация</b> — память делится на логические сегменты</li>
+      <li><b>Виртуальная память</b> — использование диска как расширения ОЗУ</li>
+    </ul>
+    <div class="card info">
+      <b>📌 Свойства виртуальной памяти:</b> позволяет запускать программы, размер которых превышает объём физической памяти, за счёт подкачки страниц с диска.
+    </div>
+    <button class="btn" onclick="nextStep()">Далее →</button>
+  </div>
+
+  <!-- РАЗДЕЛ 5: ФАЙЛОВАЯ СИСТЕМА -->
+  <div class="section" data-step="4">
+    <h2>📁 4. Файловая система</h2>
+    <p><b>Файловая система</b> — способ организации, хранения и именования файлов на дисках.</p>
+    <h3>Популярные файловые системы:</h3>
+    <ul>
+      <li><b>NTFS</b> — используется в Windows</li>
+      <li><b>ext4 / btrfs</b> — используются в Linux</li>
+      <li><b>APFS</b> — используется в macOS</li>
+      <li><b>FAT32 / exFAT</b> — для флеш-накопителей</li>
+    </ul>
+    <h3>Операции с файлами:</h3>
+    <p>создание, чтение, запись, удаление, переименование, поиск, установка атрибутов (только чтение, скрытый, системный).</p>
+    <button class="btn" onclick="nextStep()">Далее →</button>
+  </div>
+
+  <!-- РАЗДЕЛ 6: УСТРОЙСТВА -->
+  <div class="section" data-step="5">
+    <h2>🖨️ 5. Управление устройствами ввода-вывода</h2>
+    <p>ОС обеспечивает единый интерфейс работы с разнообразными устройствами через <b>драйверы</b>.</p>
+    <h3>Драйвер устройства</h3>
+    <p>— это специальная программа, которая «знает», как взаимодействовать с конкретным устройством (принтером, видеокартой, сетевой картой).</p>
+    <h3>Методы ввода-вывода:</h3>
+    <ul>
+      <li><b>Программный ввод-вывод</b> — процессор непосредственно управляет устройством</li>
+      <li><b>Прерывания</b> — устройство сигнализирует о готовности</li>
+      <li><b>Прямой доступ к памяти (ПДП/DMA)</b> — устройство обменивается данными с памятью без участия CPU</li>
+    </ul>
+    <button class="btn" onclick="nextStep()">Далее →</button>
+  </div>
+
+  <!-- РАЗДЕЛ 7: ИНТЕРФЕЙС -->
+  <div class="section" data-step="6">
+    <h2>🖱️ 6. Пользовательский интерфейс</h2>
+    <p>ОС предоставляет пользователю способы взаимодействия с компьютером.</p>
+    <h3>Типы интерфейсов:</h3>
+    <ul>
+      <li><b>CLI (Command Line Interface)</b> — командная строка: <code>ls</code>, <code>cd</code>, <code>dir</code></li>
+      <li><b>GUI (Graphical User Interface)</b> — графический интерфейс с окнами, иконками, меню</li>
+      <li><b>TUI (Text User Interface)</b> — текстовые меню (например, BIOS)</li>
+    </ul>
+    <div class="card">
+      <b>🌟 Оболочки:</b> в Linux — <code>bash</code>, <code>zsh</code>; в Windows — <code>cmd</code>, <code>PowerShell</code>.
+    </div>
+    <button class="btn" onclick="nextStep()">Перейти к тесту →</button>
+  </div>
+
+  <!-- РАЗДЕЛ 8: БЕЗОПАСНОСТЬ -->
+  <div class="section" data-step="7">
+    <h2>🔒 7. Безопасность и защита</h2>
+    <p>ОС обеспечивает защиту данных и ресурсов от несанкционированного доступа.</p>
+    <h3>Механизмы защиты:</h3>
+    <ul>
+      <li><b>Аутентификация</b> — проверка личности (пароль, биометрия)</li>
+      <li><b>Авторизация</b> — определение прав доступа</li>
+      <li><b>Изоляция процессов</b> — каждый процесс имеет своё адресное пространство</li>
+      <li><b>Шифрование</b> — защита данных на диске и в сети</li>
+      <li><b>Журналирование</b> — запись действий пользователей</li>
+    </ul>
+    <button class="btn" onclick="nextStep()">Начать тестирование 📝</button>
+  </div>
+
+  <!-- РАЗДЕЛ 9: ТЕСТ -->
+  <div class="section" data-step="8">
+    <h2>📝 Тест по теме</h2>
+    <p>Ответьте на 10 вопросов. За каждый правильный ответ — 1 балл. Максимум — 10 баллов.</p>
+    <form id="quizForm"></form>
+    <button class="btn" onclick="submitQuiz()">Завершить тест ✓</button>
+    <div id="quizResult"></div>
+  </div>
+
+  <!-- РАЗДЕЛ 10: РЕЗУЛЬТАТ -->
+  <div class="section" data-step="9">
+    <div class="result-box" id="resultBox"></div>
+  </div>
+
+</div>
+
+<script>
+const questions = [
+  {
+    q: "Что является центральной частью ОС, работающей в привилегированном режиме?",
+    opts: ["Оболочка", "Ядро", "Драйвер", "Реестр"],
+    correct: 1
+  },
+  {
+    q: "Какой тип ядра используется в Linux?",
+    opts: ["Микроядро", "Гибридное", "Монолитное", "Виртуальное"],
+    correct: 2
+  },
+  {
+    q: "Сколько состояний проходит процесс в классической модели?",
+    opts: ["3", "4", "5", "7"],
+    correct: 2
+  },
+  {
+    q: "Что такое виртуальная память?",
+    opts: [
+      "Память на оптическом диске",
+      "Использование диска как расширения ОЗУ",
+      "Оперативная память нового поколения",
+      "Память видеокарты"
+    ],
+    correct: 1
+  },
+  {
+    q: "Какая файловая система используется в Windows по умолчанию?",
+    opts: ["ext4", "APFS", "NTFS", "FAT12"],
+    correct: 2
+  },
+  {
+    q: "Что такое драйвер устройства?",
+    opts: [
+      "Физическое устройство компьютера",
+      "Программа для взаимодействия ОС с устройством",
+      "Пользовательский интерфейс",
+      "Тип процессора"
+    ],
+    correct: 1
+  },
+  {
+    q: "Какой метод ввода-вывода позволяет устройству обмениваться данными с памятью без участия CPU?",
+    opts: ["Прерывания", "Программный ввод-вывод", "DMA (ПДП)", "Буферизация"],
+    correct: 2
+  },
+  {
+    q: "Что означает аббревиатура GUI?",
+    opts: [
+      "General User Input",
+      "Graphical User Interface",
+      "Global Utility Integration",
+      "Graphic Unit Identifier"
+    ],
+    correct: 1
+  },
+  {
+    q: "Какой механизм ОС проверяет личность пользователя?",
+    opts: ["Авторизация", "Шифрование", "Аутентификация", "Журналирование"],
+    correct: 2
+  },
+  {
+    q: "Какой компонент ОС определяет, какой процесс получит процессор?",
+    opts: ["Диспетчер памяти", "Планировщик", "Файловый менеджер", "Загрузчик"],
+    correct: 1
+  }
+];
+
+let currentStep = 0;
+const totalSteps = 10;
+
+function renderDots() {
+  const dots = document.getElementById('navDots');
+  dots.innerHTML = '';
+  for (let i = 0; i < totalSteps; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === currentStep ? ' active' : '') + (i < currentStep ? ' done' : '');
+    d.onclick = () => { if (i <= currentStep) goToStep(i); };
+    dots.appendChild(d);
+  }
+}
+
+function updateProgress() {
+  const pct = (currentStep / (totalSteps - 1)) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function goToStep(n) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelector(`.section[data-step="${n}"]`).classList.add('active');
+  currentStep = n;
+  renderDots();
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function nextStep() { goToStep(currentStep + 1); }
+
+function renderQuiz() {
+  const form = document.getElementById('quizForm');
+  form.innerHTML = '';
+  questions.forEach((q, i) => {
+    const div = document.createElement('div');
+    div.className = 'question';
+    div.id = 'q' + i;
+    let html = `<p class="q-text">${i + 1}. ${q.q}</p>`;
+    q.opts.forEach((opt, j) => {
+      html += `<label class="option"><input type="radio" name="q${i}" value="${j}"> ${opt}</label>`;
+    });
+    html += `<div class="feedback" id="fb${i}"></div>`;
+    div.innerHTML = html;
+    form.appendChild(div);
+  });
+}
+
+function submitQuiz() {
+  let score = 0;
+  questions.forEach((q, i) => {
+    const sel = document.querySelector(`input[name="q${i}"]:checked`);
+    const qDiv = document.getElementById('q' + i);
+    const fb = document.getElementById('fb' + i);
+    qDiv.classList.remove('correct', 'wrong');
+    if (!sel) {
+      qDiv.classList.add('wrong');
+      fb.textContent = "⚠️ Вы не ответили на этот вопрос";
+      fb.className = 'feedback bad';
+      return;
+    }
+    if (parseInt(sel.value) === q.correct) {
+      score++;
+      qDiv.classList.add('correct');
+      fb.textContent = "✓ Правильно!";
+      fb.className = 'feedback ok';
+    } else {
+      qDiv.classList.add('wrong');
+      fb.textContent = `✗ Неверно. Правильный ответ: ${q.opts[q.correct]}`;
+      fb.className = 'feedback bad';
+    }
+  });
+  showResult(score);
+}
+
+function getGrade(score) {
+  if (score >= 9) return { g: 5, label: "Отлично!", emoji: "🏆" };
+  if (score >= 7) return { g: 4, label: "Хорошо", emoji: "👍" };
+  if (score >= 5) return { g: 3, label: "Удовлетворительно", emoji: "📖" };
+  return { g: 2, label: "Нужно повторить материал", emoji: "📚" };
+}
+
+function showResult(score) {
+  const grade = getGrade(score);
+  const today = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+  
+  // Получаем имя из поля ввода. Если пусто — подставляем вежливое значение по умолчанию
+  let studentName = document.getElementById('userName').value.trim();
+  if (!studentName) {
+    studentName = "Уважаемый Ученик";
+  }
+
+  let html = `
+    <h2>📊 Результат тестирования</h2>
+    <p>Правильных ответов: <b>${score} из 10</b></p>
+    <div class="grade">${grade.g}</div>
+    <div class="grade-label">${grade.emoji} ${grade.label}</div>
+    <table style="max-width:400px;margin:20px auto;">
+      <tr><th>Баллы</th><th>Оценка</th></tr>
+      <tr><td>9–10</td><td>5 (отлично)</td></tr>
+      <tr><td>7–8</td><td>4 (хорошо)</td></tr>
+      <tr><td>5–6</td><td>3 (удовл.)</td></tr>
+      <tr><td>0–4</td><td>2 (неудовл.)</td></tr>
+    </table>
+  `;
+
+  if (grade.g >= 3) {
+    html += `
+      <div class="certificate">
+        <h2>🎓 СЕРТИФИКАТ</h2>
+        <p>о прохождении интерактивного урока</p>
+        <h3 style="color:#666;border:none;margin:10px 0;">«Функциональные компоненты операционной системы»</h3>
+        <p>Настоящий сертификат выдан</p>
+        <div class="cert-name">${studentName}</div>
+        <p>в подтверждение успешного освоения темы</p>
+        <p style="margin-top:10px;">и получения оценки <b style="color:#4a00e0;font-size:24px;">${grade.g}</b> из 5</p>
+        <div class="cert-seal">${grade.g}</div>
+        <div class="cert-date">Дата: ${today}</div>
+      </div>
+      <button class="btn print-btn" onclick="window.print()">🖨️ Распечатать сертификат</button>
+    `;
+  } else {
+    html += `<p style="margin-top:20px;">Рекомендуем повторить теоретический материал и пройти тест заново.</p>`;
+  }
+  html += `<button class="btn" onclick="restart()" style="margin-top: 20px;">🔄 Пройти заново</button>`;
+
+  document.getElementById('resultBox').innerHTML = html;
+  nextStep();
+}
+
+function restart() {
+  renderQuiz();
+  goToStep(0);
+}
+
+// Инициализация
+renderQuiz();
+renderDots();
+updateProgress();
+</script>
+</body>
+</html>
