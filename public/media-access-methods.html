@@ -417,9 +417,9 @@
         <div class="main-grid">
             <div class="simulation-area">
                 <div class="mode-selector">
-                    <button class="mode-btn active" onclick="setMode('csma_cd')">CSMA/CD<br><small>Ethernet</small></button>
-                    <button class="mode-btn" onclick="setMode('csma_ca')">CSMA/CA<br><small>Wi-Fi</small></button>
-                    <button class="mode-btn" onclick="setMode('token')">Token Ring<br><small>Маркерный</small></button>
+                    <button class="mode-btn active" onclick="setMode('csma_cd', this)">CSMA/CD<br><small>Ethernet</small></button>
+                    <button class="mode-btn" onclick="setMode('csma_ca', this)">CSMA/CA<br><small>Wi-Fi</small></button>
+                    <button class="mode-btn" onclick="setMode('token', this)">Token Ring<br><small>Маркерный</small></button>
                 </div>
 
                 <div class="mode-description" id="modeDesc">
@@ -430,7 +430,6 @@
 
                 <div class="network-canvas" id="networkCanvas">
                     <div class="medium" id="medium"></div>
-                    <!-- Nodes will be generated here -->
                 </div>
 
                 <div class="legend" id="legend">
@@ -459,7 +458,7 @@
                 <div class="controls">
                     <button class="btn btn-success" onclick="startSimulation()">▶ Старт</button>
                     <button class="btn btn-danger" onclick="stopSimulation()">⏸ Стоп</button>
-                    <button class="btn btn-warning" onclick="resetSimulation()"> Сброс</button>
+                    <button class="btn btn-warning" onclick="resetSimulation()">↺ Сброс</button>
                 </div>
 
                 <div class="controls">
@@ -504,12 +503,11 @@
                 </div>
 
                 <div class="info-panel" id="infoPanel">
-                    <div class="info-title">ℹ️ Как использовать:</div>
-                    <p>1. Выберите метод доступа сверху<br>
-                    2. Нажмите "Старт" для запуска<br>
-                    3. Узлы будут автоматически генерировать трафик<br>
-                    4. Наблюдайте за процессом передачи и коллизиями<br>
-                    5. Используйте "Трафик" для создания нагрузки</p>
+                    <div class="info-title">ℹ️ CSMA/CD:</div>
+                    <p>• Прослушивание канала перед передачей<br>
+                    • Одновременная передача = коллизия<br>
+                    • Jam-сигнал при коллизии<br>
+                    • Случайная задержка (backoff)</p>
                 </div>
 
                 <div class="log" id="log">
@@ -520,7 +518,6 @@
     </div>
 
     <script>
-        // Global variables
         let currentMode = 'csma_cd';
         let isRunning = false;
         let simulationSpeed = 1;
@@ -528,20 +525,16 @@
         let nodes = [];
         let packets = [];
         let token = null;
-        let stats = {
-            success: 0,
-            collisions: 0,
-            totalPackets: 0
-        };
+        let stats = { success: 0, collisions: 0, totalPackets: 0 };
         let animationId = null;
+        let autoTrafficInterval = null;
 
-        // Node class
         class Node {
             constructor(id, x, y) {
                 this.id = id;
                 this.x = x;
                 this.y = y;
-                this.state = 'idle'; // idle, transmitting, waiting, collided
+                this.state = 'idle';
                 this.backoffTime = 0;
                 this.hasData = false;
                 this.element = null;
@@ -562,16 +555,8 @@
                 this.state = newState;
                 this.element.className = `node ${newState}`;
             }
-
-            setPosition(x, y) {
-                this.x = x;
-                this.y = y;
-                this.element.style.left = x + 'px';
-                this.element.style.top = y + 'px';
-            }
         }
 
-        // Packet class
         class Packet {
             constructor(fromNode, toNode, id) {
                 this.fromNode = fromNode;
@@ -598,7 +583,7 @@
                 this.progress += speed;
                 this.x += speed;
                 this.element.style.left = this.x + 'px';
-                return this.progress >= 400; // Reached destination
+                return this.progress >= 400;
             }
 
             destroy() {
@@ -608,10 +593,7 @@
             }
         }
 
-        // Initialize network
         function initNetwork() {
-            const canvas = document.getElementById('networkCanvas');
-            // Clear existing nodes
             document.querySelectorAll('.node').forEach(n => n.remove());
             document.querySelectorAll('.packet').forEach(p => p.remove());
             if (token && token.element) token.element.remove();
@@ -620,7 +602,6 @@
             packets = [];
             token = null;
             
-            // Create initial nodes
             const positions = [
                 {x: 100, y: 170},
                 {x: 300, y: 170},
@@ -652,77 +633,50 @@
             canvas.appendChild(token.element);
         }
 
-        function setMode(mode) {
+        function setMode(mode, btnElement) {
             currentMode = mode;
             
-            // Update buttons
             document.querySelectorAll('.mode-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
-            event.target.closest('.mode-btn').classList.add('active');
             
-            // Update description
+            if (btnElement) {
+                btnElement.classList.add('active');
+            }
+            
             const desc = document.getElementById('modeDesc');
             const legend = document.getElementById('legend');
             const info = document.getElementById('infoPanel');
             
             switch(mode) {
                 case 'csma_cd':
-                    desc.innerHTML = `<strong>CSMA/CD (Carrier Sense Multiple Access with Collision Detection)</strong><br>
-                    Метод используется в Ethernet. Узлы прослушивают канал перед передачей. 
-                    При обнаружении <span class="highlight">коллизии</span> передача прекращается и повторяется через случайный интервал 
-                    (алгоритм экспоненциальной отсрочки).`;
-                    
+                    desc.innerHTML = `<strong>CSMA/CD</strong> - Ethernet. Обнаружение коллизий.`;
                     legend.innerHTML = `
                         <div class="legend-item"><div class="legend-color" style="background: #3498db;"></div><span>Ожидание</span></div>
                         <div class="legend-item"><div class="legend-color" style="background: #e74c3c;"></div><span>Передача</span></div>
                         <div class="legend-item"><div class="legend-color" style="background: #f39c12;"></div><span>Backoff</span></div>
                         <div class="legend-item"><div class="legend-color" style="background: #9b59b6;"></div><span>Коллизия</span></div>
                     `;
-                    
-                    info.innerHTML = `<div class="info-title">️ CSMA/CD:</div>
-                    <p>• Прослушивание канала перед передачей<br>
-                    • Одновременная передача = коллизия<br>
-                    • Jam-сигнал при коллизии<br>
-                    • Случайная задержка (backoff)</p>`;
+                    info.innerHTML = `<div class="info-title">️ CSMA/CD:</div><p>• Прослушивание канала<br>• Обнаружение коллизий<br>• Backoff</p>`;
                     break;
-                    
                 case 'csma_ca':
-                    desc.innerHTML = `<strong>CSMA/CA (Carrier Sense Multiple Access with Collision Avoidance)</strong><br>
-                    Используется в Wi-Fi. Вместо обнаружения коллизий применяется их <span class="highlight">избегание</span>. 
-                    Узлы ждут случайное время (DIFS) и используют механизм RTS/CTS для резервирования канала.`;
-                    
+                    desc.innerHTML = `<strong>CSMA/CA</strong> - Wi-Fi. Избегание коллизий.`;
                     legend.innerHTML = `
                         <div class="legend-item"><div class="legend-color" style="background: #3498db;"></div><span>Ожидание</span></div>
                         <div class="legend-item"><div class="legend-color" style="background: #e74c3c;"></div><span>Передача</span></div>
-                        <div class="legend-item"><div class="legend-color" style="background: #f39c12;"></div><span>DIFS/Backoff</span></div>
+                        <div class="legend-item"><div class="legend-color" style="background: #f39c12;"></div><span>DIFS</span></div>
                         <div class="legend-item"><div class="legend-color" style="background: #2ecc71;"></div><span>ACK</span></div>
                     `;
-                    
-                    info.innerHTML = `<div class="info-title">ℹ️ CSMA/CA:</div>
-                    <p>• Избегание коллизий (не обнаружение)<br>
-                    • DIFS (распределенный интервал)<br>
-                    • Случайный backoff<br>
-                    • Подтверждение ACK</p>`;
+                    info.innerHTML = `<div class="info-title">ℹ️ CSMA/CA:</div><p>• Избегание коллизий<br>• DIFS + Backoff<br>• ACK</p>`;
                     break;
-                    
                 case 'token':
-                    desc.innerHTML = `<strong>Token Ring (Маркерный метод)</strong><br>
-                    Детерминированный метод. По кольцу циркулирует <span class="highlight">маркер (token)</span>. 
-                    Только узел, получивший маркер, может передавать данные. Коллизии исключены.`;
-                    
+                    desc.innerHTML = `<strong>Token Ring</strong> - Маркерный метод. Без коллизий.`;
                     legend.innerHTML = `
                         <div class="legend-item"><div class="legend-color" style="background: #3498db;"></div><span>Ожидание</span></div>
                         <div class="legend-item"><div class="legend-color" style="background: #2ecc71;"></div><span>С маркером</span></div>
                         <div class="legend-item"><div class="legend-color" style="background: #e74c3c;"></div><span>Передача</span></div>
-                        <div class="legend-item"><div class="legend-color" style="background: #9b59b6;"></div><span>Маркер</span></div>
                     `;
-                    
-                    info.innerHTML = `<div class="info-title">ℹ️ Token Ring:</div>
-                    <p>• Маркер циркулирует по кольцу<br>
-                    • Только владелец маркера передает<br>
-                    • Нет коллизий<br>
-                    • Предсказуемое время доступа</p>`;
+                    info.innerHTML = `<div class="info-title">ℹ️ Token Ring:</div><p>• Маркер по кольцу<br>• Нет коллизий<br>• Детерминизм</p>`;
                     break;
             }
             
@@ -753,6 +707,17 @@
             if (isRunning) return;
             isRunning = true;
             addLog('Симуляция запущена', 'success');
+            
+            // Generate initial traffic
+            generateTraffic();
+            
+            // Auto-generate traffic periodically
+            autoTrafficInterval = setInterval(() => {
+                if (isRunning && Math.random() < 0.3) {
+                    generateTraffic();
+                }
+            }, 3000);
+            
             simulate();
         }
 
@@ -760,6 +725,9 @@
             isRunning = false;
             if (animationId) {
                 cancelAnimationFrame(animationId);
+            }
+            if (autoTrafficInterval) {
+                clearInterval(autoTrafficInterval);
             }
             addLog('Симуляция остановлена', 'info');
         }
@@ -776,7 +744,6 @@
         function simulate() {
             if (!isRunning) return;
 
-            // Process based on mode
             switch(currentMode) {
                 case 'csma_cd':
                     simulateCSMACD();
@@ -789,14 +756,12 @@
                     break;
             }
 
-            // Update packets
             for (let i = packets.length - 1; i >= 0; i--) {
                 const reached = packets[i].update();
                 if (reached) {
                     packets[i].destroy();
                     packets.splice(i, 1);
                     stats.success++;
-                    addLog(`Пакет доставлен`, 'success');
                 }
             }
 
@@ -807,44 +772,32 @@
         function simulateCSMACD() {
             const transmittingNodes = nodes.filter(n => n.state === 'transmitting');
             
-            // Check for collisions
             if (transmittingNodes.length > 1) {
-                // Collision detected!
                 stats.collisions++;
-                addLog(`Коллизия между узлами ${transmittingNodes.map(n => n.id).join(', ')}`, 'collision');
-                
-                // Show collision effect
+                addLog(`Коллизия: узлы ${transmittingNodes.map(n => n.id).join(', ')}`, 'collision');
                 showCollisionEffect();
                 
-                // All transmitting nodes go to backoff
                 transmittingNodes.forEach(node => {
                     node.updateState('collided');
                     node.backoffTime = Math.floor(Math.random() * Math.pow(2, Math.min(stats.collisions, 10))) * 10;
                     setTimeout(() => {
-                        if (node.hasData) {
-                            node.updateState('waiting');
-                        } else {
-                            node.updateState('idle');
-                        }
+                        if (node.hasData) node.updateState('waiting');
+                        else node.updateState('idle');
                     }, node.backoffTime * 10);
                 });
                 
-                // Clear packets
                 packets.forEach(p => p.destroy());
                 packets = [];
             }
             
-            // Nodes try to transmit
             nodes.forEach(node => {
                 if (node.state === 'idle' && node.hasData && Math.random() < transmissionProb) {
-                    // Check if channel is busy
                     if (transmittingNodes.length === 0) {
                         node.updateState('transmitting');
                         const targetNode = nodes.find(n => n.id !== node.id) || nodes[0];
                         packets.push(new Packet(node, targetNode, ++stats.totalPackets));
-                        addLog(`Узел ${node.id} начал передачу`, 'info');
+                        addLog(`Узел ${node.id} передает`, 'info');
                         
-                        // Simulate transmission time
                         setTimeout(() => {
                             if (node.state === 'transmitting') {
                                 node.updateState('idle');
@@ -861,11 +814,9 @@
         function simulateCSMACA() {
             const transmittingNodes = nodes.filter(n => n.state === 'transmitting');
             
-            // In CSMA/CA, collisions are avoided, not detected
-            // But we simulate occasional collisions for education
             if (transmittingNodes.length > 1 && Math.random() < 0.3) {
                 stats.collisions++;
-                addLog(`Коллизия (редкий случай в CSMA/CA)`, 'collision');
+                addLog(`Коллизия (CSMA/CA)`, 'collision');
                 showCollisionEffect();
                 
                 transmittingNodes.forEach(node => {
@@ -879,20 +830,18 @@
             
             nodes.forEach(node => {
                 if (node.state === 'idle' && node.hasData) {
-                    // DIFS + random backoff
-                    if (Math.random() < transmissionProb * 0.5) { // Slower than CD
+                    if (Math.random() < transmissionProb * 0.5) {
                         if (transmittingNodes.length === 0) {
                             node.updateState('transmitting');
                             const targetNode = nodes.find(n => n.id !== node.id) || nodes[0];
                             packets.push(new Packet(node, targetNode, ++stats.totalPackets));
-                            addLog(`Узел ${node.id} передает (CSMA/CA)`, 'info');
+                            addLog(`Узел ${node.id} передает (CA)`, 'info');
                             
                             setTimeout(() => {
                                 if (node.state === 'transmitting') {
                                     node.updateState('idle');
                                     node.hasData = false;
-                                    // Send ACK
-                                    addLog(`ACK получен от узла ${node.id}`, 'success');
+                                    addLog(`ACK: узел ${node.id}`, 'success');
                                 }
                             }, 2500 / simulationSpeed);
                         } else {
@@ -904,7 +853,6 @@
         }
 
         function simulateToken() {
-            // Move token
             if (token && Math.random() < 0.02 * simulationSpeed) {
                 const nextNode = (token.currentNode + 1) % nodes.length;
                 token.currentNode = nextNode;
@@ -913,7 +861,6 @@
                 token.element.style.left = (targetNode.x + 15) + 'px';
                 token.element.style.top = (targetNode.y + 15) + 'px';
                 
-                // Update node states
                 nodes.forEach((node, idx) => {
                     if (idx === nextNode) {
                         node.updateState('has-token');
@@ -922,12 +869,11 @@
                     }
                 });
                 
-                // Node with token can transmit
                 if (targetNode.hasData && Math.random() < 0.7) {
                     targetNode.updateState('transmitting');
                     const targetDest = nodes.find(n => n.id !== targetNode.id) || nodes[0];
                     packets.push(new Packet(targetNode, targetDest, ++stats.totalPackets));
-                    addLog(`Узел ${targetNode.id} (с маркером) передает`, 'success');
+                    addLog(`Узел ${targetNode.id} (маркер) передает`, 'success');
                     
                     setTimeout(() => {
                         targetNode.updateState('has-token');
@@ -973,13 +919,11 @@
             log.appendChild(entry);
             log.scrollTop = log.scrollHeight;
             
-            // Limit log entries
             while (log.children.length > 50) {
                 log.removeChild(log.firstChild);
             }
         }
 
-        // Initialize on load
         window.onload = function() {
             initNetwork();
             addLog('Симуляция инициализирована', 'info');
