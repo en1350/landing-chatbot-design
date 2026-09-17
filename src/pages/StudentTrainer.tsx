@@ -105,6 +105,7 @@ const TRAINERS: TrainerItem[] = [
     title: "Методы доступа к среде передачи",
     description: "Живая симуляция CSMA/CD, CSMA/CA и Token Ring: коллизии, маркер, статистика и лог событий",
     accent: "#14B8A6",
+    paid: true,
   },
 ];
 
