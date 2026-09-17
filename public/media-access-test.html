@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест: Методы доступа к среде передачи данных</title>
+    <style>
+        :root {
+            --primary: #2a5298;
+            --primary-light: #1e3c72;
+            --success: #2ecc71;
+            --success-bg: #d5f5e3;
+            --error: #e74c3c;
+            --error-bg: #fadbd8;
+            --bg: #f4f7f6;
+            --card-bg: #ffffff;
+            --text: #2c3e50;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 { font-size: 1.8em; margin-bottom: 10px; }
+        .subtitle { opacity: 0.9; font-size: 0.95em; }
+
+        .quiz-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-left: 5px solid transparent;
+        }
+
+        .quiz-card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .question-title {
+            font-weight: 600;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: var(--primary-light);
+        }
+
+        .question-type {
+            font-size: 0.8em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .options label {
+            display: block;
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border: 1px solid #e9ecef;
+        }
+
+        .options label:hover {
+            background: #e9ecef;
+        }
+
+        .options input[type="radio"],
+        .options input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+
+        /* Matching question styles */
+        .matching-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .matching-item {
+            flex: 1;
+            min-width: 200px;
+            font-weight: 500;
+        }
+        .matching-select {
+            flex: 1;
+            min-width: 250px;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ced4da;
+            font-size: 0.95em;
+        }
+
+        .btn-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            background: var(--primary);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.1s;
+            box-shadow: 0 4px 10px rgba(42, 82, 152, 0.3);
+        }
+
+        .btn:hover { background: var(--primary-light); transform: translateY(-2px); }
+        .btn:active { transform: translateY(0); }
+        .btn-reset {
+            background: #95a5a6;
+            margin-left: 10px;
+            box-shadow: 0 4px 10px rgba(149, 165, 166, 0.3);
+        }
+        .btn-reset:hover { background: #7f8c8d; }
+
+        /* Results & Feedback Styles */
+        .feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 0.95em;
+            display: none; /* Hidden by default */
+        }
+
+        .quiz-card.correct {
+            border-left-color: var(--success);
+            background-color: #fbfbfb;
+        }
+        .quiz-card.correct .feedback {
+            display: block;
+            background-color: var(--success-bg);
+            color: #145a32;
+            border: 1px solid #abebc6;
+        }
+
+        .quiz-card.incorrect {
+            border-left-color: var(--error);
+            background-color: #fbfbfb;
+        }
+        .quiz-card.incorrect .feedback {
+            display: block;
+            background-color: var(--error-bg);
+            color: #78281f;
+            border: 1px solid #f5b7b1;
+        }
+
+        .results-panel {
+            display: none;
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border: 2px solid var(--primary);
+        }
+
+        .score-display {
+            font-size: 3em;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+
+        .grade-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-top: 10px;
+        }
+        .grade-5 { background: var(--success-bg); color: #145a32; }
+        .grade-4 { background: #d4e6f1; color: #1a5276; }
+        .grade-3 { background: #fcf3cf; color: #7d6608; }
+        .grade-2 { background: var(--error-bg); color: #78281f; }
+
+        .disabled-options {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>📝 Методы доступа к среде передачи данных</h1>
+        <p class="subtitle">Проверьте свои знания: CSMA/CD, CSMA/CA и маркерные методы. Максимальный балл: 13</p>
+    </header>
+
+    <div id="resultsPanel" class="results-panel">
+        <h2>Результаты тестирования</h2>
+        <div class="score-display"><span id="scoreValue">0</span> / 13</div>
+        <div id="gradeBadge" class="grade-badge"></div>
+        <p style="margin-top: 15px; color: #555;" id="gradeMessage"></p>
+    </div>
+
+    <form id="quizForm">
+        <!-- Часть 1: Одиночный выбор -->
+        <div class="quiz-card" data-type="single" data-points="1" data-correct="b" id="q1">
+            <div class="question-type">Одиночный выбор (1 балл)</div>
+            <div class="question-title">1. Что означает аббревиатура CSMA/CD?</div>
+            <div class="options">
+                <label><input type="radio" name="q1" value="a"> А) Множественный доступ с контролем несущей и избеганием коллизий</label>
+                <label><input type="radio" name="q1" value="b"> Б) Множественный доступ с контролем несущей и обнаружением коллизий</label>
+                <label><input type="radio" name="q1" value="c"> В) Маркерный доступ с резервированием канала</label>
+                <label><input type="radio" name="q1" value="d"> Г) Множественный доступ с разделением по времени</label>
+            </div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-card" data-type="single" data-points="1" data-correct="b" id="q2">
+            <div class="question-type">Одиночный выбор (1 балл)</div>
+            <div class="question-title">2. В какой технологии преимущественно применяется метод CSMA/CA?</div>
+            <div class="options">
+                <label><input type="radio" name="q2" value="a"> А) Классический Ethernet на коаксиальном кабеле</label>
+                <label><input type="radio" name="q2" value="b"> Б) Беспроводные сети Wi-Fi (IEEE 802.11)</label>
+                <label><input type="radio" name="q2" value="c"> В) Оптоволоконные сети FDDI</label>
+                <label><input type="radio" name="q2" value="d"> Г) Сети Token Ring</label>
+            </div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-card" data-type="single" data-points="1" data-correct="b" id="q3">
+            <div class="question-type">Одиночный выбор (1 балл)</div>
+            <div class="question-title">3. Почему в беспроводных сетях (Wi-Fi) сложно использовать обнаружение коллизий (CD)?</div>
+            <div class="options">
+                <label><input type="radio" name="q3" value="a"> А) Радиосигналы слишком быстрые для регистрации</label>
+                <label><input type="radio" name="q3" value="b"> Б) Сигнал собственного передатчика узла «глушит» приемник, не позволяя одновременно слушать эфир</label>
+                <label><input type="radio" name="q3" value="c"> В) В Wi-Fi физически невозможно возникновение коллизий</label>
+                <label><input type="radio" name="q3" value="d"> Г) Беспроводные сети всегда работают в полнодуплексном режиме</label>
+            </div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-card" data-type="single" data-points="1" data-correct="c" id="q4">
+            <div class="question-type">Одиночный выбор (1 балл)</div>
+            <div class="question-title">4. Что является основным преимуществом маркерных методов доступа (Token Passing)?</div>
+            <div class="options">
+                <label><input type="radio" name="q4" value="a"> А) Максимальная эффективность при очень низкой нагрузке на сеть</label>
+                <label><input type="radio" name="q4" value="b"> Б) Простота реализации оборудования</label>
+                <label><input type="radio" name="q4" value="c"> В) Детерминизм: гарантированное время доступа и полное отсутствие коллизий</label>
+                <label><input type="radio" name="q4" value="d"> Г) Возможность работы без центрального контроллера в любой топологии</label>
+            </div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-card" data-type="single" data-points="1" data-correct="b" id="q5">
+            <div class="question-type">Одиночный выбор (1 балл)</div>
+            <div class="question-title">5. Что делает узел в сети CSMA/CD сразу после обнаружения коллизии?</div>
+            <div class="options">
+                <label><input type="radio" name="q5" value="a"> А) Немедленно повторяет передачу того же пакета</label>
+                <label><input type="radio" name="q5" value="b"> Б) Посылает сигнал затора (Jam signal), прекращает передачу и ждет случайное время</label>
+                <label><input type="radio" name="q5" value="c"> В) Передает пакет по резервному каналу связи</label>
+                <label><input type="radio" name="q5" value="d"> Г) Отправляет запрос центральному серверу на выделение времени</label>
+            </div>
+            <div class="feedback"></div>
+        </div>
+
+        <!-- Часть 2: Множественный выбор -->
+        <div class="quiz-card" data-type="multiple" data-points="2" data-correct="b,d" id="q6">
+            <div class="question-type">Множественный выбор (2 балла)</div>
+            <div class="question-title">6. Какие из перечисленных методов доступа относятся к детерминированным (упорядоченным)?</div>
+            <div class="options">
+                <label><input type="checkbox" name="q6" value="a"> А) ALOHA</label>
+                <label><input type="checkbox" name="q6" value="b"> Б) Token Passing (передача маркера)</label>
+                <label><input type="checkbox" name="q6" value="c"> В) CSMA/CD</label>
+                <label><input type="checkbox" name="q6" value="d"> Г) TDMA (множественный доступ с разделением по времени)</label>
+            </div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="quiz-card" data-type="multiple" data-points="2" data-correct="a,b,d" id="q7">
+            <div class="question-type">Множественный выбор (2 балла)</div>
+            <div class="question-title">7. Какие действия входят в алгоритм работы узла при методе CSMA/CA перед началом передачи?</div>
+            <div class="options">
+                <label><input type="checkbox" name="q7" value="a"> А) Прослушивание эфира (физическое и виртуальное)</label>
+                <label><input type="checkbox" name="q7" value="b"> Б) Ожидание интервала DIFS</label>
+                <label><input type="checkbox" name="q7" value="c"> В) Мгновенная передача без задержек, если канал свободен</label>
+                <label><input type="checkbox" name="q7" value="d"> Г) Выбор случайного интервала времени ожидания (Backoff)</label>
+            </div>
+            <div class="feedback"></div>
+        </div>
+
+        <!-- Часть 3: Установление соответствия -->
+        <div class="quiz-card" data-type="matching" data-points="2" data-correct="1:c,2:a,3:b" id="q8">
+            <div class="question-type">Установление соответствия (2 балла)</div>
+            <div class="question-title">8. Установите соответствие между методом доступа и его характеристикой:</div>
+            <div class="matching-row">
+                <div class="matching-item">1. CSMA/CD</div>
+                <select class="matching-select" name="q8_1">
+                    <option value="">-- Выберите --</option>
+                    <option value="a">А. Использует механизмы RTS и CTS для резервирования канала</option>
+                    <option value="b">Б. Циркуляция специального кадра управления (маркера)</option>
+                    <option value="c">В. Использует алгоритм экспоненциальной отсрочки после коллизий</option>
+                </select>
+            </div>
+            <div class="matching-row">
+                <div class="matching-item">2. CSMA/CA</div>
+                <select class="matching-select" name="q8_2">
+                    <option value="">-- Выберите --</option>
+                    <option value="a">А. Использует механизмы RTS и CTS для резервирования канала</option>
+                    <option value="b">Б. Циркуляция специального кадра управления (маркера)</option>
+                    <option value="c">В. Использует алгоритм экспоненциальной отсрочки после коллизий</option>
+                </select>
+            </div>
+            <div class="matching-row">
+                <div class="matching-item">3. Token Passing</div>
+                <select class="matching-select" name="q8_3">
+                    <option value="">-- Выберите --</option>
+                    <option value="a">А. Использует механизмы RTS и CTS для резервирования канала</option>
+                    <option value="b">Б. Циркуляция специального кадра управления (маркера)</option>
+                    <option value="c">В. Использует алгоритм экспоненциальной отсрочки после коллизий</option>
+                </select>
+            </div>
+            <div class="feedback"></div>
+        </div>
+
+        <!-- Часть 4: Ситуационная задача (адаптирована для автопроверки) -->
+        <div class="quiz-card" data-type="single" data-points="2" data-correct="b" id="q9">
+            <div class="question-type">Ситуационная задача (2 балла)</div>
+            <div class="question-title">9. В старом сегменте сети 10 компьютеров подключены к одному хабу (CSMA/CD). При активной загрузке скорость падает, а количество коллизий растет. Почему это происходит и каково современное решение?</div>
+            <div class="options">
+                <label><input type="radio" name="q9" value="a"> А) Хабы имеют низкую тактовую частоту; решение: заменить кабели на оптоволоконные.</label>
+                <label><input type="radio" name="q9" value="b"> Б) При высокой нагрузке растет число коллизий, и время тратится на задержки (backoff). Решение: заменить хаб на коммутатор (switch) и перейти в полнодуплексный режим.</label>
+                <label><input type="radio" name="q9" value="c"> В) Протокол CSMA/CD требует слишком много ресурсов CPU; решение: обновить операционные системы на компьютерах.</label>
+            </div>
+            <div class="feedback"></div>
+        </div>
+
+        <div class="btn-container">
+            <button type="button" class="btn" onclick="checkAnswers()">Проверить ответы</button>
+            <button type="button" class="btn btn-reset" onclick="resetQuiz()">Сбросить</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    const explanations = {
+        q1: "Правильно: CSMA/CD расшифровывается как Carrier Sense Multiple Access with Collision Detection (обнаружение коллизий).",
+        q2: "Правильно: CSMA/CA (Collision Avoidance / избегание коллизий) является стандартом для беспроводных сетей Wi-Fi (IEEE 802.11).",
+        q3: "Правильно: В полудуплексном радиоэфире передатчик узла глушит его же приемник, делая невозможным одновременное прослушивание коллизий.",
+        q4: "Правильно: Маркерные методы являются детерминированными, что гарантирует максимальное время ожидания и исключает коллизии.",
+        q5: "Правильно: При коллизии узлы немедленно прекращают передачу, посылают Jam-сигнал для оповещения всех участников, а затем ждут случайное время (backoff).",
+        q6: "Правильно: Token Passing и TDMA строго регламентируют, кто и когда может передавать данные, исключая случайность.",
+        q7: "Правильно: CSMA/CA включает прослушивание, ожидание DIFS и случайный Backoff. Мгновенная передача (В) неверна, так как задержка обязательна.",
+        q8: "Правильно: CSMA/CD использует экспоненциальную отсрочку (В), CSMA/CA использует RTS/CTS (А), Token Passing использует циркуляцию маркера (Б).",
+        q9: "Правильно: В общей среде (хаб) коллизии паразитно нагружают сеть. Коммутатор (switch) создает выделенные домены коллизий для каждого порта, а full-duplex устраняет их полностью."
+    };
+
+    function checkAnswers() {
+        let totalScore = 0;
+        const maxScore = 13;
+        const cards = document.querySelectorAll('.quiz-card');
+
+        cards.forEach(card => {
+            const type = card.dataset.type;
+            const points = parseInt(card.dataset.points);
+            const correct = card.dataset.correct;
+            const feedbackEl = card.querySelector('.feedback');
+            let isCorrect = false;
+            let earnedPoints = 0;
+
+            // Сброс классов
+            card.classList.remove('correct', 'incorrect');
+
+            if (type === 'single') {
+                const selected = card.querySelector(`input[name="${card.id}"]:checked`);
+                if (selected && selected.value === correct) {
+                    isCorrect = true;
+                    earnedPoints = points;
+                }
+            } 
+            else if (type === 'multiple') {
+                const checkedInputs = card.querySelectorAll(`input[name="${card.id}"]:checked`);
+                const selectedValues = Array.from(checkedInputs).map(input => input.value).sort().join(',');
+                if (selectedValues === correct) {
+                    isCorrect = true;
+                    earnedPoints = points;
+                }
+            } 
+            else if (type === 'matching') {
+                const val1 = card.querySelector(`select[name="${card.id}_1"]`).value;
+                const val2 = card.querySelector(`select[name="${card.id}_2"]`).value;
+                const val3 = card.querySelector(`select[name="${card.id}_3"]`).value;
+                
+                // Проверяем все три соответствия. Можно сделать частичные баллы, но для простоты даем 2 балла только за полный правильный ответ
+                if (val1 === 'c' && val2 === 'a' && val3 === 'b') {
+                    isCorrect = true;
+                    earnedPoints = points;
+                } else if (val1 !== "" || val2 !== "" || val3 !== "") {
+                    // Частичный балл (1 балл), если хотя бы одно верно, но не все
+                    let partial = 0;
+                    if (val1 === 'c') partial++;
+                    if (val2 === 'a') partial++;
+                    if (val3 === 'b') partial++;
+                    
+                    if (partial > 0 && partial < 3) {
+                        earnedPoints = 1; // Половина баллов за частичное знание
+                    }
+                }
+            }
+
+            totalScore += earnedPoints;
+
+            // Визуальное отображение результата
+            if (earnedPoints > 0) {
+                card.classList.add('correct');
+                if (earnedPoints === points) {
+                    feedbackEl.innerHTML = `<strong>✅ Верно! (+${points} балла)</strong><br>${explanations[card.id]}`;
+                } else {
+                    feedbackEl.innerHTML = `<strong>⚠️ Частично верно! (+${earnedPoints} балла из ${points})</strong><br>${explanations[card.id]}`;
+                }
+            } else {
+                card.classList.add('incorrect');
+                feedbackEl.innerHTML = `<strong>❌ Неверно. (0 баллов)</strong><br>${explanations[card.id]}`;
+            }
+        });
+
+        // Блокировка формы после проверки
+        const inputs = document.querySelectorAll('#quizForm input, #quizForm select');
+        inputs.forEach(input => input.disabled = true);
+        document.querySelector('.btn').disabled = true;
+        document.querySelector('.btn').textContent = 'Проверка завершена';
+        document.querySelector('.btn').style.opacity = '0.6';
+
+        // Отображение результатов
+        showResults(totalScore, maxScore);
+        
+        // Прокрутка к результатам
+        document.getElementById('resultsPanel').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function showResults(score, max) {
+        const panel = document.getElementById('resultsPanel');
+        const scoreValue = document.getElementById('scoreValue');
+        const gradeBadge = document.getElementById('gradeBadge');
+        const gradeMessage = document.getElementById('gradeMessage');
+
+        panel.style.display = 'block';
+        scoreValue.textContent = score;
+
+        let grade = '';
+        let message = '';
+        let badgeClass = '';
+
+        if (score >= 11) {
+            grade = 'Оценка: 5 (Отлично)';
+            message = 'Превосходный результат! Вы отлично разбираетесь в методах доступа к среде передачи данных.';
+            badgeClass = 'grade-5';
+        } else if (score >= 8) {
+            grade = 'Оценка: 4 (Хорошо)';
+            message = 'Хороший результат! Есть небольшие пробелы, но общее понимание темы на высоком уровне.';
+            badgeClass = 'grade-4';
+        } else if (score >= 5) {
+            grade = 'Оценка: 3 (Удовлетворительно)';
+            message = 'Базовые знания есть, но рекомендуется повторить различия между CSMA/CD, CSMA/CA и маркерными методами.';
+            badgeClass = 'grade-3';
+        } else {
+            grade = 'Оценка: 2 (Неудовлетворительно)';
+            message = 'Рекомендуется внимательно изучить теоретический материал и пройти тест заново.';
+            badgeClass = 'grade-2';
+        }
+
+        gradeBadge.textContent = grade;
+        gradeBadge.className = 'grade-badge ' + badgeClass;
+        gradeMessage.textContent = message;
+    }
+
+    function resetQuiz() {
+        // Сброс формы
+        document.getElementById('quizForm').reset();
+        
+        // Разблокировка элементов
+        const inputs = document.querySelectorAll('#quizForm input, #quizForm select');
+        inputs.forEach(input => input.disabled = false);
+        
+        const btn = document.querySelector('.btn');
+        btn.disabled = false;
+        btn.textContent = 'Проверить ответы';
+        btn.style.opacity = '1';
+
+        // Сброс стилей карточек
+        const cards = document.querySelectorAll('.quiz-card');
+        cards.forEach(card => {
+            card.classList.remove('correct', 'incorrect');
+            card.querySelector('.feedback').style.display = 'none';
+            card.querySelector('.feedback').innerHTML = '';
+        });
+
+        // Скрытие панели результатов
+        document.getElementById('resultsPanel').style.display = 'none';
+        
+        // Прокрутка наверх
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+</script>
+
+</body>
+</html>

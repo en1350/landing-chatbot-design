@@ -27,7 +27,8 @@ type TrainerKey =
   | "it-project-simulator"
   | "python-java-types"
   | "os-components"
-  | "media-access";
+  | "media-access"
+  | "media-access-test";
 
 interface TrainerItem {
   key: TrainerKey;
@@ -105,6 +106,14 @@ const TRAINERS: TrainerItem[] = [
     title: "Методы доступа к среде передачи",
     description: "Живая симуляция CSMA/CD, CSMA/CA и Token Ring: коллизии, маркер, статистика и лог событий",
     accent: "#14B8A6",
+    paid: true,
+  },
+  {
+    key: "media-access-test",
+    icon: "📝",
+    title: "Тест: методы доступа к сети",
+    description: "9 заданий на 13 баллов: выбор ответа, соответствие и ситуационная задача с разбором и оценкой",
+    accent: "#0369A1",
     paid: true,
   },
 ];
@@ -292,6 +301,14 @@ const StudentTrainer = () => {
                     src="/media-access-methods.html"
                     title="Методы доступа к среде передачи данных"
                     className="w-full min-w-[1000px] h-[1250px] rounded-xl border-0"
+                  />
+                </div>
+              ) : active === "media-access-test" ? (
+                <div className="rounded-2xl border border-border bg-card p-3 md:p-5 shadow-sm max-w-[900px] overflow-x-auto">
+                  <iframe
+                    src="/media-access-test.html"
+                    title="Тест: методы доступа к сети"
+                    className="w-full min-w-[500px] h-[1200px] rounded-xl border-0"
                   />
                 </div>
               ) : (
