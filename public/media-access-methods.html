@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тренажер: Методы доступа к среде передачи данных</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 968px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .simulation-area {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            min-height: 500px;
+        }
+
+        .control-panel {
+            background: rgba(255,255,255,0.15);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .mode-btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .mode-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .mode-btn.active {
+            background: #4CAF50;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .network-canvas {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            height: 400px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .node {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9em;
+            transition: all 0.3s;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        .node.idle {
+            background: #3498db;
+            border: 3px solid #2980b9;
+        }
+
+        .node.transmitting {
+            background: #e74c3c;
+            border: 3px solid #c0392b;
+            animation: pulse 1s infinite;
+        }
+
+        .node.waiting {
+            background: #f39c12;
+            border: 3px solid #d68910;
+        }
+
+        .node.collided {
+            background: #9b59b6;
+            border: 3px solid #8e44ad;
+            animation: shake 0.5s;
+        }
+
+        .node.has-token {
+            background: #2ecc71;
+            border: 3px solid #27ae60;
+            box-shadow: 0 0 20px rgba(46, 204, 113, 0.6);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .medium {
+            position: absolute;
+            height: 8px;
+            background: linear-gradient(90deg, #34495e, #7f8c8d);
+            border-radius: 4px;
+            top: 50%;
+            left: 10%;
+            right: 10%;
+            transform: translateY(-50%);
+        }
+
+        .packet {
+            position: absolute;
+            width: 40px;
+            height: 20px;
+            background: #f1c40f;
+            border-radius: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7em;
+            font-weight: bold;
+            color: #000;
+            z-index: 5;
+            transition: left 0.1s linear;
+        }
+
+        .token {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: #2ecc71;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8em;
+            box-shadow: 0 0 15px rgba(46, 204, 113, 0.8);
+            z-index: 15;
+            transition: all 0.5s ease-in-out;
+        }
+
+        .collision-effect {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(231, 76, 60, 0.8) 0%, transparent 70%);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            animation: explode 0.5s ease-out;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        @keyframes explode {
+            to {
+                transform: translate(-50%, -50%) scale(2);
+                opacity: 0;
+            }
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-success {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #f39c12;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .stats {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .info-panel {
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        .info-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #f1c40f;
+        }
+
+        .log {
+            background: rgba(0,0,0,0.4);
+            border-radius: 8px;
+            padding: 10px;
+            height: 150px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin-top: 15px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 3px;
+            border-left: 3px solid #3498db;
+            padding-left: 8px;
+        }
+
+        .log-entry.collision {
+            border-left-color: #e74c3c;
+            color: #ff6b6b;
+        }
+
+        .log-entry.success {
+            border-left-color: #2ecc71;
+            color: #51cf66;
+        }
+
+        .log-entry.info {
+            border-left-color: #f39c12;
+        }
+
+        .slider-container {
+            margin: 15px 0;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255,255,255,0.2);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+        }
+
+        .legend {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+            font-size: 0.85em;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .mode-description {
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        .highlight {
+            color: #f1c40f;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔌 Методы доступа к среде передачи данных</h1>
+            <p class="subtitle">Интерактивный тренажер для изучения CSMA/CD, CSMA/CA и маркерных методов</p>
+        </header>
+
+        <div class="main-grid">
+            <div class="simulation-area">
+                <div class="mode-selector">
+                    <button class="mode-btn active" onclick="setMode('csma_cd')">CSMA/CD<br><small>Ethernet</small></button>
+                    <button class="mode-btn" onclick="setMode('csma_ca')">CSMA/CA<br><small>Wi-Fi</small></button>
+                    <button class="mode-btn" onclick="setMode('token')">Token Ring<br><small>Маркерный</small></button>
+                </div>
+
+                <div class="mode-description" id="modeDesc">
+                    <strong>CSMA/CD (Carrier Sense Multiple Access with Collision Detection)</strong><br>
+                    Метод используется в Ethernet. Узлы прослушивают канал перед передачей. 
+                    При обнаружении <span class="highlight">коллизии</span> передача прекращается и повторяется через случайный интервал.
+                </div>
+
+                <div class="network-canvas" id="networkCanvas">
+                    <div class="medium" id="medium"></div>
+                    <!-- Nodes will be generated here -->
+                </div>
+
+                <div class="legend" id="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #3498db;"></div>
+                        <span>Ожидание</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #e74c3c;"></div>
+                        <span>Передача</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #f39c12;"></div>
+                        <span>Backoff</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #9b59b6;"></div>
+                        <span>Коллизия</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <h3 style="margin-bottom: 15px;">🎮 Управление</h3>
+                
+                <div class="controls">
+                    <button class="btn btn-success" onclick="startSimulation()">▶ Старт</button>
+                    <button class="btn btn-danger" onclick="stopSimulation()">⏸ Стоп</button>
+                    <button class="btn btn-warning" onclick="resetSimulation()"> Сброс</button>
+                </div>
+
+                <div class="controls">
+                    <button class="btn btn-primary" onclick="addNode()">+ Добавить узел</button>
+                    <button class="btn btn-primary" onclick="generateTraffic()">📦 Трафик</button>
+                </div>
+
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Скорость симуляции</span>
+                        <span id="speedValue">1x</span>
+                    </div>
+                    <input type="range" min="1" max="5" value="1" id="speedSlider" onchange="updateSpeed(this.value)">
+                </div>
+
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Вероятность передачи</span>
+                        <span id="probValue">30%</span>
+                    </div>
+                    <input type="range" min="10" max="90" value="30" id="probSlider" onchange="updateProb(this.value)">
+                </div>
+
+                <div class="stats">
+                    <h4 style="margin-bottom: 10px;">📊 Статистика</h4>
+                    <div class="stat-item">
+                        <span>Узлов:</span>
+                        <span class="stat-value" id="nodeCount">4</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Успешных передач:</span>
+                        <span class="stat-value" id="successCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Коллизий:</span>
+                        <span class="stat-value" id="collisionCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Пакетов в очереди:</span>
+                        <span class="stat-value" id="queueCount">0</span>
+                    </div>
+                </div>
+
+                <div class="info-panel" id="infoPanel">
+                    <div class="info-title">ℹ️ Как использовать:</div>
+                    <p>1. Выберите метод доступа сверху<br>
+                    2. Нажмите "Старт" для запуска<br>
+                    3. Узлы будут автоматически генерировать трафик<br>
+                    4. Наблюдайте за процессом передачи и коллизиями<br>
+                    5. Используйте "Трафик" для создания нагрузки</p>
+                </div>
+
+                <div class="log" id="log">
+                    <div class="log-entry info">Симуляция готова к запуску...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentMode = 'csma_cd';
+        let isRunning = false;
+        let simulationSpeed = 1;
+        let transmissionProb = 0.3;
+        let nodes = [];
+        let packets = [];
+        let token = null;
+        let stats = {
+            success: 0,
+            collisions: 0,
+            totalPackets: 0
+        };
+        let animationId = null;
+
+        // Node class
+        class Node {
+            constructor(id, x, y) {
+                this.id = id;
+                this.x = x;
+                this.y = y;
+                this.state = 'idle'; // idle, transmitting, waiting, collided
+                this.backoffTime = 0;
+                this.hasData = false;
+                this.element = null;
+                this.createDOM();
+            }
+
+            createDOM() {
+                const canvas = document.getElementById('networkCanvas');
+                this.element = document.createElement('div');
+                this.element.className = 'node idle';
+                this.element.textContent = `Node ${this.id}`;
+                this.element.style.left = this.x + 'px';
+                this.element.style.top = this.y + 'px';
+                canvas.appendChild(this.element);
+            }
+
+            updateState(newState) {
+                this.state = newState;
+                this.element.className = `node ${newState}`;
+            }
+
+            setPosition(x, y) {
+                this.x = x;
+                this.y = y;
+                this.element.style.left = x + 'px';
+                this.element.style.top = y + 'px';
+            }
+        }
+
+        // Packet class
+        class Packet {
+            constructor(fromNode, toNode, id) {
+                this.fromNode = fromNode;
+                this.toNode = toNode;
+                this.id = id;
+                this.x = fromNode.x + 30;
+                this.y = 200;
+                this.progress = 0;
+                this.element = null;
+                this.createDOM();
+            }
+
+            createDOM() {
+                const canvas = document.getElementById('networkCanvas');
+                this.element = document.createElement('div');
+                this.element.className = 'packet';
+                this.element.textContent = `P${this.id}`;
+                this.element.style.left = this.x + 'px';
+                canvas.appendChild(this.element);
+            }
+
+            update() {
+                const speed = 2 * simulationSpeed;
+                this.progress += speed;
+                this.x += speed;
+                this.element.style.left = this.x + 'px';
+                return this.progress >= 400; // Reached destination
+            }
+
+            destroy() {
+                if (this.element && this.element.parentNode) {
+                    this.element.parentNode.removeChild(this.element);
+                }
+            }
+        }
+
+        // Initialize network
+        function initNetwork() {
+            const canvas = document.getElementById('networkCanvas');
+            // Clear existing nodes
+            document.querySelectorAll('.node').forEach(n => n.remove());
+            document.querySelectorAll('.packet').forEach(p => p.remove());
+            if (token && token.element) token.element.remove();
+            
+            nodes = [];
+            packets = [];
+            token = null;
+            
+            // Create initial nodes
+            const positions = [
+                {x: 100, y: 170},
+                {x: 300, y: 170},
+                {x: 500, y: 170},
+                {x: 700, y: 170}
+            ];
+
+            positions.forEach((pos, idx) => {
+                nodes.push(new Node(idx + 1, pos.x, pos.y));
+            });
+
+            if (currentMode === 'token') {
+                createToken();
+            }
+
+            updateStats();
+        }
+
+        function createToken() {
+            const canvas = document.getElementById('networkCanvas');
+            token = {
+                currentNode: 0,
+                element: document.createElement('div')
+            };
+            token.element.className = 'token';
+            token.element.textContent = 'T';
+            token.element.style.left = nodes[0].x + 15 + 'px';
+            token.element.style.top = '185px';
+            canvas.appendChild(token.element);
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            
+            // Update buttons
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.closest('.mode-btn').classList.add('active');
+            
+            // Update description
+            const desc = document.getElementById('modeDesc');
+            const legend = document.getElementById('legend');
+            const info = document.getElementById('infoPanel');
+            
+            switch(mode) {
+                case 'csma_cd':
+                    desc.innerHTML = `<strong>CSMA/CD (Carrier Sense Multiple Access with Collision Detection)</strong><br>
+                    Метод используется в Ethernet. Узлы прослушивают канал перед передачей. 
+                    При обнаружении <span class="highlight">коллизии</span> передача прекращается и повторяется через случайный интервал 
+                    (алгоритм экспоненциальной отсрочки).`;
+                    
+                    legend.innerHTML = `
+                        <div class="legend-item"><div class="legend-color" style="background: #3498db;"></div><span>Ожидание</span></div>
+                        <div class="legend-item"><div class="legend-color" style="background: #e74c3c;"></div><span>Передача</span></div>
+                        <div class="legend-item"><div class="legend-color" style="background: #f39c12;"></div><span>Backoff</span></div>
+                        <div class="legend-item"><div class="legend-color" style="background: #9b59b6;"></div><span>Коллизия</span></div>
+                    `;
+                    
+                    info.innerHTML = `<div class="info-title">️ CSMA/CD:</div>
+                    <p>• Прослушивание канала перед передачей<br>
+                    • Одновременная передача = коллизия<br>
+                    • Jam-сигнал при коллизии<br>
+                    • Случайная задержка (backoff)</p>`;
+                    break;
+                    
+                case 'csma_ca':
+                    desc.innerHTML = `<strong>CSMA/CA (Carrier Sense Multiple Access with Collision Avoidance)</strong><br>
+                    Используется в Wi-Fi. Вместо обнаружения коллизий применяется их <span class="highlight">избегание</span>. 
+                    Узлы ждут случайное время (DIFS) и используют механизм RTS/CTS для резервирования канала.`;
+                    
+                    legend.innerHTML = `
+                        <div class="legend-item"><div class="legend-color" style="background: #3498db;"></div><span>Ожидание</span></div>
+                        <div class="legend-item"><div class="legend-color" style="background: #e74c3c;"></div><span>Передача</span></div>
+                        <div class="legend-item"><div class="legend-color" style="background: #f39c12;"></div><span>DIFS/Backoff</span></div>
+                        <div class="legend-item"><div class="legend-color" style="background: #2ecc71;"></div><span>ACK</span></div>
+                    `;
+                    
+                    info.innerHTML = `<div class="info-title">ℹ️ CSMA/CA:</div>
+                    <p>• Избегание коллизий (не обнаружение)<br>
+                    • DIFS (распределенный интервал)<br>
+                    • Случайный backoff<br>
+                    • Подтверждение ACK</p>`;
+                    break;
+                    
+                case 'token':
+                    desc.innerHTML = `<strong>Token Ring (Маркерный метод)</strong><br>
+                    Детерминированный метод. По кольцу циркулирует <span class="highlight">маркер (token)</span>. 
+                    Только узел, получивший маркер, может передавать данные. Коллизии исключены.`;
+                    
+                    legend.innerHTML = `
+                        <div class="legend-item"><div class="legend-color" style="background: #3498db;"></div><span>Ожидание</span></div>
+                        <div class="legend-item"><div class="legend-color" style="background: #2ecc71;"></div><span>С маркером</span></div>
+                        <div class="legend-item"><div class="legend-color" style="background: #e74c3c;"></div><span>Передача</span></div>
+                        <div class="legend-item"><div class="legend-color" style="background: #9b59b6;"></div><span>Маркер</span></div>
+                    `;
+                    
+                    info.innerHTML = `<div class="info-title">ℹ️ Token Ring:</div>
+                    <p>• Маркер циркулирует по кольцу<br>
+                    • Только владелец маркера передает<br>
+                    • Нет коллизий<br>
+                    • Предсказуемое время доступа</p>`;
+                    break;
+            }
+            
+            resetSimulation();
+        }
+
+        function addNode() {
+            const id = nodes.length + 1;
+            const x = 100 + (id % 5) * 150;
+            const y = 170 + Math.floor((id - 1) / 5) * 80;
+            nodes.push(new Node(id, x, y));
+            updateStats();
+            addLog(`Добавлен узел ${id}`, 'info');
+        }
+
+        function generateTraffic() {
+            nodes.forEach(node => {
+                if (Math.random() < 0.5) {
+                    node.hasData = true;
+                    node.updateState('waiting');
+                }
+            });
+            addLog('Сгенерирован трафик', 'info');
+            updateStats();
+        }
+
+        function startSimulation() {
+            if (isRunning) return;
+            isRunning = true;
+            addLog('Симуляция запущена', 'success');
+            simulate();
+        }
+
+        function stopSimulation() {
+            isRunning = false;
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+            addLog('Симуляция остановлена', 'info');
+        }
+
+        function resetSimulation() {
+            stopSimulation();
+            stats = { success: 0, collisions: 0, totalPackets: 0 };
+            packets.forEach(p => p.destroy());
+            packets = [];
+            initNetwork();
+            addLog('Симуляция сброшена', 'info');
+        }
+
+        function simulate() {
+            if (!isRunning) return;
+
+            // Process based on mode
+            switch(currentMode) {
+                case 'csma_cd':
+                    simulateCSMACD();
+                    break;
+                case 'csma_ca':
+                    simulateCSMACA();
+                    break;
+                case 'token':
+                    simulateToken();
+                    break;
+            }
+
+            // Update packets
+            for (let i = packets.length - 1; i >= 0; i--) {
+                const reached = packets[i].update();
+                if (reached) {
+                    packets[i].destroy();
+                    packets.splice(i, 1);
+                    stats.success++;
+                    addLog(`Пакет доставлен`, 'success');
+                }
+            }
+
+            updateStats();
+            animationId = requestAnimationFrame(simulate);
+        }
+
+        function simulateCSMACD() {
+            const transmittingNodes = nodes.filter(n => n.state === 'transmitting');
+            
+            // Check for collisions
+            if (transmittingNodes.length > 1) {
+                // Collision detected!
+                stats.collisions++;
+                addLog(`Коллизия между узлами ${transmittingNodes.map(n => n.id).join(', ')}`, 'collision');
+                
+                // Show collision effect
+                showCollisionEffect();
+                
+                // All transmitting nodes go to backoff
+                transmittingNodes.forEach(node => {
+                    node.updateState('collided');
+                    node.backoffTime = Math.floor(Math.random() * Math.pow(2, Math.min(stats.collisions, 10))) * 10;
+                    setTimeout(() => {
+                        if (node.hasData) {
+                            node.updateState('waiting');
+                        } else {
+                            node.updateState('idle');
+                        }
+                    }, node.backoffTime * 10);
+                });
+                
+                // Clear packets
+                packets.forEach(p => p.destroy());
+                packets = [];
+            }
+            
+            // Nodes try to transmit
+            nodes.forEach(node => {
+                if (node.state === 'idle' && node.hasData && Math.random() < transmissionProb) {
+                    // Check if channel is busy
+                    if (transmittingNodes.length === 0) {
+                        node.updateState('transmitting');
+                        const targetNode = nodes.find(n => n.id !== node.id) || nodes[0];
+                        packets.push(new Packet(node, targetNode, ++stats.totalPackets));
+                        addLog(`Узел ${node.id} начал передачу`, 'info');
+                        
+                        // Simulate transmission time
+                        setTimeout(() => {
+                            if (node.state === 'transmitting') {
+                                node.updateState('idle');
+                                node.hasData = false;
+                            }
+                        }, 2000 / simulationSpeed);
+                    } else {
+                        node.updateState('waiting');
+                    }
+                }
+            });
+        }
+
+        function simulateCSMACA() {
+            const transmittingNodes = nodes.filter(n => n.state === 'transmitting');
+            
+            // In CSMA/CA, collisions are avoided, not detected
+            // But we simulate occasional collisions for education
+            if (transmittingNodes.length > 1 && Math.random() < 0.3) {
+                stats.collisions++;
+                addLog(`Коллизия (редкий случай в CSMA/CA)`, 'collision');
+                showCollisionEffect();
+                
+                transmittingNodes.forEach(node => {
+                    node.updateState('waiting');
+                    node.backoffTime = Math.floor(Math.random() * 100);
+                });
+                
+                packets.forEach(p => p.destroy());
+                packets = [];
+            }
+            
+            nodes.forEach(node => {
+                if (node.state === 'idle' && node.hasData) {
+                    // DIFS + random backoff
+                    if (Math.random() < transmissionProb * 0.5) { // Slower than CD
+                        if (transmittingNodes.length === 0) {
+                            node.updateState('transmitting');
+                            const targetNode = nodes.find(n => n.id !== node.id) || nodes[0];
+                            packets.push(new Packet(node, targetNode, ++stats.totalPackets));
+                            addLog(`Узел ${node.id} передает (CSMA/CA)`, 'info');
+                            
+                            setTimeout(() => {
+                                if (node.state === 'transmitting') {
+                                    node.updateState('idle');
+                                    node.hasData = false;
+                                    // Send ACK
+                                    addLog(`ACK получен от узла ${node.id}`, 'success');
+                                }
+                            }, 2500 / simulationSpeed);
+                        } else {
+                            node.updateState('waiting');
+                        }
+                    }
+                }
+            });
+        }
+
+        function simulateToken() {
+            // Move token
+            if (token && Math.random() < 0.02 * simulationSpeed) {
+                const nextNode = (token.currentNode + 1) % nodes.length;
+                token.currentNode = nextNode;
+                
+                const targetNode = nodes[nextNode];
+                token.element.style.left = (targetNode.x + 15) + 'px';
+                token.element.style.top = (targetNode.y + 15) + 'px';
+                
+                // Update node states
+                nodes.forEach((node, idx) => {
+                    if (idx === nextNode) {
+                        node.updateState('has-token');
+                    } else if (node.state === 'has-token') {
+                        node.updateState('idle');
+                    }
+                });
+                
+                // Node with token can transmit
+                if (targetNode.hasData && Math.random() < 0.7) {
+                    targetNode.updateState('transmitting');
+                    const targetDest = nodes.find(n => n.id !== targetNode.id) || nodes[0];
+                    packets.push(new Packet(targetNode, targetDest, ++stats.totalPackets));
+                    addLog(`Узел ${targetNode.id} (с маркером) передает`, 'success');
+                    
+                    setTimeout(() => {
+                        targetNode.updateState('has-token');
+                        targetNode.hasData = false;
+                    }, 2000 / simulationSpeed);
+                }
+            }
+        }
+
+        function showCollisionEffect() {
+            const canvas = document.getElementById('networkCanvas');
+            const effect = document.createElement('div');
+            effect.className = 'collision-effect';
+            effect.style.left = '50%';
+            effect.style.top = '50%';
+            canvas.appendChild(effect);
+            setTimeout(() => effect.remove(), 500);
+        }
+
+        function updateStats() {
+            document.getElementById('nodeCount').textContent = nodes.length;
+            document.getElementById('successCount').textContent = stats.success;
+            document.getElementById('collisionCount').textContent = stats.collisions;
+            document.getElementById('queueCount').textContent = nodes.filter(n => n.hasData || n.state === 'waiting').length;
+        }
+
+        function updateSpeed(val) {
+            simulationSpeed = parseInt(val);
+            document.getElementById('speedValue').textContent = val + 'x';
+        }
+
+        function updateProb(val) {
+            transmissionProb = parseInt(val) / 100;
+            document.getElementById('probValue').textContent = val + '%';
+        }
+
+        function addLog(message, type = 'info') {
+            const log = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const time = new Date().toLocaleTimeString('ru-RU', {hour12: false});
+            entry.textContent = `[${time}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+            
+            // Limit log entries
+            while (log.children.length > 50) {
+                log.removeChild(log.firstChild);
+            }
+        }
+
+        // Initialize on load
+        window.onload = function() {
+            initNetwork();
+            addLog('Симуляция инициализирована', 'info');
+        };
+    </script>
+</body>
+</html>

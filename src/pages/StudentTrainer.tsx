@@ -26,7 +26,8 @@ type TrainerKey =
   | "ai-arcade"
   | "it-project-simulator"
   | "python-java-types"
-  | "os-components";
+  | "os-components"
+  | "media-access";
 
 interface TrainerItem {
   key: TrainerKey;
@@ -97,6 +98,13 @@ const TRAINERS: TrainerItem[] = [
     title: "Функциональные компоненты ОС",
     description: "Урок из 8 разделов про ядро, процессы, память и файловые системы, тест на 10 вопросов и сертификат",
     accent: "#8B5CF6",
+  },
+  {
+    key: "media-access",
+    icon: "🔌",
+    title: "Методы доступа к среде передачи",
+    description: "Живая симуляция CSMA/CD, CSMA/CA и Token Ring: коллизии, маркер, статистика и лог событий",
+    accent: "#14B8A6",
   },
 ];
 
@@ -275,6 +283,14 @@ const StudentTrainer = () => {
                     src="/os-components.html"
                     title="Функциональные компоненты ОС"
                     className="w-full min-w-[600px] h-[1000px] rounded-xl border-0"
+                  />
+                </div>
+              ) : active === "media-access" ? (
+                <div className="rounded-2xl border border-border bg-card p-3 md:p-5 shadow-sm max-w-[1440px] overflow-x-auto">
+                  <iframe
+                    src="/media-access-methods.html"
+                    title="Методы доступа к среде передачи данных"
+                    className="w-full min-w-[1000px] h-[1250px] rounded-xl border-0"
                   />
                 </div>
               ) : (
