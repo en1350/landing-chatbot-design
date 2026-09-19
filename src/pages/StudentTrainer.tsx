@@ -124,7 +124,6 @@ const TRAINERS: TrainerItem[] = [
     title: "Компьютер и цифровая информация",
     description: "Урок из 10 шагов: двоичный конвертер, пиксельный редактор, схема ПК и именной сертификат",
     accent: "#7C5CFC",
-    paid: true,
   },
   {
     key: "database-lesson",
@@ -132,7 +131,6 @@ const TRAINERS: TrainerItem[] = [
     title: "Создание базы данных",
     description: "Урок из 12 шагов: виды БД, кликабельная схема «Библиотека», SQL-запросы, практика и сертификат",
     accent: "#2563EB",
-    paid: true,
   },
 ];
 
