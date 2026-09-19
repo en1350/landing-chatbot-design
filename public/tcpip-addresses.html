@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Типы адресов стека TCP/IP — Обучающий модуль</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: #222;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3);
+    overflow: hidden;
+  }
+  header {
+    background: linear-gradient(90deg, #0f2027, #203a43, #2c5364);
+    color: #fff;
+    padding: 30px;
+    text-align: center;
+  }
+  header h1 { font-size: 28px; margin-bottom: 8px; }
+  header p { opacity: .85; font-size: 15px; }
+
+  .name-input {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 2px solid #7fffd4;
+    background: rgba(255,255,255,0.95);
+    font-size: 15px;
+    font-weight: bold;
+    color: #1e3c72;
+    width: 280px;
+    text-align: center;
+    outline: none;
+    transition: .2s;
+  }
+  .name-input:focus {
+    border-color: #fff;
+    box-shadow: 0 0 8px rgba(127, 255, 212, 0.6);
+  }
+
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    background: #f0f4f8;
+    border-bottom: 2px solid #d6e0ea;
+  }
+  nav button {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    color: #2c5364;
+    transition: .25s;
+    border-bottom: 3px solid transparent;
+  }
+  nav button:hover { background: #e1ebf5; }
+  nav button.active {
+    background: #fff;
+    border-bottom: 3px solid #2a5298;
+    color: #1e3c72;
+  }
+  section {
+    padding: 30px;
+    display: none;
+    animation: fade .4s ease;
+  }
+  section.active { display: block; }
+  @keyframes fade { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:translateY(0);} }
+  h2 { color: #1e3c72; margin-bottom: 15px; border-left: 5px solid #2a5298; padding-left: 12px; }
+  h3 { color: #2c5364; margin: 18px 0 10px; }
+  p, li { line-height: 1.65; margin-bottom: 8px; }
+  ul, ol { padding-left: 22px; margin-bottom: 12px; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+    font-size: 14px;
+  }
+  th, td {
+    border: 1px solid #cfd8e3;
+    padding: 10px;
+    text-align: left;
+  }
+  th { background: #2a5298; color: #fff; }
+  tr:nth-child(even) { background: #f5f8fc; }
+  code, .code {
+    background: #0f2027;
+    color: #7fffd4;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-family: 'Consolas', monospace;
+    font-size: 14px;
+  }
+  .terminal {
+    background: #000;
+    color: #0f0;
+    font-family: 'Consolas', monospace;
+    padding: 15px;
+    border-radius: 8px;
+    min-height: 180px;
+    max-height: 400px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    font-size: 14px;
+    margin-top: 10px;
+  }
+  .terminal .prompt { color: #7fffd4; }
+  .terminal .out { color: #ddd; }
+  .cmd-input {
+    display: flex;
+    margin-top: 10px;
+    gap: 8px;
+  }
+  .cmd-input input {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid #2a5298;
+    border-radius: 6px;
+    font-family: 'Consolas', monospace;
+    font-size: 14px;
+  }
+  .cmd-input button, .btn {
+    padding: 10px 18px;
+    background: #2a5298;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: .2s;
+  }
+  .cmd-input button:hover, .btn:hover { background: #1e3c72; }
+  .hint-box {
+    background: #fff8e1;
+    border-left: 4px solid #ffc107;
+    padding: 10px 14px;
+    margin: 12px 0;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  .task-box {
+    background: #e3f2fd;
+    border-left: 4px solid #2196f3;
+    padding: 12px 16px;
+    margin: 12px 0;
+    border-radius: 4px;
+  }
+  .question {
+    background: #f7f9fc;
+    border: 1px solid #d6e0ea;
+    padding: 16px;
+    margin-bottom: 14px;
+    border-radius: 8px;
+  }
+  .question p.q-text { font-weight: 600; margin-bottom: 10px; color: #1e3c72; }
+  .question label {
+    display: block;
+    padding: 8px 12px;
+    margin: 4px 0;
+    background: #fff;
+    border: 1px solid #d6e0ea;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: .2s;
+  }
+  .question label:hover { background: #eef4fb; }
+  .question input[type=radio] { margin-right: 8px; }
+  .result-box {
+    text-align: center;
+    padding: 30px;
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    border-radius: 12px;
+    margin: 20px 0;
+  }
+  .score {
+    font-size: 52px;
+    font-weight: bold;
+    color: #1e3c72;
+    margin: 10px 0;
+  }
+  .grade {
+    display: inline-block;
+    padding: 10px 30px;
+    border-radius: 30px;
+    font-size: 22px;
+    font-weight: bold;
+    color: #fff;
+    margin: 10px;
+  }
+  .g5 { background: #2e7d32; }
+  .g4 { background: #558b2f; }
+  .g3 { background: #f9a825; }
+  .g2 { background: #c62828; }
+  .certificate {
+    background: linear-gradient(135deg, #fff9e6, #ffe9a8);
+    border: 8px double #b8860b;
+    padding: 40px;
+    margin: 20px 0;
+    text-align: center;
+    border-radius: 12px;
+    position: relative;
+  }
+  .certificate::before {
+    content: "🏆";
+    font-size: 60px;
+    display: block;
+    margin-bottom: 10px;
+  }
+  .certificate h2 {
+    color: #8b4513;
+    border: none;
+    padding: 0;
+    font-size: 26px;
+  }
+  .cert-name {
+    font-size: 30px;
+    font-weight: bold;
+    color: #1e3c72;
+    margin: 15px 0;
+    font-style: italic;
+    border-bottom: 2px solid #b8860b;
+    display: inline-block;
+    padding: 0 20px 5px;
+  }
+  .cert-details { font-size: 15px; color: #555; margin: 8px 0; }
+  .cert-seal {
+    margin-top: 20px;
+    font-size: 14px;
+    color: #8b4513;
+    font-weight: 600;
+  }
+  .ip-card {
+    display: inline-block;
+    background: #f0f4f8;
+    border: 1px solid #cfd8e3;
+    padding: 10px 14px;
+    margin: 4px;
+    border-radius: 6px;
+    font-family: 'Consolas', monospace;
+    font-size: 14px;
+  }
+  .ip-card b { color: #2a5298; }
+  footer {
+    text-align: center;
+    padding: 20px;
+    background: #0f2027;
+    color: #aaa;
+    font-size: 13px;
+  }
+  @media print {
+    body { background: #fff; padding: 0; }
+    .container { box-shadow: none; }
+    nav, header, footer, .no-print { display: none !important; }
+    section { display: block !important; }
+    #results { page-break-before: always; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>🌐 Типы адресов стека TCP/IP</h1>
+  <p>Обучающий модуль с практической частью, тестом и сертификатом</p>
+
+  <div style="margin-top: 15px; display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
+    <label for="studentName" style="color: #fff; font-size: 14px; font-weight: 600;">Имя для сертификата:</label>
+    <input type="text" id="studentName" class="name-input" placeholder="Введите ваше имя" value="">
+  </div>
+</header>
+
+<nav class="no-print">
+  <button class="tab-btn active" onclick="showTab('theory', this)">📘 Теория</button>
+  <button class="tab-btn" onclick="showTab('practice', this)">🛠 Практика</button>
+  <button class="tab-btn" onclick="showTab('test', this)">📝 Тест</button>
+  <button class="tab-btn" onclick="showTab('results', this)">🏆 Результат</button>
+</nav>
+
+<!-- ============ ТЕОРИЯ ============ -->
+<section id="theory" class="active">
+  <h2>1. Модель TCP/IP и адресация</h2>
+  <p>Стек протоколов <b>TCP/IP</b> — это основа современной сети Интернет. Для идентификации устройств и служб в нём используются несколько типов адресов, работающих на разных уровнях модели.</p>
+
+  <h3>1.1. Уровни модели TCP/IP и соответствующие адреса</h3>
+  <table>
+    <tr><th>Уровень</th><th>Тип адреса</th><th>Длина / формат</th><th>Назначение</th></tr>
+    <tr><td>Прикладной</td><td>URL / доменное имя</td><td>строка (example.com)</td><td>Идентификация ресурса</td></tr>
+    <tr><td>Транспортный</td><td>Номер порта</td><td>16 бит (0–65535)</td><td>Идентификация процесса/службы</td></tr>
+    <tr><td>Интернет (сетевой)</td><td>IP-адрес (IPv4 / IPv6)</td><td>32 / 128 бит</td><td>Идентификация узла в сети</td></tr>
+    <tr><td>Канальный (сет. доступ)</td><td>MAC-адрес</td><td>48 бит (6 байт)</td><td>Идентификация сетевого интерфейса</td></tr>
+  </table>
+
+  <h3>1.2. Классификация IP-адресов IPv4</h3>
+  <p>По <b>назначению</b> IP-адреса делятся на:</p>
+  <ul>
+    <li><b>Публичные (глобальные)</b> — используются в Интернете, уникальны во всём мире.</li>
+    <li><b>Частные (локальные)</b> — используются внутри организации/дома, не маршрутизируются в Интернете.</li>
+  </ul>
+
+  <div class="task-box">
+    <b>Диапазоны частных адресов (RFC 1918):</b>
+    <div class="ip-card"><b>Класс A:</b> 10.0.0.0 – 10.255.255.255</div>
+    <div class="ip-card"><b>Класс B:</b> 172.16.0.0 – 172.31.255.255</div>
+    <div class="ip-card"><b>Класс C:</b> 192.168.0.0 – 192.168.255.255</div>
+  </div>
+
+  <p>По <b>способу доставки</b>:</p>
+  <ul>
+    <li><b>Unicast (одноадресный)</b> — одному конкретному узлу.</li>
+    <li><b>Broadcast (широковещательный)</b> — всем узлам сети (адрес хоста = все 1).</li>
+    <li><b>Multicast (групповой)</b> — группе узлов (диапазон 224.0.0.0 – 239.255.255.255).</li>
+    <li><b>Anycast</b> — ближайшему узлу из группы (часто в IPv6).</li>
+  </ul>
+
+  <p>По <b>способу назначения</b>:</p>
+  <ul>
+    <li><b>Статический</b> — задаётся администратором вручную.</li>
+    <li><b>Динамический</b> — выдаётся протоколом DHCP.</li>
+    <li><b>Loopback</b> — <code>127.0.0.1</code>, обращение к самому узлу.</li>
+    <li><b>APIPA</b> — <code>169.254.x.x</code>, назначается автоматически при отсутствии DHCP.</li>
+  </ul>
+
+  <h3>1.3. Адреса IPv6</h3>
+  <p>Длина — 128 бит, запись в шестнадцатеричном виде, например <code>2001:0db8:85a3::8a2e:0370:7334</code>.</p>
+  <ul>
+    <li><b>Global Unicast</b> (2000::/3) — глобальные.</li>
+    <li><b>Link-Local</b> (fe80::/10) — в пределах одного канала.</li>
+    <li><b>Unique Local</b> (fc00::/7) — аналог частных IPv4.</li>
+    <li><b>Multicast</b> (ff00::/8).</li>
+    <li><b>Loopback</b> — <code>::1</code>.</li>
+  </ul>
+
+  <h3>1.4. Порты TCP/UDP</h3>
+  <table>
+    <tr><th>Диапазон</th><th>Тип</th><th>Примеры</th></tr>
+    <tr><td>0 – 1023</td><td>Well-known (системные)</td><td>80 (HTTP), 443 (HTTPS), 22 (SSH), 21 (FTP)</td></tr>
+    <tr><td>1024 – 49151</td><td>Registered (зарегистрированные)</td><td>3306 (MySQL), 1433 (MSSQL)</td></tr>
+    <tr><td>49152 – 65535</td><td>Dynamic / Ephemeral</td><td>используются клиентом временно</td></tr>
+  </table>
+</section>
+
+<!-- ============ ПРАКТИКА ============ -->
+<section id="practice">
+  <h2>2. Практика: Настройка протоколов TCP в ОС</h2>
+  <p>Ниже приведён <b>симулятор командной строки</b>. Введите одну из поддерживаемых команд и изучите её вывод. Это имитация работы в Windows / Linux.</p>
+
+  <div class="hint-box">
+    💡 <b>Подсказка.</b> Попробуйте команды: <code>ipconfig</code>, <code>ipconfig /all</code>, <code>ping 127.0.0.1</code>, <code>ping 192.168.1.1</code>, <code>netstat -an</code>, <code>arp -a</code>, <code>nslookup example.com</code>, <code>tracert 8.8.8.8</code>, <code>setip 192.168.1.50 255.255.255.0 192.168.1.1</code>, <code>help</code>.
+  </div>
+
+  <div class="terminal" id="term"><span class="prompt">C:\&gt;</span> <span class="out">_</span></div>
+  <div class="cmd-input">
+    <input type="text" id="cmd" placeholder="Введите команду..." onkeydown="if(event.key==='Enter') runCmd()">
+    <button onclick="runCmd()">Выполнить</button>
+    <button onclick="clearTerm()" style="background:#555">Очистить</button>
+  </div>
+
+  <h3 style="margin-top:25px;">2.1. Задания для самостоятельной работы</h3>
+  <div class="task-box">
+    <b>Задание 1.</b> Определите IP-адрес, маску и шлюз текущего компьютера командой <code>ipconfig /all</code>.
+  </div>
+  <div class="task-box">
+    <b>Задание 2.</b> Проверьте работоспособность стека TCP/IP командой <code>ping 127.0.0.1</code>.
+  </div>
+  <div class="task-box">
+    <b>Задание 3.</b> Назначьте компьютеру статический IP-адрес <code>192.168.1.50</code> с маской <code>255.255.255.0</code> и шлюзом <code>192.168.1.1</code> (команда <code>setip ...</code>).
+  </div>
+  <div class="task-box">
+    <b>Задание 4.</b> Просмотрите активные TCP-соединения командой <code>netstat -an</code>.
+  </div>
+  <div class="task-box">
+    <b>Задание 5.</b> Определите MAC-адрес шлюза командой <code>arp -a</code>.
+  </div>
+</section>
+
+<!-- ============ ТЕСТ ============ -->
+<section id="test">
+  <h2>3. Тестовые задания</h2>
+  <p>Ответьте на 10 вопросов. После завершения нажмите кнопку «Завершить тест» — будет выставлена оценка и сгенерирован сертификат.</p>
+  <form id="quizForm"></form>
+  <button class="btn" onclick="submitTest()" style="margin-top:15px;">✅ Завершить тест</button>
+</section>
+
+<!-- ============ РЕЗУЛЬТАТ ============ -->
+<section id="results">
+  <h2>4. Результаты обучения</h2>
+  <div id="resultContent">
+    <p>Для получения результатов пройдите тест в разделе «📝 Тест».</p>
+  </div>
+</section>
+
+<footer>
+  Учебный модуль «Типы адресов стека TCP/IP»
+</footer>
+</div>
+
+<script>
+function showTab(id, btn) {
+  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+const term = document.getElementById('term');
+const cmdInput = document.getElementById('cmd');
+let currentIP = '192.168.1.10';
+let currentMask = '255.255.255.0';
+let currentGW = '192.168.1.1';
+
+function appendOut(text, cls='out') {
+  term.innerHTML += '\n<span class="'+cls+'">'+text+'</span>';
+  term.scrollTop = term.scrollHeight;
+}
+function appendPrompt(cmd) {
+  term.innerHTML += '\n<span class="prompt">C:\\&gt;</span> <span class="out">'+cmd+'</span>';
+}
+function clearTerm() { term.innerHTML = '<span class="prompt">C:\\&gt;</span> <span class="out">_</span>'; }
+
+function runCmd() {
+  const raw = cmdInput.value.trim();
+  if (!raw) return;
+  appendPrompt(raw);
+  const cmd = raw.toLowerCase();
+
+  if (cmd === 'help') {
+    appendOut('Доступные команды:');
+    appendOut('  ipconfig              — краткие сетевые настройки');
+    appendOut('  ipconfig /all         — полные настройки (вкл. MAC, DNS)');
+    appendOut('  ping <адрес>          — проверка связи');
+    appendOut('  netstat -an           — активные TCP/UDP соединения');
+    appendOut('  arp -a                — таблица ARP (IP -> MAC)');
+    appendOut('  nslookup <домен>      — DNS-запрос');
+    appendOut('  tracert <адрес>       — трассировка маршрута');
+    appendOut('  setip <IP> <MASK> <GW> — назначить статический IP');
+    appendOut('  help                  — эта справка');
+    appendOut('  clear                 — очистить экран');
+  }
+  else if (cmd === 'clear') { clearTerm(); }
+  else if (cmd === 'ipconfig') {
+    appendOut('Настройка протокола IP Windows');
+    appendOut('');
+    appendOut('Адаптер Ethernet Ethernet:');
+    appendOut('   IPv4-адрес. . . . . . . . . : '+currentIP);
+    appendOut('   Маска подсети . . . . . . . : '+currentMask);
+    appendOut('   Основной шлюз. . . . . . . .: '+currentGW);
+  }
+  else if (cmd === 'ipconfig /all') {
+    appendOut('Настройка протокола IP Windows');
+    appendOut('');
+    appendOut('Адаптер Ethernet Ethernet:');
+    appendOut('   Описание. . . . . . . . . . . : Realtek PCIe GbE');
+    appendOut('   Физический адрес. . . . . . . : 00-1A-2B-3C-4D-5E');
+    appendOut('   DHCP включен. . . . . . . . . : Да');
+    appendOut('   IPv4-адрес. . . . . . . . . . : '+currentIP);
+    appendOut('   Маска подсети . . . . . . . . : '+currentMask);
+    appendOut('   Основной шлюз. . . . . . . . .: '+currentGW);
+    appendOut('   DNS-серверы. . . . . . . . . .: 8.8.8.8, 8.8.4.4');
+  }
+  else if (cmd.startsWith('ping ')) {
+    const host = raw.substring(5).trim();
+    if (host === '127.0.0.1' || host === 'localhost') {
+      appendOut('Обмен пакетами с 127.0.0.1 по 32 байт:');
+      appendOut('Ответ от 127.0.0.1: число байт=32 время<1мс TTL=128');
+      appendOut('Ответ от 127.0.0.1: число байт=32 время<1мс TTL=128');
+      appendOut('Ответ от 127.0.0.1: число байт=32 время<1мс TTL=128');
+      appendOut('Ответ от 127.0.0.1: число байт=32 время<1мс TTL=128');
+      appendOut('Статистика Ping для 127.0.0.1: Отправлено=4, Получено=4, Потеряно=0');
+    } else if (host === currentGW || host.startsWith('192.168.')) {
+      appendOut('Обмен пакетами с '+host+' по 32 байт:');
+      appendOut('Ответ от '+host+': число байт=32 время=3мс TTL=64');
+      appendOut('Ответ от '+host+': число байт=32 время=2мс TTL=64');
+      appendOut('Статистика: Отправлено=4, Получено=4, Потеряно=0');
+    } else {
+      appendOut('Обмен пакетами с '+host+' по 32 байт:');
+      appendOut('Ответ от '+host+': число байт=32 время=18мс TTL=55');
+      appendOut('Статистика: Отправлено=4, Получено=4, Потеряно=0');
+    }
+  }
+  else if (cmd === 'netstat -an') {
+    appendOut('Активные подключения');
+    appendOut('');
+    appendOut('Протокол   Локальный адрес         Внешний адрес         Состояние');
+    appendOut('TCP        0.0.0.0:135             0.0.0.0:0             LISTENING');
+    appendOut('TCP        0.0.0.0:445             0.0.0.0:0             LISTENING');
+    appendOut('TCP        '+currentIP+':49672      93.184.216.34:443     ESTABLISHED');
+    appendOut('TCP        '+currentIP+':49673      142.250.74.110:443    ESTABLISHED');
+    appendOut('UDP        0.0.0.0:5353            *:*');
+    appendOut('UDP        0.0.0.0:1900            *:*');
+  }
+  else if (cmd === 'arp -a') {
+    appendOut('Интерфейс: '+currentIP+' --- 0x3');
+    appendOut('  Интернет-адрес      Физический адрес      Тип');
+    appendOut('  '+currentGW+'        aa-bb-cc-dd-ee-ff     динамический');
+    appendOut('  192.168.1.25        11-22-33-44-55-66     динамический');
+    appendOut('  192.168.1.100       77-88-99-aa-bb-cc     динамический');
+  }
+  else if (cmd.startsWith('nslookup ')) {
+    const dom = raw.substring(9).trim();
+    appendOut('Сервер:  dns.google');
+    appendOut('Address:  8.8.8.8');
+    appendOut('');
+    appendOut('Не заслуживающий доверия ответ:');
+    appendOut('Имя:    '+dom);
+    appendOut('Address:  93.184.216.34');
+  }
+  else if (cmd.startsWith('tracert ')) {
+    const host = raw.substring(8).trim();
+    appendOut('Трассировка маршрута к '+host);
+    appendOut('');
+    appendOut('  1     1 ms    1 ms    1 ms  '+currentGW);
+    appendOut('  2     8 ms    9 ms    8 ms  10.0.0.1');
+    appendOut('  3    15 ms   14 ms   16 ms  172.16.0.1');
+    appendOut('  4    22 ms   21 ms   23 ms  '+host);
+    appendOut('');
+    appendOut('Трассировка завершена.');
+  }
+  else if (cmd.startsWith('setip ')) {
+    const parts = raw.substring(6).trim().split(/\s+/);
+    if (parts.length === 3 && /^(\d+\.){3}\d+$/.test(parts[0])) {
+      currentIP = parts[0]; currentMask = parts[1]; currentGW = parts[2];
+      appendOut('✅ Статический IP-адрес успешно назначен:');
+      appendOut('   IP:     '+currentIP);
+      appendOut('   Маска:  '+currentMask);
+      appendOut('   Шлюз:   '+currentGW);
+    } else {
+      appendOut('❌ Ошибка. Формат: setip <IP> <MASK> <GW>');
+      appendOut('   Пример: setip 192.168.1.50 255.255.255.0 192.168.1.1');
+    }
+  }
+  else {
+    appendOut("'"+raw+"' не является внутренней или внешней командой.");
+    appendOut("Введите 'help' для списка команд.");
+  }
+  cmdInput.value = '';
+}
+
+const questions = [
+  { q: "1. Какой адрес является адресом loopback в IPv4?", o: ["192.168.0.1", "127.0.0.1", "255.255.255.255", "10.0.0.1"], a: 1 },
+  { q: "2. Какой из адресов относится к частным (RFC 1918)?", o: ["8.8.8.8", "172.32.0.1", "172.16.10.5", "11.0.0.1"], a: 2 },
+  { q: "3. Сколько бит занимает IPv6-адрес?", o: ["32", "64", "128", "256"], a: 2 },
+  { q: "4. Какой порт используется протоколом HTTPS?", o: ["80", "21", "443", "25"], a: 2 },
+  { q: "5. Что такое MAC-адрес?", o: ["Логический адрес узла в сети Интернет", "Физический 48-битный адрес сетевого интерфейса", "Адрес почтового сервера", "Адрес шлюза по умолчанию"], a: 1 },
+  { q: "6. Какой адрес является широковещательным для сети 192.168.1.0/24?", o: ["192.168.1.0", "192.168.1.1", "192.168.1.255", "192.168.255.255"], a: 2 },
+  { q: "7. Какая команда Windows показывает активные TCP-соединения?", o: ["ipconfig", "netstat -an", "ping", "tracert"], a: 1 },
+  { q: "8. Какой диапазон адресов используется для multicast в IPv4?", o: ["10.0.0.0 – 10.255.255.255", "127.0.0.0 – 127.255.255.255", "224.0.0.0 – 239.255.255.255", "240.0.0.0 – 255.255.255.255"], a: 2 },
+  { q: "9. Какой адрес назначается автоматически при отсутствии DHCP-сервера?", o: ["127.0.0.1", "169.254.x.x (APIPA)", "0.0.0.0", "255.255.255.0"], a: 1 },
+  { q: "10. К какому уровню модели TCP/IP относится IP-адрес?", o: ["Прикладной", "Транспортный", "Интернет (сетевой)", "Канальный"], a: 2 }
+];
+
+const form = document.getElementById('quizForm');
+questions.forEach((q, i) => {
+  let html = '<div class="question"><p class="q-text">'+q.q+'</p>';
+  q.o.forEach((opt, j) => {
+    html += '<label><input type="radio" name="q'+i+'" value="'+j+'"> '+opt+'</label>';
+  });
+  html += '</div>';
+  form.innerHTML += html;
+});
+
+function submitTest() {
+  let score = 0;
+  let unanswered = 0;
+  questions.forEach((q, i) => {
+    const sel = document.querySelector('input[name="q'+i+'"]:checked');
+    if (!sel) unanswered++;
+    else if (parseInt(sel.value) === q.a) score++;
+  });
+  if (unanswered > 0) {
+    if (!confirm('Вы не ответили на '+unanswered+' вопрос(ов). Всё равно завершить?')) return;
+  }
+
+  const percent = Math.round(score / questions.length * 100);
+  let grade, gClass, comment;
+  if (percent >= 90) { grade = '5 (отлично)'; gClass = 'g5'; comment = 'Превосходный результат! Материал усвоен полностью.'; }
+  else if (percent >= 75) { grade = '4 (хорошо)'; gClass = 'g4'; comment = 'Хороший результат, есть небольшие пробелы.'; }
+  else if (percent >= 50) { grade = '3 (удовлетворительно)'; gClass = 'g3'; comment = 'Рекомендуется повторить теорию.'; }
+  else { grade = '2 (неудовлетворительно)'; gClass = 'g2'; comment = 'Необходимо пройти обучение повторно.'; }
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('ru-RU', {day:'2-digit', month:'long', year:'numeric'});
+  const certId = 'TCP-IP-' + now.getFullYear() + '-' + Math.floor(100000 + Math.random()*900000);
+
+  const studentName = document.getElementById('studentName').value.trim() || 'Студент';
+
+  document.getElementById('resultContent').innerHTML = `
+    <div class="result-box">
+      <p style="font-size:18px;">Правильных ответов:</p>
+      <div class="score">${score} / ${questions.length}</div>
+      <p>Процент выполнения: <b>${percent}%</b></p>
+      <div class="grade ${gClass}">Оценка: ${grade}</div>
+      <p style="margin-top:15px; font-style:italic;">${comment}</p>
+    </div>
+
+    <div class="certificate" id="cert">
+      <h2>СЕРТИФИКАТ</h2>
+      <p style="font-size:14px; letter-spacing:2px; color:#8b4513;">о прохождении обучающего модуля</p>
+      <h3 style="color:#1e3c72; margin:15px 0;">«Типы адресов стека TCP/IP.<br>Настройка протоколов TCP в ОС»</h3>
+      <p style="margin-top:20px;">Настоящий сертификат удостоверяет, что</p>
+      <div class="cert-name">${studentName}</div>
+      <p>успешно прошёл(ла) обучение и выполнил(а) все практические и тестовые задания</p>
+      <div class="cert-details">Результат: <b>${score}/${questions.length}</b> (${percent}%)</div>
+      <div class="cert-details">Оценка: <b>${grade}</b></div>
+      <div class="cert-details">Дата выдачи: <b>${dateStr}</b></div>
+      <div class="cert-details">Регистрационный №: <b>${certId}</b></div>
+      <div class="cert-seal">🖋 Подпись преподавателя ______________ &nbsp;&nbsp;&nbsp; Печать 🏛</div>
+    </div>
+
+    <div style="text-align:center; margin-top:20px;" class="no-print">
+      <button class="btn" onclick="window.print()">🖨 Распечатать сертификат</button>
+      <button class="btn" onclick="showTab('test', document.querySelectorAll('.tab-btn')[2])" style="background:#555;">↩ Пройти тест заново</button>
+    </div>
+  `;
+
+  showTab('results', document.querySelectorAll('.tab-btn')[3]);
+}
+</script>
+</body>
+</html>

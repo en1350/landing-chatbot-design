@@ -30,7 +30,8 @@ type TrainerKey =
   | "media-access"
   | "media-access-test"
   | "digital-info"
-  | "database-lesson";
+  | "database-lesson"
+  | "tcpip-addresses";
 
 interface TrainerItem {
   key: TrainerKey;
@@ -131,6 +132,14 @@ const TRAINERS: TrainerItem[] = [
     title: "Создание базы данных",
     description: "Урок из 12 шагов: виды БД, кликабельная схема «Библиотека», SQL-запросы, практика и сертификат",
     accent: "#2563EB",
+  },
+  {
+    key: "tcpip-addresses",
+    icon: "🌐",
+    title: "Типы адресов стека TCP/IP",
+    description: "Теория, симулятор командной строки (ipconfig, ping, netstat), тест на 10 вопросов и сертификат",
+    accent: "#1E3C72",
+    paid: true,
   },
 ];
 
@@ -341,6 +350,14 @@ const StudentTrainer = () => {
                     src="/database-lesson.html"
                     title="Создание базы данных: назначение, виды, модель"
                     className="w-full min-w-[360px] h-[1100px] rounded-xl border-0"
+                  />
+                </div>
+              ) : active === "tcpip-addresses" ? (
+                <div className="rounded-2xl border border-border bg-card p-3 md:p-5 shadow-sm max-w-[1150px] overflow-x-auto">
+                  <iframe
+                    src="/tcpip-addresses.html"
+                    title="Типы адресов стека TCP/IP"
+                    className="w-full min-w-[420px] h-[1200px] rounded-xl border-0"
                   />
                 </div>
               ) : (
