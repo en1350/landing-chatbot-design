@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Создание базы данных: назначение, виды, модель</title>
+<style>
+:root{
+  --bg1:#f0f2f5;
+  --bg2:#ffffff;
+  --bg3:#ffffff;
+  --acc:#2563eb;
+  --acc2:#7c3aed;
+  --acc3:#db2777;
+  --ok:#16a34a;
+  --bad:#dc2626;
+  --warn:#d97706;
+  --txt:#1e293b;
+  --muted:#64748b;
+  --card:rgba(255,255,255,0.9);
+  --glass:rgba(37,99,235,0.05);
+  --border:rgba(0,0,0,0.08);
+  --shadow:0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+  --r:16px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  background:var(--bg1);color:var(--txt);min-height:100vh;
+  background-image: radial-gradient(circle at 10% 20%, rgba(37,99,235,0.03) 0%, transparent 20%),
+                    radial-gradient(circle at 90% 80%, rgba(124,58,237,0.03) 0%, transparent 20%);
+}
+.wrap{max-width:680px;margin:0 auto;padding:12px 14px 90px}
+
+h1{font-size:1.3rem;text-align:center;margin:6px 0 2px;line-height:1.3;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  font-weight:800;}
+h2{font-size:1.1rem;color:var(--acc);margin:14px 0 8px;display:flex;align-items:center;gap:6px;font-weight:700}
+h3{font-size:1rem;color:var(--acc2);margin:10px 0 6px;font-weight:600}
+p,li{font-size:.93rem;line-height:1.6;color:#334155}
+ul,ol{padding-left:20px}
+li{margin:3px 0}
+b{color:#0f172a}
+.sub{text-align:center;color:var(--muted);font-size:.82rem;margin-bottom:10px}
+
+.hint{font-size:.84rem;color:var(--acc2);margin-top:8px;padding:8px 10px;
+  background:rgba(124,58,237,0.08);border-radius:10px;border-left:3px solid var(--acc2)}
+
+.code{background:#f1f5f9;padding:10px 12px;border-radius:10px;
+  font-family:'Courier New',monospace;font-size:.88rem;color:#0f172a;
+  overflow-x:auto;white-space:pre-wrap;margin:8px 0;border:1px solid #e2e8f0}
+
+.card{background:var(--card);backdrop-filter:blur(12px);
+  border-radius:var(--r);padding:18px 16px;margin:10px 0;
+  border:1px solid var(--border);
+  box-shadow:var(--shadow)}
+
+.prog-wrap{position:sticky;top:0;z-index:50;background:rgba(240,242,245,0.95);
+  backdrop-filter:blur(5px);padding:8px 0 4px}
+.prog{height:6px;background:#e2e8f0;border-radius:10px;overflow:hidden}
+.prog>div{height:100%;width:0;border-radius:10px;
+  background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .5s ease}
+.prog-label{text-align:right;font-size:.72rem;color:var(--muted);margin-top:2px}
+
+.step{display:none;animation:fadeUp .4s ease}
+.step.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+.btn{cursor:pointer;border:none;font-size:.95rem;font-weight:700;
+  padding:13px 18px;border-radius:12px;color:#fff;min-height:48px;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));
+  box-shadow:0 4px 12px rgba(37,99,235,0.25);transition:transform .12s,box-shadow .2s;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:1;min-width:110px}
+.btn:active{transform:scale(.96)}
+.btn.ghost{background:#fff;color:var(--txt);box-shadow:var(--shadow);border:1px solid #cbd5e1}
+.btn.ok{background:linear-gradient(135deg,var(--ok),#15803d)}
+.btn:disabled{opacity:.35;pointer-events:none}
+.nav{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+
+.opts{display:flex;flex-direction:column;gap:9px;margin-top:10px}
+.opt{background:#fff;border:2px solid #e2e8f0;border-radius:12px;
+  padding:13px 14px;cursor:pointer;text-align:left;font-size:.93rem;color:var(--txt);
+  transition:all .2s;min-height:48px;display:flex;align-items:center;gap:10px;
+  box-shadow:0 1px 2px rgba(0,0,0,0.05)}
+.opt::before{content:'';width:20px;height:20px;border-radius:50%;
+  border:2px solid #cbd5e1;flex-shrink:0;transition:all .2s}
+.opt:active{transform:scale(.98)}
+.opt.correct{background:rgba(22,163,74,0.08);border-color:var(--ok)}
+.opt.correct::before{background:var(--ok);border-color:var(--ok);box-shadow:inset 0 0 0 3px #fff}
+.opt.wrong{background:rgba(220,38,38,0.08);border-color:var(--bad)}
+.opt.wrong::before{background:var(--bad);border-color:var(--bad)}
+.opt.locked{pointer-events:none;opacity:.7}
+.opt.locked.correct{opacity:1}
+
+input[type="text"],input[type="number"],select{
+  width:100%;padding:13px 14px;border-radius:12px;
+  border:2px solid #e2e8f0;background:#fff;
+  color:var(--txt);font-size:1rem;min-height:48px;transition:border .2s;
+  box-shadow:0 1px 2px rgba(0,0,0,0.05)}
+input:focus,select:focus{outline:none;border-color:var(--acc)}
+input::placeholder{color:#94a3b8}
+select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--acc) 50%),linear-gradient(135deg,var(--acc) 50%,transparent 50%);
+  background-position:calc(100% - 20px) center,calc(100% - 15px) center;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:36px}
+
+.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.4);
+  backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:#fff;
+  border-radius:20px;padding:28px 22px;max-width:420px;width:100%;
+  border:1px solid rgba(0,0,0,0.1);box-shadow:0 20px 60px rgba(0,0,0,0.2);
+  text-align:center;animation:fadeUp .4s ease}
+.modal h2{justify-content:center;font-size:1.2rem;margin-bottom:6px;color:var(--txt)}
+.modal p{font-size:.9rem;color:var(--muted);margin-bottom:16px}
+.modal input{text-align:center;font-size:1.1rem;font-weight:600;margin-bottom:14px}
+.modal .btn{width:100%}
+.modal .err{color:var(--bad);font-size:.82rem;margin-top:-8px;margin-bottom:8px;display:none}
+
+.db-types{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}
+.db-card{background:#fff;border:2px solid #e2e8f0;border-radius:14px;
+  padding:14px;cursor:pointer;transition:all .25s;box-shadow:0 1px 2px rgba(0,0,0,0.05)}
+.db-card .hdr{display:flex;align-items:center;gap:10px;font-weight:700;font-size:.98rem;color:var(--txt)}
+.db-card .ic{font-size:1.6rem}
+.db-card .body{max-height:0;overflow:hidden;transition:max-height .4s ease,margin-top .3s;
+  font-size:.88rem;color:#475569;line-height:1.55}
+.db-card.open{border-color:var(--acc);background:rgba(37,99,235,0.03)}
+.db-card.open .body{max-height:400px;margin-top:10px}
+.db-card .body b{color:var(--acc)}
+.db-card .body .ex{background:var(--glass);padding:8px 10px;border-radius:8px;margin-top:8px;
+  font-size:.82rem;color:var(--acc2)}
+
+.schema-wrap{background:#f8fafc;
+  border-radius:16px;padding:12px;margin:10px 0;
+  border:1px solid #e2e8f0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.schema-svg{display:block;width:100%;min-width:560px;height:auto}
+.tbl-node{cursor:pointer;transition:all .2s}
+.tbl-node:hover .tbl-bg{filter:brightness(0.95)}
+.tbl-node.active .tbl-bg{stroke:var(--acc);stroke-width:3}
+.tbl-bg{fill:#fff;stroke:#cbd5e1;stroke-width:1.5;
+  transition:all .2s;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.1))}
+.tbl-head{fill:rgba(37,99,235,0.1)}
+.tbl-title{fill:var(--acc);font-size:14px;font-weight:700}
+.tbl-field{fill:#334155;font-size:12px}
+.tbl-pk{fill:#d97706;font-size:11px;font-weight:700}
+.tbl-fk{fill:var(--acc3);font-size:11px;font-weight:700}
+.rel-line{stroke:var(--acc2);stroke-width:2.5;fill:none;
+  stroke-dasharray:0;transition:all .3s;cursor:pointer}
+.rel-line:hover{stroke:var(--acc3);stroke-width:3.5}
+.rel-line.active{stroke:var(--acc3);stroke-width:3.5;filter:drop-shadow(0 0 6px var(--acc3))}
+.rel-label{fill:var(--acc);font-size:13px;font-weight:700;
+  paint-order:stroke;stroke:#f8fafc;stroke-width:4px;stroke-linejoin:round}
+.schema-hint{text-align:center;font-size:.82rem;color:var(--muted);margin-top:8px}
+
+.records-overlay{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,0.5);
+  backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:16px}
+.records-overlay.show{display:flex}
+.records-box{background:#fff;
+  border-radius:18px;padding:20px 16px;max-width:560px;width:100%;
+  border:1px solid rgba(0,0,0,0.1);box-shadow:0 20px 60px rgba(0,0,0,0.2);
+  max-height:85vh;overflow-y:auto;animation:fadeUp .3s}
+.records-box h3{color:var(--acc);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.records-box .close{float:right;background:#f1f5f9;border:none;color:var(--txt);
+  width:36px;height:36px;border-radius:50%;font-size:1.2rem;cursor:pointer}
+.records-tbl{width:100%;border-collapse:collapse;font-size:.85rem;margin-top:8px}
+.records-tbl th{background:rgba(37,99,235,0.1);color:var(--acc);
+  padding:8px 6px;text-align:left;border-bottom:2px solid rgba(37,99,235,0.2);
+  position:sticky;top:0;font-size:.8rem}
+.records-tbl td{padding:7px 6px;border-bottom:1px solid #e2e8f0;color:#334155}
+.records-tbl tr:hover td{background:#f8fafc}
+.records-tbl .hl{background:rgba(217,119,6,0.1);color:#b45309;font-weight:700}
+
+.sql-box{background:#f8fafc;border-radius:12px;padding:12px;margin:10px 0;
+  border:1px solid #e2e8f0;position:relative}
+.sql-box .tag{position:absolute;top:-8px;left:12px;background:var(--acc2);
+  color:#fff;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:6px}
+.sql-box code{font-family:'Courier New',monospace;font-size:.85rem;color:#0f172a;
+  white-space:pre-wrap;display:block;line-height:1.5}
+.sql-key{color:#db2777;font-weight:bold}
+.sql-str{color:#16a34a}
+.sql-num{color:#7c3aed}
+
+.fb{margin-top:10px;padding:10px 12px;border-radius:10px;font-size:.93rem;animation:fadeUp .3s}
+.fb.ok{background:rgba(22,163,74,0.1);border-left:3px solid var(--ok);color:var(--ok)}
+.fb.bad{background:rgba(220,38,38,0.1);border-left:3px solid var(--bad);color:var(--bad)}
+
+.cert{
+  background:#fff;
+  border:4px double #d97706;border-radius:20px;padding:28px 18px;
+  text-align:center;position:relative;overflow:hidden;margin-top:10px;
+  box-shadow:0 10px 30px rgba(217,119,6,0.15)}
+.cert::before{content:'';position:absolute;inset:10px;
+  border:1px solid rgba(217,119,6,0.3);border-radius:14px;pointer-events:none}
+.cert .label{font-size:.8rem;color:#94a3b8;letter-spacing:3px;text-transform:uppercase}
+.cert h2{justify-content:center;color:#b45309;font-size:1.2rem;margin:6px 0}
+.cert .topic{color:#78350f;font-weight:600;font-size:.95rem;margin:8px 0;line-height:1.4}
+.cert .uname{font-size:1.55rem;font-weight:800;color:#0f172a;margin:14px 0 4px}
+.cert .grade-big{font-size:3.5rem;font-weight:900;margin:8px 0;
+  background:linear-gradient(135deg,#d97706,#f59e0b);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.cert .stars{font-size:1.8rem;color:#d97706;letter-spacing:6px;margin:4px 0}
+.cert .seal{display:inline-block;width:72px;height:72px;border-radius:50%;
+  border:3px solid #d97706;line-height:66px;color:#d97706;font-weight:800;
+  font-size:.65rem;text-align:center;transform:rotate(-10deg);
+  background:rgba(217,119,6,0.08);margin:10px 0}
+.cert .date{color:#64748b;font-size:.85rem;margin-top:8px}
+
+@media(max-width:420px){
+  h1{font-size:1.1rem}
+  .cert .uname{font-size:1.25rem}
+  .cert .grade-big{font-size:2.8rem}
+  .card{padding:14px 12px}
+  .records-tbl{font-size:.78rem}
+  .records-tbl th,.records-tbl td{padding:6px 4px}
+}
+@media print{
+  body{background:#fff!important;color:#000!important}
+  .no-print{display:none!important}
+  .cert{border-color:#000!important;box-shadow:none}
+  .cert *{color:#000!important;-webkit-text-fill-color:#000!important}
+  .cert .grade-big{-webkit-text-fill-color:#b8860b!important}
+  .wrap{max-width:100%}
+}
+</style>
+</head>
+<body>
+
+<div class="modal-overlay" id="nameModal">
+  <div class="modal">
+    <div style="font-size:2.4rem;margin-bottom:8px">🗄️</div>
+    <h2>Добро пожаловать!</h2>
+    <p>Введите ваше имя и фамилию — они будут указаны в сертификате по окончании урока.</p>
+    <input type="text" id="nameInput" placeholder="Иванов Иван" maxlength="60" autocomplete="name">
+    <div class="err" id="nameErr">Пожалуйста, введите имя (минимум 2 символа)</div>
+    <button class="btn" onclick="startLesson()">Начать урок 🚀</button>
+  </div>
+</div>
+
+<div class="records-overlay" id="recordsModal">
+  <div class="records-box">
+    <button class="close" onclick="closeRecords()">×</button>
+    <h3 id="recTitle">📋 Таблица</h3>
+    <div id="recContent"></div>
+  </div>
+</div>
+
+<div class="wrap" id="mainApp" style="display:none">
+  <h1>🗄️ Создание базы данных:<br>назначение, виды, модель</h1>
+  <div class="sub">Интерактивный урок · 12 шагов</div>
+
+  <div class="prog-wrap no-print">
+    <div class="prog"><div id="progBar"></div></div>
+    <div class="prog-label" id="progLabel">Шаг 1 из 12</div>
+  </div>
+
+  <section class="step active" data-s="1">
+    <div class="card">
+      <h2>📚 Что такое база данных?</h2>
+      <p><b>База данных (БД)</b> — организованная совокупность данных, хранящихся в памяти компьютера и отражающая реальную предметную область.</p>
+      <h3>🎯 Назначение БД</h3>
+      <ul>
+        <li><b>Хранение</b> больших объёмов структурированной информации</li>
+        <li><b>Быстрый поиск</b> и выборка нужных данных</li>
+        <li><b>Изменение</b> и обновление информации</li>
+        <li><b>Защита</b> данных от несанкционированного доступа</li>
+        <li><b>Совместный доступ</b> нескольких пользователей</li>
+      </ul>
+      <h3>💡 Примеры применения</h3>
+      <ul>
+        <li>🏫 Электронный журнал школы</li>
+        <li>🏥 Медицинская карта пациента</li>
+        <li>🛒 Каталог интернет-магазина</li>
+        <li>📚 Библиотечный каталог</li>
+        <li>🏦 Банковская система счетов</li>
+      </ul>
+      <div class="hint">💡 Главное отличие БД от простого списка — <b>структурированность</b> и возможность эффективного поиска.</div>
+    </div>
+    <div class="nav"><button class="btn" onclick="go(2)">Далее →</button></div>
+  </section>
+
+  <section class="step" data-s="2">
+    <div class="card">
+      <h2>📊 Виды баз данных</h2>
+      <p>БД классифицируют по <b>способу организации</b> данных. <b>Нажмите на карточку</b>, чтобы узнать подробнее.</p>
+      <div class="db-types" id="dbTypes">
+        <div class="db-card" data-db="hier">
+          <div class="hdr"><span class="ic">🌳</span> Иерархическая</div>
+          <div class="body">Данные организованы в виде <b>«дерева»</b>: один корневой элемент, от него отходят «ветви».
+            <div class="ex">📁 Пример: файловая система (папка → подпапка → файл).</div>
+          </div>
+        </div>
+        <div class="db-card" data-db="net">
+          <div class="hdr"><span class="ic">🕸️</span> Сетевая</div>
+          <div class="body">Элементы могут иметь <b>несколько «родителей»</b>. Сложная структура связей.
+            <div class="ex">📁 Пример: социальные связи (человек — член нескольких групп).</div>
+          </div>
+        </div>
+        <div class="db-card" data-db="rel">
+          <div class="hdr"><span class="ic">📋</span> Реляционная</div>
+          <div class="body">Данные хранятся в виде <b>таблиц</b>, связанных между собой. Самая распространённая модель!
+            <div class="ex">📁 Пример: MySQL, PostgreSQL, MS Access, SQLite.</div>
+          </div>
+        </div>
+        <div class="db-card" data-db="obj">
+          <div class="hdr"><span class="ic">🧩</span> Объектно-ориентированная</div>
+          <div class="body">Данные — как <b>объекты</b> со свойствами и методами.
+            <div class="ex">📁 Пример: ObjectDB, db4o.</div>
+          </div>
+        </div>
+        <div class="db-card" data-db="nosql">
+          <div class="hdr"><span class="ic">📦</span> NoSQL</div>
+          <div class="body">Документо-ориентированные, ключ-значение, графовые БД. Гибкая структура.
+            <div class="ex">📁 Пример: MongoDB, Redis, Cassandra.</div>
+          </div>
+        </div>
+      </div>
+      <div class="hint">💡 В школе изучают именно <b>реляционные</b> базы данных.</div>
+    </div>
+    <div class="nav">
+      <button class="btn ghost" onclick="go(1)">← Назад</button>
+      <button class="btn" onclick="go(3)">Далее →</button>
+    </div>
+  </section>
+
+  <section class="step" data-s="3">
+    <div class="card">
+      <h2>📋 Реляционная модель данных</h2>
+      <p><b>Реляционная модель</b> (от лат. <i>relatio</i> — отношение) — основа современных БД. Данные хранятся в <b>таблицах</b> (отношениях).</p>
+      <h3>Основные понятия</h3>
+      <ul>
+        <li><b>Таблица (отношение)</b> — структура данных с колонками и строками</li>
+        <li><b>Поле (атрибут, столбец)</b> — свойство объекта</li>
+        <li><b>Запись (кортеж, строка)</b> — один объект</li>
+        <li><b>Первичный ключ (PK)</b> — уникальное поле для идентификации записи</li>
+        <li><b>Внешний ключ (FK)</b> — поле, ссылающееся на PK другой таблицы</li>
+      </ul>
+      <div class="hint">💡 <b>PK</b> должен быть уникальным и непустым. <b>FK</b> обеспечивает связь между таблицами.</div>
+    </div>
+    <div class="nav">
+      <button class="btn ghost" onclick="go(2)">← Назад</button>
+      <button class="btn" onclick="go(4)">Далее →</button>
+    </div>
+  </section>
+
+  <section class="step" data-s="4">
+    <div class="card">
+      <h2>🔢 Типы данных в БД</h2>
+      <p>Каждое поле таблицы имеет <b>тип данных</b>:</p>
+      <ul>
+        <li><b>INTEGER</b> — целое число (1, 42, -7)</li>
+        <li><b>REAL / FLOAT</b> — дробное число (3.14, 4.5)</li>
+        <li><b>TEXT / VARCHAR</b> — текст («Иванов», «Москва»)</li>
+        <li><b>DATE</b> — дата (2026-09-19)</li>
+        <li><b>TIME</b> — время (14:30:00)</li>
+        <li><b>DATETIME</b> — дата и время</li>
+        <li><b>BOOLEAN</b> — логическое (TRUE / FALSE)</li>
+        <li><b>BLOB</b> — двоичные данные (картинки, файлы)</li>
+      </ul>
+      <div class="hint">💡 Правильный выбор типа — залог корректной работы БД и экономии памяти.</div>
+    </div>
+    <div class="nav">
+      <button class="btn ghost" onclick="go(3)">← Назад</button>
+      <button class="btn" onclick="go(5)">Далее →</button>
+    </div>
+  </section>
+
+  <section class="step" data-s="5">
+    <div class="card">
+      <h2>🗺️ Демонстрация схемы данных</h2>
+      <p>Рассмотрим реляционную БД <b>«Библиотека»</b>. Она состоит из трёх таблиц, связанных между собой.</p>
+      <p style="font-size:.88rem;color:var(--muted)">👆 <b>Нажмите на таблицу</b> — увидите её записи. <b>Нажмите на линию связи</b> — увидите, как она работает.</p>
+
+      <div class="schema-wrap">
+        <svg class="schema-svg" viewBox="0 0 800 620" xmlns="http://www.w3.org/2000/svg">
+          <path class="rel-line" data-rel="r-l" d="M 200 230 Q 200 340 340 420"/>
+          <text class="rel-label" x="210" y="320">1 : N</text>
+          <path class="rel-line" data-rel="b-l" d="M 600 230 Q 600 340 460 420"/>
+          <text class="rel-label" x="560" y="320">1 : N</text>
+
+          <g class="tbl-node" data-tbl="readers">
+            <rect class="tbl-bg" x="40" y="40" width="320" height="190" rx="10"/>
+            <rect class="tbl-head" x="40" y="40" width="320" height="36" rx="10"/>
+            <text class="tbl-title" x="200" y="64" text-anchor="middle">👥 Читатели (Readers)</text>
+            <text class="tbl-pk" x="55" y="98">🔑 PK</text>
+            <text class="tbl-field" x="100" y="98">id : INTEGER</text>
+            <text class="tbl-field" x="55" y="122">fio : TEXT</text>
+            <text class="tbl-field" x="55" y="146">phone : TEXT</text>
+            <text class="tbl-field" x="55" y="170">address : TEXT</text>
+            <text class="tbl-field" x="55" y="194">reg_date : DATE</text>
+            <text class="tbl-field" x="55" y="218" style="fill:var(--muted);font-style:italic;font-size:11px">Записей: 4</text>
+          </g>
+
+          <g class="tbl-node" data-tbl="books">
+            <rect class="tbl-bg" x="440" y="40" width="320" height="190" rx="10"/>
+            <rect class="tbl-head" x="440" y="40" width="320" height="36" rx="10"/>
+            <text class="tbl-title" x="600" y="64" text-anchor="middle">📚 Книги (Books)</text>
+            <text class="tbl-pk" x="455" y="98">🔑 PK</text>
+            <text class="tbl-field" x="500" y="98">id : INTEGER</text>
+            <text class="tbl-field" x="455" y="122">title : TEXT</text>
+            <text class="tbl-field" x="455" y="146">author : TEXT</text>
+            <text class="tbl-field" x="455" y="170">year : INTEGER</text>
+            <text class="tbl-field" x="455" y="194">isbn : TEXT</text>
+            <text class="tbl-field" x="455" y="218" style="fill:var(--muted);font-style:italic;font-size:11px">Записей: 5</text>
+          </g>
+
+          <g class="tbl-node" data-tbl="loans">
+            <rect class="tbl-bg" x="240" y="400" width="320" height="200" rx="10"/>
+            <rect class="tbl-head" x="240" y="400" width="320" height="36" rx="10"/>
+            <text class="tbl-title" x="400" y="424" text-anchor="middle">📋 Выдачи (Loans)</text>
+            <text class="tbl-pk" x="255" y="458">🔑 PK</text>
+            <text class="tbl-field" x="300" y="458">id : INTEGER</text>
+            <text class="tbl-fk" x="255" y="482">🔗 FK</text>
+            <text class="tbl-field" x="300" y="482">reader_id : INTEGER</text>
+            <text class="tbl-fk" x="255" y="506">🔗 FK</text>
+            <text class="tbl-field" x="300" y="506">book_id : INTEGER</text>
+            <text class="tbl-field" x="255" y="530">loan_date : DATE</text>
+            <text class="tbl-field" x="255" y="554">return_date : DATE</text>
+            <text class="tbl-field" x="255" y="578" style="fill:var(--muted);font-style:italic;font-size:11px">Записей: 6</text>
+          </g>
+
+          <text class="rel-label" x="400" y="30" text-anchor="middle" style="fill:var(--acc3)">M : N (через Loans)</text>
+        </svg>
+      </div>
+      <div class="schema-hint">💡 Таблица «Выдачи» связывает «Читателей» и «Книги» — реализует связь <b>многие-ко-многим</b>.</div>
+    </div>
+    <div class="nav">
+      <button class="btn ghost" onclick="go(4)">← Назад</button>
+      <button class="btn" onclick="go(6)">Далее →</button>
+    </div>
+  </section>
+
+  <section class="step" data-s="6">
+    <div class="card">
+      <h2>💬 Язык SQL: запросы к БД</h2>
+      <p>Для работы с реляционными БД используется язык <b>SQL</b> (Structured Query Language). Вот примеры запросов к нашей БД «Библиотека»:</p>
+
+      <div class="sql-box">
+        <div class="tag">SELECT</div>
+        <code><span class="sql-key">SELECT</span> fio, phone
+<span class="sql-key">FROM</span> Readers
+<span class="sql-key">WHERE</span> reg_date &gt; <span class="sql-str">'2025-01-01'</span>;</code>
+      </div>
+      <p style="font-size:.85rem;color:var(--muted)">→ Выбрать всех читателей, зарегистрированных после 1 января 2025.</p>
+
+      <div class="sql-box">
+        <div class="tag">JOIN</div>
+        <code><span class="sql-key">SELECT</span> R.fio, B.title, L.loan_date
+<span class="sql-key">FROM</span> Loans L
+<span class="sql-key">JOIN</span> Readers R <span class="sql-key">ON</span> L.reader_id = R.id
+<span class="sql-key">JOIN</span> Books B <span class="sql-key">ON</span> L.book_id = B.id;</code>
+      </div>
+      <p style="font-size:.85rem;color:var(--muted)">→ Кто какую книгу брал и когда. Используется связь через таблицу <b>Loans</b>.</p>
+
+      <div class="hint">💡 <b>JOIN</b> — ключевое слово, которое объединяет таблицы по связям (FK → PK).</div>
+    </div>
+    <div class="nav">
+      <button class="btn ghost" onclick="go(5)">← Назад</button>
+      <button class="btn" onclick="go(7)">Далее →</button>
+    </div>
+  </section>
+
+  <section class="step" data-s="7">
+    <div class="card">
+      <h2>🛠️ Этапы создания базы данных</h2>
+      <ol>
+        <li style="margin:6px 0"><b>Планирование</b> — определение цели и предметной области</li>
+        <li style="margin:6px 0"><b>Проектирование</b> — структура: таблицы, поля, типы, связи</li>
+        <li style="margin:6px 0"><b>Моделирование</b> — инфологическая и даталогическая модели</li>
+        <li style="margin:6px 0"><b>Реализация</b> — создание БД в СУБД</li>
+        <li style="margin:6px 0"><b>Наполнение</b> — ввод реальных данных</li>
+        <li style="margin:6px 0"><b>Тестирование</b> — проверка запросов</li>
+        <li style="margin:6px 0"><b>Эксплуатация</b> — использование и резервное копирование</li>
+      </ol>
+      <h3>🔑 Ключевые термины</h3>
+      <ul>
+        <li><b>СУБД</b> — программа для работы с БД (MS Access, MySQL, PostgreSQL)</li>
+        <li><b>SQL</b> — язык запросов</li>
+        <li><b>Запрос</b> — команда на выборку/изменение данных</li>
+      </ul>
+    </div>
+    <div class="nav">
+      <button class="btn ghost" onclick="go(6)">← Назад</button>
+      <button class="btn" onclick="go(8)">Далее →</button>
+    </div>
+  </section>
+
+  <section class="step" data-s="8">
+    <div class="card">
+      <h2>❓ Тест 1. Виды БД</h2>
+      <p>В каком виде базы данных данные организованы в виде <b>таблиц</b>?</p>
+      <div class="opts" id="q1">
+        <button class="opt" data-ok="0">Иерархическая</button>
+        <button class="opt" data-ok="0">Сетевая</button>
+        <button class="opt" data-ok="1">Реляционная</button>
+        <button class="opt" data-ok="0">Объектно-ориентированная</button>
+      </div>
+      <div id="fb1"></div>
+    </div>
+    <div class="nav">
+      <button class="btn ghost" onclick="go(7)">← Назад</button>
+      <button class="btn" onclick="go(9)">Далее →</button>
+    </div>
+  </section>
+
+  <section class="step" data-s="9">
+    <div class="card">
+      <h2>❓ Тест 2. Связи</h2>
+      <p>В схеме «Библиотека» один <b>читатель</b> может взять <b>несколько книг</b>, а одну <b>книгу</b> могут брать <b>несколько читателей</b>. Какой тип связи между «Читателями» и «Книгами»?</p>
+      <div class="opts" id="q2">
+        <button class="opt" data-ok="0">1 : 1 (один-к-одному)</button>
+        <button class="opt" data-ok="0">1 : N (один-ко-многим)</button>
+        <button class="opt" data-ok="1">M : N (многие-ко-многим)</button>
+        <button class="opt" data-ok="0">Это не связь</button>
+      </div>
+      <div id="fb2"></div>
+    </div>
+    <div class="nav">
+      <button class="btn ghost" onclick="go(8)">← Назад</button>
+      <button class="btn" onclick="go(10)">Далее →</button>
+    </div>
+  </section>
+
+  <section class="step" data-s="10">
+    <div class="card">
+      <h2>❓ Тест 3. Ключи</h2>
+      <p>Какое поле в таблице «Читатели» является <b>первичным ключом (PK)</b>?</p>
+      <div class="opts" id="q3">
+        <button class="opt" data-ok="0">fio (ФИО)</button>
+        <button class="opt" data-ok="1">id</button>
+        <button class="opt" data-ok="0">phone (телефон)</button>
+        <button class="opt" data-ok="0">address (адрес)</button>
+      </div>
+      <div id="fb3"></div>
+    </div>
+    <div class="nav">
+      <button class="btn ghost" onclick="go(9)">← Назад</button>
+      <button class="btn" onclick="go(11)">Далее →</button>
+    </div>
+  </section>
+
+  <section class="step" data-s="11">
+    <div class="card">
+      <h2>🧩 Практика: определи тип связи</h2>
+      <p>Определите тип связи между сущностями.</p>
+      <div id="relQuiz"></div>
+      <div class="nav"><button class="btn" onclick="checkRel()">Проверить ответы</button></div>
+      <div id="fbRel"></div>
+    </div>
+    <div class="nav">
+      <button class="btn ghost" onclick="go(10)">← Назад</button>
+      <button class="btn ok" onclick="finish()">🎓 Завершить и получить сертификат</button>
+    </div>
+  </section>
+
+  <section class="step" data-s="12">
+    <div class="cert" id="certBlock">
+      <div class="label">сертификат</div>
+      <h2>об успешном прохождении интерактивного урока</h2>
+      <div style="color:#64748b;font-size:.92rem">по теме</div>
+      <div class="topic">«Создание базы данных:<br>назначение, виды, модель»</div>
+      <div style="color:#94a3b8;font-size:.88rem;margin-top:12px">выдан</div>
+      <div class="uname" id="certName">—</div>
+      <div class="stars" id="certStars">★★★★★</div>
+      <div class="grade-big" id="certGrade">5</div>
+      <div style="color:#64748b;font-size:.9rem">Итоговая оценка (из 5)</div>
+      <div class="seal">БД<br>2026</div>
+      <div class="date" id="certDate"></div>
+    </div>
+    <div class="card">
+      <h3>📊 Подробные результаты</h3>
+      <p id="summary">—</p>
+      <div class="nav no-print">
+        <button class="btn ghost" onclick="restart()">🔄 Пройти заново</button>
+        <button class="btn" onclick="window.print()">🖨️ Печать / PDF</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const STEPS=12;
+let cur=1, score=0, attempts=0;
+const done=new Set();
+let userName='';
+
+const DB_DATA={
+  readers:{
+    title:'👥 Таблица «Читатели» (Readers)',
+    cols:['id','ФИО','Телефон','Адрес','Дата рег.'],
+    rows:[
+      [1,'Иванов Иван','+7(900)111-22-33','ул. Ленина, 5','2024-09-01'],
+      [2,'Петрова Мария','+7(900)222-33-44','пр. Мира, 12','2024-11-15'],
+      [3,'Сидоров Алексей','+7(900)333-44-55','ул. Садовая, 8','2025-02-20'],
+      [4,'Кузнецова Ольга','+7(900)444-55-66','ул. Школьная, 3','2025-05-10']
+    ]
+  },
+  books:{
+    title:'📚 Таблица «Книги» (Books)',
+    cols:['id','Название','Автор','Год','ISBN'],
+    rows:[
+      [101,'Война и мир','Л. Толстой',1869,'978-5-17-001'],
+      [102,'Преступление и наказание','Ф. Достоевский',1866,'978-5-17-002'],
+      [103,'Евгений Онегин','А. Пушкин',1833,'978-5-17-003'],
+      [104,'Мастер и Маргарита','М. Булгаков',1967,'978-5-17-004'],
+      [105,'Капитанская дочка','А. Пушкин',1836,'978-5-17-005']
+    ]
+  },
+  loans:{
+    title:'📋 Таблица «Выдачи» (Loans)',
+    cols:['id','reader_id','book_id','Дата выдачи','Дата возврата'],
+    rows:[
+      [1,1,101,'2025-09-01','2025-09-20'],
+      [2,1,103,'2025-09-15','2025-10-05'],
+      [3,2,102,'2025-10-01','2025-10-25'],
+      [4,3,104,'2025-10-10','2025-11-01'],
+      [5,2,105,'2025-11-05','2025-11-28'],
+      [6,4,101,'2025-11-15','—']
+    ],
+    hlCols:[1,2]
+  }
+};
+
+$('nameInput').addEventListener('keydown',e=>{if(e.key==='Enter')startLesson()});
+function startLesson(){
+  const v=$('nameInput').value.trim();
+  if(v.length<2){$('nameErr').style.display='block';$('nameInput').focus();return}
+  userName=v;
+  $('nameModal').style.display='none';
+  $('mainApp').style.display='block';
+  go(1);
+}
+
+function go(n){
+  document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
+  document.querySelector(`[data-s="${n}"]`).classList.add('active');
+  cur=n;
+  $('progBar').style.width=(n/STEPS*100)+'%';
+  $('progLabel').textContent=`Шаг ${n} из ${STEPS}`;
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(n===5 && !document.querySelector('.schema-svg').dataset.set) initSchema();
+  if(n===11 && !$('relQuiz').dataset.set) initRelQuiz();
+}
+
+document.querySelectorAll('.db-card').forEach(c=>{
+  c.addEventListener('click',()=>c.classList.toggle('open'));
+});
+
+function initSchema(){
+  document.querySelector('.schema-svg').dataset.set='1';
+
+  document.querySelectorAll('.tbl-node').forEach(node=>{
+    node.addEventListener('click',()=>{
+      document.querySelectorAll('.tbl-node').forEach(n=>n.classList.remove('active'));
+      node.classList.add('active');
+      showRecords(node.dataset.tbl);
+    });
+  });
+
+  document.querySelectorAll('.rel-line').forEach(line=>{
+    line.addEventListener('click',e=>{
+      e.stopPropagation();
+      document.querySelectorAll('.rel-line').forEach(l=>l.classList.remove('active'));
+      line.classList.add('active');
+      const rel=line.dataset.rel;
+      if(rel==='r-l'){
+        showRecords('loans','reader_id');
+      }else if(rel==='b-l'){
+        showRecords('loans','book_id');
+      }
+    });
+  });
+}
+
+function showRecords(tblName,hlColName){
+  const data=DB_DATA[tblName];
+  if(!data)return;
+  $('recTitle').textContent=data.title;
+  let html='<div style="overflow-x:auto"><table class="records-tbl"><thead><tr>';
+  data.cols.forEach(c=>html+=`<th>${c}</th>`);
+  html+='</tr></thead><tbody>';
+  data.rows.forEach(r=>{
+    html+='<tr>';
+    r.forEach((cell,i)=>{
+      const isHl=data.hlCols && data.hlCols.includes(i);
+      const colIsHl=hlColName && data.cols[i]===hlColName;
+      const cls=(isHl||colIsHl)?'hl':'';
+      html+=`<td class="${cls}">${cell}</td>`;
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table></div>';
+  if(tblName==='loans'){
+    html+='<div class="hint" style="margin-top:10px">💡 Колонки <b style="color:#b45309">reader_id</b> и <b style="color:#b45309">book_id</b> — это <b>внешние ключи (FK)</b>. Они ссылаются на id в таблицах «Читатели» и «Книги».</div>';
+  }
+  $('recContent').innerHTML=html;
+  $('recordsModal').classList.add('show');
+}
+function closeRecords(){
+  $('recordsModal').classList.remove('show');
+  document.querySelectorAll('.tbl-node').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.rel-line').forEach(l=>l.classList.remove('active'));
+}
+$('recordsModal').addEventListener('click',e=>{
+  if(e.target===$('recordsModal'))closeRecords();
+});
+
+function setupQ(id,fbId){
+  document.querySelectorAll(`#${id} .opt`).forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      if(done.has(id))return;
+      done.add(id);attempts++;
+      const ok=btn.dataset.ok==='1';
+      if(ok){btn.classList.add('correct');score++;
+        $(fbId).innerHTML='<div class="fb ok">✅ Верно! Отличная работа.</div>';
+      }else{btn.classList.add('wrong');
+        $(fbId).innerHTML='<div class="fb bad">❌ Неверно. Правильный ответ выделен выше.</div>';
+        document.querySelectorAll(`#${id} .opt`).forEach(b=>{if(b.dataset.ok==='1')b.classList.add('correct')});
+      }
+      document.querySelectorAll(`#${id} .opt`).forEach(b=>b.classList.add('locked'));
+    });
+  });
+}
+setupQ('q1','fb1');
+setupQ('q2','fb2');
+setupQ('q3','fb3');
+
+const REL_TASKS=[
+  {a:'👨‍👩‍👧 Родитель',b:'👶 Ребёнок',ans:'1n',hint:'У родителя может быть несколько детей'},
+  {a:'👤 Человек',b:'🛂 Паспорт',ans:'11',hint:'У человека один паспорт'},
+  {a:'👨‍🎓 Студент',b:'📖 Предмет',ans:'mn',hint:'Студент сдаёт много предметов, предмет сдают много студентов'},
+  {a:'📚 Книга',b:'📖 Экземпляр',ans:'1n',hint:'У одной книги — много экземпляров в библиотеке'}
+];
+function initRelQuiz(){
+  $('relQuiz').dataset.set='1';
+  let html='';
+  REL_TASKS.forEach((t,i)=>{
+    html+=`<div style="background:var(--glass);padding:12px;border-radius:12px;margin-bottom:10px;border:1px solid #e2e8f0">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+        <span style="font-weight:700">${t.a}</span>
+        <span style="color:var(--acc)">↔</span>
+        <span style="font-weight:700">${t.b}</span>
+      </div>
+      <select id="rel_${i}">
+        <option value="">— выберите тип связи —</option>
+        <option value="11">1 : 1 (один-к-одному)</option>
+        <option value="1n">1 : N (один-ко-многим)</option>
+        <option value="mn">M : N (многие-ко-многим)</option>
+      </select>
+    </div>`;
+  });
+  $('relQuiz').innerHTML=html;
+}
+function checkRel(){
+  if(done.has('rel'))return;
+  attempts++;
+  let correct=0;
+  REL_TASKS.forEach((t,i)=>{
+    const v=$(`rel_${i}`).value;
+    if(v===t.ans)correct++;
+  });
+  if(correct===REL_TASKS.length){
+    score++;done.add('rel');
+    $('fbRel').innerHTML=`<div class="fb ok">✅ Все ${correct} из ${REL_TASKS.length} ответов верны! Отлично!</div>`;
+  }else{
+    let html=`<div class="fb bad">❌ Верно: ${correct} из ${REL_TASKS.length}. Правильные ответы:</div><ul style="margin-top:8px;font-size:.88rem">`;
+    REL_TASKS.forEach((t,i)=>{
+      const v=$(`rel_${i}`).value;
+      const ok=v===t.ans;
+      const lbl={'11':'1:1','1n':'1:N','mn':'M:N'}[t.ans];
+      html+=`<li style="color:${ok?'var(--ok)':'var(--bad)'}">${t.a} ↔ ${t.b} → <b>${lbl}</b> (${t.hint})</li>`;
+    });
+    html+='</ul>';
+    $('fbRel').innerHTML=html;
+  }
+}
+
+function finish(){
+  const MAX=4;
+  const r=score/MAX;
+  let g,s;
+  if(r>=.95){g=5;s='★★★★★'}
+  else if(r>=.75){g=4;s='★★★★☆'}
+  else if(r>=.5){g=3;s='★★★☆☆'}
+  else if(r>=.25){g=2;s='★★☆☆☆'}
+  else{g=1;s='★☆☆☆☆'}
+
+  $('certName').textContent=userName;
+  $('certGrade').textContent=g;
+  $('certStars').textContent=s;
+
+  const now=new Date();
+  const months=['января','февраля','марта','апреля','мая','июня',
+    'июля','августа','сентября','октября','ноября','декабря'];
+  $('certDate').textContent=`${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()} г.`;
+
+  const msg=g===5?'🏆 Превосходно! Вы отлично освоили тему баз данных!':
+    g===4?'👍 Хороший результат! Вы уверенно ориентируетесь в БД.':
+    g===3?'📘 Неплохо, но стоит повторить виды связей и типы данных.':
+    g===2?'📖 Есть над чем поработать. Перечитайте теорию.':
+    '📕 Рекомендуем пройти урок ещё раз.';
+
+  $('summary').innerHTML=
+    `Правильных ответов: <b>${score} из ${MAX}</b><br>`+
+    `Оценка: <b>${g} / 5</b><br><br>${msg}`;
+
+  go(12);
+}
+
+function restart(){
+  score=0;attempts=0;done.clear();
+  document.querySelectorAll('.opt').forEach(b=>{
+    b.classList.remove('correct','wrong','locked')});
+  ['fb1','fb2','fb3','fbRel'].forEach(id=>$(id).innerHTML='');
+  delete $('relQuiz').dataset.set;
+  $('relQuiz').innerHTML='';
+  document.querySelectorAll('.db-card').forEach(c=>c.classList.remove('open'));
+  document.querySelectorAll('.tbl-node').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.rel-line').forEach(l=>l.classList.remove('active'));
+  go(1);
+}
+</script>
+</body>
+</html>

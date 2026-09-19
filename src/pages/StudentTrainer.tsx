@@ -29,7 +29,8 @@ type TrainerKey =
   | "os-components"
   | "media-access"
   | "media-access-test"
-  | "digital-info";
+  | "digital-info"
+  | "database-lesson";
 
 interface TrainerItem {
   key: TrainerKey;
@@ -123,6 +124,14 @@ const TRAINERS: TrainerItem[] = [
     title: "Компьютер и цифровая информация",
     description: "Урок из 10 шагов: двоичный конвертер, пиксельный редактор, схема ПК и именной сертификат",
     accent: "#7C5CFC",
+    paid: true,
+  },
+  {
+    key: "database-lesson",
+    icon: "🗄️",
+    title: "Создание базы данных",
+    description: "Урок из 12 шагов: виды БД, кликабельная схема «Библиотека», SQL-запросы, практика и сертификат",
+    accent: "#2563EB",
     paid: true,
   },
 ];
@@ -325,6 +334,14 @@ const StudentTrainer = () => {
                   <iframe
                     src="/computer-digital-info.html"
                     title="Компьютер и цифровое представление информации"
+                    className="w-full min-w-[360px] h-[1100px] rounded-xl border-0"
+                  />
+                </div>
+              ) : active === "database-lesson" ? (
+                <div className="rounded-2xl border border-border bg-card p-3 md:p-5 shadow-sm max-w-[900px] overflow-x-auto">
+                  <iframe
+                    src="/database-lesson.html"
+                    title="Создание базы данных: назначение, виды, модель"
                     className="w-full min-w-[360px] h-[1100px] rounded-xl border-0"
                   />
                 </div>
