@@ -28,7 +28,8 @@ type TrainerKey =
   | "python-java-types"
   | "os-components"
   | "media-access"
-  | "media-access-test";
+  | "media-access-test"
+  | "digital-info";
 
 interface TrainerItem {
   key: TrainerKey;
@@ -114,6 +115,14 @@ const TRAINERS: TrainerItem[] = [
     title: "Тест: методы доступа к сети",
     description: "9 заданий на 13 баллов: выбор ответа, соответствие и ситуационная задача с разбором и оценкой",
     accent: "#0369A1",
+    paid: true,
+  },
+  {
+    key: "digital-info",
+    icon: "💻",
+    title: "Компьютер и цифровая информация",
+    description: "Урок из 10 шагов: двоичный конвертер, пиксельный редактор, схема ПК и именной сертификат",
+    accent: "#7C5CFC",
     paid: true,
   },
 ];
@@ -309,6 +318,14 @@ const StudentTrainer = () => {
                     src="/media-access-test.html"
                     title="Тест: методы доступа к сети"
                     className="w-full min-w-[500px] h-[1200px] rounded-xl border-0"
+                  />
+                </div>
+              ) : active === "digital-info" ? (
+                <div className="rounded-2xl border border-border bg-card p-3 md:p-5 shadow-sm max-w-[900px] overflow-x-auto">
+                  <iframe
+                    src="/computer-digital-info.html"
+                    title="Компьютер и цифровое представление информации"
+                    className="w-full min-w-[360px] h-[1100px] rounded-xl border-0"
                   />
                 </div>
               ) : (
