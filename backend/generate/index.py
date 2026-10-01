@@ -552,6 +552,35 @@ def build_task_card_prompt(f: dict) -> str:
 {{"goal": "сформулированная цель задания одним предложением", "task": "полный текст задания для обучающегося", "criteria": "критерии оценки"}}"""
 
 
+def build_extracurricular_prompt(data: dict) -> str:
+    rows = data.get('rows') or []
+    lines = []
+    for r in rows:
+        total = r.get('total') or 0
+        participants = r.get('participants') or 0
+        pct = round(participants / total * 100, 1) if total else 0
+        lines.append(
+            f"{r.get('year', '')}; {r.get('date', '')}; дисциплина «{r.get('subject', '')}»; "
+            f"группа {r.get('group', '')}; в группе {total} чел.; вид «{r.get('type', '')}»; "
+            f"{r.get('desc', '')}; участников {participants} ({pct}%)"
+        )
+    rows_block = "\n".join(lines) if lines else "нет данных"
+
+    return f"""Ты опытный методист и заместитель директора по воспитательной работе. На основе учёта внеаудиторных мероприятий составь развёрнутую аналитическую справку на русском языке.
+
+Данные по мероприятиям (учебный год; дата; дисциплина; группа; численность; вид деятельности; описание; участники и процент охвата):
+{rows_block}
+
+Составь справку из следующих разделов (используй именно эти заголовки):
+1. Общие количественные показатели — сколько мероприятий, групп, дисциплин, суммарный охват и средний процент вовлечённости.
+2. Структура по видам деятельности — какие форматы преобладают, насколько сбалансирована работа.
+3. Анализ уровня вовлечённости — где охват высокий (75% и выше), средний (40-74%), низкий (менее 40%), с конкретными примерами и возможными причинами.
+4. Содержательный анализ — какие направления воспитательной и профессионально-ориентированной работы реализуются.
+5. Выводы и рекомендации — сильные стороны, зоны роста и конкретные шаги по повышению вовлечённости обучающихся.
+
+Пиши развёрнуто, конкретно, по-деловому, без markdown-разметки (без **, #), обычным текстом с нумерацией разделов."""
+
+
 CHAT_SYSTEM_PROMPT = """Ты ИИ-помощник УрокАИ для учителей и педагогов. Ты дружелюбно и по-деловому помогаешь с методическими вопросами: как составить план урока, придумать игру, оценить работу учеников, подобрать технологию обучения и т.д.
 
 Правила:
@@ -876,6 +905,21 @@ def handler(event: dict, context) -> dict:
                 'task': parsed.get('task') or '',
                 'criteria': parsed.get('criteria') or '',
             }, ensure_ascii=False)}
+
+        elif action == 'extracurricular_analysis':
+            if not is_user_paid(event):
+                return {'statusCode': 403, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ-справка по внеаудиторной деятельности доступна только по платной подписке'})}
+
+            data = body.get('data') or {}
+            if not data.get('rows'):
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Недостаточно данных для анализа'})}
+
+            content = call_ai([
+                {'role': 'system', 'content': 'Ты опытный методист и специалист по воспитательной работе. Отвечай развёрнуто, по-деловому и всегда на русском языке.'},
+                {'role': 'user', 'content': build_extracurricular_prompt(data)},
+            ], temperature=0.6)
+
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'content': content}, ensure_ascii=False)}
 
         elif action == 'extract_text':
             file_base64 = body.get('file_base64') or ''

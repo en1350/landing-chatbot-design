@@ -9,7 +9,8 @@ interface QualityAnalyticsPromoProps {
 const FEATURES = [
   "Диагностика по 5-балльной шкале",
   "Аналитика по группе и по каждому студенту",
-  "План коррекционной работы от ИИ",
+  "Учёт охвата внеаудиторных мероприятий",
+  "План коррекционной работы и справки от ИИ",
 ];
 
 const TOOLS = [
@@ -25,6 +26,12 @@ const TOOLS = [
     title: "Качественный анализ по предметам и дисциплинам",
     gradient: "from-[#7c2d12] to-[#c2410c]",
   },
+  {
+    to: "/vneauditornaya-deyatelnost",
+    icon: "🎯",
+    title: "Справка по внеаудиторной деятельности",
+    gradient: "from-[#1e8449] to-[#27ae60]",
+  },
 ];
 
 const QualityAnalyticsPromo = ({ id }: QualityAnalyticsPromoProps) => {
@@ -39,9 +46,9 @@ const QualityAnalyticsPromo = ({ id }: QualityAnalyticsPromoProps) => {
             Аналитика качества обученности
           </h2>
           <p className="text-muted-foreground mt-4 leading-relaxed max-w-md">
-            Уровневая аналитика качества освоения предметных умений и автоматизированный расчёт
-            качества знаний по группам и дисциплинам: сводные таблицы, динамика, план коррекционной
-            работы от ИИ.
+            Уровневая аналитика качества освоения предметных умений, автоматизированный расчёт
+            качества знаний по группам и дисциплинам и учёт вовлечения студентов во внеаудиторную
+            деятельность: сводные таблицы, динамика, готовые справки от ИИ.
           </p>
           <ul className="mt-6 space-y-3">
             {FEATURES.map((t) => (
@@ -53,7 +60,7 @@ const QualityAnalyticsPromo = ({ id }: QualityAnalyticsPromoProps) => {
           </ul>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid sm:grid-cols-2 gap-4 [&>*:last-child:nth-child(odd)]:sm:col-span-2">
           {TOOLS.map((tool, i) => (
             <Link
               key={tool.to}

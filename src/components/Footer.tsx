@@ -55,6 +55,11 @@ const Footer = ({ onOpenProfile, onOpenRandomizer, onOpenAntiplagiat }: FooterPr
                 Качественный анализ по дисциплинам
               </Link>
             </li>
+            <li>
+              <Link to="/vneauditornaya-deyatelnost" className="hover:text-foreground transition-colors">
+                Внеаудиторная деятельность
+              </Link>
+            </li>
             <li><a href="#chat-anchor" className="hover:text-foreground transition-colors">ИИ-помощник</a></li>
             <li>
               <button onClick={onOpenProfile} className="hover:text-foreground transition-colors">

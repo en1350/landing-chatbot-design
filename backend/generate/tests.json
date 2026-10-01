@@ -114,6 +114,15 @@
       "bodyMatcher": "partial"
     },
     {
+      "name": "Extracurricular analysis without paid subscription returns 403",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "extracurricular_analysis", "data": {"rows": [{"subject": "test", "group": "1", "total": 10, "participants": 5}]}},
+      "expectedStatus": 403,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    },
+    {
       "name": "KZ analysis without paid subscription returns 403",
       "method": "POST",
       "path": "/",
