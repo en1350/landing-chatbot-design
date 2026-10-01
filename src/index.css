@@ -122,3 +122,21 @@
     background-size: 22px 22px;
   }
 }
+
+@media print {
+  body {
+    background: #fff !important;
+  }
+  .no-print,
+  header,
+  footer {
+    display: none !important;
+  }
+  #lesson-card-print {
+    border: none !important;
+    padding: 0 !important;
+  }
+  .lg\:grid-cols-2 {
+    display: block !important;
+  }
+}

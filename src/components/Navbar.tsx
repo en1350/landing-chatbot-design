@@ -69,6 +69,12 @@ const Navbar = ({
             </button>
           ))}
           <Link
+            to="/konstruktor-uroka"
+            className="story-link px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
+          >
+            Конструктор урока
+          </Link>
+          <Link
             to="/trenazher-dlya-uchenikov"
             className="story-link px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
           >
@@ -107,6 +113,13 @@ const Navbar = ({
                   {l.label}
                 </button>
               ))}
+              <Link
+                to="/konstruktor-uroka"
+                onClick={() => setOpen(false)}
+                className="text-left px-3 py-3 rounded-lg text-base font-medium hover:bg-accent transition-colors"
+              >
+                Конструктор урока
+              </Link>
               <Link
                 to="/trenazher-dlya-uchenikov"
                 onClick={() => setOpen(false)}

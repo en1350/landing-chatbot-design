@@ -10,6 +10,7 @@ import ResetPassword from "./pages/ResetPassword";
 import StudentTrainer from "./pages/StudentTrainer";
 import QualityAnalytics from "./pages/QualityAnalytics";
 import QualityAnalysisTool from "./pages/QualityAnalysisTool";
+import LessonCardBuilder from "./pages/LessonCardBuilder";
 import { UsageProvider } from "./context/UsageContext";
 import { AuthProvider } from "./context/AuthContext";
 
@@ -29,6 +30,7 @@ const App = () => (
               <Route path="/trenazher-dlya-uchenikov" element={<StudentTrainer />} />
               <Route path="/analitika-kachestva" element={<QualityAnalytics />} />
               <Route path="/kachestvo-znaniy" element={<QualityAnalysisTool />} />
+              <Route path="/konstruktor-uroka" element={<LessonCardBuilder />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

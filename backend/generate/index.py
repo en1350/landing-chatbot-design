@@ -463,6 +463,59 @@ def build_kz_analysis_prompt(data: dict) -> str:
 Пиши развёрнуто, конкретно, по-деловому, без markdown-разметки (без **, #), обычным текстом с нумерацией разделов."""
 
 
+LESSON_CARD_STAGES = [
+    ('s1', 'Приветствие'),
+    ('s2', 'Актуализация'),
+    ('s3', 'Повторение пройденного материала'),
+    ('s4', 'Сообщение новой темы'),
+    ('s5', 'Закрепление изученной темы'),
+    ('s6', 'Рефлексия'),
+    ('s7', 'Домашнее задание'),
+]
+
+
+def build_lesson_card_prompt(f: dict) -> str:
+    discipline = (f.get('discipline') or '').strip() or 'дисциплина не указана'
+    group = (f.get('group') or '').strip() or 'группа не указана'
+    topic = (f.get('topic') or '').strip() or 'тема не указана'
+    goal = (f.get('goal') or '').strip()
+    duration = str(f.get('duration') or '45')
+    lesson_type = (f.get('lessonType') or 'Теоретическое занятие').strip()
+    competencies = f.get('competencies') or []
+    technologies = f.get('technologies') or []
+    times = f.get('times') or {}
+
+    comp_block = "\n".join(f"- {c}" for c in competencies) if competencies else "не выбраны"
+    tech_block = ", ".join(technologies) if technologies else "не выбраны"
+    goal_line = goal if goal else "цель не сформулирована преподавателем — сформулируй её сам, исходя из темы"
+
+    stage_lines = []
+    for key, name in LESSON_CARD_STAGES:
+        mins = times.get(key) or 0
+        stage_lines.append(f'"{key}" — этап «{name}», {mins} мин')
+    stages_block = "\n".join(stage_lines)
+
+    return f"""Ты опытный методист-педагог СПО. Составь содержание карточки урока на русском языке.
+
+Дисциплина: {discipline}
+Класс / группа: {group}
+Тема урока: {topic}
+Цель урока: {goal_line}
+Время урока: {duration} минут
+Тип занятия: {lesson_type}
+Формируемые компетенции:
+{comp_block}
+Технологии обучения: {tech_block}
+
+Этапы урока с отведённым временем:
+{stages_block}
+
+Для КАЖДОГО этапа напиши содержание: конкретные действия преподавателя и обучающихся, применяемые приёмы и методы, уместные именно для темы «{topic}» и дисциплины «{discipline}». Учитывай тип занятия ({lesson_type}) и выбранные технологии обучения. Объём каждого этапа — 2-5 содержательных предложений, соразмерно отведённому времени. Без общих фраз и без markdown-разметки.
+
+Верни ответ СТРОГО в формате JSON без markdown, пояснений и текста до/после:
+{{"goal": "сформулированная цель урока одним предложением", "stages": {{"s1": "текст", "s2": "текст", "s3": "текст", "s4": "текст", "s5": "текст", "s6": "текст", "s7": "текст"}}}}"""
+
+
 CHAT_SYSTEM_PROMPT = """Ты ИИ-помощник УрокАИ для учителей и педагогов. Ты дружелюбно и по-деловому помогаешь с методическими вопросами: как составить план урока, придумать игру, оценить работу учеников, подобрать технологию обучения и т.д.
 
 Правила:
@@ -732,6 +785,33 @@ def handler(event: dict, context) -> dict:
             ], temperature=0.6)
 
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'content': content}, ensure_ascii=False)}
+
+        elif action == 'lesson_card':
+            fields = body.get('fields') or {}
+            if not (fields.get('topic') or '').strip():
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите тему урока'})}
+
+            raw = call_ai([
+                {'role': 'system', 'content': 'Ты профессиональный педагог-методист. Отвечаешь строго валидным JSON без markdown и пояснений, всегда на русском языке.'},
+                {'role': 'user', 'content': build_lesson_card_prompt(fields)},
+            ], temperature=0.7)
+
+            cleaned = raw.strip()
+            if cleaned.startswith('```'):
+                cleaned = cleaned.split('```')[1]
+                if cleaned.startswith('json'):
+                    cleaned = cleaned[4:]
+                cleaned = cleaned.strip()
+
+            try:
+                parsed = json.loads(cleaned)
+            except json.JSONDecodeError:
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ вернул некорректный ответ, попробуйте снова'})}
+
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({
+                'goal': parsed.get('goal') or '',
+                'stages': parsed.get('stages') or {},
+            }, ensure_ascii=False)}
 
         elif action == 'extract_text':
             file_base64 = body.get('file_base64') or ''
