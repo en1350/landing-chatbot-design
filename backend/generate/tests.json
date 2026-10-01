@@ -105,6 +105,15 @@
       "bodyMatcher": "partial"
     },
     {
+      "name": "Task card without topic returns 400",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "task_card", "fields": {"topic": ""}},
+      "expectedStatus": 400,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    },
+    {
       "name": "KZ analysis without paid subscription returns 403",
       "method": "POST",
       "path": "/",

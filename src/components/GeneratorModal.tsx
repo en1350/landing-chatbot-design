@@ -22,6 +22,7 @@ import { useAuth, AUTH_URL, GeneratorType } from "@/context/AuthContext";
 import { useUsage } from "@/context/UsageContext";
 import { downloadTxt, downloadDocx } from "@/lib/download";
 import { saveLessonCardPrefill, matchTechnologies } from "@/components/lesson-card/prefill";
+import { saveTaskCardPrefill, COMPONENT_TO_TASK_TYPE } from "@/components/task-card/taskCardConfig";
 
 const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
 
@@ -355,6 +356,18 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
       technologies: matchTechnologies(lessonFields.technology),
     });
     window.location.href = "/konstruktor-uroka";
+  };
+
+  const handleOpenTaskCardBuilder = () => {
+    saveTaskCardPrefill({
+      discipline: taskFields.subject,
+      group: "",
+      topic: taskFields.topic,
+      goal: taskFields.goal,
+      taskType: COMPONENT_TO_TASK_TYPE[taskFields.component] || "Репродуктивное",
+      competencies: taskFields.competencies,
+    });
+    window.location.href = "/konstruktor-zadaniy";
   };
 
   const handleDownloadSelfAnalysis = () => {
@@ -953,6 +966,17 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
                 </Button>
               </>
             )}
+
+            {type === "task" && (
+              <Button
+                variant="outline"
+                className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
+                onClick={handleOpenTaskCardBuilder}
+              >
+                <Icon name="LayoutTemplate" size={16} />
+                Открыть в конструкторе заданий
+              </Button>
+            )}
           </div>
         ) : (
           <div className="mt-2 space-y-4 animate-fade-in">
@@ -1079,6 +1103,17 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
                   Шаблон самоанализа по уроку
                 </Button>
               </>
+            )}
+
+            {type === "task" && (
+              <Button
+                variant="outline"
+                className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
+                onClick={handleOpenTaskCardBuilder}
+              >
+                <Icon name="LayoutTemplate" size={16} />
+                Оформить карточку задания
+              </Button>
             )}
           </div>
         )}

@@ -516,6 +516,42 @@ def build_lesson_card_prompt(f: dict) -> str:
 {{"goal": "сформулированная цель урока одним предложением", "stages": {{"s1": "текст", "s2": "текст", "s3": "текст", "s4": "текст", "s5": "текст", "s6": "текст", "s7": "текст"}}}}"""
 
 
+def build_task_card_prompt(f: dict) -> str:
+    discipline = (f.get('discipline') or '').strip() or 'дисциплина не указана'
+    group = (f.get('group') or '').strip() or 'группа не указана'
+    topic = (f.get('topic') or '').strip() or 'тема не указана'
+    goal = (f.get('goal') or '').strip()
+    time_label = (f.get('time') or '10 минут').strip()
+    task_type = (f.get('taskType') or 'Репродуктивное').strip()
+    self_assessment = (f.get('selfAssessment') or 'Да').strip()
+    competencies = f.get('competencies') or []
+    task_text = (f.get('task') or '').strip()
+
+    comp_block = "\n".join(f"- {c}" for c in competencies) if competencies else "не выбраны"
+    goal_line = goal if goal else "цель не сформулирована преподавателем — сформулируй её сам, исходя из темы и типа задания"
+    task_line = f"\nЧерновик задания от преподавателя (доработай и приведи в готовый вид): {task_text}" if task_text else ""
+    self_line = (
+        " Также добавь в текст задания короткий блок самооценки: 2-3 вопроса, по которым обучающийся сам оценит выполнение."
+        if self_assessment == 'Да' else ""
+    )
+
+    return f"""Ты опытный педагог-методист СПО, специалист по разработке учебных заданий. Составь содержание карточки учебного задания на русском языке.
+
+Дисциплина: {discipline}
+Класс / группа: {group}
+Тема задания: {topic}
+Цель задания: {goal_line}
+Время выполнения: {time_label}
+Тип задания: {task_type}
+Формируемые компетенции:
+{comp_block}{task_line}
+
+Задание должно быть реально выполнимым за {time_label} и соответствовать типу «{task_type}». Формулируй конкретно, по шагам, обращаясь к обучающемуся на «вы». Критерии оценки опиши понятно, с указанием баллов или уровней.{self_line} Без markdown-разметки.
+
+Верни ответ СТРОГО в формате JSON без markdown, пояснений и текста до/после:
+{{"goal": "сформулированная цель задания одним предложением", "task": "полный текст задания для обучающегося", "criteria": "критерии оценки"}}"""
+
+
 CHAT_SYSTEM_PROMPT = """Ты ИИ-помощник УрокАИ для учителей и педагогов. Ты дружелюбно и по-деловому помогаешь с методическими вопросами: как составить план урока, придумать игру, оценить работу учеников, подобрать технологию обучения и т.д.
 
 Правила:
@@ -811,6 +847,34 @@ def handler(event: dict, context) -> dict:
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({
                 'goal': parsed.get('goal') or '',
                 'stages': parsed.get('stages') or {},
+            }, ensure_ascii=False)}
+
+        elif action == 'task_card':
+            fields = body.get('fields') or {}
+            if not (fields.get('topic') or '').strip():
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите тему задания'})}
+
+            raw = call_ai([
+                {'role': 'system', 'content': 'Ты профессиональный педагог-методист. Отвечаешь строго валидным JSON без markdown и пояснений, всегда на русском языке.'},
+                {'role': 'user', 'content': build_task_card_prompt(fields)},
+            ], temperature=0.7)
+
+            cleaned = raw.strip()
+            if cleaned.startswith('```'):
+                cleaned = cleaned.split('```')[1]
+                if cleaned.startswith('json'):
+                    cleaned = cleaned[4:]
+                cleaned = cleaned.strip()
+
+            try:
+                parsed = json.loads(cleaned)
+            except json.JSONDecodeError:
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ вернул некорректный ответ, попробуйте снова'})}
+
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({
+                'goal': parsed.get('goal') or '',
+                'task': parsed.get('task') or '',
+                'criteria': parsed.get('criteria') or '',
             }, ensure_ascii=False)}
 
         elif action == 'extract_text':

@@ -11,6 +11,7 @@ import StudentTrainer from "./pages/StudentTrainer";
 import QualityAnalytics from "./pages/QualityAnalytics";
 import QualityAnalysisTool from "./pages/QualityAnalysisTool";
 import LessonCardBuilder from "./pages/LessonCardBuilder";
+import TaskCardBuilder from "./pages/TaskCardBuilder";
 import { UsageProvider } from "./context/UsageContext";
 import { AuthProvider } from "./context/AuthContext";
 
@@ -31,6 +32,7 @@ const App = () => (
               <Route path="/analitika-kachestva" element={<QualityAnalytics />} />
               <Route path="/kachestvo-znaniy" element={<QualityAnalysisTool />} />
               <Route path="/konstruktor-uroka" element={<LessonCardBuilder />} />
+              <Route path="/konstruktor-zadaniy" element={<TaskCardBuilder />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

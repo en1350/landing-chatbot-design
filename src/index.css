@@ -132,7 +132,8 @@
   footer {
     display: none !important;
   }
-  #lesson-card-print {
+  #lesson-card-print,
+  #task-card-print {
     border: none !important;
     padding: 0 !important;
   }
