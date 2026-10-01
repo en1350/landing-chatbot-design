@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -30,6 +30,20 @@ const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008
 
 const newId = () => Math.random().toString(36).slice(2, 10);
 
+const STORAGE_KEY = "urokai_extracurricular_rows";
+const REPORT_KEY = "urokai_extracurricular_report";
+
+const loadStoredRows = (): EventRow[] => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
 const ExtracurricularAnalytics = () => {
   const { user, isPaid, token } = useAuth();
 
@@ -40,9 +54,26 @@ const ExtracurricularAnalytics = () => {
   const [authOpen, setAuthOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
-  const [rows, setRows] = useState<EventRow[]>([]);
-  const [report, setReport] = useState("");
+  const [rows, setRows] = useState<EventRow[]>(loadStoredRows);
+  const [report, setReport] = useState(() => localStorage.getItem(REPORT_KEY) || "");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
+    } catch {
+      /* хранилище переполнено или недоступно */
+    }
+  }, [rows]);
+
+  useEffect(() => {
+    try {
+      if (report) localStorage.setItem(REPORT_KEY, report);
+      else localStorage.removeItem(REPORT_KEY);
+    } catch {
+      /* хранилище недоступно */
+    }
+  }, [report]);
 
   const [year, setYear] = useState(YEARS[1]);
   const [date, setDate] = useState("");
@@ -87,8 +118,10 @@ const ExtracurricularAnalytics = () => {
   };
 
   const clearAll = () => {
+    if (rows.length > 0 && !window.confirm("Удалить все мероприятия и справку? Действие необратимо.")) return;
     setRows([]);
     setReport("");
+    toast.success("Данные очищены");
   };
 
   const generateReport = async () => {
@@ -144,6 +177,46 @@ const ExtracurricularAnalytics = () => {
     a.download = "vneauditornaya-deyatelnost.csv";
     a.click();
     URL.revokeObjectURL(a.href);
+  };
+
+  const exportBackup = () => {
+    if (rows.length === 0) {
+      toast.error("Нет данных для сохранения");
+      return;
+    }
+    const blob = new Blob([JSON.stringify(rows, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "vneauditornaya-rezervnaya-kopiya.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast.success("Резервная копия сохранена");
+  };
+
+  const importBackup = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(String(reader.result));
+        if (!Array.isArray(parsed)) throw new Error();
+        const restored: EventRow[] = parsed.map((r) => ({
+          id: newId(),
+          year: r.year || YEARS[1],
+          date: r.date || "",
+          subject: r.subject || "",
+          group: r.group || "",
+          total: Number(r.total) || 0,
+          type: r.type || ACTIVITY_TYPES[0],
+          desc: r.desc || "",
+          participants: Number(r.participants) || 0,
+        }));
+        setRows(restored);
+        toast.success(`Загружено мероприятий: ${restored.length}`);
+      } catch {
+        toast.error("Не удалось прочитать файл — нужен файл резервной копии");
+      }
+    };
+    reader.readAsText(file);
   };
 
   const reportTitle = "Аналитическая справка о вовлечении обучающихся во внеаудиторную деятельность";
@@ -255,13 +328,46 @@ const ExtracurricularAnalytics = () => {
                     Добавить
                   </Button>
                   <Button variant="outline" className="gap-2" onClick={loadDemo}>
-                    <Icon name="Download" size={16} />
+                    <Icon name="Sparkles" size={16} />
                     Загрузить пример
                   </Button>
                   <Button variant="ghost" className="gap-2 text-destructive hover:text-destructive" onClick={clearAll}>
                     <Icon name="Trash2" size={16} />
                     Очистить всё
                   </Button>
+                </div>
+
+                <div className="mt-6 rounded-xl border border-border bg-muted/30 p-4">
+                  <div className="flex items-start gap-2 mb-3">
+                    <Icon name="Save" size={16} className="text-primary mt-0.5 shrink-0" />
+                    <p className="text-sm text-muted-foreground">
+                      Таблица сохраняется автоматически в этом браузере
+                      {rows.length > 0 && <> — сейчас записей: <b className="text-foreground">{rows.length}</b></>}.
+                      Чтобы перенести данные на другой компьютер, сделайте резервную копию.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button variant="outline" size="sm" className="gap-1.5" onClick={exportBackup}>
+                      <Icon name="HardDriveDownload" size={15} />
+                      Сохранить копию
+                    </Button>
+                    <label className="inline-flex">
+                      <input
+                        type="file"
+                        accept="application/json,.json"
+                        className="hidden"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) importBackup(f);
+                          e.target.value = "";
+                        }}
+                      />
+                      <span className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-md border border-input bg-background px-3 text-sm font-medium hover:bg-accent transition-colors">
+                        <Icon name="HardDriveUpload" size={15} />
+                        Восстановить из копии
+                      </span>
+                    </label>
+                  </div>
                 </div>
               </div>
             </TabsContent>
