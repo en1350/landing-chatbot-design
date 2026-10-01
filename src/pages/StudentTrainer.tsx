@@ -18,6 +18,8 @@ import NetworkProtocolsTask from "@/components/student-trainer/NetworkProtocolsT
 
 /* ---------- Список тренажёров ---------- */
 
+type CategoryKey = "informatics" | "networks" | "programming" | "os";
+
 type TrainerKey =
   | "info-basics"
   | "algorithms"
@@ -32,10 +34,20 @@ type TrainerKey =
   | "digital-info"
   | "database-lesson"
   | "tcpip-addresses"
-  | "linear-programs";
+  | "linear-programs"
+  | "code-duel";
+
+interface CategoryItem {
+  key: CategoryKey;
+  icon: string;
+  title: string;
+  description: string;
+  accent: string;
+}
 
 interface TrainerItem {
   key: TrainerKey;
+  category: CategoryKey;
   icon: string;
   title: string;
   description: string;
@@ -43,9 +55,41 @@ interface TrainerItem {
   paid?: boolean;
 }
 
+const CATEGORIES: CategoryItem[] = [
+  {
+    key: "informatics",
+    icon: "📚",
+    title: "Информатика",
+    description: "Работа с информацией, представление данных, базы данных, нейросети",
+    accent: "#2563EB",
+  },
+  {
+    key: "networks",
+    icon: "🌐",
+    title: "Компьютерные сети",
+    description: "Протоколы, методы доступа к среде передачи, адресация TCP/IP",
+    accent: "#0891B2",
+  },
+  {
+    key: "programming",
+    icon: "🧩",
+    title: "Алгоритмизация и программирование",
+    description: "Алгоритмы, типы данных, линейные программы, игры и соревнования по коду",
+    accent: "#16A34A",
+  },
+  {
+    key: "os",
+    icon: "🖥️",
+    title: "Операционные системы и среды",
+    description: "Устройство и компоненты операционных систем",
+    accent: "#8B5CF6",
+  },
+];
+
 const TRAINERS: TrainerItem[] = [
   {
     key: "info-basics",
+    category: "informatics",
     icon: "📚",
     title: "Работа с информацией",
     description: "Тест, классификация, сопоставление и обработчик текста — один интерактив в 4 шага",
@@ -53,6 +97,7 @@ const TRAINERS: TrainerItem[] = [
   },
   {
     key: "algorithms",
+    category: "programming",
     icon: "🧩",
     title: "Алгоритмические конструкции",
     description: "Теория и тест по линейным алгоритмам, ветвлению, циклам",
@@ -60,6 +105,7 @@ const TRAINERS: TrainerItem[] = [
   },
   {
     key: "backwards",
+    category: "programming",
     icon: "🧠",
     title: "Анализ с конца",
     description: "Логические задачи на монеты, яблоки и улитку с решением и псевдокодом",
@@ -68,6 +114,7 @@ const TRAINERS: TrainerItem[] = [
   },
   {
     key: "network-protocols",
+    category: "networks",
     icon: "🌐",
     title: "Сетевые протоколы",
     description: "Теория по модели OSI и TCP/IP, тест и именной сертификат по итогам",
@@ -75,6 +122,7 @@ const TRAINERS: TrainerItem[] = [
   },
   {
     key: "ai-arcade",
+    category: "informatics",
     icon: "🤖",
     title: "AI Arcade: Архитектура нейросети",
     description: "Аркада на 5 уровней про сбор данных, обучение весов и архитектуру нейросети — с сертификатом",
@@ -83,6 +131,7 @@ const TRAINERS: TrainerItem[] = [
   },
   {
     key: "it-project-simulator",
+    category: "informatics",
     icon: "🚀",
     title: "IT Project Simulator",
     description: "Командная игра по управлению IT-проектами: 4 кризисных этапа, оценка решений и лидерборд",
@@ -91,6 +140,7 @@ const TRAINERS: TrainerItem[] = [
   },
   {
     key: "python-java-types",
+    category: "programming",
     icon: "💻",
     title: "Типы данных: Python и Java",
     description: "Теория, 9 практических заданий и именной сертификат по теме «Типы данных»",
@@ -99,6 +149,7 @@ const TRAINERS: TrainerItem[] = [
   },
   {
     key: "os-components",
+    category: "os",
     icon: "🖥️",
     title: "Функциональные компоненты ОС",
     description: "Урок из 8 разделов про ядро, процессы, память и файловые системы, тест на 10 вопросов и сертификат",
@@ -106,6 +157,7 @@ const TRAINERS: TrainerItem[] = [
   },
   {
     key: "media-access",
+    category: "networks",
     icon: "🔌",
     title: "Методы доступа к среде передачи",
     description: "Живая симуляция CSMA/CD, CSMA/CA и Token Ring: коллизии, маркер, статистика и лог событий",
@@ -114,6 +166,7 @@ const TRAINERS: TrainerItem[] = [
   },
   {
     key: "media-access-test",
+    category: "networks",
     icon: "📝",
     title: "Тест: методы доступа к сети",
     description: "9 заданий на 13 баллов: выбор ответа, соответствие и ситуационная задача с разбором и оценкой",
@@ -122,6 +175,7 @@ const TRAINERS: TrainerItem[] = [
   },
   {
     key: "digital-info",
+    category: "informatics",
     icon: "💻",
     title: "Компьютер и цифровая информация",
     description: "Урок из 10 шагов: двоичный конвертер, пиксельный редактор, схема ПК и именной сертификат",
@@ -129,6 +183,7 @@ const TRAINERS: TrainerItem[] = [
   },
   {
     key: "database-lesson",
+    category: "informatics",
     icon: "🗄️",
     title: "Создание базы данных",
     description: "Урок из 12 шагов: виды БД, кликабельная схема «Библиотека», SQL-запросы, практика и сертификат",
@@ -136,6 +191,7 @@ const TRAINERS: TrainerItem[] = [
   },
   {
     key: "tcpip-addresses",
+    category: "networks",
     icon: "🌐",
     title: "Типы адресов стека TCP/IP",
     description: "Теория, симулятор командной строки (ipconfig, ping, netstat), тест на 10 вопросов и сертификат",
@@ -144,10 +200,20 @@ const TRAINERS: TrainerItem[] = [
   },
   {
     key: "linear-programs",
+    category: "programming",
     icon: "🎓",
     title: "Практическая работа: программы линейной структуры",
     description: "Теория, 6 заданий по уровням Блума, тест на 10 вопросов, самооценка и именной сертификат",
     accent: "#764ba2",
+    paid: true,
+  },
+  {
+    key: "code-duel",
+    category: "programming",
+    icon: "🎮",
+    title: "Кодовая Дуэль: линейные программы",
+    description: "Дуэль на двоих с таймером, бонусами за скорость, шутками и именным сертификатом победителя",
+    accent: "#ff00ff",
     paid: true,
   },
 ];
@@ -156,6 +222,7 @@ const TRAINERS: TrainerItem[] = [
 
 const StudentTrainer = () => {
   const { user, isPaid } = useAuth();
+  const [category, setCategory] = useState<CategoryKey | null>(null);
   const [active, setActive] = useState<TrainerKey | null>(null);
   const [decomposerOpen, setDecomposerOpen] = useState(false);
   const [randomizerOpen, setRandomizerOpen] = useState(false);
@@ -205,7 +272,7 @@ const StudentTrainer = () => {
             На главную
           </Link>
 
-          {!active ? (
+          {!category ? (
             <>
               <div className="max-w-2xl mb-8">
                 <span className="text-xs font-bold uppercase tracking-widest text-coral">Для учеников</span>
@@ -213,13 +280,62 @@ const StudentTrainer = () => {
                   <span className="text-3xl">🧠</span> Тренажёры для учеников
                 </h1>
                 <p className="text-muted-foreground mt-3 leading-relaxed">
-                  Выберите тренажёр — тесты, классификация, сопоставление и обработка текста
-                  прямо в браузере.
+                  Выберите раздел — внутри тесты, игры, симуляторы и практические работы прямо в
+                  браузере.
                 </p>
               </div>
 
+              <div className="grid sm:grid-cols-2 gap-5">
+                {CATEGORIES.map((c, i) => {
+                  const count = TRAINERS.filter((t) => t.category === c.key).length;
+                  return (
+                    <button
+                      key={c.key}
+                      onClick={() => setCategory(c.key)}
+                      className="group relative text-left rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 animate-fade-in"
+                      style={{ animationDelay: `${i * 80}ms` }}
+                    >
+                      <div
+                        className="flex h-12 w-12 items-center justify-center rounded-xl text-2xl mb-4 transition-transform group-hover:scale-110"
+                        style={{ backgroundColor: `${c.accent}1A` }}
+                      >
+                        {c.icon}
+                      </div>
+                      <h3 className="font-display font-bold text-lg mb-1.5">{c.title}</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                        {c.description}
+                      </p>
+                      <span
+                        className="inline-flex items-center gap-1.5 text-sm font-semibold transition-transform group-hover:translate-x-1"
+                        style={{ color: c.accent }}
+                      >
+                        {count} {count === 1 ? "тренажёр" : count < 5 ? "тренажёра" : "тренажёров"}
+                        <Icon name="ArrowRight" size={15} />
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          ) : !active ? (
+            <>
+              <button
+                onClick={() => setCategory(null)}
+                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+              >
+                <Icon name="ArrowLeft" size={15} />
+                Все разделы
+              </button>
+
+              <div className="max-w-2xl mb-8">
+                <h1 className="font-display text-2xl md:text-3xl font-bold flex items-center gap-3">
+                  <span className="text-2xl">{CATEGORIES.find((c) => c.key === category)?.icon}</span>
+                  {CATEGORIES.find((c) => c.key === category)?.title}
+                </h1>
+              </div>
+
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {TRAINERS.map((t, i) => {
+                {TRAINERS.filter((t) => t.category === category).map((t, i) => {
                   const locked = t.paid && !isPaid;
                   return (
                     <button
@@ -269,7 +385,7 @@ const StudentTrainer = () => {
                 className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
               >
                 <Icon name="ArrowLeft" size={15} />
-                Все тренажёры
+                Назад к разделу
               </button>
 
               <div className="max-w-2xl mb-6">
@@ -375,6 +491,14 @@ const StudentTrainer = () => {
                     src="/linear-programs.html"
                     title="Составление программ линейной структуры"
                     className="w-full min-w-[700px] h-[1300px] rounded-xl border-0"
+                  />
+                </div>
+              ) : active === "code-duel" ? (
+                <div className="rounded-2xl border border-border bg-card p-3 md:p-5 shadow-sm max-w-[1180px] overflow-x-auto">
+                  <iframe
+                    src="/code-duel.html"
+                    title="Кодовая Дуэль: линейные программы"
+                    className="w-full min-w-[700px] h-[1100px] rounded-xl border-0"
                   />
                 </div>
               ) : (
