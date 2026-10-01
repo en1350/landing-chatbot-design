@@ -31,7 +31,8 @@ type TrainerKey =
   | "media-access-test"
   | "digital-info"
   | "database-lesson"
-  | "tcpip-addresses";
+  | "tcpip-addresses"
+  | "linear-programs";
 
 interface TrainerItem {
   key: TrainerKey;
@@ -139,6 +140,14 @@ const TRAINERS: TrainerItem[] = [
     title: "Типы адресов стека TCP/IP",
     description: "Теория, симулятор командной строки (ipconfig, ping, netstat), тест на 10 вопросов и сертификат",
     accent: "#1E3C72",
+    paid: true,
+  },
+  {
+    key: "linear-programs",
+    icon: "🎓",
+    title: "Практическая работа: программы линейной структуры",
+    description: "Теория, 6 заданий по уровням Блума, тест на 10 вопросов, самооценка и именной сертификат",
+    accent: "#764ba2",
     paid: true,
   },
 ];
@@ -358,6 +367,14 @@ const StudentTrainer = () => {
                     src="/tcpip-addresses.html"
                     title="Типы адресов стека TCP/IP"
                     className="w-full min-w-[420px] h-[1200px] rounded-xl border-0"
+                  />
+                </div>
+              ) : active === "linear-programs" ? (
+                <div className="rounded-2xl border border-border bg-card p-3 md:p-5 shadow-sm max-w-[1240px] overflow-x-auto">
+                  <iframe
+                    src="/linear-programs.html"
+                    title="Составление программ линейной структуры"
+                    className="w-full min-w-[700px] h-[1300px] rounded-xl border-0"
                   />
                 </div>
               ) : (
