@@ -114,6 +114,24 @@
       "bodyMatcher": "partial"
     },
     {
+      "name": "Lesson card refine without instruction returns 400",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "lesson_card_refine", "fields": {"topic": "Тема"}, "instruction": ""},
+      "expectedStatus": 400,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Task card refine without instruction returns 400",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "task_card_refine", "fields": {"topic": "Тема"}, "instruction": ""},
+      "expectedStatus": 400,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    },
+    {
       "name": "Extracurricular analysis without paid subscription returns 403",
       "method": "POST",
       "path": "/",

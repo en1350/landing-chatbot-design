@@ -552,6 +552,89 @@ def build_task_card_prompt(f: dict) -> str:
 {{"goal": "сформулированная цель задания одним предложением", "task": "полный текст задания для обучающегося", "criteria": "критерии оценки"}}"""
 
 
+def build_lesson_card_refine_prompt(f: dict, instruction: str) -> str:
+    discipline = (f.get('discipline') or '').strip() or 'дисциплина не указана'
+    group = (f.get('group') or '').strip() or 'группа не указана'
+    topic = (f.get('topic') or '').strip() or 'тема не указана'
+    duration = str(f.get('duration') or '45')
+    lesson_type = (f.get('lessonType') or 'Теоретическое занятие').strip()
+    competencies = f.get('competencies') or []
+    technologies = f.get('technologies') or []
+    times = f.get('times') or {}
+    goal = (f.get('goal') or '').strip()
+    contents = f.get('contents') or {}
+
+    comp_block = "\n".join(f"- {c}" for c in competencies) if competencies else "не выбраны"
+    tech_block = ", ".join(technologies) if technologies else "не выбраны"
+
+    stage_lines = []
+    for key, name in LESSON_CARD_STAGES:
+        mins = times.get(key) or 0
+        text = (contents.get(key) or '').strip() or '(пусто)'
+        stage_lines.append(f'"{key}" — этап «{name}», {mins} мин. Текущий текст: {text}')
+    stages_block = "\n".join(stage_lines)
+
+    return f"""Ты опытный методист-педагог СПО. Вот текущая карточка урока:
+
+Дисциплина: {discipline}
+Класс / группа: {group}
+Тема урока: {topic}
+Время урока: {duration} минут
+Тип занятия: {lesson_type}
+Формируемые компетенции:
+{comp_block}
+Технологии обучения: {tech_block}
+
+Текущая цель урока: {goal or '(не сформулирована)'}
+
+Текущее содержание этапов:
+{stages_block}
+
+Преподаватель просит доработать карточку по инструкции: «{instruction}»
+
+Обнови содержание этапов и/или цель урока в соответствии с инструкцией, сохраняя структуру из 7 этапов и их названия. Если инструкция касается конкретного этапа — измени в первую очередь его, но верни ВСЕ этапы целиком (не только изменённый). Без markdown-разметки.
+
+Верни ответ СТРОГО в формате JSON без markdown, пояснений и текста до/после:
+{{"goal": "обновлённая или прежняя цель урока одним предложением", "stages": {{"s1": "текст", "s2": "текст", "s3": "текст", "s4": "текст", "s5": "текст", "s6": "текст", "s7": "текст"}}}}"""
+
+
+def build_task_card_refine_prompt(f: dict, instruction: str) -> str:
+    discipline = (f.get('discipline') or '').strip() or 'дисциплина не указана'
+    group = (f.get('group') or '').strip() or 'группа не указана'
+    topic = (f.get('topic') or '').strip() or 'тема не указана'
+    time_label = (f.get('time') or '10 минут').strip()
+    task_type = (f.get('taskType') or 'Репродуктивное').strip()
+    self_assessment = (f.get('selfAssessment') or 'Да').strip()
+    competencies = f.get('competencies') or []
+    goal = (f.get('goal') or '').strip()
+    task_text = (f.get('task') or '').strip()
+    criteria_text = (f.get('criteria') or '').strip()
+
+    comp_block = "\n".join(f"- {c}" for c in competencies) if competencies else "не выбраны"
+
+    return f"""Ты опытный педагог-методист СПО. Вот текущая карточка учебного задания:
+
+Дисциплина: {discipline}
+Класс / группа: {group}
+Тема задания: {topic}
+Время выполнения: {time_label}
+Тип задания: {task_type}
+Самооценка предусмотрена: {self_assessment}
+Формируемые компетенции:
+{comp_block}
+
+Текущая цель задания: {goal or '(не сформулирована)'}
+Текущий текст задания: {task_text or '(пусто)'}
+Текущие критерии оценки: {criteria_text or '(пусто)'}
+
+Преподаватель просит доработать карточку по инструкции: «{instruction}»
+
+Обнови цель, текст задания и/или критерии оценки в соответствии с инструкцией. Если инструкция касается только одной части — измени в первую очередь её, но верни ВСЕ три поля целиком. Задание должно оставаться выполнимым за {time_label} и соответствовать типу «{task_type}». Без markdown-разметки.
+
+Верни ответ СТРОГО в формате JSON без markdown, пояснений и текста до/после:
+{{"goal": "обновлённая или прежняя цель задания одним предложением", "task": "полный обновлённый текст задания", "criteria": "обновлённые критерии оценки"}}"""
+
+
 def build_extracurricular_prompt(data: dict) -> str:
     rows = data.get('rows') or []
     lines = []
@@ -887,6 +970,67 @@ def handler(event: dict, context) -> dict:
                 {'role': 'system', 'content': 'Ты профессиональный педагог-методист. Отвечаешь строго валидным JSON без markdown и пояснений, всегда на русском языке.'},
                 {'role': 'user', 'content': build_task_card_prompt(fields)},
             ], temperature=0.7)
+
+            cleaned = raw.strip()
+            if cleaned.startswith('```'):
+                cleaned = cleaned.split('```')[1]
+                if cleaned.startswith('json'):
+                    cleaned = cleaned[4:]
+                cleaned = cleaned.strip()
+
+            try:
+                parsed = json.loads(cleaned)
+            except json.JSONDecodeError:
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ вернул некорректный ответ, попробуйте снова'})}
+
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({
+                'goal': parsed.get('goal') or '',
+                'task': parsed.get('task') or '',
+                'criteria': parsed.get('criteria') or '',
+            }, ensure_ascii=False)}
+
+        elif action == 'lesson_card_refine':
+            fields = body.get('fields') or {}
+            instruction = (body.get('instruction') or '').strip()
+            if not (fields.get('topic') or '').strip():
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите тему урока'})}
+            if not instruction:
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите, что нужно доработать'})}
+
+            raw = call_ai([
+                {'role': 'system', 'content': 'Ты профессиональный педагог-методист, дорабатываешь карточку урока по запросу преподавателя. Отвечаешь строго валидным JSON без markdown и пояснений, всегда на русском языке.'},
+                {'role': 'user', 'content': build_lesson_card_refine_prompt(fields, instruction)},
+            ], temperature=0.6)
+
+            cleaned = raw.strip()
+            if cleaned.startswith('```'):
+                cleaned = cleaned.split('```')[1]
+                if cleaned.startswith('json'):
+                    cleaned = cleaned[4:]
+                cleaned = cleaned.strip()
+
+            try:
+                parsed = json.loads(cleaned)
+            except json.JSONDecodeError:
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ вернул некорректный ответ, попробуйте снова'})}
+
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({
+                'goal': parsed.get('goal') or '',
+                'stages': parsed.get('stages') or {},
+            }, ensure_ascii=False)}
+
+        elif action == 'task_card_refine':
+            fields = body.get('fields') or {}
+            instruction = (body.get('instruction') or '').strip()
+            if not (fields.get('topic') or '').strip():
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите тему задания'})}
+            if not instruction:
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите, что нужно доработать'})}
+
+            raw = call_ai([
+                {'role': 'system', 'content': 'Ты профессиональный педагог-методист, дорабатываешь карточку учебного задания по запросу преподавателя. Отвечаешь строго валидным JSON без markdown и пояснений, всегда на русском языке.'},
+                {'role': 'user', 'content': build_task_card_refine_prompt(fields, instruction)},
+            ], temperature=0.6)
 
             cleaned = raw.strip()
             if cleaned.startswith('```'):

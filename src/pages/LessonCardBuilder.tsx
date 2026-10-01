@@ -50,6 +50,11 @@ const LessonCardBuilder = () => {
   const [loading, setLoading] = useState(false);
   const [prefilled, setPrefilled] = useState(false);
 
+  const [refineOpen, setRefineOpen] = useState(false);
+  const [refineInstruction, setRefineInstruction] = useState("");
+  const [refining, setRefining] = useState(false);
+  const [refineError, setRefineError] = useState<string | null>(null);
+
   useEffect(() => {
     const data = takeLessonCardPrefill();
     if (!data) return;
@@ -151,6 +156,69 @@ const LessonCardBuilder = () => {
       toast.error(err instanceof Error ? err.message : "Не удалось наполнить карточку урока");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRefine = async () => {
+    if (!user) {
+      setAuthOpen(true);
+      return;
+    }
+    if (!isPaid) {
+      setUpgradeOpen(true);
+      return;
+    }
+    if (!topic.trim()) {
+      toast.error("Укажите тему урока — без неё ИИ не сможет доработать карточку");
+      return;
+    }
+    if (!refineInstruction.trim()) return;
+
+    setRefining(true);
+    setRefineError(null);
+    try {
+      const res = await fetch(GENERATE_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "X-Authorization": token } : {}),
+        },
+        body: JSON.stringify({
+          action: "lesson_card_refine",
+          instruction: refineInstruction.trim(),
+          fields: {
+            discipline,
+            group,
+            topic,
+            goal,
+            duration,
+            lessonType,
+            competencies: allCompetencies,
+            technologies,
+            times,
+            contents,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Не удалось доработать карточку урока");
+
+      if (data.goal) setGoal(data.goal);
+      const aiStages = (data.stages || {}) as Record<string, string>;
+      setContents((prev) => {
+        const next = { ...prev };
+        STAGES.forEach((s) => {
+          if (aiStages[s.key]) next[s.key] = aiStages[s.key];
+        });
+        return next;
+      });
+      setRefineInstruction("");
+      setRefineOpen(false);
+      toast.success("Карточка урока доработана — проверьте изменения");
+    } catch (err) {
+      setRefineError(err instanceof Error ? err.message : "Не удалось доработать карточку урока");
+    } finally {
+      setRefining(false);
     }
   };
 
@@ -439,6 +507,61 @@ const LessonCardBuilder = () => {
                 <p className="mt-2 text-center text-xs text-muted-foreground">
                   ИИ-наполнение доступно по подписке. Форму можно заполнить вручную и распечатать бесплатно.
                 </p>
+              )}
+
+              {!refineOpen ? (
+                <Button
+                  variant="outline"
+                  className="w-full mt-2.5 gap-2 border-primary/30 text-primary hover:bg-primary/5"
+                  onClick={() => setRefineOpen(true)}
+                >
+                  <Icon name="Sparkles" size={16} />
+                  Доработать с ИИ
+                </Button>
+              ) : (
+                <div className="mt-2.5 rounded-xl border border-primary/30 bg-primary/5 p-3.5 space-y-2.5 animate-fade-in">
+                  <label className="text-sm font-medium block">Что доработать или исправить?</label>
+                  <Textarea
+                    value={refineInstruction}
+                    onChange={(e) => setRefineInstruction(e.target.value)}
+                    placeholder="Например: сделай этап «Закрепление» более практическим, добавь примеры по теме, перефразируй цель урока..."
+                    rows={3}
+                  />
+                  {refineError && (
+                    <p className="text-sm text-destructive flex items-center gap-1.5">
+                      <Icon name="AlertCircle" size={14} />
+                      {refineError}
+                    </p>
+                  )}
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => {
+                        setRefineOpen(false);
+                        setRefineInstruction("");
+                        setRefineError(null);
+                      }}
+                      disabled={refining}
+                    >
+                      Отмена
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="flex-1 gap-1.5 bg-primary hover:bg-primary/90"
+                      onClick={handleRefine}
+                      disabled={refining || !refineInstruction.trim()}
+                    >
+                      {refining ? (
+                        <Icon name="Loader2" size={15} className="animate-spin" />
+                      ) : (
+                        <Icon name="Sparkles" size={15} />
+                      )}
+                      Применить
+                    </Button>
+                  </div>
+                </div>
               )}
             </div>
 
