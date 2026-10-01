@@ -186,7 +186,7 @@ const TaskCardBuilder = () => {
           setProfileOpen(false);
           setAuthOpen(true);
         }}
-        onOpenPricing={() => (window.location.href = "/#pricing")}
+        onOpenPricing={() => setProfileOpen(true)}
       />
 
       <main className="flex-1">

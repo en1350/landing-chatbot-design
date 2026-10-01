@@ -183,7 +183,7 @@ const StudentTrainer = () => {
         onOpenAntiplagiat={() => setAntiplagiatOpen(true)}
         onOpenProfile={() => setProfileOpen(true)}
         onOpenAuth={openAuth}
-        onOpenPricing={() => (window.location.href = "/#pricing")}
+        onOpenPricing={() => setProfileOpen(true)}
       />
 
       <main className="flex-1">

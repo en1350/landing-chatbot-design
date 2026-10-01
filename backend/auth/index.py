@@ -15,8 +15,8 @@ SCHEMA = os.environ.get('MAIN_DB_SCHEMA', 'public')
 DEFAULT_SITE_URL = os.environ.get('SITE_URL', 'https://urokai.ru')
 
 PLANS = {
-    'month': {'days': 30, 'amount': '99.00', 'label': 'Подписка УрокАИ на 1 месяц'},
-    'year': {'days': 365, 'amount': '890.00', 'label': 'Подписка УрокАИ на 1 год'},
+    'month': {'days': 30, 'amount': '129.00', 'label': 'Подписка УрокАИ на 1 месяц'},
+    'year': {'days': 365, 'amount': '1199.00', 'label': 'Подписка УрокАИ на 1 год'},
 }
 
 FREE_LIMIT = 3

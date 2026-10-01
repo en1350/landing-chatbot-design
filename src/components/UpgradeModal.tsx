@@ -103,7 +103,7 @@ const UpgradeModal = ({ open, onClose, onNeedAuth }: UpgradeModalProps) => {
             disabled={loadingPlan !== null}
             className="rounded-xl border border-border p-4 text-left hover:border-primary transition-colors disabled:opacity-60"
           >
-            <p className="font-display text-2xl font-bold">99 ₽</p>
+            <p className="font-display text-2xl font-bold">129 ₽</p>
             <p className="text-xs text-muted-foreground mt-0.5">в месяц</p>
           </button>
           <button
@@ -112,9 +112,9 @@ const UpgradeModal = ({ open, onClose, onNeedAuth }: UpgradeModalProps) => {
             className="rounded-xl border-2 border-coral p-4 relative text-left hover:bg-coral/5 transition-colors disabled:opacity-60"
           >
             <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-coral text-coral-foreground text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
-              Выгоднее на 25%
+              Выгоднее на 23%
             </span>
-            <p className="font-display text-2xl font-bold">890 ₽</p>
+            <p className="font-display text-2xl font-bold">1199 ₽</p>
             <p className="text-xs text-muted-foreground mt-0.5">в год</p>
           </button>
         </div>

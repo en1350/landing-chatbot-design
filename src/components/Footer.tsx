@@ -56,7 +56,11 @@ const Footer = ({ onOpenProfile, onOpenRandomizer, onOpenAntiplagiat }: FooterPr
               </Link>
             </li>
             <li><a href="#chat-anchor" className="hover:text-foreground transition-colors">ИИ-помощник</a></li>
-            <li><a href="#pricing" className="hover:text-foreground transition-colors">Тарифы</a></li>
+            <li>
+              <button onClick={onOpenProfile} className="hover:text-foreground transition-colors">
+                Тарифы
+              </button>
+            </li>
           </ul>
         </div>
 

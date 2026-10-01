@@ -6,6 +6,8 @@ import Icon from "@/components/ui/icon";
 import { useUsage } from "@/context/UsageContext";
 import { useAuth, AUTH_URL } from "@/context/AuthContext";
 import { downloadTxt } from "@/lib/download";
+import PlanCards, { PLAN_FEATURES } from "@/components/PlanCards";
+import UpgradeModal from "@/components/UpgradeModal";
 
 interface ProfileSheetProps {
   open: boolean;
@@ -47,6 +49,7 @@ const ProfileSheet = ({ open, onClose, onNeedAuth }: ProfileSheetProps) => {
   const [materials, setMaterials] = useState<SavedMaterial[]>([]);
   const [loadingMaterials, setLoadingMaterials] = useState(false);
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   const loadMaterials = async () => {
     if (!token) return;
@@ -157,10 +160,11 @@ const ProfileSheet = ({ open, onClose, onNeedAuth }: ProfileSheetProps) => {
           )}
 
           <Tabs defaultValue="usage">
-            <TabsList className="grid grid-cols-3 w-full">
-              <TabsTrigger value="usage" className="text-xs sm:text-sm px-1.5 sm:px-3">Статистика</TabsTrigger>
-              <TabsTrigger value="materials" className="text-xs sm:text-sm px-1.5 sm:px-3">Материалы</TabsTrigger>
-              <TabsTrigger value="privacy" className="text-xs sm:text-sm px-1.5 sm:px-3">Данные</TabsTrigger>
+            <TabsList className="grid grid-cols-4 w-full">
+              <TabsTrigger value="usage" className="text-xs sm:text-sm px-1 sm:px-2">Статистика</TabsTrigger>
+              <TabsTrigger value="plans" className="text-xs sm:text-sm px-1 sm:px-2">Тариф</TabsTrigger>
+              <TabsTrigger value="materials" className="text-xs sm:text-sm px-1 sm:px-2">Материалы</TabsTrigger>
+              <TabsTrigger value="privacy" className="text-xs sm:text-sm px-1 sm:px-2">Данные</TabsTrigger>
             </TabsList>
 
             <TabsContent value="usage" className="space-y-4 mt-4">
@@ -195,6 +199,36 @@ const ProfileSheet = ({ open, onClose, onNeedAuth }: ProfileSheetProps) => {
                   </div>
                 ))}
               </div>
+            </TabsContent>
+
+            <TabsContent value="plans" className="mt-4 space-y-4">
+              {isPaid ? (
+                <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-sm">
+                  <p className="font-semibold text-primary mb-1">Подписка активна</p>
+                  <p className="text-muted-foreground">
+                    Вам доступны все инструменты без ограничений. Продлить можно после окончания периода.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Полный доступ ко всем инструментам платформы без ограничений по количеству генераций.
+                </p>
+              )}
+
+              <PlanCards compact onSelect={() => setUpgradeOpen(true)} />
+
+              <ul className="space-y-2 pt-1">
+                {PLAN_FEATURES.map((f) => (
+                  <li key={f} className="flex gap-2 text-xs text-muted-foreground">
+                    <Icon name="Check" size={14} className="text-primary shrink-0 mt-0.5" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+
+              <p className="text-xs text-muted-foreground text-center">
+                Оплата банковской картой через ЮКассу. Подписка не продлевается автоматически.
+              </p>
             </TabsContent>
 
             <TabsContent value="materials" className="mt-4">
@@ -268,6 +302,8 @@ const ProfileSheet = ({ open, onClose, onNeedAuth }: ProfileSheetProps) => {
             </TabsContent>
           </Tabs>
         </div>
+
+        <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} onNeedAuth={onNeedAuth} />
       </SheetContent>
     </Sheet>
   );

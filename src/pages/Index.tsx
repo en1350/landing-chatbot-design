@@ -7,7 +7,6 @@ import Icon from "@/components/ui/icon";
 import GeneratorsSection from "@/components/GeneratorsSection";
 import NotebookCheck from "@/components/NotebookCheck";
 import QualityAnalyticsPromo from "@/components/QualityAnalyticsPromo";
-import PricingSection from "@/components/PricingSection";
 import Footer from "@/components/Footer";
 import DecomposerModal from "@/components/DecomposerModal";
 import RandomizerModal from "@/components/RandomizerModal";
@@ -73,7 +72,7 @@ const Index = () => {
         onOpenAntiplagiat={() => setAntiplagiatOpen(true)}
         onOpenProfile={() => setProfileOpen(true)}
         onOpenAuth={openAuth}
-        onOpenPricing={() => scrollTo("pricing")}
+        onOpenPricing={() => setProfileOpen(true)}
       />
 
       <main className="flex-1">
@@ -92,7 +91,6 @@ const Index = () => {
         <GeneratorsSection onNeedAuth={openAuth} />
         <NotebookCheck id="notebook" onNeedAuth={openAuth} onNeedUpgrade={openUpgrade} />
         <QualityAnalyticsPromo id="quality-analytics" />
-        <PricingSection id="pricing" onNeedAuth={openAuth} />
       </main>
 
       <Footer
