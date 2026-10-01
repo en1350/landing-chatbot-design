@@ -17,6 +17,7 @@ import { downloadDocx, downloadTxt } from "@/lib/download";
 import { toast } from "sonner";
 import LessonCardPreview from "@/components/lesson-card/LessonCardPreview";
 import { OK_LIST, STAGES, TECHNOLOGIES, LESSON_TYPES, type LessonType } from "@/components/lesson-card/lessonCardConfig";
+import { takeLessonCardPrefill } from "@/components/lesson-card/prefill";
 
 const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
 
@@ -45,7 +46,27 @@ const LessonCardBuilder = () => {
   const [technologies, setTechnologies] = useState<string[]>([]);
   const [times, setTimes] = useState<Record<string, number>>(() => buildInitialTimes("45"));
   const [contents, setContents] = useState<Record<string, string>>(emptyContents);
+  const [extraCompetencies, setExtraCompetencies] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [prefilled, setPrefilled] = useState(false);
+
+  useEffect(() => {
+    const data = takeLessonCardPrefill();
+    if (!data) return;
+    const okValues = OK_LIST.map(([code, text]) => `${code}. ${text}`);
+    if (data.discipline) setDiscipline(data.discipline);
+    if (data.group) setGroup(data.group);
+    if (data.topic) setTopic(data.topic);
+    if (data.goal) setGoal(data.goal);
+    if (data.duration) setDuration(data.duration);
+    if (data.lessonType) setLessonType(data.lessonType as LessonType);
+    if (data.technologies?.length) setTechnologies(data.technologies);
+    if (data.competencies?.length) {
+      setCompetencies(data.competencies.filter((c) => okValues.includes(c)));
+      setExtraCompetencies(data.competencies.filter((c) => !okValues.includes(c)));
+    }
+    setPrefilled(true);
+  }, []);
 
   useEffect(() => {
     setTimes(buildInitialTimes(duration));
@@ -58,6 +79,11 @@ const LessonCardBuilder = () => {
     setter(list.includes(value) ? list.filter((x) => x !== value) : [...list, value]);
   };
 
+  const allCompetencies = useMemo(
+    () => [...competencies, ...extraCompetencies],
+    [competencies, extraCompetencies]
+  );
+
   const previewData = {
     discipline,
     group,
@@ -65,7 +91,7 @@ const LessonCardBuilder = () => {
     goal,
     duration,
     lessonType,
-    competencies,
+    competencies: allCompetencies,
     technologies,
     times,
     contents,
@@ -102,7 +128,7 @@ const LessonCardBuilder = () => {
             goal,
             duration,
             lessonType,
-            competencies,
+            competencies: allCompetencies,
             technologies,
             times,
           },
@@ -140,7 +166,7 @@ const LessonCardBuilder = () => {
       goal.trim() || "не сформулирована",
       "",
       "ФОРМИРУЕМЫЕ КОМПЕТЕНЦИИ",
-      ...(competencies.length ? competencies.map((c) => `- ${c}`) : ["не выбраны"]),
+      ...(allCompetencies.length ? allCompetencies.map((c) => `- ${c}`) : ["не выбраны"]),
       "",
       "ТЕХНОЛОГИИ ОБУЧЕНИЯ",
       ...(technologies.length ? technologies.map((t) => `- ${t}`) : ["не выбраны"]),
@@ -212,6 +238,16 @@ const LessonCardBuilder = () => {
               карточку можно распечатать или скачать в Word.
             </p>
           </div>
+
+          {prefilled && (
+            <div className="mb-6 flex items-start gap-2.5 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm no-print">
+              <Icon name="CheckCircle2" size={17} className="text-primary mt-0.5 shrink-0" />
+              <span>
+                Данные перенесены из генератора уроков. Проверьте поля, распределите время и нажмите «Заполнить с
+                помощью ИИ».
+              </span>
+            </div>
+          )}
 
           <div className="grid gap-6 lg:grid-cols-2">
             {/* ===== ФОРМА ===== */}
@@ -304,6 +340,24 @@ const LessonCardBuilder = () => {
                     );
                   })}
                 </div>
+                {extraCompetencies.length > 0 && (
+                  <div className="mt-2 rounded-lg border border-primary/25 bg-primary/5 p-3">
+                    <p className="text-xs font-semibold text-primary mb-1.5">Перенесены из генератора уроков:</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {extraCompetencies.map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => setExtraCompetencies((prev) => prev.filter((x) => x !== c))}
+                          className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-1 text-xs hover:bg-accent transition-colors"
+                        >
+                          {c}
+                          <Icon name="X" size={11} />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="mt-4">

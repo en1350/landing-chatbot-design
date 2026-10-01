@@ -21,6 +21,7 @@ import Icon from "@/components/ui/icon";
 import { useAuth, AUTH_URL, GeneratorType } from "@/context/AuthContext";
 import { useUsage } from "@/context/UsageContext";
 import { downloadTxt, downloadDocx } from "@/lib/download";
+import { saveLessonCardPrefill, matchTechnologies } from "@/components/lesson-card/prefill";
 
 const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
 
@@ -340,6 +341,20 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
   const handleDownload = () => {
     if (!result) return;
     downloadTxt(resultTitle, [resultTitle, "", result]);
+  };
+
+  const handleOpenCardBuilder = () => {
+    saveLessonCardPrefill({
+      discipline: lessonFields.subject,
+      group: lessonFields.ageCount,
+      topic: lessonFields.topic,
+      goal: lessonFields.goal,
+      duration: lessonFields.duration,
+      lessonType: lessonFields.lessonType === "practice" ? "Практическое занятие" : "Теоретическое занятие",
+      competencies: lessonFields.competencies,
+      technologies: matchTechnologies(lessonFields.technology),
+    });
+    window.location.href = "/konstruktor-uroka";
   };
 
   const handleDownloadSelfAnalysis = () => {
@@ -919,14 +934,24 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
             </Button>
 
             {type === "lesson" && (
-              <Button
-                variant="outline"
-                className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
-                onClick={handleDownloadSelfAnalysis}
-              >
-                <Icon name="ClipboardList" size={16} />
-                Шаблон самоанализа по уроку
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
+                  onClick={handleOpenCardBuilder}
+                >
+                  <Icon name="LayoutTemplate" size={16} />
+                  Открыть в конструкторе карточки урока
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
+                  onClick={handleDownloadSelfAnalysis}
+                >
+                  <Icon name="ClipboardList" size={16} />
+                  Шаблон самоанализа по уроку
+                </Button>
+              </>
             )}
           </div>
         ) : (
@@ -1036,14 +1061,24 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
             )}
 
             {type === "lesson" && (
-              <Button
-                variant="outline"
-                className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
-                onClick={handleDownloadSelfAnalysis}
-              >
-                <Icon name="ClipboardList" size={16} />
-                Шаблон самоанализа по уроку
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
+                  onClick={handleOpenCardBuilder}
+                >
+                  <Icon name="LayoutTemplate" size={16} />
+                  Оформить карточку урока
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
+                  onClick={handleDownloadSelfAnalysis}
+                >
+                  <Icon name="ClipboardList" size={16} />
+                  Шаблон самоанализа по уроку
+                </Button>
+              </>
             )}
           </div>
         )}
