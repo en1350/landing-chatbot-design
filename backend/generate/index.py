@@ -7,8 +7,8 @@ import urllib.error
 import psycopg2
 
 AITUNNEL_URL = "https://api.aitunnel.ru/v1/chat/completions"
-MODEL = "gpt-4o-mini"
-VISION_MODEL = "gpt-4o-mini"
+MODEL = "gemini-3.8-flash"
+VISION_MODEL = "gemini-3.8-flash"
 SCHEMA = os.environ.get('MAIN_DB_SCHEMA', 'public')
 
 
