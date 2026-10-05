@@ -408,6 +408,18 @@
   .btn-correct { background: linear-gradient(135deg, #43e97b, #38f9d7); }
   .btn-wrong { background: linear-gradient(135deg, #ff6b9d, #fa709a); }
   .btn-start { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+  .btn-answer { background: linear-gradient(135deg, #f7971e, #ffd200); color: #1a1a2e !important; }
+  .game-answer {
+    display: none;
+    margin-bottom: 15px;
+    padding: 14px 18px;
+    text-align: center;
+    background: rgba(255,210,0,0.15);
+    border: 1px solid rgba(255,210,0,0.5);
+    border-radius: 14px;
+    font-size: 1.05em;
+  }
+  .game-answer.show { display: block; }
 
   .reflection-grid {
     display: grid;
@@ -719,10 +731,12 @@ a.has(3);           // true
       </div>
 
       <div class="game-question" id="gameQuestion">Нажмите «Начать игру», чтобы начать!</div>
+      <div class="game-answer" id="gameAnswer"></div>
       <div style="text-align:center;font-size:0.9em;opacity:0.8;" id="gameInfo">Вопрос 0 / 15 · Отвечает: —</div>
 
       <div class="game-controls">
         <button class="btn-start" onclick="startGame()">🚀 Начать игру</button>
+        <button class="btn-answer" onclick="showGameAnswer()">👁 Показать ответ</button>
         <button class="btn-correct" onclick="answerGame(true)">✓ Верно (+10)</button>
         <button class="btn-wrong" onclick="answerGame(false)">✗ Неверно (−5)</button>
         <button class="btn-start" onclick="resetGame()">🔄 Сброс</button>
@@ -1045,7 +1059,21 @@ function startGame() {
   showGameQuestion();
 }
 
+function hideGameAnswer() {
+  const box = document.getElementById('gameAnswer');
+  box.classList.remove('show');
+  box.textContent = '';
+}
+
+function showGameAnswer() {
+  if (!game.started || game.current >= gameQuestions.length) return;
+  const box = document.getElementById('gameAnswer');
+  box.innerHTML = `Правильный ответ: <b>${escapeHtml(gameQuestions[game.current].a)}</b>`;
+  box.classList.add('show');
+}
+
 function showGameQuestion() {
+  hideGameAnswer();
   if (game.current >= gameQuestions.length) {
     endGame();
     return;
@@ -1079,6 +1107,7 @@ function endGame() {
   const names = [1,2,3].map(i => escapeHtml(document.getElementById(`team${i}Name`).value));
   const max = Math.max(...game.scores);
   const winners = game.scores.map((s, i) => s === max ? names[i] : null).filter(Boolean);
+  hideGameAnswer();
   document.getElementById('gameQuestion').innerHTML = '🏆 Игра окончена!';
   document.getElementById('gameInfo').textContent = '';
   const banner = document.getElementById('gameResult');
@@ -1092,6 +1121,7 @@ function endGame() {
 function resetGame() {
   game = { current: 0, team: 0, scores: [0,0,0], started: false };
   [1,2,3].forEach(i => document.getElementById(`team${i}Score`).textContent = '0');
+  hideGameAnswer();
   document.getElementById('gameQuestion').textContent = 'Нажмите «Начать игру», чтобы начать!';
   document.getElementById('gameInfo').textContent = 'Вопрос 0 / 15 · Отвечает: —';
   document.getElementById('gameResult').classList.remove('show');
