@@ -36,7 +36,8 @@ type TrainerKey =
   | "tcpip-addresses"
   | "linear-programs"
   | "code-duel"
-  | "sets-python-js";
+  | "sets-python-js"
+  | "os-processes";
 
 interface CategoryItem {
   key: CategoryKey;
@@ -155,6 +156,14 @@ const TRAINERS: TrainerItem[] = [
     title: "Функциональные компоненты ОС",
     description: "Урок из 8 разделов про ядро, процессы, память и файловые системы, тест на 10 вопросов и сертификат",
     accent: "#8B5CF6",
+  },
+  {
+    key: "os-processes",
+    category: "os",
+    icon: "⚙️",
+    title: "Управление процессами",
+    description: "Теория про состояния, планирование и тупики, разбор вывода ps и top, 3 контрольные задачи и сертификат",
+    accent: "#667eea",
   },
   {
     key: "media-access",
@@ -452,6 +461,14 @@ const StudentTrainer = () => {
                   <iframe
                     src="/os-components.html"
                     title="Функциональные компоненты ОС"
+                    className="w-full min-w-[600px] h-[1000px] rounded-xl border-0"
+                  />
+                </div>
+              ) : active === "os-processes" ? (
+                <div className="rounded-2xl border border-border bg-card p-3 md:p-5 shadow-sm max-w-[1000px] overflow-x-auto">
+                  <iframe
+                    src="/os-processes.html"
+                    title="Управление процессами"
                     className="w-full min-w-[600px] h-[1000px] rounded-xl border-0"
                   />
                 </div>

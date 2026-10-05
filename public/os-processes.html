@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Тренажёр: Управление процессами</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    min-height: 100vh;
+    color: #2c3e50;
+    padding: 20px;
+  }
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    overflow: hidden;
+  }
+  header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    text-align: center;
+  }
+  header h1 { font-size: 28px; margin-bottom: 8px; }
+  header p { opacity: 0.9; font-size: 14px; }
+  .progress-bar { height: 6px; background: #e0e0e0; position: relative; }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #11998e, #38ef7d);
+    width: 0%;
+    transition: width 0.4s;
+  }
+  .screen { padding: 35px; display: none; }
+  .screen.active { display: block; animation: fadeIn 0.4s; }
+  @keyframes fadeIn { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:translateY(0);} }
+  h2 { color: #2a5298; margin-bottom: 18px; border-bottom: 2px solid #667eea; padding-bottom: 8px; }
+  h3 { color: #764ba2; margin: 18px 0 10px; }
+  p, li { line-height: 1.7; margin-bottom: 10px; }
+  ul, ol { padding-left: 25px; }
+  .theory-block {
+    background: #f5f7ff;
+    border-left: 4px solid #667eea;
+    padding: 15px 20px;
+    margin: 15px 0;
+    border-radius: 6px;
+  }
+  .code-block {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    padding: 15px;
+    border-radius: 6px;
+    font-family: 'Consolas', monospace;
+    font-size: 13px;
+    overflow-x: auto;
+    margin: 10px 0;
+    white-space: pre;
+  }
+  .keyword { color: #569cd6; }
+  .comment { color: #6a9955; }
+  input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+  }
+  input:focus { outline: none; border-color: #667eea; }
+  button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 25px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  button:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102,126,234,0.4); }
+  .task {
+    background: #fff8e1;
+    border: 1px solid #ffd54f;
+    padding: 20px;
+    border-radius: 10px;
+    margin: 15px 0;
+  }
+  .options { margin-top: 15px; }
+  .option {
+    display: block;
+    padding: 12px 15px;
+    margin: 8px 0;
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .option:hover { border-color: #667eea; background: #f5f7ff; }
+  .option input { margin-right: 10px; }
+  .option.correct { border-color: #4caf50; background: #e8f5e9; }
+  .option.wrong { border-color: #f44336; background: #ffebee; }
+  .feedback { padding: 12px; border-radius: 8px; margin-top: 15px; display: none; }
+  .feedback.show { display: block; }
+  .feedback.ok { background: #e8f5e9; color: #2e7d32; border-left: 4px solid #4caf50; }
+  .feedback.err { background: #ffebee; color: #c62828; border-left: 4px solid #f44336; }
+  .nav-buttons { display: flex; justify-content: space-between; margin-top: 25px; gap: 10px; flex-wrap: wrap; }
+  .certificate {
+    border: 8px double #667eea;
+    padding: 40px;
+    text-align: center;
+    background: linear-gradient(135deg, #fff 0%, #f5f7ff 100%);
+    margin: 20px 0;
+  }
+  .certificate h2 { color: #764ba2; border: none; font-size: 32px; }
+  .certificate .name { font-size: 28px; color: #2a5298; margin: 20px 0; font-weight: bold; font-style: italic; }
+  .certificate .grade { font-size: 32px; color: #11998e; font-weight: bold; margin: 15px 0; }
+  .certificate .date { color: #777; margin-top: 20px; }
+  .seal {
+    display: inline-block;
+    width: 80px; height: 80px;
+    border: 3px solid #c9a227;
+    border-radius: 50%;
+    color: #c9a227;
+    line-height: 74px;
+    font-weight: bold;
+    margin-top: 15px;
+    transform: rotate(-15deg);
+  }
+  .errors-review { background: #fff3e0; padding: 20px; border-radius: 10px; margin: 15px 0; }
+  .errors-review .err-item { padding: 10px; margin: 8px 0; background: white; border-radius: 6px; border-left: 3px solid #ff9800; }
+  .star { color: #ffc107; font-size: 24px; }
+  @media print {
+    body { background: white; padding: 0; }
+    .no-print { display: none !important; }
+    .container { box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🖥️ Тренажёр: Управление процессами</h1>
+    <p>Дисциплина «Операционные системы и среды»</p>
+  </header>
+  <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+  <div class="screen active" id="screen-0">
+    <h2>Добро пожаловать!</h2>
+    <p>Перед началом работы введите своё имя для персонализации обучения и сертификата.</p>
+    <input type="text" id="userName" placeholder="Ваше имя и фамилия">
+    <div class="nav-buttons">
+      <span></span>
+      <button onclick="startTraining()">Начать обучение →</button>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-1">
+    <h2>📘 Теоретический материал</h2>
+
+    <h3>1. Понятие процесса</h3>
+    <div class="theory-block">
+      <b>Процесс</b> — программа, находящаяся в стадии выполнения, со своим контекстом: адресным пространством, регистрами ЦП, открытыми файлами и состоянием.
+    </div>
+    <p><b>Состояния процесса (5-модель):</b></p>
+    <ul>
+      <li><b>New</b> — создаётся</li>
+      <li><b>Ready</b> — готов к выполнению, ждёт ЦП</li>
+      <li><b>Running</b> — выполняется на процессоре</li>
+      <li><b>Waiting / Blocked</b> — ждёт событие (ввод-вывод, семафор)</li>
+      <li><b>Terminated</b> — завершён</li>
+    </ul>
+
+    <h3>2. Дескриптор процесса (PCB)</h3>
+    <p>Каждому процессу соответствует <b>Process Control Block</b>, содержащий: PID, состояние, счётчик команд (PC), регистры ЦП, информацию о планировании, учёт памяти и ввода-вывода.</p>
+
+    <h3>3. Создание и завершение процессов</h3>
+    <div class="code-block"><span class="comment"># Linux: создание процесса</span>
+<span class="keyword">fork</span>()    <span class="comment">// создаёт дочерний процесс (копия родителя)</span>
+<span class="keyword">exec</span>(...) <span class="comment">// заменяет образ процесса новой программой</span>
+<span class="keyword">exit</span>(n)   <span class="comment">// завершает процесс с кодом n</span>
+<span class="keyword">wait</span>(...) <span class="comment">// родитель ждёт завершения дочернего</span></div>
+
+    <h3>4. Планирование процессов</h3>
+    <p><b>Планировщик</b> выбирает процесс из очереди готовых. Критерии:</p>
+    <ul>
+      <li>Загрузка ЦП (CPU utilization)</li>
+      <li>Пропускная способность (throughput)</li>
+      <li>Время оборота (turnaround time)</li>
+      <li>Время ожидания (waiting time)</li>
+      <li>Время отклика (response time)</li>
+    </ul>
+    <p><b>Алгоритмы:</b> FCFS, SJF, Round Robin, приоритетное планирование, многоуровневые очереди.</p>
+
+    <h3>5. Синхронизация и взаимное исключение</h3>
+    <p>Для доступа к общим ресурсам используются: <b>семафоры</b>, <b>мьютексы</b>, <b>мониторы</b>. Классическая задача — «критическая секция».</p>
+
+    <h3>6. Тупики (Deadlock)</h3>
+    <p><b>Тупик</b> — ситуация, при которой каждый процесс из набора ждёт событие, которое может вызвать только другой процесс из этого набора.</p>
+    <p><b>4 условия Коффмана</b> (все должны выполняться одновременно):</p>
+    <ol>
+      <li>Взаимное исключение</li>
+      <li>Удержание и ожидание</li>
+      <li>Отсутствие вытеснения</li>
+      <li>Циклическое ожидание</li>
+    </ol>
+    <p><b>Методы работы:</b> игнорирование (страус), предотвращение, избегание (алгоритм банкира), обнаружение + восстановление.</p>
+
+    <div class="nav-buttons">
+      <button onclick="goScreen(0)" class="no-print">← Назад</button>
+      <button onclick="goScreen(2)">К заданиям →</button>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-2">
+    <h2>🛠️ Практические задания</h2>
+    <p>Изучите примеры работы с процессами. Это подготовит вас к контрольным задачам.</p>
+
+    <h3>Практика 1. Анализ вывода ps в Linux</h3>
+    <div class="code-block">USER       PID %CPU %MEM    VSZ   RSS TTY   STAT START   TIME COMMAND
+root         1  0.0  0.1 169344 13000 ?     Ss   Oct05   0:03 /sbin/init
+root       412  0.2  0.5 450000 42000 ?     Sl   Oct05   0:15 /usr/bin/Xorg
+user      1823 95.3  1.2 820000 98000 pts/0 R+   10:30  12:45 ./compute
+user      2001  0.0  0.0      0     0 ?     Z    10:32   0:00 [defunct]</div>
+    <p><b>Вопросы для самопроверки:</b></p>
+    <ul>
+      <li>Какой процесс потребляет больше всего ЦП? → <i>PID 1823 (95.3%)</i></li>
+      <li>Что означает STAT=Z у процесса 2001? → <i>«зомби» — завершён, но ждёт wait() от родителя</i></li>
+      <li>Какой процесс является предком всех? → <i>PID 1 (/sbin/init)</i></li>
+    </ul>
+
+    <h3>Практика 2. Расчёт времени ожидания (FCFS)</h3>
+    <p>Процессы приходят в порядке P1 (0), P2 (2), P3 (4), длительности: 8, 4, 1 мс.</p>
+    <p>P1 стартует в 0 (ожидание 0), P2 стартует в 8 (ожидание 8 − 2 = 6), P3 стартует в 12 (ожидание 12 − 4 = 8). Среднее = (0+6+8)/3 = <b>4.67 мс</b>.</p>
+
+    <h3>Практика 3. Проверка тупика по алгоритму банкира</h3>
+    <p>Доступно ресурсов: (3,3,2). Проверяем, существует ли безопасная последовательность — перебираем процессы, у которых Need ≤ Available, и «возвращаем» их Allocation.</p>
+
+    <div class="nav-buttons">
+      <button onclick="goScreen(1)">← Теория</button>
+      <button onclick="goScreen(3)">К задачам →</button>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-3">
+    <h2>📝 Контрольные задачи (3 задачи × 5 баллов)</h2>
+    <p>Максимум: 15 баллов. Итоговая оценка по 5-балльной шкале.</p>
+
+    <div class="task" id="task1">
+      <h3>Задача 1. Процессорное время (алгоритм SJF)</h3>
+      <p>Даны 4 процесса с временем выполнения (мс):</p>
+      <p><b>P1=6, P2=8, P3=7, P4=3</b>. Все прибыли одновременно (время 0).</p>
+      <p>Применяется алгоритм <b>SJF (Shortest Job First)</b> без вытеснения. Чему равно <b>среднее время ожидания</b>?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1" value="a"> a) 5.75 мс</label>
+        <label class="option"><input type="radio" name="q1" value="b"> b) 7.00 мс</label>
+        <label class="option"><input type="radio" name="q1" value="c"> c) 6.25 мс</label>
+        <label class="option"><input type="radio" name="q1" value="d"> d) 7.50 мс</label>
+      </div>
+      <div class="feedback" id="fb1"></div>
+    </div>
+
+    <div class="task" id="task2">
+      <h3>Задача 2. Анализ системного вывода</h3>
+      <p>Фрагмент вывода команды <code>top</code> в Linux:</p>
+      <div class="code-block">top - 14:22:10 up 5 days,  3:12,  2 users,  load average: 4.82, 3.95, 3.20
+Tasks: 210 total,   3 running, 205 sleeping,   2 stopped,   0 zombie
+%Cpu(s): 92.1 us,  3.5 sy,  0.0 ni,  3.8 id,  0.4 wa,  0.0 hi,  0.2 si
+MiB Mem:   7982.0 total,   1204.5 free,   5890.2 used,    887.3 buff/cache</div>
+      <p>Какое из утверждений <b>НЕВЕРНО</b>?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2" value="a"> a) Система сильно загружена: load average > числа ядер (типично 4)</label>
+        <label class="option"><input type="radio" name="q2" value="b"> b) Процессор почти полностью занят (92.1% пользовательский режим + 3.5% ядро)</label>
+        <label class="option"><input type="radio" name="q2" value="c"> c) В системе есть 2 зомби-процесса, ожидающих завершения</label>
+        <label class="option"><input type="radio" name="q2" value="d"> d) Имеется ожидание ввода-вывода (wa = 0.4%), что указывает на дисковые операции</label>
+      </div>
+      <div class="feedback" id="fb2"></div>
+    </div>
+
+    <div class="task" id="task3">
+      <h3>Задача 3. Проблема тупика</h3>
+      <p>Система имеет <b>12 устройств ввода-вывода</b> одинакового типа. Три процесса:</p>
+      <ul>
+        <li>P1: удерживает 4, максимум нужно 8</li>
+        <li>P2: удерживает 3, максимум нужно 6</li>
+        <li>P3: удерживает 3, максимум нужно 4</li>
+      </ul>
+      <p>Свободно: 12 − (4+3+3) = <b>2 устройства</b>. Какая из последовательностей завершения процессов <b>безопасна</b>?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3" value="a"> a) Безопасной последовательности нет, система в тупике</label>
+        <label class="option"><input type="radio" name="q3" value="b"> b) ⟨P3, P2, P1⟩</label>
+        <label class="option"><input type="radio" name="q3" value="c"> c) ⟨P1, P2, P3⟩</label>
+        <label class="option"><input type="radio" name="q3" value="d"> d) ⟨P2, P1, P3⟩</label>
+      </div>
+      <div class="feedback" id="fb3"></div>
+    </div>
+
+    <div class="nav-buttons">
+      <button onclick="goScreen(2)">← Назад</button>
+      <button onclick="checkAll()">Проверить ответы ✓</button>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-4">
+    <h2>🏆 Результаты</h2>
+    <div id="resultSummary"></div>
+
+    <div class="certificate" id="cert">
+      <h2>СЕРТИФИКАТ</h2>
+      <p style="color:#777; margin-top:10px;">об успешном прохождении тренажёра</p>
+      <p style="margin-top:25px; font-size:18px;">по дисциплине</p>
+      <p style="font-size:22px; font-weight:bold; color:#2a5298;">«Операционные системы и среды»</p>
+      <p style="margin-top:20px;">подтверждается, что</p>
+      <div class="name" id="certName">—</div>
+      <p>прошёл(а) тренажёр по теме</p>
+      <p style="font-size:20px; color:#764ba2; font-weight:bold; margin:10px 0;">«Управление процессами»</p>
+      <p>и набрал(а) баллов:</p>
+      <div class="grade" id="certGrade">— / 15</div>
+      <div id="certStars"></div>
+      <div class="seal">ОС<br>2026</div>
+      <div class="date" id="certDate"></div>
+    </div>
+
+    <div class="errors-review" id="errorsReview"></div>
+
+    <div class="nav-buttons no-print">
+      <button onclick="window.print()">🖨️ Печать сертификата</button>
+      <button onclick="location.reload()">🔄 Пройти заново</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const TOTAL_SCREENS = 5;
+let userName = '';
+
+const answers = {
+  q1: { correct: 'b', explain: 'Порядок SJF: P4(3) → P1(6) → P3(7) → P2(8). Время ожидания: P4=0, P1=3, P3=3+6=9, P2=3+6+7=16. Среднее = (0+3+9+16)/4 = 28/4 = 7.00 мс.' },
+  q2: { correct: 'c', explain: 'В выводе указано: «2 stopped, 0 zombie». Зомби-процессов НОЛЬ, а остановленных (stopped) — 2. Утверждение c) ложное.' },
+  q3: { correct: 'b', explain: 'Свободно 2. Need: P1=4, P2=3, P3=1. Выполниться может только P3 (1 ≤ 2) → свободно 2+3=5. Затем P2 (3 ≤ 5) → 5+3=8. Затем P1 (4 ≤ 8) → 8+4=12. Безопасная последовательность: ⟨P3, P2, P1⟩. Последовательности, начинающиеся с P1 или P2, невозможны: им не хватает свободных устройств.' }
+};
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text || '';
+  return div.innerHTML;
+}
+
+function goScreen(n) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + n).classList.add('active');
+  document.getElementById('progress').style.width = (n / (TOTAL_SCREENS - 1) * 100) + '%';
+  window.scrollTo(0, 0);
+}
+
+function startTraining() {
+  userName = document.getElementById('userName').value.trim();
+  if (!userName) { alert('Пожалуйста, введите имя'); return; }
+  goScreen(1);
+}
+
+function checkAll() {
+  let score = 0;
+  const errors = [];
+  const perTask = 5;
+
+  ['q1','q2','q3'].forEach((q, i) => {
+    const sel = document.querySelector(`input[name="${q}"]:checked`);
+    const fb = document.getElementById('fb' + (i+1));
+    document.querySelectorAll(`input[name="${q}"]`).forEach(o => {
+      const lbl = o.parentElement;
+      if (o.value === answers[q].correct) lbl.classList.add('correct');
+      else if (o.checked) lbl.classList.add('wrong');
+      o.disabled = true;
+    });
+    if (sel && sel.value === answers[q].correct) {
+      score += perTask;
+      fb.className = 'feedback show ok';
+      fb.innerHTML = '✅ <b>Верно!</b> +5 баллов. ' + answers[q].explain;
+    } else {
+      fb.className = 'feedback show err';
+      const userAns = sel ? sel.value.toUpperCase() : '—';
+      fb.innerHTML = `❌ <b>Неверно.</b> Ваш ответ: ${userAns}, правильный: ${answers[q].correct.toUpperCase()}. ${answers[q].explain}`;
+      errors.push({ num: i+1, user: userAns, correct: answers[q].correct.toUpperCase(), explain: answers[q].explain });
+    }
+  });
+
+  let grade;
+  if (score >= 14) grade = 5;
+  else if (score >= 11) grade = 4;
+  else if (score >= 7) grade = 3;
+  else grade = 2;
+
+  const safeName = escapeHtml(userName);
+  document.getElementById('resultSummary').innerHTML = `
+    <div style="background:#e8f5e9; padding:20px; border-radius:10px; margin-bottom:20px;">
+      <p style="font-size:18px;"><b>Уважаемый(ая) ${safeName}!</b></p>
+      <p style="margin-top:10px;">Вы набрали: <b style="color:#2a5298; font-size:22px;">${score} / 15 баллов</b></p>
+      <p>Итоговая оценка: <b style="color:#11998e; font-size:28px;">${grade}</b> из 5</p>
+    </div>
+  `;
+
+  document.getElementById('certName').textContent = userName;
+  document.getElementById('certGrade').textContent = `${score} / 15 баллов — оценка ${grade}`;
+  document.getElementById('certStars').innerHTML = `<div class="star">${'★'.repeat(grade)}${'☆'.repeat(5-grade)}</div>`;
+  document.getElementById('certDate').textContent = 'Дата: ' + new Date().toLocaleDateString('ru-RU', {day:'numeric', month:'long', year:'numeric'});
+
+  const errDiv = document.getElementById('errorsReview');
+  if (errors.length === 0) {
+    errDiv.innerHTML = '<h3 style="color:#2e7d32;">🎉 Ошибок нет! Превосходный результат!</h3>';
+  } else {
+    let html = '<h3>📋 Разбор ошибок</h3>';
+    errors.forEach(e => {
+      html += `<div class="err-item">
+        <b>Задача ${e.num}:</b> ваш ответ — <b>${e.user}</b>, верно — <b>${e.correct}</b><br>
+        <small>${e.explain}</small>
+      </div>`;
+    });
+    errDiv.innerHTML = html;
+  }
+
+  goScreen(4);
+}
+</script>
+</body>
+</html>
