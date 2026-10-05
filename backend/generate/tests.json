@@ -132,6 +132,24 @@
       "bodyMatcher": "partial"
     },
     {
+      "name": "Event card without title returns 400",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "event_card", "fields": {"title": ""}},
+      "expectedStatus": 400,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Event card refine without instruction returns 400",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "event_card_refine", "fields": {"title": "Тема"}, "instruction": ""},
+      "expectedStatus": 400,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    },
+    {
       "name": "Extracurricular analysis without paid subscription returns 403",
       "method": "POST",
       "path": "/",

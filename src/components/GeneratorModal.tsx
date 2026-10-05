@@ -23,6 +23,7 @@ import { useUsage } from "@/context/UsageContext";
 import { downloadTxt, downloadDocx } from "@/lib/download";
 import { saveLessonCardPrefill, matchTechnologies } from "@/components/lesson-card/prefill";
 import { saveTaskCardPrefill, COMPONENT_TO_TASK_TYPE } from "@/components/task-card/taskCardConfig";
+import { saveEventPrefill, mapIntensiveToEvent } from "@/components/event-card/eventCardConfig";
 
 const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
 
@@ -356,6 +357,11 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
       technologies: matchTechnologies(lessonFields.technology),
     });
     window.location.href = "/konstruktor-uroka";
+  };
+
+  const handleOpenEventBuilder = () => {
+    saveEventPrefill(mapIntensiveToEvent(intensiveFields));
+    window.location.href = "/konstruktor-masterklassov";
   };
 
   const handleOpenTaskCardBuilder = () => {
@@ -977,6 +983,17 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
                 Открыть в конструкторе заданий
               </Button>
             )}
+
+            {type === "intensive" && (
+              <Button
+                variant="outline"
+                className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
+                onClick={handleOpenEventBuilder}
+              >
+                <Icon name="LayoutTemplate" size={16} />
+                Открыть в конструкторе мастер-классов
+              </Button>
+            )}
           </div>
         ) : (
           <div className="mt-2 space-y-4 animate-fade-in">
@@ -1113,6 +1130,17 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
               >
                 <Icon name="LayoutTemplate" size={16} />
                 Оформить карточку задания
+              </Button>
+            )}
+
+            {type === "intensive" && (
+              <Button
+                variant="outline"
+                className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
+                onClick={handleOpenEventBuilder}
+              >
+                <Icon name="LayoutTemplate" size={16} />
+                Оформить карточку мастер-класса
               </Button>
             )}
           </div>

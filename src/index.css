@@ -133,7 +133,8 @@
     display: none !important;
   }
   #lesson-card-print,
-  #task-card-print {
+  #task-card-print,
+  #event-card-print {
     border: none !important;
     padding: 0 !important;
   }

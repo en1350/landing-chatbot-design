@@ -635,6 +635,85 @@ def build_task_card_refine_prompt(f: dict, instruction: str) -> str:
 {{"goal": "обновлённая или прежняя цель задания одним предложением", "task": "полный обновлённый текст задания", "criteria": "обновлённые критерии оценки"}}"""
 
 
+def build_event_card_context(f: dict) -> str:
+    scenario = f.get('scenario') or []
+    scenario_lines = []
+    for i, s in enumerate(scenario, 1):
+        scenario_lines.append(
+            f"{i}. {(s.get('title') or '').strip() or '(без названия)'} | {(s.get('time') or '').strip() or '(время не указано)'} | {(s.get('desc') or '').strip() or '(пусто)'}"
+        )
+    scenario_block = "\n".join(scenario_lines) if scenario_lines else "(сценарий пуст)"
+    return f"""Название / тема: {(f.get('title') or '').strip() or 'не указана'}
+Формат: {(f.get('format') or 'Мастер-класс').strip()}
+Целевая аудитория: {(f.get('audience') or 'Школьники').strip()}
+Длительность: {(f.get('duration') or '45 минут').strip()}
+Уровень сложности: {(f.get('level') or 'Начальный').strip()}
+Проведение: {(f.get('mode') or 'Онлайн').strip()}
+Участников: от {f.get('minParticipants') or '?'} до {f.get('maxParticipants') or '?'}
+Описание / цели: {(f.get('description') or '').strip() or '(пусто)'}
+Результат для участника: {(f.get('result') or '').strip() or '(пусто)'}
+Необходимые материалы: {(f.get('materials') or '').strip() or '(пусто)'}
+Сценарий (этап | время | содержание):
+{scenario_block}"""
+
+
+EVENT_CARD_JSON_FORMAT = """{"description": "описание и цели события, 2-4 предложения", "result": "что получит участник после события, 1-3 предложения", "scenario": [{"title": "название этапа", "time": "10 мин", "desc": "содержание этапа, 1-3 предложения"}], "materials": "каждый материал с новой строки"}"""
+
+
+def build_event_card_prompt(f: dict) -> str:
+    return f"""Ты опытный методист и продюсер образовательных событий. Составь содержание карточки образовательного события на русском языке.
+
+{build_event_card_context(f)}
+
+Заполни или улучши описание, результат для участника, поминутный сценарий и список материалов. Если поля уже заполнены преподавателем — сохрани их смысл и дополни. Сценарий: 4-8 этапов, сумма времени должна укладываться в длительность «{(f.get('duration') or '45 минут').strip()}», формы работы подбирай под формат «{(f.get('format') or 'Мастер-класс').strip()}» и аудиторию «{(f.get('audience') or 'Школьники').strip()}». Без markdown-разметки.
+
+Верни ответ СТРОГО в формате JSON без markdown, пояснений и текста до/после:
+{EVENT_CARD_JSON_FORMAT}"""
+
+
+def build_event_card_refine_prompt(f: dict, instruction: str) -> str:
+    return f"""Ты опытный методист и продюсер образовательных событий. Вот текущая карточка события:
+
+{build_event_card_context(f)}
+
+Преподаватель просит доработать карточку по инструкции: «{instruction}»
+
+Измени описание, результат, сценарий и/или материалы в соответствии с инструкцией. Если она касается одной части — измени в первую очередь её, но верни ВСЕ поля целиком. Без markdown-разметки.
+
+Верни ответ СТРОГО в формате JSON без markdown, пояснений и текста до/после:
+{EVENT_CARD_JSON_FORMAT}"""
+
+
+def parse_ai_json(raw: str):
+    cleaned = raw.strip()
+    if cleaned.startswith('```'):
+        cleaned = cleaned.split('```')[1]
+        if cleaned.startswith('json'):
+            cleaned = cleaned[4:]
+        cleaned = cleaned.strip()
+    return json.loads(cleaned)
+
+
+def normalize_event_card(parsed: dict) -> dict:
+    scenario = []
+    for s in parsed.get('scenario') or []:
+        if isinstance(s, dict):
+            scenario.append({
+                'title': str(s.get('title') or ''),
+                'time': str(s.get('time') or ''),
+                'desc': str(s.get('desc') or ''),
+            })
+    materials = parsed.get('materials') or ''
+    if isinstance(materials, list):
+        materials = "\n".join(str(m) for m in materials)
+    return {
+        'description': str(parsed.get('description') or ''),
+        'result': str(parsed.get('result') or ''),
+        'scenario': scenario,
+        'materials': str(materials),
+    }
+
+
 def build_extracurricular_prompt(data: dict) -> str:
     rows = data.get('rows') or []
     lines = []
@@ -1049,6 +1128,27 @@ def handler(event: dict, context) -> dict:
                 'task': parsed.get('task') or '',
                 'criteria': parsed.get('criteria') or '',
             }, ensure_ascii=False)}
+
+        elif action in ('event_card', 'event_card_refine'):
+            fields = body.get('fields') or {}
+            instruction = (body.get('instruction') or '').strip()
+            if not (fields.get('title') or '').strip():
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите название события'})}
+            if action == 'event_card_refine' and not instruction:
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите, что нужно доработать'})}
+
+            prompt = build_event_card_prompt(fields) if action == 'event_card' else build_event_card_refine_prompt(fields, instruction)
+            raw = call_ai([
+                {'role': 'system', 'content': 'Ты профессиональный методист образовательных событий. Отвечаешь строго валидным JSON без markdown и пояснений, всегда на русском языке.'},
+                {'role': 'user', 'content': prompt},
+            ], temperature=0.7)
+
+            try:
+                parsed = parse_ai_json(raw)
+            except (json.JSONDecodeError, IndexError):
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ вернул некорректный ответ, попробуйте снова'})}
+
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps(normalize_event_card(parsed), ensure_ascii=False)}
 
         elif action == 'extracurricular_analysis':
             if not is_user_paid(event):
