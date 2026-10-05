@@ -15,6 +15,7 @@ import InfoBasicsInteractive from "@/components/student-trainer/InfoBasicsIntera
 import AlgorithmsTask from "@/components/student-trainer/AlgorithmsTask";
 import BackwardsAnalysisTask from "@/components/student-trainer/BackwardsAnalysisTask";
 import NetworkProtocolsTask from "@/components/student-trainer/NetworkProtocolsTask";
+import TrainerFullscreen from "@/components/student-trainer/TrainerFullscreen";
 
 /* ---------- Список тренажёров ---------- */
 
@@ -56,6 +57,22 @@ interface TrainerItem {
   accent: string;
   paid?: boolean;
 }
+
+const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
+  "ai-arcade": "/ai-arcade.html",
+  "it-project-simulator": "/it-project-simulator.html",
+  "python-java-types": "/python-java-types.html",
+  "os-components": "/os-components.html",
+  "os-processes": "/os-processes.html",
+  "media-access": "/media-access-methods.html",
+  "media-access-test": "/media-access-test.html",
+  "digital-info": "/computer-digital-info.html",
+  "database-lesson": "/database-lesson.html",
+  "tcpip-addresses": "/tcpip-addresses.html",
+  "linear-programs": "/linear-programs.html",
+  "code-duel": "/code-duel.html",
+  "sets-python-js": "/sets-python-js.html",
+};
 
 const CATEGORIES: CategoryItem[] = [
   {
@@ -243,6 +260,7 @@ const StudentTrainer = () => {
   const { user, isPaid } = useAuth();
   const [category, setCategory] = useState<CategoryKey | null>(null);
   const [active, setActive] = useState<TrainerKey | null>(null);
+  const activeTrainer = TRAINERS.find((t) => t.key === active);
   const [decomposerOpen, setDecomposerOpen] = useState(false);
   const [randomizerOpen, setRandomizerOpen] = useState(false);
   const [antiplagiatOpen, setAntiplagiatOpen] = useState(false);
@@ -432,117 +450,28 @@ const StudentTrainer = () => {
                     {user ? "Оформить подписку" : "Войти и оформить подписку"}
                   </Button>
                 </div>
-              ) : active === "ai-arcade" ? (
-                <div className="rounded-2xl border border-border bg-card p-3 md:p-5 shadow-sm max-w-[840px] overflow-x-auto">
-                  <iframe
-                    src="/ai-arcade.html"
-                    title="AI Arcade: Архитектура нейросети"
-                    className="w-[800px] h-[600px] rounded-xl border-0"
-                  />
-                </div>
-              ) : active === "it-project-simulator" ? (
-                <div className="rounded-2xl border border-border bg-card p-3 md:p-5 shadow-sm max-w-[940px] overflow-x-auto">
-                  <iframe
-                    src="/it-project-simulator.html"
-                    title="IT Project Simulator"
-                    className="w-full min-w-[600px] h-[900px] rounded-xl border-0"
-                  />
-                </div>
-              ) : active === "python-java-types" ? (
-                <div className="rounded-2xl border border-border bg-card p-3 md:p-5 shadow-sm max-w-[1180px] overflow-x-auto">
-                  <iframe
-                    src="/python-java-types.html"
-                    title="Типы данных: Python и Java"
-                    className="w-full min-w-[700px] h-[1000px] rounded-xl border-0"
-                  />
-                </div>
-              ) : active === "os-components" ? (
-                <div className="rounded-2xl border border-border bg-card p-3 md:p-5 shadow-sm max-w-[1000px] overflow-x-auto">
-                  <iframe
-                    src="/os-components.html"
-                    title="Функциональные компоненты ОС"
-                    className="w-full min-w-[600px] h-[1000px] rounded-xl border-0"
-                  />
-                </div>
-              ) : active === "os-processes" ? (
-                <div className="rounded-2xl border border-border bg-card p-3 md:p-5 shadow-sm max-w-[1000px] overflow-x-auto">
-                  <iframe
-                    src="/os-processes.html"
-                    title="Управление процессами"
-                    className="w-full min-w-[600px] h-[1000px] rounded-xl border-0"
-                  />
-                </div>
-              ) : active === "media-access" ? (
-                <div className="rounded-2xl border border-border bg-card p-3 md:p-5 shadow-sm max-w-[1440px] overflow-x-auto">
-                  <iframe
-                    src="/media-access-methods.html"
-                    title="Методы доступа к среде передачи данных"
-                    className="w-full min-w-[1000px] h-[1250px] rounded-xl border-0"
-                  />
-                </div>
-              ) : active === "media-access-test" ? (
-                <div className="rounded-2xl border border-border bg-card p-3 md:p-5 shadow-sm max-w-[900px] overflow-x-auto">
-                  <iframe
-                    src="/media-access-test.html"
-                    title="Тест: методы доступа к сети"
-                    className="w-full min-w-[500px] h-[1200px] rounded-xl border-0"
-                  />
-                </div>
-              ) : active === "digital-info" ? (
-                <div className="rounded-2xl border border-border bg-card p-3 md:p-5 shadow-sm max-w-[900px] overflow-x-auto">
-                  <iframe
-                    src="/computer-digital-info.html"
-                    title="Компьютер и цифровое представление информации"
-                    className="w-full min-w-[360px] h-[1100px] rounded-xl border-0"
-                  />
-                </div>
-              ) : active === "database-lesson" ? (
-                <div className="rounded-2xl border border-border bg-card p-3 md:p-5 shadow-sm max-w-[900px] overflow-x-auto">
-                  <iframe
-                    src="/database-lesson.html"
-                    title="Создание базы данных: назначение, виды, модель"
-                    className="w-full min-w-[360px] h-[1100px] rounded-xl border-0"
-                  />
-                </div>
-              ) : active === "tcpip-addresses" ? (
-                <div className="rounded-2xl border border-border bg-card p-3 md:p-5 shadow-sm max-w-[1150px] overflow-x-auto">
-                  <iframe
-                    src="/tcpip-addresses.html"
-                    title="Типы адресов стека TCP/IP"
-                    className="w-full min-w-[420px] h-[1200px] rounded-xl border-0"
-                  />
-                </div>
-              ) : active === "linear-programs" ? (
-                <div className="rounded-2xl border border-border bg-card p-3 md:p-5 shadow-sm max-w-[1240px] overflow-x-auto">
-                  <iframe
-                    src="/linear-programs.html"
-                    title="Составление программ линейной структуры"
-                    className="w-full min-w-[700px] h-[1300px] rounded-xl border-0"
-                  />
-                </div>
-              ) : active === "code-duel" ? (
-                <div className="rounded-2xl border border-border bg-card p-3 md:p-5 shadow-sm max-w-[1180px] overflow-x-auto">
-                  <iframe
-                    src="/code-duel.html"
-                    title="Кодовая Дуэль: линейные программы"
-                    className="w-full min-w-[700px] h-[1100px] rounded-xl border-0"
-                  />
-                </div>
-              ) : active === "sets-python-js" ? (
-                <div className="rounded-2xl border border-border bg-card p-3 md:p-5 shadow-sm max-w-[1240px] overflow-x-auto">
-                  <iframe
-                    src="/sets-python-js.html"
-                    title="Множества: Python и JavaScript"
-                    className="w-full min-w-[700px] h-[1400px] rounded-xl border-0"
-                  />
-                </div>
               ) : (
-                <div className="rounded-2xl border border-border bg-card p-5 md:p-8 shadow-sm max-w-2xl">
-                  {active === "info-basics" && <InfoBasicsInteractive />}
-                  {active === "algorithms" && <AlgorithmsTask />}
-                  {active === "backwards" && <BackwardsAnalysisTask />}
-                  {active === "network-protocols" && <NetworkProtocolsTask />}
-                </div>
+                <TrainerFullscreen
+                  icon={activeTrainer?.icon || ""}
+                  title={activeTrainer?.title || ""}
+                  onClose={() => setActive(null)}
+                >
+                  {IFRAME_SRC[active] ? (
+                    <iframe
+                      key={active}
+                      src={IFRAME_SRC[active]}
+                      title={activeTrainer?.title}
+                      className="block h-full w-full border-0"
+                    />
+                  ) : (
+                    <div className="mx-auto w-full max-w-3xl p-4 sm:p-8">
+                      {active === "info-basics" && <InfoBasicsInteractive />}
+                      {active === "algorithms" && <AlgorithmsTask />}
+                      {active === "backwards" && <BackwardsAnalysisTask />}
+                      {active === "network-protocols" && <NetworkProtocolsTask />}
+                    </div>
+                  )}
+                </TrainerFullscreen>
               )}
             </>
           )}
