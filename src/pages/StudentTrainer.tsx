@@ -35,7 +35,8 @@ type TrainerKey =
   | "database-lesson"
   | "tcpip-addresses"
   | "linear-programs"
-  | "code-duel";
+  | "code-duel"
+  | "sets-python-js";
 
 interface CategoryItem {
   key: CategoryKey;
@@ -214,6 +215,15 @@ const TRAINERS: TrainerItem[] = [
     title: "Кодовая Дуэль: линейные программы",
     description: "Дуэль на двоих с таймером, бонусами за скорость, шутками и именным сертификатом победителя",
     accent: "#ff00ff",
+    paid: true,
+  },
+  {
+    key: "sets-python-js",
+    category: "programming",
+    icon: "🧮",
+    title: "Множества: Python и JavaScript",
+    description: "Теория с параллельным сравнением двух языков, 10 практических заданий, тест, игра на 3 команды и рефлексия",
+    accent: "#4facfe",
     paid: true,
   },
 ];
@@ -499,6 +509,14 @@ const StudentTrainer = () => {
                     src="/code-duel.html"
                     title="Кодовая Дуэль: линейные программы"
                     className="w-full min-w-[700px] h-[1100px] rounded-xl border-0"
+                  />
+                </div>
+              ) : active === "sets-python-js" ? (
+                <div className="rounded-2xl border border-border bg-card p-3 md:p-5 shadow-sm max-w-[1240px] overflow-x-auto">
+                  <iframe
+                    src="/sets-python-js.html"
+                    title="Множества: Python и JavaScript"
+                    className="w-full min-w-[700px] h-[1400px] rounded-xl border-0"
                   />
                 </div>
               ) : (

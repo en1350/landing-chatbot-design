@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Интерактивный урок: Множества в Python и JavaScript</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    min-height: 100vh;
+    color: #fff;
+    overflow-x: hidden;
+    position: relative;
+    background: #1a1a2e;
+  }
+  body::before, body::after, .blob {
+    content: '';
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    z-index: 0;
+    pointer-events: none;
+  }
+  body::before {
+    width: 500px; height: 500px;
+    background: #ff6b9d;
+    top: -100px; left: -100px;
+    opacity: 0.6;
+  }
+  body::after {
+    width: 600px; height: 600px;
+    background: #4facfe;
+    bottom: -150px; right: -150px;
+    opacity: 0.6;
+  }
+  .blob {
+    width: 400px; height: 400px;
+    background: #43e97b;
+    top: 40%; left: 30%;
+    opacity: 0.4;
+  }
+  .blob.b2 {
+    background: #fa709a;
+    top: 60%; left: 70%;
+    width: 350px; height: 350px;
+    opacity: 0.5;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 30px 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 30px;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 24px;
+    border: 1px solid rgba(255,255,255,0.18);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  }
+  header h1 {
+    font-size: 2.3em;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #fff, #b8d4ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  header p { opacity: 0.9; font-size: 1.05em; }
+
+  nav {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 15px;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.18);
+  }
+  nav button {
+    padding: 12px 22px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.05);
+    color: #fff;
+    border-radius: 14px;
+    cursor: pointer;
+    font-size: 0.95em;
+    font-weight: 600;
+    transition: all 0.3s;
+  }
+  nav button:hover {
+    background: rgba(255,255,255,0.15);
+    transform: translateY(-2px);
+  }
+  nav button.active {
+    background: linear-gradient(135deg, rgba(255,107,157,0.6), rgba(79,172,254,0.6));
+    border-color: rgba(255,255,255,0.4);
+    box-shadow: 0 4px 20px rgba(255,107,157,0.3);
+  }
+
+  .glass {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.18);
+    padding: 28px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  }
+  .glass h2 {
+    margin-bottom: 18px;
+    font-size: 1.6em;
+    background: linear-gradient(135deg, #fff, #b8d4ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .glass h3 {
+    margin: 18px 0 10px;
+    color: #ffd6e7;
+    font-size: 1.15em;
+  }
+  .glass p, .glass li {
+    line-height: 1.7;
+    margin-bottom: 10px;
+    font-size: 0.98em;
+  }
+  .glass ul, .glass ol { padding-left: 22px; }
+
+  .lang-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin: 15px 0;
+  }
+  @media (max-width: 700px) {
+    .lang-compare { grid-template-columns: 1fr; }
+  }
+  .lang-col {
+    background: rgba(0,0,0,0.25);
+    border-radius: 14px;
+    padding: 16px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .lang-col.python { border-top: 3px solid #3776ab; }
+  .lang-col.javascript { border-top: 3px solid #f7df1e; }
+  .lang-label {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .lang-label.py { background: #3776ab; color: #fff; }
+  .lang-label.js { background: #f7df1e; color: #000; }
+
+  pre {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    padding: 14px;
+    overflow-x: auto;
+    margin: 10px 0;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.88em;
+    color: #a8f0c6;
+  }
+  code {
+    background: rgba(0,0,0,0.3);
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-family: 'Consolas', monospace;
+    color: #ffd6e7;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+    background: rgba(0,0,0,0.2);
+    border-radius: 12px;
+    overflow: hidden;
+    font-size: 0.92em;
+  }
+  th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  th {
+    background: rgba(255,107,157,0.2);
+    font-weight: 700;
+  }
+
+  .section { display: none; animation: fadeIn 0.4s; }
+  .section.active { display: block; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .task {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 14px;
+  }
+  .task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .task-number {
+    background: linear-gradient(135deg, #ff6b9d, #4facfe);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.9em;
+  }
+  .task-status {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 600;
+  }
+  .task-status.correct { background: rgba(67,233,123,0.3); color: #a8f0c6; }
+  .task-status.wrong { background: rgba(255,107,157,0.3); color: #ffb8d1; }
+  .task-status.pending { background: rgba(255,255,255,0.1); }
+
+  .lang-switch {
+    display: inline-flex;
+    gap: 4px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 10px;
+    padding: 3px;
+  }
+  .lang-switch button {
+    padding: 4px 12px;
+    border: none;
+    background: transparent;
+    color: #fff;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85em;
+    font-weight: 600;
+  }
+  .lang-switch button.active-py { background: #3776ab; }
+  .lang-switch button.active-js { background: #f7df1e; color: #000; }
+
+  .task input[type="text"] {
+    width: 100%;
+    padding: 10px 14px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 10px;
+    color: #fff;
+    font-size: 0.95em;
+    margin: 8px 0;
+    font-family: 'Consolas', monospace;
+  }
+  .task input[type="text"]:focus {
+    outline: none;
+    border-color: #ff6b9d;
+    box-shadow: 0 0 0 3px rgba(255,107,157,0.2);
+  }
+  .task button {
+    padding: 8px 18px;
+    background: linear-gradient(135deg, #ff6b9d, #4facfe);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .task button:hover { transform: translateY(-2px); }
+  .task .lang-switch button { padding: 4px 12px; background: transparent; border-radius: 8px; }
+  .task .lang-switch button.active-py { background: #3776ab; }
+  .task .lang-switch button.active-js { background: #f7df1e; color: #000; }
+  .task .hint {
+    margin-top: 10px;
+    padding: 10px;
+    background: rgba(255,214,231,0.1);
+    border-left: 3px solid #ffd6e7;
+    border-radius: 8px;
+    font-size: 0.9em;
+    display: none;
+  }
+  .task .hint.show { display: block; }
+
+  .question {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 14px;
+  }
+  .options { display: grid; gap: 8px; margin-top: 12px; }
+  .option {
+    padding: 10px 14px;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.95em;
+  }
+  .option:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.3);
+  }
+  .option.selected {
+    background: linear-gradient(135deg, rgba(255,107,157,0.3), rgba(79,172,254,0.3));
+    border-color: #ff6b9d;
+  }
+  .option.correct {
+    background: rgba(67,233,123,0.3);
+    border-color: #43e97b;
+  }
+  .option.wrong {
+    background: rgba(255,107,157,0.3);
+    border-color: #ff6b9d;
+  }
+
+  .teams-setup {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+  @media (max-width: 700px) {
+    .teams-setup { grid-template-columns: 1fr; }
+  }
+  .team-card {
+    padding: 18px;
+    border-radius: 14px;
+    text-align: center;
+    border: 2px solid;
+  }
+  .team-card.t1 { background: rgba(255,107,157,0.2); border-color: #ff6b9d; }
+  .team-card.t2 { background: rgba(79,172,254,0.2); border-color: #4facfe; }
+  .team-card.t3 { background: rgba(67,233,123,0.2); border-color: #43e97b; }
+  .team-card input {
+    width: 100%;
+    padding: 8px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    color: #fff;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  .team-card input:focus { outline: none; border-color: #fff; }
+  .team-score {
+    font-size: 2.5em;
+    font-weight: 800;
+    margin: 8px 0;
+  }
+  .team-card.active {
+    box-shadow: 0 0 30px currentColor;
+    transform: scale(1.03);
+    transition: all 0.3s;
+  }
+
+  .game-question {
+    background: rgba(0,0,0,0.3);
+    padding: 22px;
+    border-radius: 16px;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 1.05em;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+  .game-controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 15px;
+  }
+  .game-controls button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.95em;
+  }
+  .btn-correct { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+  .btn-wrong { background: linear-gradient(135deg, #ff6b9d, #fa709a); }
+  .btn-start { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+
+  .reflection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 15px;
+  }
+  .reflection-card {
+    padding: 20px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 16px;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+  }
+  .reflection-card h4 {
+    margin-bottom: 12px;
+    color: #ffd6e7;
+  }
+  .reflection-card textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 10px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 10px;
+    color: #fff;
+    font-family: inherit;
+    resize: vertical;
+  }
+  .reflection-card textarea:focus {
+    outline: none;
+    border-color: #ff6b9d;
+  }
+
+  .emoji-rate {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 15px 0;
+  }
+  .emoji-rate button {
+    font-size: 2em;
+    background: rgba(255,255,255,0.05);
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 14px;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .emoji-rate button:hover {
+    transform: scale(1.15);
+    background: rgba(255,255,255,0.15);
+  }
+  .emoji-rate button.selected {
+    background: linear-gradient(135deg, rgba(255,107,157,0.4), rgba(79,172,254,0.4));
+    border-color: #fff;
+    transform: scale(1.1);
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 15px 0;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff6b9d, #4facfe, #43e97b);
+    transition: width 0.4s;
+    border-radius: 10px;
+  }
+
+  .result-banner {
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(255,107,157,0.2), rgba(79,172,254,0.2));
+    border-radius: 14px;
+    margin-top: 15px;
+    font-size: 1.1em;
+    font-weight: 600;
+    display: none;
+  }
+  .result-banner.show { display: block; }
+
+  .info-box {
+    background: rgba(79,172,254,0.15);
+    border-left: 4px solid #4facfe;
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin: 12px 0;
+  }
+  .warn-box {
+    background: rgba(255,193,7,0.15);
+    border-left: 4px solid #ffc107;
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin: 12px 0;
+  }
+</style>
+</head>
+<body>
+<div class="blob"></div>
+<div class="blob b2"></div>
+
+<div class="container">
+  <header>
+    <h1>🎓 Множества: Python vs JavaScript</h1>
+    <p>Интерактивный урок с параллельным сравнением двух языков</p>
+  </header>
+
+  <nav>
+    <button class="nav-btn active" data-section="theory">📖 Теория</button>
+    <button class="nav-btn" data-section="practice">💻 Практика (10)</button>
+    <button class="nav-btn" data-section="test">✅ Тест (10)</button>
+    <button class="nav-btn" data-section="game">🎮 Игра на 3 команды</button>
+    <button class="nav-btn" data-section="reflection">💭 Рефлексия</button>
+  </nav>
+
+  <div class="section active" id="theory">
+    <div class="glass">
+      <h2>📖 Что такое множество?</h2>
+      <p><b>Множество (set)</b> — неупорядоченная коллекция <b>уникальных</b> элементов. В обоих языках есть встроенная поддержка, но с разной философией.</p>
+
+      <div class="lang-compare">
+        <div class="lang-col python">
+          <span class="lang-label py">🐍 Python</span>
+          <pre>a = {1, 2, 3, 4, 5}
+b = set([1, 2, 2, 3])
+# b = {1, 2, 3}
+# Есть операторы: | &amp; - ^</pre>
+        </div>
+        <div class="lang-col javascript">
+          <span class="lang-label js">🟨 JavaScript</span>
+          <pre>const a = new Set([1, 2, 3, 4, 5]);
+const b = new Set([1, 2, 2, 3]);
+// b = Set {1, 2, 3}
+// Нет операторов — только методы</pre>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        ⚠️ <b>Важно:</b> в Python <code>{}</code> — это пустой <b>словарь</b>, а не множество! Пустое множество: <code>set()</code>. В JavaScript <code>{}</code> — это блок кода или объект.
+      </div>
+    </div>
+
+    <div class="glass">
+      <h2>🔧 Операторы над множествами</h2>
+      <p>Python поддерживает операторы напрямую. В JavaScript нужно использовать методы или комбинации <code>spread</code> и <code>filter</code>.</p>
+
+      <h3>1. Объединение (Union)</h3>
+      <div class="lang-compare">
+        <div class="lang-col python">
+          <span class="lang-label py">🐍 Python</span>
+          <pre>a = {1, 2, 3}
+b = {3, 4, 5}
+c = a | b          # {1, 2, 3, 4, 5}
+d = a.union(b)     # то же самое</pre>
+        </div>
+        <div class="lang-col javascript">
+          <span class="lang-label js">🟨 JavaScript</span>
+          <pre>const a = new Set([1, 2, 3]);
+const b = new Set([3, 4, 5]);
+const c = new Set([...a, ...b]);
+// Set {1, 2, 3, 4, 5}</pre>
+        </div>
+      </div>
+
+      <h3>2. Пересечение (Intersection)</h3>
+      <div class="lang-compare">
+        <div class="lang-col python">
+          <span class="lang-label py">🐍 Python</span>
+          <pre>a = {1, 2, 3, 4}
+b = {3, 4, 5, 6}
+c = a &amp; b          # {3, 4}
+d = a.intersection(b)</pre>
+        </div>
+        <div class="lang-col javascript">
+          <span class="lang-label js">🟨 JavaScript</span>
+          <pre>const a = new Set([1, 2, 3, 4]);
+const b = new Set([3, 4, 5, 6]);
+const c = new Set(
+  [...a].filter(x =&gt; b.has(x))
+);
+// Set {3, 4}</pre>
+        </div>
+      </div>
+
+      <h3>3. Разность (Difference)</h3>
+      <div class="lang-compare">
+        <div class="lang-col python">
+          <span class="lang-label py">🐍 Python</span>
+          <pre>a = {1, 2, 3, 4}
+b = {3, 4, 5}
+c = a - b          # {1, 2}
+d = a.difference(b)</pre>
+        </div>
+        <div class="lang-col javascript">
+          <span class="lang-label js">🟨 JavaScript</span>
+          <pre>const a = new Set([1, 2, 3, 4]);
+const b = new Set([3, 4, 5]);
+const c = new Set(
+  [...a].filter(x =&gt; !b.has(x))
+);
+// Set {1, 2}</pre>
+        </div>
+      </div>
+
+      <h3>4. Симметрическая разность</h3>
+      <div class="lang-compare">
+        <div class="lang-col python">
+          <span class="lang-label py">🐍 Python</span>
+          <pre>a = {1, 2, 3}
+b = {2, 3, 4}
+c = a ^ b          # {1, 4}
+d = a.symmetric_difference(b)</pre>
+        </div>
+        <div class="lang-col javascript">
+          <span class="lang-label js">🟨 JavaScript</span>
+          <pre>const a = new Set([1, 2, 3]);
+const b = new Set([2, 3, 4]);
+const c = new Set([
+  ...[...a].filter(x =&gt; !b.has(x)),
+  ...[...b].filter(x =&gt; !a.has(x))
+]);
+// Set {1, 4}</pre>
+        </div>
+      </div>
+
+      <h3>5. Проверка вхождения и подмножества</h3>
+      <div class="lang-compare">
+        <div class="lang-col python">
+          <span class="lang-label py">🐍 Python</span>
+          <pre>a = {1, 2, 3}
+3 in a              # True
+{1, 2} &lt;= a         # True (подмножество)
+a &gt;= {1, 2}         # True (надмножество)</pre>
+        </div>
+        <div class="lang-col javascript">
+          <span class="lang-label js">🟨 JavaScript</span>
+          <pre>const a = new Set([1, 2, 3]);
+a.has(3);           // true
+// Подмножество — вручную:
+[...b].every(x =&gt; a.has(x));</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass">
+      <h2>📊 Сводная таблица</h2>
+      <table>
+        <tr><th>Операция</th><th>🐍 Python</th><th>🟨 JavaScript</th></tr>
+        <tr><td>Создать</td><td><code>{1,2,3}</code> или <code>set()</code></td><td><code>new Set([1,2,3])</code></td></tr>
+        <tr><td>Объединение</td><td><code>a | b</code></td><td><code>new Set([...a, ...b])</code></td></tr>
+        <tr><td>Пересечение</td><td><code>a &amp; b</code></td><td><code>[...a].filter(x =&gt; b.has(x))</code></td></tr>
+        <tr><td>Разность</td><td><code>a - b</code></td><td><code>[...a].filter(x =&gt; !b.has(x))</code></td></tr>
+        <tr><td>Симм. разность</td><td><code>a ^ b</code></td><td>комбинация filter</td></tr>
+        <tr><td>Проверка элемента</td><td><code>x in a</code></td><td><code>a.has(x)</code></td></tr>
+        <tr><td>Добавить</td><td><code>a.add(x)</code></td><td><code>a.add(x)</code></td></tr>
+        <tr><td>Удалить</td><td><code>a.remove(x)</code></td><td><code>a.delete(x)</code></td></tr>
+        <tr><td>Размер</td><td><code>len(a)</code></td><td><code>a.size</code></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="section" id="practice">
+    <div class="glass">
+      <h2>💻 Практические задания</h2>
+      <p>Переключайтесь между Python и JavaScript. Введите результат выполнения кода.</p>
+      <div class="progress-bar"><div class="progress-fill" id="practiceProgress" style="width:0%"></div></div>
+      <div id="tasksContainer"></div>
+      <div class="result-banner" id="practiceResult"></div>
+    </div>
+  </div>
+
+  <div class="section" id="test">
+    <div class="glass">
+      <h2>✅ Тестовые задания</h2>
+      <p>Выберите один правильный ответ. Вопросы по обоим языкам.</p>
+      <div class="progress-bar"><div class="progress-fill" id="testProgress" style="width:0%"></div></div>
+      <div id="testContainer"></div>
+      <button onclick="checkTest()" style="margin-top:15px;padding:12px 24px;background:linear-gradient(135deg,#ff6b9d,#4facfe);border:none;border-radius:12px;color:#fff;font-weight:700;cursor:pointer;font-size:1em;">Проверить тест</button>
+      <div class="result-banner" id="testResult"></div>
+    </div>
+  </div>
+
+  <div class="section" id="game">
+    <div class="glass">
+      <h2>🎮 Игровой интенсив: Битва команд</h2>
+      <p>Три команды по очереди отвечают на вопросы по Python и JavaScript. За правильный ответ — <b>+10 очков</b>, за неправильный — <b>−5 очков</b>.</p>
+
+      <div class="teams-setup">
+        <div class="team-card t1" id="team1Card">
+          <input type="text" id="team1Name" value="Python Masters" placeholder="Название">
+          <div class="team-score" id="team1Score">0</div>
+          <small>очков</small>
+        </div>
+        <div class="team-card t2" id="team2Card">
+          <input type="text" id="team2Name" value="JS Wizards" placeholder="Название">
+          <div class="team-score" id="team2Score">0</div>
+          <small>очков</small>
+        </div>
+        <div class="team-card t3" id="team3Card">
+          <input type="text" id="team3Name" value="Set Squad" placeholder="Название">
+          <div class="team-score" id="team3Score">0</div>
+          <small>очков</small>
+        </div>
+      </div>
+
+      <div class="game-question" id="gameQuestion">Нажмите «Начать игру», чтобы начать!</div>
+      <div style="text-align:center;font-size:0.9em;opacity:0.8;" id="gameInfo">Вопрос 0 / 15 · Отвечает: —</div>
+
+      <div class="game-controls">
+        <button class="btn-start" onclick="startGame()">🚀 Начать игру</button>
+        <button class="btn-correct" onclick="answerGame(true)">✓ Верно (+10)</button>
+        <button class="btn-wrong" onclick="answerGame(false)">✗ Неверно (−5)</button>
+        <button class="btn-start" onclick="resetGame()">🔄 Сброс</button>
+      </div>
+
+      <div class="result-banner" id="gameResult"></div>
+    </div>
+  </div>
+
+  <div class="section" id="reflection">
+    <div class="glass">
+      <h2>💭 Рефлексия</h2>
+      <p>Оцените своё настроение после урока:</p>
+      <div class="emoji-rate" id="emojiRate">
+        <button data-emoji="😴">😴</button>
+        <button data-emoji="😕">😕</button>
+        <button data-emoji="🙂">🙂</button>
+        <button data-emoji="😊">😊</button>
+        <button data-emoji="🤩">🤩</button>
+      </div>
+
+      <div class="reflection-grid">
+        <div class="reflection-card">
+          <h4>🎯 Что нового я узнал(а)?</h4>
+          <textarea placeholder="Какие операторы и методы вы запомнили?"></textarea>
+        </div>
+        <div class="reflection-card">
+          <h4>🤔 Что было самым сложным?</h4>
+          <textarea placeholder="Над чем пришлось подумать дольше всего?"></textarea>
+        </div>
+        <div class="reflection-card">
+          <h4>⚖️ Какой язык удобнее для множеств?</h4>
+          <textarea placeholder="Python с операторами или JavaScript с методами? Почему?"></textarea>
+        </div>
+        <div class="reflection-card">
+          <h4>⭐ Что понравилось больше всего?</h4>
+          <textarea placeholder="Какая часть урока была самой интересной?"></textarea>
+        </div>
+        <div class="reflection-card">
+          <h4>🚀 Где я смогу применить эти знания?</h4>
+          <textarea placeholder="В каких задачах могут пригодиться множества?"></textarea>
+        </div>
+      </div>
+
+      <div class="reflection-card" style="margin-top:15px;">
+        <h4>📊 Моя самооценка</h4>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+          <label style="flex:1;min-width:140px;padding:10px;background:rgba(0,0,0,0.2);border-radius:10px;cursor:pointer;">
+            <input type="radio" name="selfgrade" value="need"> Нужно повторить
+          </label>
+          <label style="flex:1;min-width:140px;padding:10px;background:rgba(0,0,0,0.2);border-radius:10px;cursor:pointer;">
+            <input type="radio" name="selfgrade" value="ok"> В целом понял(а)
+          </label>
+          <label style="flex:1;min-width:140px;padding:10px;background:rgba(0,0,0,0.2);border-radius:10px;cursor:pointer;">
+            <input type="radio" name="selfgrade" value="great"> Всё отлично!
+          </label>
+        </div>
+      </div>
+
+      <button onclick="saveReflection()" style="margin-top:20px;padding:14px 28px;background:linear-gradient(135deg,#ff6b9d,#4facfe);border:none;border-radius:14px;color:#fff;font-weight:700;cursor:pointer;font-size:1em;width:100%;">💾 Сохранить рефлексию</button>
+      <div class="result-banner" id="reflectionResult"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.section).classList.add('active');
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  });
+});
+
+const tasks = [
+  {
+    q: 'Что вернёт код?',
+    py: 'a = {1, 2, 3}; b = {3, 4, 5}; print(a | b)',
+    js: 'const a = new Set([1,2,3]); const b = new Set([3,4,5]); console.log(new Set([...a, ...b]))',
+    a: '{1, 2, 3, 4, 5}',
+    hint: 'Объединение — все уникальные элементы из обоих множеств.'
+  },
+  {
+    q: 'Что получится на выходе?',
+    py: 'a = {1,2,3,4}; b = {3,4,5,6}; print(a & b)',
+    js: 'const a=new Set([1,2,3,4]); const b=new Set([3,4,5,6]); console.log(new Set([...a].filter(x=>b.has(x))))',
+    a: '{3, 4}',
+    hint: 'Пересечение — только общие элементы.'
+  },
+  {
+    q: 'Что выведет программа?',
+    py: 'a = {1,2,3,4}; b = {3,4,5}; print(a - b)',
+    js: 'const a=new Set([1,2,3,4]); const b=new Set([3,4,5]); console.log(new Set([...a].filter(x=>!b.has(x))))',
+    a: '{1, 2}',
+    hint: 'Разность: элементы из a, которых нет в b.'
+  },
+  {
+    q: 'Результат симметрической разности?',
+    py: 'a = {1,2,3}; b = {2,3,4}; print(a ^ b)',
+    js: '// симм. разность {1, 4}',
+    a: '{1, 4}',
+    hint: 'Элементы, которые есть только в одном из множеств.'
+  },
+  {
+    q: 'Что вернёт проверка вхождения?',
+    py: 'a = {1, 2, 3, 4, 5}; print(3 in a)',
+    js: 'const a = new Set([1,2,3,4,5]); console.log(a.has(3))',
+    a: 'True',
+    hint: 'В Python — оператор in, в JS — метод has(). Оба вернут логическое значение.'
+  },
+  {
+    q: 'Является ли {1,2} подмножеством a?',
+    py: 'a = {1,2,3,4}; print({1,2} <= a)',
+    js: 'const a=new Set([1,2,3,4]); const b=new Set([1,2]); console.log([...b].every(x=>a.has(x)))',
+    a: 'True',
+    hint: 'Все элементы {1,2} есть в a? Да.'
+  },
+  {
+    q: 'Сколько элементов в множестве?',
+    py: 'a = {1, 1, 2, 2, 3, 3, 3}; print(len(a))',
+    js: 'const a = new Set([1, 1, 2, 2, 3, 3, 3]); console.log(a.size)',
+    a: '3',
+    hint: 'Множество хранит только уникальные элементы.'
+  },
+  {
+    q: 'Что получится после добавления?',
+    py: 'a = {1, 2, 3}; a.add(4); print(len(a))',
+    js: 'const a = new Set([1, 2, 3]); a.add(4); console.log(a.size)',
+    a: '4',
+    hint: 'Метод add() одинаков в обоих языках.'
+  },
+  {
+    q: 'Как создать пустое множество в Python?',
+    py: 'a = ???; print(type(a).__name__)  # должно вывести "set"',
+    js: '// В JavaScript: const a = new Set();',
+    a: 'set()',
+    hint: 'В Python {} — это словарь. Используйте функцию set().'
+  },
+  {
+    q: 'Что вернёт код? (внимание на синтаксис JS)',
+    py: '// не применимо',
+    js: 'const a = new Set([1,2,3]); a.delete(2); console.log(a.size)',
+    a: '2',
+    hint: 'В JavaScript для удаления используется метод delete(), а размер — свойство size.'
+  }
+];
+
+const taskLang = new Array(tasks.length).fill('py');
+
+function normalize(s) {
+  return s.replace(/\s+/g, '').toLowerCase();
+}
+
+function renderTasks() {
+  const container = document.getElementById('tasksContainer');
+  container.innerHTML = tasks.map((t, i) => `
+    <div class="task" data-idx="${i}">
+      <div class="task-header">
+        <span class="task-number">Задание ${i+1}</span>
+        <div class="lang-switch">
+          <button class="${taskLang[i]==='py'?'active-py':''}" onclick="switchLang(${i},'py')">🐍 Python</button>
+          <button class="${taskLang[i]==='js'?'active-js':''}" onclick="switchLang(${i},'js')">🟨 JS</button>
+        </div>
+        <span class="task-status pending" id="status-${i}">ожидает</span>
+      </div>
+      <p>${t.q}</p>
+      <pre id="code-${i}">${escapeHtml(t.py)}</pre>
+      <input type="text" placeholder="Ваш ответ" id="answer-${i}" oninput="checkTask(${i})">
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+        <button onclick="toggleHint(${i})">💡 Подсказка</button>
+      </div>
+      <div class="hint" id="hint-${i}">${t.hint}</div>
+    </div>
+  `).join('');
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text || '';
+  return div.innerHTML;
+}
+
+function switchLang(i, lang) {
+  taskLang[i] = lang;
+  document.getElementById(`code-${i}`).textContent = tasks[i][lang];
+  const btns = document.querySelectorAll(`.task[data-idx="${i}"] .lang-switch button`);
+  btns[0].className = lang === 'py' ? 'active-py' : '';
+  btns[1].className = lang === 'js' ? 'active-js' : '';
+  const status = document.getElementById(`status-${i}`);
+  status.className = 'task-status pending';
+  status.textContent = 'ожидает';
+  document.getElementById(`answer-${i}`).value = '';
+  updatePracticeProgress();
+}
+
+function checkTask(i) {
+  const input = document.getElementById(`answer-${i}`).value.trim();
+  const status = document.getElementById(`status-${i}`);
+  if (!input) { status.className = 'task-status pending'; status.textContent = 'ожидает'; updatePracticeProgress(); return; }
+  const userNorm = normalize(input);
+  const correctNorm = normalize(tasks[i].a);
+  if (userNorm === correctNorm) {
+    status.className = 'task-status correct';
+    status.textContent = '✓ верно';
+  } else {
+    status.className = 'task-status wrong';
+    status.textContent = '✗ неверно';
+  }
+  updatePracticeProgress();
+}
+
+function toggleHint(i) {
+  document.getElementById(`hint-${i}`).classList.toggle('show');
+}
+
+function updatePracticeProgress() {
+  let correct = 0;
+  tasks.forEach((_, i) => {
+    const s = document.getElementById(`status-${i}`);
+    if (s && s.classList.contains('correct')) correct++;
+  });
+  document.getElementById('practiceProgress').style.width = (correct / tasks.length * 100) + '%';
+  const banner = document.getElementById('practiceResult');
+  if (correct === tasks.length) {
+    banner.textContent = `🎉 Отлично! Все ${tasks.length} заданий выполнены верно!`;
+  } else {
+    banner.textContent = `Выполнено верно: ${correct} из ${tasks.length}`;
+  }
+  banner.classList.add('show');
+}
+
+renderTasks();
+
+const testQuestions = [
+  { q: '🐍 Как создать пустое множество в Python?', opts: ['{}', 'set()', '[]', 'empty()'], correct: 1 },
+  { q: '🟨 Как создать множество в JavaScript?', opts: ['new Set([])', 'set()', '{}', 'new HashSet()'], correct: 0 },
+  { q: '🐍 Что вернёт <code>{1,2,3} | {3,4,5}</code> в Python?', opts: ['{3}', '{1,2,3,4,5}', '{1,2,4,5}', 'ошибка'], correct: 1 },
+  { q: '🟨 Как получить объединение двух Set в JavaScript?', opts: ['a.union(b)', 'a | b', 'new Set([...a, ...b])', 'merge(a, b)'], correct: 2 },
+  { q: '🐍 Что вернёт <code>{1,2,3} & {2,3,4}</code>?', opts: ['{1,4}', '{2,3}', '{1,2,3,4}', '{}'], correct: 1 },
+  { q: '🟨 Какой метод проверяет наличие элемента в Set?', opts: ['contains()', 'in()', 'has()', 'includes()'], correct: 2 },
+  { q: '🐍 Что вернёт <code>{1,2,3} - {2,3}</code>?', opts: ['{1}', '{2,3}', '{1,2,3}', '{}'], correct: 0 },
+  { q: '🟨 Как удалить элемент из Set в JavaScript?', opts: ['remove()', 'delete()', 'pop()', 'discard()'], correct: 1 },
+  { q: 'Как узнать размер множества?', opts: ['🐍 len(a) и 🟨 a.size', '🐍 a.size и 🟨 a.length', '🐍 length(a) и 🟨 a.size', '🐍 a.count() и 🟨 a.size'], correct: 0 },
+  { q: 'Что общего у множеств в Python и JavaScript?', opts: ['Поддерживают оператор |', 'Хранят только уникальные элементы', 'Имеют метод add() с одинаковым синтаксисом', 'Создаются через {}'], correct: 1 }
+];
+
+let userAnswers = new Array(testQuestions.length).fill(-1);
+
+function renderTest() {
+  const container = document.getElementById('testContainer');
+  container.innerHTML = testQuestions.map((q, i) => `
+    <div class="question" data-idx="${i}">
+      <div style="font-weight:600;margin-bottom:8px;">${i+1}. ${q.q}</div>
+      <div class="options">
+        ${q.opts.map((o, j) => `
+          <div class="option" data-q="${i}" data-opt="${j}" onclick="selectOption(${i},${j})">${o}</div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function selectOption(qi, oi) {
+  userAnswers[qi] = oi;
+  document.querySelectorAll(`.option[data-q="${qi}"]`).forEach(el => el.classList.remove('selected'));
+  document.querySelector(`.option[data-q="${qi}"][data-opt="${oi}"]`).classList.add('selected');
+  updateTestProgress();
+}
+
+function updateTestProgress() {
+  const answered = userAnswers.filter(a => a !== -1).length;
+  document.getElementById('testProgress').style.width = (answered / testQuestions.length * 100) + '%';
+}
+
+function checkTest() {
+  let correct = 0;
+  testQuestions.forEach((q, i) => {
+    const opts = document.querySelectorAll(`.option[data-q="${i}"]`);
+    opts.forEach((el, j) => {
+      el.classList.remove('correct', 'wrong');
+      if (j === q.correct) el.classList.add('correct');
+      else if (j === userAnswers[i]) el.classList.add('wrong');
+    });
+    if (userAnswers[i] === q.correct) correct++;
+  });
+  const banner = document.getElementById('testResult');
+  banner.textContent = `📊 Ваш результат: ${correct} из ${testQuestions.length} (${Math.round(correct/testQuestions.length*100)}%)`;
+  banner.classList.add('show');
+  banner.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+renderTest();
+
+const gameQuestions = [
+  { q: '🐍 Какой оператор используется для объединения множеств в Python?', a: '|' },
+  { q: '🟨 Как проверить, есть ли элемент x в Set в JavaScript?', a: 'has' },
+  { q: '🐍 Что вернёт <code>{1,2,3} & {4,5,6}</code>?', a: 'set()' },
+  { q: '🟨 Какое свойство хранит количество элементов в Set?', a: 'size' },
+  { q: '🐍 Сколько элементов в <code>{1,1,2,2,3,3}</code>?', a: '3' },
+  { q: '🟨 Как создать пустое множество в JavaScript?', a: 'new Set()' },
+  { q: '🐍 Что вернёт <code>{1,2,3} ^ {2,3,4}</code>?', a: '{1, 4}' },
+  { q: '🟨 Какой метод добавляет элемент в Set?', a: 'add' },
+  { q: '🐍 Как удалить элемент без ошибки, если его нет?', a: 'discard' },
+  { q: '🟨 Как получить пересечение двух Set в JS?', a: 'filter' },
+  { q: '🐍 Является ли <code>{1,2}</code> подмножеством <code>{1,2,3}</code>?', a: 'да' },
+  { q: '🟨 Можно ли хранить объект {} внутри Set?', a: 'да' },
+  { q: '🐍 Что вернёт <code>len(set("hello"))</code>?', a: '4' },
+  { q: '🟨 Как удалить элемент из Set в JS?', a: 'delete' },
+  { q: 'Что общего: 🐍 <code>a.add(x)</code> и 🟨 <code>a.add(x)</code>?', a: 'одинаковый синтаксис' }
+];
+
+let game = { current: 0, team: 0, scores: [0,0,0], started: false };
+
+function startGame() {
+  game = { current: 0, team: 0, scores: [0,0,0], started: true };
+  [1,2,3].forEach(i => document.getElementById(`team${i}Score`).textContent = '0');
+  document.getElementById('gameResult').classList.remove('show');
+  showGameQuestion();
+}
+
+function showGameQuestion() {
+  if (game.current >= gameQuestions.length) {
+    endGame();
+    return;
+  }
+  const q = gameQuestions[game.current];
+  document.getElementById('gameQuestion').innerHTML = `
+    <div style="opacity:0.7;font-size:0.85em;margin-bottom:8px;">Вопрос для команды:</div>
+    <div style="font-size:1.3em;font-weight:700;margin-bottom:12px;">${escapeHtml(document.getElementById(`team${game.team+1}Name`).value)}</div>
+    <div>${q.q}</div>
+    <div style="margin-top:12px;opacity:0.6;font-size:0.85em;">Ответ для ведущего: <b>${q.a}</b></div>
+  `;
+  document.getElementById('gameInfo').textContent = `Вопрос ${game.current+1} / ${gameQuestions.length} · Отвечает: команда ${game.team+1}`;
+  highlightTeam();
+}
+
+function highlightTeam() {
+  ['team1Card','team2Card','team3Card'].forEach((id, i) => {
+    document.getElementById(id).classList.toggle('active', i === game.team);
+  });
+}
+
+function answerGame(correct) {
+  if (!game.started || game.current >= gameQuestions.length) return;
+  game.scores[game.team] += correct ? 10 : -5;
+  document.getElementById(`team${game.team+1}Score`).textContent = game.scores[game.team];
+  game.current++;
+  game.team = (game.team + 1) % 3;
+  showGameQuestion();
+}
+
+function endGame() {
+  const names = [1,2,3].map(i => escapeHtml(document.getElementById(`team${i}Name`).value));
+  const max = Math.max(...game.scores);
+  const winners = game.scores.map((s, i) => s === max ? names[i] : null).filter(Boolean);
+  document.getElementById('gameQuestion').innerHTML = '🏆 Игра окончена!';
+  document.getElementById('gameInfo').textContent = '';
+  const banner = document.getElementById('gameResult');
+  banner.innerHTML = `Победитель: <b>${winners.join(', ')}</b> с ${max} очками!<br>
+    ${names.map((n,i) => `${n}: ${game.scores[i]} очков`).join(' · ')}`;
+  banner.classList.add('show');
+  ['team1Card','team2Card','team3Card'].forEach(id => document.getElementById(id).classList.remove('active'));
+  game.started = false;
+}
+
+function resetGame() {
+  game = { current: 0, team: 0, scores: [0,0,0], started: false };
+  [1,2,3].forEach(i => document.getElementById(`team${i}Score`).textContent = '0');
+  document.getElementById('gameQuestion').textContent = 'Нажмите «Начать игру», чтобы начать!';
+  document.getElementById('gameInfo').textContent = 'Вопрос 0 / 15 · Отвечает: —';
+  document.getElementById('gameResult').classList.remove('show');
+  ['team1Card','team2Card','team3Card'].forEach(id => document.getElementById(id).classList.remove('active'));
+}
+
+document.querySelectorAll('#emojiRate button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#emojiRate button').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+  });
+});
+
+function saveReflection() {
+  const emoji = document.querySelector('#emojiRate button.selected')?.dataset.emoji || '—';
+  const grade = document.querySelector('input[name="selfgrade"]:checked')?.value || '—';
+  const texts = Array.from(document.querySelectorAll('.reflection-card textarea')).map(t => t.value);
+  const data = { emoji, grade, texts, date: new Date().toLocaleString('ru-RU') };
+  try {
+    localStorage.setItem('lesson_reflection_v2', JSON.stringify(data));
+  } catch(e) {}
+  const banner = document.getElementById('reflectionResult');
+  banner.innerHTML = `💾 Рефлексия сохранена!<br><small>Настроение: ${emoji} · Самооценка: ${grade}</small>`;
+  banner.classList.add('show');
+}
+
+try {
+  const saved = JSON.parse(localStorage.getItem('lesson_reflection_v2') || 'null');
+  if (saved) {
+    if (saved.emoji) {
+      const btn = document.querySelector(`#emojiRate button[data-emoji="${saved.emoji}"]`);
+      if (btn) btn.classList.add('selected');
+    }
+    if (saved.grade) {
+      const r = document.querySelector(`input[name="selfgrade"][value="${saved.grade}"]`);
+      if (r) r.checked = true;
+    }
+    if (saved.texts) {
+      document.querySelectorAll('.reflection-card textarea').forEach((t, i) => {
+        if (saved.texts[i]) t.value = saved.texts[i];
+      });
+    }
+  }
+} catch(e) {}
+</script>
+</body>
+</html>
