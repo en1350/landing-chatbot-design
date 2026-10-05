@@ -1055,7 +1055,6 @@ function showGameQuestion() {
     <div style="opacity:0.7;font-size:0.85em;margin-bottom:8px;">Вопрос для команды:</div>
     <div style="font-size:1.3em;font-weight:700;margin-bottom:12px;">${escapeHtml(document.getElementById(`team${game.team+1}Name`).value)}</div>
     <div>${q.q}</div>
-    <div style="margin-top:12px;opacity:0.6;font-size:0.85em;">Ответ для ведущего: <b>${q.a}</b></div>
   `;
   document.getElementById('gameInfo').textContent = `Вопрос ${game.current+1} / ${gameQuestions.length} · Отвечает: команда ${game.team+1}`;
   highlightTeam();
