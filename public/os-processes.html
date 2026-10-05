@@ -249,57 +249,10 @@ user      2001  0.0  0.0      0     0 ?     Z    10:32   0:00 [defunct]</div>
   </div>
 
   <div class="screen" id="screen-3">
-    <h2>📝 Контрольные задачи (3 задачи × 5 баллов)</h2>
-    <p>Максимум: 15 баллов. Итоговая оценка по 5-балльной шкале.</p>
+    <h2>📝 Контрольный тест (10 вопросов × 1 балл)</h2>
+    <p>Максимум: 10 баллов. Шкала оценок: 9–10 баллов — «5», 7–8 — «4», 5–6 — «3», менее 5 — «2».</p>
 
-    <div class="task" id="task1">
-      <h3>Задача 1. Процессорное время (алгоритм SJF)</h3>
-      <p>Даны 4 процесса с временем выполнения (мс):</p>
-      <p><b>P1=6, P2=8, P3=7, P4=3</b>. Все прибыли одновременно (время 0).</p>
-      <p>Применяется алгоритм <b>SJF (Shortest Job First)</b> без вытеснения. Чему равно <b>среднее время ожидания</b>?</p>
-      <div class="options">
-        <label class="option"><input type="radio" name="q1" value="a"> a) 5.75 мс</label>
-        <label class="option"><input type="radio" name="q1" value="b"> b) 7.00 мс</label>
-        <label class="option"><input type="radio" name="q1" value="c"> c) 6.25 мс</label>
-        <label class="option"><input type="radio" name="q1" value="d"> d) 7.50 мс</label>
-      </div>
-      <div class="feedback" id="fb1"></div>
-    </div>
-
-    <div class="task" id="task2">
-      <h3>Задача 2. Анализ системного вывода</h3>
-      <p>Фрагмент вывода команды <code>top</code> в Linux:</p>
-      <div class="code-block">top - 14:22:10 up 5 days,  3:12,  2 users,  load average: 4.82, 3.95, 3.20
-Tasks: 210 total,   3 running, 205 sleeping,   2 stopped,   0 zombie
-%Cpu(s): 92.1 us,  3.5 sy,  0.0 ni,  3.8 id,  0.4 wa,  0.0 hi,  0.2 si
-MiB Mem:   7982.0 total,   1204.5 free,   5890.2 used,    887.3 buff/cache</div>
-      <p>Какое из утверждений <b>НЕВЕРНО</b>?</p>
-      <div class="options">
-        <label class="option"><input type="radio" name="q2" value="a"> a) Система сильно загружена: load average > числа ядер (типично 4)</label>
-        <label class="option"><input type="radio" name="q2" value="b"> b) Процессор почти полностью занят (92.1% пользовательский режим + 3.5% ядро)</label>
-        <label class="option"><input type="radio" name="q2" value="c"> c) В системе есть 2 зомби-процесса, ожидающих завершения</label>
-        <label class="option"><input type="radio" name="q2" value="d"> d) Имеется ожидание ввода-вывода (wa = 0.4%), что указывает на дисковые операции</label>
-      </div>
-      <div class="feedback" id="fb2"></div>
-    </div>
-
-    <div class="task" id="task3">
-      <h3>Задача 3. Проблема тупика</h3>
-      <p>Система имеет <b>12 устройств ввода-вывода</b> одинакового типа. Три процесса:</p>
-      <ul>
-        <li>P1: удерживает 4, максимум нужно 8</li>
-        <li>P2: удерживает 3, максимум нужно 6</li>
-        <li>P3: удерживает 3, максимум нужно 4</li>
-      </ul>
-      <p>Свободно: 12 − (4+3+3) = <b>2 устройства</b>. Какая из последовательностей завершения процессов <b>безопасна</b>?</p>
-      <div class="options">
-        <label class="option"><input type="radio" name="q3" value="a"> a) Безопасной последовательности нет, система в тупике</label>
-        <label class="option"><input type="radio" name="q3" value="b"> b) ⟨P3, P2, P1⟩</label>
-        <label class="option"><input type="radio" name="q3" value="c"> c) ⟨P1, P2, P3⟩</label>
-        <label class="option"><input type="radio" name="q3" value="d"> d) ⟨P2, P1, P3⟩</label>
-      </div>
-      <div class="feedback" id="fb3"></div>
-    </div>
+    <div id="questionsContainer"></div>
 
     <div class="nav-buttons">
       <button onclick="goScreen(2)">← Назад</button>
@@ -321,7 +274,7 @@ MiB Mem:   7982.0 total,   1204.5 free,   5890.2 used,    887.3 buff/cache</div>
       <p>прошёл(а) тренажёр по теме</p>
       <p style="font-size:20px; color:#764ba2; font-weight:bold; margin:10px 0;">«Управление процессами»</p>
       <p>и набрал(а) баллов:</p>
-      <div class="grade" id="certGrade">— / 15</div>
+      <div class="grade" id="certGrade">— / 10</div>
       <div id="certStars"></div>
       <div class="seal">ОС<br>2026</div>
       <div class="date" id="certDate"></div>
@@ -338,18 +291,123 @@ MiB Mem:   7982.0 total,   1204.5 free,   5890.2 used,    887.3 buff/cache</div>
 
 <script>
 const TOTAL_SCREENS = 5;
+const MAX_SCORE = 10;
 let userName = '';
 
-const answers = {
-  q1: { correct: 'b', explain: 'Порядок SJF: P4(3) → P1(6) → P3(7) → P2(8). Время ожидания: P4=0, P1=3, P3=3+6=9, P2=3+6+7=16. Среднее = (0+3+9+16)/4 = 28/4 = 7.00 мс.' },
-  q2: { correct: 'c', explain: 'В выводе указано: «2 stopped, 0 zombie». Зомби-процессов НОЛЬ, а остановленных (stopped) — 2. Утверждение c) ложное.' },
-  q3: { correct: 'b', explain: 'Свободно 2. Need: P1=4, P2=3, P3=1. Выполниться может только P3 (1 ≤ 2) → свободно 2+3=5. Затем P2 (3 ≤ 5) → 5+3=8. Затем P1 (4 ≤ 8) → 8+4=12. Безопасная последовательность: ⟨P3, P2, P1⟩. Последовательности, начинающиеся с P1 или P2, невозможны: им не хватает свободных устройств.' }
-};
+const TOP_CODE = `top - 14:22:10 up 5 days,  3:12,  2 users,  load average: 4.82, 3.95, 3.20
+Tasks: 210 total,   3 running, 205 sleeping,   2 stopped,   0 zombie
+%Cpu(s): 92.1 us,  3.5 sy,  0.0 ni,  3.8 id,  0.4 wa,  0.0 hi,  0.2 si
+MiB Mem:   7982.0 total,   1204.5 free,   5890.2 used,    887.3 buff/cache`;
+
+const questions = [
+  {
+    title: 'Процессорное время (алгоритм SJF)',
+    text: 'Даны 4 процесса с временем выполнения (мс): <b>P1=6, P2=8, P3=7, P4=3</b>. Все прибыли одновременно (время 0). Применяется алгоритм <b>SJF</b> без вытеснения. Чему равно <b>среднее время ожидания</b>?',
+    options: ['5.75 мс', '7.00 мс', '6.25 мс', '7.50 мс'],
+    correct: 1,
+    explain: 'Порядок SJF: P4(3) → P1(6) → P3(7) → P2(8). Время ожидания: P4=0, P1=3, P3=3+6=9, P2=3+6+7=16. Среднее = (0+3+9+16)/4 = 28/4 = 7.00 мс.'
+  },
+  {
+    title: 'Анализ системного вывода',
+    text: 'Фрагмент вывода команды <code>top</code> в Linux:',
+    code: TOP_CODE,
+    after: 'Какое из утверждений <b>НЕВЕРНО</b>?',
+    options: [
+      'Система сильно загружена: load average больше числа ядер (типично 4)',
+      'Процессор почти полностью занят (92.1% пользовательский режим + 3.5% ядро)',
+      'В системе есть 2 зомби-процесса, ожидающих завершения',
+      'Имеется ожидание ввода-вывода (wa = 0.4%), что указывает на дисковые операции'
+    ],
+    correct: 2,
+    explain: 'В выводе указано: «2 stopped, 0 zombie». Зомби-процессов НОЛЬ, а остановленных (stopped) — 2. Утверждение c) ложное.'
+  },
+  {
+    title: 'Проблема тупика',
+    text: 'Система имеет <b>12 устройств ввода-вывода</b> одинакового типа. Три процесса:',
+    list: ['P1: удерживает 4, максимум нужно 8', 'P2: удерживает 3, максимум нужно 6', 'P3: удерживает 3, максимум нужно 4'],
+    after: 'Свободно: 12 − (4+3+3) = <b>2 устройства</b>. Какая из последовательностей завершения процессов <b>безопасна</b>?',
+    options: ['Безопасной последовательности нет, система в тупике', '⟨P3, P2, P1⟩', '⟨P1, P2, P3⟩', '⟨P2, P1, P3⟩'],
+    correct: 1,
+    explain: 'Свободно 2. Need: P1=4, P2=3, P3=1. Выполниться может только P3 (1 ≤ 2) → свободно 2+3=5. Затем P2 (3 ≤ 5) → 5+3=8. Затем P1 (4 ≤ 8) → 8+4=12. Безопасная последовательность: ⟨P3, P2, P1⟩. Последовательности, начинающиеся с P1 или P2, невозможны: им не хватает свободных устройств.'
+  },
+  {
+    title: 'Состояния процесса',
+    text: 'В какое состояние переходит выполняющийся процесс (Running), когда запрашивает операцию ввода-вывода и должен ждать её завершения?',
+    options: ['New', 'Ready', 'Waiting (Blocked)', 'Terminated'],
+    correct: 2,
+    explain: 'Процесс, ожидающий событие (завершение ввода-вывода, освобождение семафора), переходит в состояние Waiting / Blocked. В Ready он вернётся только после наступления события.'
+  },
+  {
+    title: 'Создание процессов в Linux',
+    text: 'Какой системный вызов Linux создаёт дочерний процесс как копию родительского?',
+    options: ['fork()', 'exec()', 'wait()', 'exit()'],
+    correct: 0,
+    explain: 'fork() создаёт дочерний процесс — копию родителя. exec() заменяет образ процесса новой программой, wait() ждёт завершения потомка, exit() завершает процесс.'
+  },
+  {
+    title: 'Условия возникновения тупика',
+    text: 'Какое из перечисленных свойств системы <b>противоречит</b> условиям Коффмана, то есть при его наличии тупик возникнуть не может?',
+    options: ['Взаимное исключение при доступе к ресурсу', 'Удержание ресурса при ожидании другого', 'Циклическое ожидание процессов', 'Возможность принудительного отъёма ресурса у процесса'],
+    correct: 3,
+    explain: 'Четыре условия Коффмана: взаимное исключение, удержание и ожидание, ОТСУТСТВИЕ вытеснения и циклическое ожидание. Если ресурс можно принудительно отобрать, условие «отсутствие вытеснения» нарушено — и тупик невозможен.'
+  },
+  {
+    title: 'Дескриптор процесса (PCB)',
+    text: 'Что <b>НЕ</b> входит в дескриптор процесса (Process Control Block)?',
+    options: ['Содержимое файлов, открытых процессом, на диске', 'Идентификатор процесса (PID)', 'Счётчик команд и регистры ЦП', 'Текущее состояние процесса'],
+    correct: 0,
+    explain: 'В PCB хранится управляющая информация: PID, состояние, счётчик команд, регистры ЦП, данные планирования, учёт памяти и открытых файлов. Само содержимое файлов лежит на диске и в PCB не хранится.'
+  },
+  {
+    title: 'Зомби-процесс',
+    text: 'Что такое «зомби-процесс» (статус Z в выводе ps)?',
+    options: [
+      'Процесс, зависший в бесконечном цикле и занимающий ЦП',
+      'Процесс, который завершился, но его запись остаётся в таблице, пока родитель не вызовет wait()',
+      'Процесс, заблокированный на семафоре',
+      'Процесс с наивысшим приоритетом'
+    ],
+    correct: 1,
+    explain: 'Зомби — завершённый процесс, у которого родитель ещё не получил код возврата через wait(). Он не потребляет ЦП и память, но занимает запись в таблице процессов.'
+  },
+  {
+    title: 'Алгоритмы планирования',
+    text: 'Какой из алгоритмов планирования использует понятие «квант времени»?',
+    options: ['FCFS', 'SJF без вытеснения', 'Приоритетное планирование без вытеснения', 'Round Robin'],
+    correct: 3,
+    explain: 'Round Robin (круговое планирование) выделяет каждому процессу квант времени ЦП; по его истечении процесс вытесняется и встаёт в конец очереди готовых.'
+  },
+  {
+    title: 'Синхронизация',
+    text: 'Какое средство используется для обеспечения взаимного исключения при входе в критическую секцию?',
+    options: ['Мьютекс', 'Системный вызов fork()', 'Дескриптор процесса (PCB)', 'Планировщик процессов'],
+    correct: 0,
+    explain: 'Мьютекс (как и семафор или монитор) гарантирует, что в критической секции одновременно находится не более одного процесса или потока.'
+  }
+];
+
+const LETTERS = ['a', 'b', 'c', 'd'];
 
 function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text || '';
   return div.innerHTML;
+}
+
+function renderQuestions() {
+  document.getElementById('questionsContainer').innerHTML = questions.map((q, i) => `
+    <div class="task">
+      <h3>Вопрос ${i + 1}. ${q.title}</h3>
+      <p>${q.text}</p>
+      ${q.code ? `<div class="code-block">${escapeHtml(q.code)}</div>` : ''}
+      ${q.list ? `<ul>${q.list.map(l => `<li>${l}</li>`).join('')}</ul>` : ''}
+      ${q.after ? `<p>${q.after}</p>` : ''}
+      <div class="options">
+        ${q.options.map((o, j) => `<label class="option"><input type="radio" name="q${i}" value="${j}"> ${LETTERS[j]}) ${escapeHtml(o)}</label>`).join('')}
+      </div>
+      <div class="feedback" id="fb${i}"></div>
+    </div>
+  `).join('');
 }
 
 function goScreen(n) {
@@ -365,50 +423,53 @@ function startTraining() {
   goScreen(1);
 }
 
+function getGrade(score) {
+  if (score >= 9) return 5;
+  if (score >= 7) return 4;
+  if (score >= 5) return 3;
+  return 2;
+}
+
 function checkAll() {
   let score = 0;
   const errors = [];
-  const perTask = 5;
 
-  ['q1','q2','q3'].forEach((q, i) => {
-    const sel = document.querySelector(`input[name="${q}"]:checked`);
-    const fb = document.getElementById('fb' + (i+1));
-    document.querySelectorAll(`input[name="${q}"]`).forEach(o => {
+  questions.forEach((q, i) => {
+    const sel = document.querySelector(`input[name="q${i}"]:checked`);
+    const fb = document.getElementById('fb' + i);
+    document.querySelectorAll(`input[name="q${i}"]`).forEach(o => {
       const lbl = o.parentElement;
-      if (o.value === answers[q].correct) lbl.classList.add('correct');
+      if (Number(o.value) === q.correct) lbl.classList.add('correct');
       else if (o.checked) lbl.classList.add('wrong');
       o.disabled = true;
     });
-    if (sel && sel.value === answers[q].correct) {
-      score += perTask;
+    const correctLetter = LETTERS[q.correct].toUpperCase();
+    if (sel && Number(sel.value) === q.correct) {
+      score += 1;
       fb.className = 'feedback show ok';
-      fb.innerHTML = '✅ <b>Верно!</b> +5 баллов. ' + answers[q].explain;
+      fb.innerHTML = '✅ <b>Верно!</b> +1 балл. ' + q.explain;
     } else {
       fb.className = 'feedback show err';
-      const userAns = sel ? sel.value.toUpperCase() : '—';
-      fb.innerHTML = `❌ <b>Неверно.</b> Ваш ответ: ${userAns}, правильный: ${answers[q].correct.toUpperCase()}. ${answers[q].explain}`;
-      errors.push({ num: i+1, user: userAns, correct: answers[q].correct.toUpperCase(), explain: answers[q].explain });
+      const userAns = sel ? LETTERS[Number(sel.value)].toUpperCase() : '—';
+      fb.innerHTML = `❌ <b>Неверно.</b> Ваш ответ: ${userAns}, правильный: ${correctLetter}. ${q.explain}`;
+      errors.push({ num: i + 1, user: userAns, correct: correctLetter, explain: q.explain });
     }
   });
 
-  let grade;
-  if (score >= 14) grade = 5;
-  else if (score >= 11) grade = 4;
-  else if (score >= 7) grade = 3;
-  else grade = 2;
+  const grade = getGrade(score);
 
   const safeName = escapeHtml(userName);
   document.getElementById('resultSummary').innerHTML = `
     <div style="background:#e8f5e9; padding:20px; border-radius:10px; margin-bottom:20px;">
       <p style="font-size:18px;"><b>Уважаемый(ая) ${safeName}!</b></p>
-      <p style="margin-top:10px;">Вы набрали: <b style="color:#2a5298; font-size:22px;">${score} / 15 баллов</b></p>
+      <p style="margin-top:10px;">Вы набрали: <b style="color:#2a5298; font-size:22px;">${score} / ${MAX_SCORE} баллов</b></p>
       <p>Итоговая оценка: <b style="color:#11998e; font-size:28px;">${grade}</b> из 5</p>
     </div>
   `;
 
   document.getElementById('certName').textContent = userName;
-  document.getElementById('certGrade').textContent = `${score} / 15 баллов — оценка ${grade}`;
-  document.getElementById('certStars').innerHTML = `<div class="star">${'★'.repeat(grade)}${'☆'.repeat(5-grade)}</div>`;
+  document.getElementById('certGrade').textContent = `${score} / ${MAX_SCORE} баллов — оценка ${grade}`;
+  document.getElementById('certStars').innerHTML = `<div class="star">${'★'.repeat(grade)}${'☆'.repeat(5 - grade)}</div>`;
   document.getElementById('certDate').textContent = 'Дата: ' + new Date().toLocaleDateString('ru-RU', {day:'numeric', month:'long', year:'numeric'});
 
   const errDiv = document.getElementById('errorsReview');
@@ -418,7 +479,7 @@ function checkAll() {
     let html = '<h3>📋 Разбор ошибок</h3>';
     errors.forEach(e => {
       html += `<div class="err-item">
-        <b>Задача ${e.num}:</b> ваш ответ — <b>${e.user}</b>, верно — <b>${e.correct}</b><br>
+        <b>Вопрос ${e.num}:</b> ваш ответ — <b>${e.user}</b>, верно — <b>${e.correct}</b><br>
         <small>${e.explain}</small>
       </div>`;
     });
@@ -427,6 +488,8 @@ function checkAll() {
 
   goScreen(4);
 }
+
+renderQuestions();
 </script>
 </body>
 </html>
