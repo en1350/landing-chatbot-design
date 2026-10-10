@@ -63,7 +63,11 @@ const UpgradeModal = ({ open, onClose, onNeedAuth }: UpgradeModalProps) => {
       }
       if (data.confirmation_url) {
         setPaymentUrl(data.confirmation_url);
-        window.location.href = data.confirmation_url;
+        try {
+          (window.top || window).location.href = data.confirmation_url;
+        } catch {
+          window.open(data.confirmation_url, "_blank", "noopener,noreferrer");
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка оплаты, попробуйте снова");
