@@ -112,7 +112,7 @@ def yookassa_auth_header():
     return f"Basic {creds}"
 
 
-def send_reset_email(to_email: str, reset_link: str):
+def send_email(to_email: str, subject: str, text: str):
     host = os.environ.get('SMTP_HOST')
     port = int(os.environ.get('SMTP_PORT', '465'))
     login = os.environ.get('SMTP_LOGIN')
@@ -121,14 +121,6 @@ def send_reset_email(to_email: str, reset_link: str):
     if not host or not login or not password:
         raise RuntimeError('SMTP не настроен')
 
-    subject = 'Восстановление доступа к УрокАИ'
-    text = (
-        f"Здравствуйте!\n\n"
-        f"Вы запросили восстановление доступа к личному кабинету УрокАИ.\n"
-        f"Перейдите по ссылке, чтобы задать новый пароль (ссылка действует 1 час):\n\n"
-        f"{reset_link}\n\n"
-        f"Если вы не запрашивали восстановление доступа, просто проигнорируйте это письмо."
-    )
     msg = MIMEText(text, 'plain', 'utf-8')
     msg['Subject'] = subject
     msg['From'] = login
@@ -145,6 +137,54 @@ def send_reset_email(to_email: str, reset_link: str):
             server.ehlo()
             server.login(login, password)
             server.sendmail(login, [to_email], msg.as_string())
+
+
+def send_reset_email(to_email: str, reset_link: str):
+    text = (
+        f"Здравствуйте!\n\n"
+        f"Вы запросили восстановление доступа к личному кабинету УрокАИ.\n"
+        f"Перейдите по ссылке, чтобы задать новый пароль (ссылка действует 1 час):\n\n"
+        f"{reset_link}\n\n"
+        f"Если вы не запрашивали восстановление доступа, просто проигнорируйте это письмо."
+    )
+    send_email(to_email, 'Восстановление доступа к УрокАИ', text)
+
+
+def send_verify_email(to_email: str, verify_link: str):
+    text = (
+        f"Здравствуйте!\n\n"
+        f"Спасибо за регистрацию в УрокАИ. Подтвердите ваш email, перейдя по ссылке (действует 24 часа):\n\n"
+        f"{verify_link}\n\n"
+        f"Если вы не регистрировались, просто проигнорируйте это письмо."
+    )
+    send_email(to_email, 'Подтвердите email в УрокАИ', text)
+
+
+def resolve_origin(event, body_data):
+    headers_in = event.get('headers') or {}
+    return (
+        body_data.get('origin')
+        or headers_in.get('Origin')
+        or headers_in.get('origin')
+        or headers_in.get('Referer')
+        or headers_in.get('referer')
+        or DEFAULT_SITE_URL
+    ).rstrip('/')
+
+
+def issue_verification(cur, conn, event, body_data, user_id, email):
+    verify_token = secrets.token_urlsafe(32)
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
+    cur.execute(
+        f"INSERT INTO {SCHEMA}.email_verifications (user_id, token, expires_at) VALUES (%s, %s, %s)",
+        (user_id, verify_token, expires_at)
+    )
+    conn.commit()
+    link = f"{resolve_origin(event, body_data)}/verify-email?token={verify_token}"
+    try:
+        send_verify_email(email, link)
+    except Exception as e:
+        print(f"[send_verify_email] FAILED to send to {email}: {type(e).__name__}: {e}")
 
 
 def handler(event: dict, context) -> dict:
@@ -206,47 +246,118 @@ def handler(event: dict, context) -> dict:
             if not privacy_accepted:
                 return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Необходимо согласиться с политикой обработки персональных данных'})}
 
-            cur.execute(f"SELECT id FROM {SCHEMA}.users WHERE email = %s", (email,))
-            if cur.fetchone():
+            cur.execute(f"SELECT id, email_verified FROM {SCHEMA}.users WHERE email = %s", (email,))
+            existing = cur.fetchone()
+            pw_hash = hash_password(password)
+
+            if existing and existing[1]:
                 return {'statusCode': 409, 'headers': cors_headers(), 'body': json.dumps({'error': 'Пользователь с таким email уже зарегистрирован'})}
 
-            pw_hash = hash_password(password)
-            cur.execute(
-                f"INSERT INTO {SCHEMA}.users (email, password_hash, name, privacy_accepted_at) VALUES (%s, %s, %s, now()) RETURNING id",
-                (email, pw_hash, name or email.split('@')[0])
-            )
-            user_id = cur.fetchone()[0]
+            if existing:
+                user_id = existing[0]
+                cur.execute(
+                    f"UPDATE {SCHEMA}.users SET password_hash = %s, name = %s WHERE id = %s",
+                    (pw_hash, name or email.split('@')[0], user_id)
+                )
+            else:
+                cur.execute(
+                    f"INSERT INTO {SCHEMA}.users (email, password_hash, name, privacy_accepted_at, email_verified) VALUES (%s, %s, %s, now(), false) RETURNING id",
+                    (email, pw_hash, name or email.split('@')[0])
+                )
+                user_id = cur.fetchone()[0]
+                cur.execute(f"INSERT INTO {SCHEMA}.usage_counts (user_id) VALUES (%s)", (user_id,))
+                cur.execute(f"INSERT INTO {SCHEMA}.subscriptions (user_id, plan) VALUES (%s, 'free')", (user_id,))
+            conn.commit()
 
-            cur.execute(f"INSERT INTO {SCHEMA}.usage_counts (user_id) VALUES (%s)", (user_id,))
-            cur.execute(f"INSERT INTO {SCHEMA}.subscriptions (user_id, plan) VALUES (%s, 'free')", (user_id,))
+            issue_verification(cur, conn, event, body_data, user_id, email)
+
+            return {
+                'statusCode': 200,
+                'headers': cors_headers(),
+                'body': json.dumps({
+                    'needs_verification': True,
+                    'email': email,
+                    'message': 'Мы отправили письмо со ссылкой для подтверждения email',
+                })
+            }
+
+        elif action == 'verify_email':
+            verify_token = body_data.get('token') or ''
+            if not verify_token:
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Токен не передан'})}
+
+            cur.execute(
+                f"SELECT id, user_id, expires_at, used FROM {SCHEMA}.email_verifications WHERE token = %s",
+                (verify_token,)
+            )
+            row = cur.fetchone()
+            if not row:
+                return {'statusCode': 404, 'headers': cors_headers(), 'body': json.dumps({'error': 'Ссылка недействительна'})}
+
+            ver_id, user_id, expires_at, used = row
+            if expires_at < datetime.now(timezone.utc):
+                return {'statusCode': 410, 'headers': cors_headers(), 'body': json.dumps({'error': 'Срок действия ссылки истёк. Запросите новое письмо при входе'})}
+
+            cur.execute(f"UPDATE {SCHEMA}.users SET email_verified = true WHERE id = %s", (user_id,))
+            cur.execute(f"UPDATE {SCHEMA}.email_verifications SET used = true WHERE id = %s", (ver_id,))
 
             token = secrets.token_hex(32)
             cur.execute(f"INSERT INTO {SCHEMA}.sessions (user_id, token) VALUES (%s, %s)", (user_id, token))
+            cur.execute(f"SELECT email, name FROM {SCHEMA}.users WHERE id = %s", (user_id,))
+            email, name = cur.fetchone()
+            plan, _ = get_plan_for_user(cur, user_id)
+            usage = get_usage_for_user(cur, user_id)
             conn.commit()
 
             return {
                 'statusCode': 200,
                 'headers': cors_headers(),
                 'body': json.dumps({
+                    'ok': True,
                     'token': token,
                     'user': {'id': user_id, 'email': email, 'name': name},
-                    'plan': 'free',
-                    'usage': {'lesson': 0, 'game': 0, 'intensive': 0, 'task': 0, 'antiplagiat': 0},
+                    'plan': plan,
+                    'usage': usage,
                     'free_limit': FREE_LIMIT,
                 })
             }
+
+        elif action == 'resend_verification':
+            email = (body_data.get('email') or '').strip().lower()
+            generic = {
+                'statusCode': 200,
+                'headers': cors_headers(),
+                'body': json.dumps({'ok': True, 'message': 'Если email ожидает подтверждения, письмо отправлено повторно'})
+            }
+            if not email or '@' not in email:
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Некорректный email'})}
+
+            cur.execute(f"SELECT id, email_verified FROM {SCHEMA}.users WHERE email = %s", (email,))
+            row = cur.fetchone()
+            if not row or row[1]:
+                return generic
+
+            cur.execute(
+                f"SELECT count(*) FROM {SCHEMA}.email_verifications WHERE user_id = %s AND created_at > now() - interval '1 minute'",
+                (row[0],)
+            )
+            if cur.fetchone()[0] == 0:
+                issue_verification(cur, conn, event, body_data, row[0], email)
+            return generic
 
         elif action == 'login':
             email = (body_data.get('email') or '').strip().lower()
             password = body_data.get('password') or ''
             pw_hash = hash_password(password)
 
-            cur.execute(f"SELECT id, name FROM {SCHEMA}.users WHERE email = %s AND password_hash = %s", (email, pw_hash))
+            cur.execute(f"SELECT id, name, email_verified FROM {SCHEMA}.users WHERE email = %s AND password_hash = %s", (email, pw_hash))
             row = cur.fetchone()
             if not row:
                 return {'statusCode': 401, 'headers': cors_headers(), 'body': json.dumps({'error': 'Неверный email или пароль'})}
 
-            user_id, name = row
+            user_id, name, verified = row
+            if not verified:
+                return {'statusCode': 403, 'headers': cors_headers(), 'body': json.dumps({'error': 'Email не подтверждён. Проверьте почту и перейдите по ссылке из письма', 'code': 'email_not_verified', 'email': email})}
             token = secrets.token_hex(32)
             cur.execute(f"INSERT INTO {SCHEMA}.sessions (user_id, token) VALUES (%s, %s)", (user_id, token))
 
@@ -300,15 +411,7 @@ def handler(event: dict, context) -> dict:
             )
             conn.commit()
 
-            headers_in = event.get('headers') or {}
-            origin = (
-                body_data.get('origin')
-                or headers_in.get('Origin')
-                or headers_in.get('origin')
-                or headers_in.get('Referer')
-                or headers_in.get('referer')
-                or DEFAULT_SITE_URL
-            ).rstrip('/')
+            origin = resolve_origin(event, body_data)
             reset_link = f"{origin}/reset-password?token={reset_token}"
             try:
                 send_reset_email(email, reset_link)
@@ -341,7 +444,7 @@ def handler(event: dict, context) -> dict:
                 return {'statusCode': 410, 'headers': cors_headers(), 'body': json.dumps({'error': 'Срок действия ссылки истёк'})}
 
             new_hash = hash_password(new_password)
-            cur.execute(f"UPDATE {SCHEMA}.users SET password_hash = %s WHERE id = %s", (new_hash, user_id))
+            cur.execute(f"UPDATE {SCHEMA}.users SET password_hash = %s, email_verified = true WHERE id = %s", (new_hash, user_id))
             cur.execute(f"UPDATE {SCHEMA}.password_resets SET used = true WHERE id = %s", (reset_id,))
             cur.execute(f"DELETE FROM {SCHEMA}.sessions WHERE user_id = %s", (user_id,))
 

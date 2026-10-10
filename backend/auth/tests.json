@@ -11,52 +11,110 @@
       "method": "GET",
       "path": "/",
       "expectedStatus": 401,
-      "expectedBody": {"error": "string"},
+      "expectedBody": {
+        "error": "string"
+      },
       "bodyMatcher": "partial"
     },
     {
       "name": "POST unknown action returns 400",
       "method": "POST",
       "path": "/",
-      "body": {"action": "unknown_xyz"},
+      "body": {
+        "action": "unknown_xyz"
+      },
       "expectedStatus": 400,
-      "expectedBody": {"error": "string"},
+      "expectedBody": {
+        "error": "string"
+      },
       "bodyMatcher": "partial"
     },
     {
       "name": "Login with wrong credentials returns 401",
       "method": "POST",
       "path": "/",
-      "body": {"action": "login", "email": "nonexistent_test_user@example.com", "password": "wrongpass"},
+      "body": {
+        "action": "login",
+        "email": "nonexistent_test_user@example.com",
+        "password": "wrongpass"
+      },
       "expectedStatus": 401,
-      "expectedBody": {"error": "string"},
+      "expectedBody": {
+        "error": "string"
+      },
       "bodyMatcher": "partial"
     },
     {
       "name": "Register without privacy consent returns 400",
       "method": "POST",
       "path": "/",
-      "body": {"action": "register", "email": "consent_test@example.com", "password": "password123", "privacy_accepted": false},
+      "body": {
+        "action": "register",
+        "email": "consent_test@example.com",
+        "password": "password123",
+        "privacy_accepted": false
+      },
       "expectedStatus": 400,
-      "expectedBody": {"error": "string"},
+      "expectedBody": {
+        "error": "string"
+      },
       "bodyMatcher": "partial"
     },
     {
       "name": "Reset password with invalid token returns 404",
       "method": "POST",
       "path": "/",
-      "body": {"action": "reset_password", "token": "invalid_token_xyz", "new_password": "newpassword123"},
+      "body": {
+        "action": "reset_password",
+        "token": "invalid_token_xyz",
+        "new_password": "newpassword123"
+      },
       "expectedStatus": 404,
-      "expectedBody": {"error": "string"},
+      "expectedBody": {
+        "error": "string"
+      },
       "bodyMatcher": "partial"
     },
     {
       "name": "register_use without auth returns 401",
       "method": "POST",
       "path": "/",
-      "body": {"action": "register_use", "type": "lesson"},
+      "body": {
+        "action": "register_use",
+        "type": "lesson"
+      },
       "expectedStatus": 401,
-      "expectedBody": {"error": "string"},
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "verify_email invalid token returns 404",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "verify_email",
+        "token": "invalid_token_xyz"
+      },
+      "expectedStatus": 404,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "resend_verification unknown email returns 200",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "resend_verification",
+        "email": "nobody_xyz@example.com"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "ok": true
+      },
       "bodyMatcher": "partial"
     }
   ]

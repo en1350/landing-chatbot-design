@@ -21,7 +21,7 @@ interface AuthModalProps {
 type Mode = "login" | "register" | "forgot";
 
 const AuthModal = ({ open, onClose }: AuthModalProps) => {
-  const { login, register, forgotPassword } = useAuth();
+  const { login, register, forgotPassword, resendVerification } = useAuth();
   const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,6 +31,9 @@ const AuthModal = ({ open, onClose }: AuthModalProps) => {
   const [error, setError] = useState<string | null>(null);
   const [forgotSent, setForgotSent] = useState<string | null>(null);
   const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [verifySent, setVerifySent] = useState<string | null>(null);
+  const [needsVerify, setNeedsVerify] = useState(false);
+  const [resendInfo, setResendInfo] = useState<string | null>(null);
 
   const reset = () => {
     setEmail("");
@@ -40,6 +43,9 @@ const AuthModal = ({ open, onClose }: AuthModalProps) => {
     setError(null);
     setLoading(false);
     setForgotSent(null);
+    setVerifySent(null);
+    setNeedsVerify(false);
+    setResendInfo(null);
   };
 
   const handleClose = () => {
@@ -50,6 +56,9 @@ const AuthModal = ({ open, onClose }: AuthModalProps) => {
   const switchMode = (m: Mode) => {
     setError(null);
     setForgotSent(null);
+    setVerifySent(null);
+    setNeedsVerify(false);
+    setResendInfo(null);
     setMode(m);
   };
 
@@ -68,16 +77,26 @@ const AuthModal = ({ open, onClose }: AuthModalProps) => {
         await login(email, password);
         handleClose();
       } else if (mode === "register") {
-        await register(email, password, name, privacyAccepted);
-        handleClose();
+        const message = await register(email, password, name, privacyAccepted);
+        setVerifySent(message);
       } else {
         const message = await forgotPassword(email);
         setForgotSent(message);
       }
     } catch (err) {
+      setNeedsVerify((err as { code?: string }).code === "email_not_verified");
       setError(err instanceof Error ? err.message : "Ошибка. Попробуйте снова.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const resend = async () => {
+    setResendInfo(null);
+    try {
+      setResendInfo(await resendVerification(email));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Не удалось отправить письмо");
     }
   };
 
@@ -105,7 +124,23 @@ const AuthModal = ({ open, onClose }: AuthModalProps) => {
             <DialogDescription>{descriptions[mode]}</DialogDescription>
           </DialogHeader>
 
-          {forgotSent ? (
+          {verifySent ? (
+            <div className="space-y-4 mt-1">
+              <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-sm flex gap-2.5">
+                <Icon name="MailCheck" size={18} className="text-primary shrink-0 mt-0.5" />
+                <span>
+                  {verifySent}. Проверьте почту <b>{email}</b> и перейдите по ссылке из письма, чтобы завершить регистрацию. Если письма нет, загляните в «Спам».
+                </span>
+              </div>
+              {resendInfo && <p className="text-xs text-muted-foreground">{resendInfo}</p>}
+              <Button variant="outline" className="w-full" onClick={resend}>
+                Отправить письмо ещё раз
+              </Button>
+              <Button variant="ghost" className="w-full" onClick={() => switchMode("login")}>
+                Вернуться ко входу
+              </Button>
+            </div>
+          ) : forgotSent ? (
             <div className="space-y-4 mt-1">
               <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-sm flex gap-2.5">
                 <Icon name="MailCheck" size={18} className="text-primary shrink-0 mt-0.5" />
@@ -179,6 +214,18 @@ const AuthModal = ({ open, onClose }: AuthModalProps) => {
                   {error}
                 </p>
               )}
+              {needsVerify && (
+                <div className="space-y-1">
+                  <button
+                    type="button"
+                    onClick={resend}
+                    className="text-xs text-primary underline underline-offset-2"
+                  >
+                    Отправить письмо ещё раз
+                  </button>
+                  {resendInfo && <p className="text-xs text-muted-foreground">{resendInfo}</p>}
+                </div>
+              )}
 
               <Button type="submit" className="w-full h-11 gap-2 bg-primary hover:bg-primary/90" disabled={loading}>
                 {loading ? (
@@ -197,7 +244,7 @@ const AuthModal = ({ open, onClose }: AuthModalProps) => {
             </form>
           )}
 
-          {!forgotSent && (
+          {!forgotSent && !verifySent && (
             <button
               onClick={() => switchMode(mode === "login" ? "register" : "login")}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors text-center mt-1"

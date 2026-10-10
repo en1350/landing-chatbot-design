@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
+import VerifyEmail from "./pages/VerifyEmail";
 import StudentTrainer from "./pages/StudentTrainer";
 import QualityAnalytics from "./pages/QualityAnalytics";
 import QualityAnalysisTool from "./pages/QualityAnalysisTool";
@@ -30,6 +31,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
               <Route path="/trenazher-dlya-uchenikov" element={<StudentTrainer />} />
               <Route path="/analitika-kachestva" element={<QualityAnalytics />} />
               <Route path="/kachestvo-znaniy" element={<QualityAnalysisTool />} />

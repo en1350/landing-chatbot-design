@@ -36,7 +36,9 @@ interface AuthContextValue {
   remainingUse: (type: GeneratorType) => number;
   canUseGenerator: (type: GeneratorType) => boolean;
   registerGeneratorUse: (type: GeneratorType) => Promise<boolean>;
-  register: (email: string, password: string, name: string, privacyAccepted: boolean) => Promise<void>;
+  register: (email: string, password: string, name: string, privacyAccepted: boolean) => Promise<string>;
+  verifyEmail: (verifyToken: string) => Promise<void>;
+  resendVerification: (email: string) => Promise<string>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -57,7 +59,9 @@ async function apiRequest(action: string, payload: Record<string, unknown> = {},
   });
   const data = await res.json();
   if (!res.ok) {
-    throw new Error(data.error || "Что-то пошло не так");
+    const err = new Error(data.error || "Что-то пошло не так") as Error & { code?: string };
+    err.code = data.code;
+    throw err;
   }
   return data;
 }
@@ -116,12 +120,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   const register = async (email: string, password: string, name: string, privacyAccepted: boolean) => {
-    const data = await apiRequest("register", { email, password, name, privacy_accepted: privacyAccepted });
+    const data = await apiRequest("register", {
+      email,
+      password,
+      name,
+      privacy_accepted: privacyAccepted,
+      origin: window.location.origin,
+    });
+    return (data.message as string) || "Мы отправили письмо со ссылкой для подтверждения email";
+  };
+
+  const verifyEmail = async (verifyToken: string) => {
+    const data = await apiRequest("verify_email", { token: verifyToken });
     applySession(data.token);
     setUser(data.user);
     setPlan(data.plan || "free");
     setUsage(data.usage || defaultUsage);
     setFreeLimit(data.free_limit ?? 3);
+  };
+
+  const resendVerification = async (email: string) => {
+    const data = await apiRequest("resend_verification", { email, origin: window.location.origin });
+    return data.message as string;
   };
 
   const login = async (email: string, password: string) => {
@@ -192,6 +212,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         canUseGenerator,
         registerGeneratorUse,
         register,
+        verifyEmail,
+        resendVerification,
         login,
         logout,
         refresh,
