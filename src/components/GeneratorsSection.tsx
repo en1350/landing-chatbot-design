@@ -50,7 +50,7 @@ const GeneratorsSection = ({ onNeedAuth }: GeneratorsSectionProps) => {
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   return (
-    <section id="generators" className="container py-16 md:py-24">
+    <section id="generators" className="container pt-6 pb-16 md:pt-8 md:pb-24">
       <div className="text-center max-w-2xl mx-auto mb-4">
         <span className="text-xs font-bold uppercase tracking-widest text-coral">Инструменты</span>
         <h2 className="font-display text-3xl md:text-4xl font-bold mt-2">
