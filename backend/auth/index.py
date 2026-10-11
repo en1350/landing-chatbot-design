@@ -15,8 +15,9 @@ SCHEMA = os.environ.get('MAIN_DB_SCHEMA', 'public')
 DEFAULT_SITE_URL = os.environ.get('SITE_URL', 'https://urokai.ru')
 
 PLANS = {
-    'month': {'days': 30, 'amount': '129.00', 'label': 'Подписка УрокАИ на 1 месяц'},
-    'year': {'days': 365, 'amount': '1199.00', 'label': 'Подписка УрокАИ на 1 год'},
+    'month': {'days': 30, 'amount': '199.00', 'label': 'Подписка УрокАИ на 1 месяц', 'db_plan': '30days'},
+    'quarter': {'days': 90, 'amount': '477.00', 'label': 'Подписка УрокАИ на 3 месяца', 'db_plan': '90days'},
+    'year': {'days': 365, 'amount': '1668.00', 'label': 'Подписка УрокАИ на 12 месяцев', 'db_plan': 'year'},
 }
 
 FREE_LIMIT = 3
@@ -655,7 +656,7 @@ def handler(event: dict, context) -> dict:
                         f"UPDATE {SCHEMA}.subscriptions SET is_active = false WHERE user_id = %s AND is_active = true",
                         (user_id,)
                     )
-                    plan_label = '30days' if plan_key == 'month' else 'year'
+                    plan_label = plan['db_plan']
                     cur.execute(
                         f"INSERT INTO {SCHEMA}.subscriptions (user_id, plan, expires_at, is_active) VALUES (%s, %s, %s, true)",
                         (user_id, plan_label, expires_at)

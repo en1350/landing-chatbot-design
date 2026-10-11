@@ -16,7 +16,7 @@ interface UpgradeModalProps {
   onNeedAuth: () => void;
 }
 
-type PlanKey = "month" | "year";
+type PlanKey = "month" | "quarter" | "year";
 
 const UpgradeModal = ({ open, onClose, onNeedAuth }: UpgradeModalProps) => {
   const { token, refresh } = useAuth();
@@ -90,7 +90,7 @@ const UpgradeModal = ({ open, onClose, onNeedAuth }: UpgradeModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
-      <DialogContent className="max-w-md text-center">
+      <DialogContent className="max-w-lg text-center">
         <DialogHeader>
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-coral/15 text-3xl mb-2">
             🔓
@@ -101,25 +101,35 @@ const UpgradeModal = ({ open, onClose, onNeedAuth }: UpgradeModalProps) => {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-3 mt-2">
+        <div className="grid grid-cols-3 gap-2.5 mt-2">
           <button
             onClick={() => pay("month")}
             disabled={loadingPlan !== null}
-            className="rounded-xl border border-border p-4 text-left hover:border-primary transition-colors disabled:opacity-60"
+            className="rounded-xl border border-border p-3 text-left hover:border-primary transition-colors disabled:opacity-60"
           >
-            <p className="font-display text-2xl font-bold">129 ₽</p>
-            <p className="text-xs text-muted-foreground mt-0.5">в месяц</p>
+            <p className="font-display text-xl font-bold">199 ₽</p>
+            <p className="text-xs text-muted-foreground mt-0.5">1 месяц</p>
+          </button>
+          <button
+            onClick={() => pay("quarter")}
+            disabled={loadingPlan !== null}
+            className="rounded-xl border border-border p-3 text-left hover:border-primary transition-colors disabled:opacity-60"
+          >
+            <p className="font-display text-xl font-bold">477 ₽</p>
+            <p className="text-xs text-muted-foreground mt-0.5">3 месяца</p>
+            <p className="text-[11px] text-primary font-semibold mt-0.5">159 ₽ / мес</p>
           </button>
           <button
             onClick={() => pay("year")}
             disabled={loadingPlan !== null}
-            className="rounded-xl border-2 border-coral p-4 relative text-left hover:bg-coral/5 transition-colors disabled:opacity-60"
+            className="rounded-xl border-2 border-coral p-3 relative text-left hover:bg-coral/5 transition-colors disabled:opacity-60"
           >
             <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-coral text-coral-foreground text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
-              Выгоднее на 23%
+              Выгоднее на 30%
             </span>
-            <p className="font-display text-2xl font-bold">1199 ₽</p>
-            <p className="text-xs text-muted-foreground mt-0.5">в год</p>
+            <p className="font-display text-xl font-bold">1668 ₽</p>
+            <p className="text-xs text-muted-foreground mt-0.5">12 месяцев</p>
+            <p className="text-[11px] text-primary font-semibold mt-0.5">139 ₽ / мес</p>
           </button>
         </div>
 

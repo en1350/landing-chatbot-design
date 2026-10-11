@@ -34,6 +34,7 @@ const USAGE_LABELS: Record<string, string> = {
 const PLAN_LABELS: Record<string, string> = {
   free: "Бесплатный тариф",
   "30days": "Тариф активен ✓ (30 дней)",
+  "90days": "Тариф активен ✓ (3 месяца)",
   "7days": "Тариф активен ✓ (7 дней)",
   year: "Тариф активен ✓ (год)",
 };
