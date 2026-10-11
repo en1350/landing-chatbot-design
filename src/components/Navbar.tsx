@@ -81,6 +81,12 @@ const Navbar = ({
             Конструктор заданий
           </Link>
           <Link
+            to="/konstruktor-igry"
+            className="story-link px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
+          >
+            Конструктор игры
+          </Link>
+          <Link
             to="/trenazher-dlya-uchenikov"
             className="story-link px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
           >
@@ -132,6 +138,13 @@ const Navbar = ({
                 className="text-left px-3 py-3 rounded-lg text-base font-medium hover:bg-accent transition-colors"
               >
                 Конструктор заданий
+              </Link>
+              <Link
+                to="/konstruktor-igry"
+                onClick={() => setOpen(false)}
+                className="text-left px-3 py-3 rounded-lg text-base font-medium hover:bg-accent transition-colors"
+              >
+                Конструктор игры
               </Link>
               <Link
                 to="/trenazher-dlya-uchenikov"

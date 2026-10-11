@@ -134,6 +134,7 @@
   }
   #lesson-card-print,
   #task-card-print,
+  #game-card-print,
   #event-card-print {
     border: none !important;
     padding: 0 !important;

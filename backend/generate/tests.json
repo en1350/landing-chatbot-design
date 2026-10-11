@@ -11,160 +11,304 @@
       "method": "GET",
       "path": "/",
       "expectedStatus": 405,
-      "expectedBody": {"error": "string"},
+      "expectedBody": {
+        "error": "string"
+      },
       "bodyMatcher": "partial"
     },
     {
       "name": "Unknown action returns 400",
       "method": "POST",
       "path": "/",
-      "body": {"action": "unknown_xyz"},
+      "body": {
+        "action": "unknown_xyz"
+      },
       "expectedStatus": 400,
-      "expectedBody": {"error": "string"},
+      "expectedBody": {
+        "error": "string"
+      },
       "bodyMatcher": "partial"
     },
     {
       "name": "Generate unknown type returns 400",
       "method": "POST",
       "path": "/",
-      "body": {"action": "generate", "type": "unknown_type", "fields": {}},
+      "body": {
+        "action": "generate",
+        "type": "unknown_type",
+        "fields": {}
+      },
       "expectedStatus": 400,
-      "expectedBody": {"error": "string"},
+      "expectedBody": {
+        "error": "string"
+      },
       "bodyMatcher": "partial"
     },
     {
       "name": "Refine without content returns 400",
       "method": "POST",
       "path": "/",
-      "body": {"action": "refine", "content": "", "instruction": ""},
+      "body": {
+        "action": "refine",
+        "content": "",
+        "instruction": ""
+      },
       "expectedStatus": 400,
-      "expectedBody": {"error": "string"},
+      "expectedBody": {
+        "error": "string"
+      },
       "bodyMatcher": "partial"
     },
     {
       "name": "Chat without message returns 400",
       "method": "POST",
       "path": "/",
-      "body": {"action": "chat", "message": ""},
+      "body": {
+        "action": "chat",
+        "message": ""
+      },
       "expectedStatus": 400,
-      "expectedBody": {"error": "string"},
+      "expectedBody": {
+        "error": "string"
+      },
       "bodyMatcher": "partial"
     },
     {
       "name": "Decompose without paid subscription returns 403",
       "method": "POST",
       "path": "/",
-      "body": {"action": "decompose", "competency": ""},
+      "body": {
+        "action": "decompose",
+        "competency": ""
+      },
       "expectedStatus": 403,
-      "expectedBody": {"error": "string"},
+      "expectedBody": {
+        "error": "string"
+      },
       "bodyMatcher": "partial"
     },
     {
       "name": "Notebook check without paid subscription returns 403",
       "method": "POST",
       "path": "/",
-      "body": {"action": "notebook_check", "image_base64": ""},
+      "body": {
+        "action": "notebook_check",
+        "image_base64": ""
+      },
       "expectedStatus": 403,
-      "expectedBody": {"error": "string"},
+      "expectedBody": {
+        "error": "string"
+      },
       "bodyMatcher": "partial"
     },
     {
       "name": "Antiplagiat check without text returns 400",
       "method": "POST",
       "path": "/",
-      "body": {"action": "antiplagiat_check", "text": ""},
+      "body": {
+        "action": "antiplagiat_check",
+        "text": ""
+      },
       "expectedStatus": 400,
-      "expectedBody": {"error": "string"},
+      "expectedBody": {
+        "error": "string"
+      },
       "bodyMatcher": "partial"
     },
     {
       "name": "Extract text without file returns 400",
       "method": "POST",
       "path": "/",
-      "body": {"action": "extract_text", "file_base64": "", "filename": "a.pdf"},
+      "body": {
+        "action": "extract_text",
+        "file_base64": "",
+        "filename": "a.pdf"
+      },
       "expectedStatus": 400,
-      "expectedBody": {"error": "string"},
+      "expectedBody": {
+        "error": "string"
+      },
       "bodyMatcher": "partial"
     },
     {
       "name": "Correction plan without paid subscription returns 403",
       "method": "POST",
       "path": "/",
-      "body": {"action": "correction_plan", "data": {"skills": [{"name": "test", "avg": 3, "level": "Средний"}]}},
+      "body": {
+        "action": "correction_plan",
+        "data": {
+          "skills": [
+            {
+              "name": "test",
+              "avg": 3,
+              "level": "Средний"
+            }
+          ]
+        }
+      },
       "expectedStatus": 403,
-      "expectedBody": {"error": "string"},
+      "expectedBody": {
+        "error": "string"
+      },
       "bodyMatcher": "partial"
     },
     {
       "name": "Lesson card without topic returns 400",
       "method": "POST",
       "path": "/",
-      "body": {"action": "lesson_card", "fields": {"topic": ""}},
+      "body": {
+        "action": "lesson_card",
+        "fields": {
+          "topic": ""
+        }
+      },
       "expectedStatus": 400,
-      "expectedBody": {"error": "string"},
+      "expectedBody": {
+        "error": "string"
+      },
       "bodyMatcher": "partial"
     },
     {
       "name": "Task card without topic returns 400",
       "method": "POST",
       "path": "/",
-      "body": {"action": "task_card", "fields": {"topic": ""}},
+      "body": {
+        "action": "task_card",
+        "fields": {
+          "topic": ""
+        }
+      },
       "expectedStatus": 400,
-      "expectedBody": {"error": "string"},
+      "expectedBody": {
+        "error": "string"
+      },
       "bodyMatcher": "partial"
     },
     {
       "name": "Lesson card refine without instruction returns 400",
       "method": "POST",
       "path": "/",
-      "body": {"action": "lesson_card_refine", "fields": {"topic": "Тема"}, "instruction": ""},
+      "body": {
+        "action": "lesson_card_refine",
+        "fields": {
+          "topic": "Тема"
+        },
+        "instruction": ""
+      },
       "expectedStatus": 400,
-      "expectedBody": {"error": "string"},
+      "expectedBody": {
+        "error": "string"
+      },
       "bodyMatcher": "partial"
     },
     {
       "name": "Task card refine without instruction returns 400",
       "method": "POST",
       "path": "/",
-      "body": {"action": "task_card_refine", "fields": {"topic": "Тема"}, "instruction": ""},
+      "body": {
+        "action": "task_card_refine",
+        "fields": {
+          "topic": "Тема"
+        },
+        "instruction": ""
+      },
       "expectedStatus": 400,
-      "expectedBody": {"error": "string"},
+      "expectedBody": {
+        "error": "string"
+      },
       "bodyMatcher": "partial"
     },
     {
       "name": "Event card without title returns 400",
       "method": "POST",
       "path": "/",
-      "body": {"action": "event_card", "fields": {"title": ""}},
+      "body": {
+        "action": "event_card",
+        "fields": {
+          "title": ""
+        }
+      },
       "expectedStatus": 400,
-      "expectedBody": {"error": "string"},
+      "expectedBody": {
+        "error": "string"
+      },
       "bodyMatcher": "partial"
     },
     {
       "name": "Event card refine without instruction returns 400",
       "method": "POST",
       "path": "/",
-      "body": {"action": "event_card_refine", "fields": {"title": "Тема"}, "instruction": ""},
+      "body": {
+        "action": "event_card_refine",
+        "fields": {
+          "title": "Тема"
+        },
+        "instruction": ""
+      },
       "expectedStatus": 400,
-      "expectedBody": {"error": "string"},
+      "expectedBody": {
+        "error": "string"
+      },
       "bodyMatcher": "partial"
     },
     {
       "name": "Extracurricular analysis without paid subscription returns 403",
       "method": "POST",
       "path": "/",
-      "body": {"action": "extracurricular_analysis", "data": {"rows": [{"subject": "test", "group": "1", "total": 10, "participants": 5}]}},
+      "body": {
+        "action": "extracurricular_analysis",
+        "data": {
+          "rows": [
+            {
+              "subject": "test",
+              "group": "1",
+              "total": 10,
+              "participants": 5
+            }
+          ]
+        }
+      },
       "expectedStatus": 403,
-      "expectedBody": {"error": "string"},
+      "expectedBody": {
+        "error": "string"
+      },
       "bodyMatcher": "partial"
     },
     {
       "name": "KZ analysis without paid subscription returns 403",
       "method": "POST",
       "path": "/",
-      "body": {"action": "kz_analysis", "data": {"rows": [{"discipline": "test", "group": "test"}]}},
+      "body": {
+        "action": "kz_analysis",
+        "data": {
+          "rows": [
+            {
+              "discipline": "test",
+              "group": "test"
+            }
+          ]
+        }
+      },
       "expectedStatus": 403,
-      "expectedBody": {"error": "string"},
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Game card requires subscription",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "game_card",
+        "fields": {
+          "topic": "Фотосинтез"
+        }
+      },
+      "expectedStatus": 403,
+      "expectedBody": {
+        "error": "string"
+      },
       "bodyMatcher": "partial"
     }
   ]

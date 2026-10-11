@@ -684,6 +684,53 @@ def build_event_card_refine_prompt(f: dict, instruction: str) -> str:
 {EVENT_CARD_JSON_FORMAT}"""
 
 
+def build_game_card_prompt(f: dict) -> str:
+    topic = (f.get('topic') or '').strip() or 'тема не указана'
+    game_type = (f.get('gameType') or '').strip() or 'Квиз'
+    time_label = (f.get('time') or '10 минут').strip()
+    people = (f.get('people') or '').strip() or 'не указано'
+    goal = (f.get('goal') or '').strip() or 'Закрепление'
+    scenario = (f.get('scenario') or '').strip()
+    scenario_line = f"\nПожелания и условия преподавателя (обязательно учти): {scenario}" if scenario else ""
+
+    return f"""Ты опытный педагог-игропрактик. Составь карточку образовательной игры на русском языке.
+
+Тема урока: {topic}
+Вид игры: {game_type}
+Время проведения: {time_label}
+Количество участников: {people}
+Цель игры: {goal}{scenario_line}
+
+Игра должна быть реально проводимой за {time_label}, а тайминг этапов в сумме должен давать это время. Содержание привязывай именно к теме «{topic}»: приведи конкретные примеры вопросов, ролей, ситуаций или заданий. Разбей участников на команды, если это уместно. Без markdown-разметки.
+
+Верни ответ СТРОГО в формате JSON без markdown, пояснений и текста до/после:
+{{"goal": "цель игры одним-двумя предложениями", "stages": [{{"name": "название этапа", "minutes": 3, "description": "что делают ведущий и участники"}}], "rules": "правила игры и система баллов", "materials": ["материал 1", "материал 2"], "tips": ["совет 1", "совет 2"], "criteria": "как подвести итоги и определить победителей"}}"""
+
+
+def normalize_game_card(parsed: dict) -> dict:
+    stages = []
+    for st in (parsed.get('stages') or []):
+        if not isinstance(st, dict):
+            continue
+        try:
+            minutes = int(st.get('minutes') or 0)
+        except (TypeError, ValueError):
+            minutes = 0
+        stages.append({
+            'name': str(st.get('name') or '').strip(),
+            'minutes': minutes,
+            'description': str(st.get('description') or '').strip(),
+        })
+    return {
+        'goal': str(parsed.get('goal') or '').strip(),
+        'stages': stages,
+        'rules': str(parsed.get('rules') or '').strip(),
+        'materials': [str(x).strip() for x in (parsed.get('materials') or []) if str(x).strip()],
+        'tips': [str(x).strip() for x in (parsed.get('tips') or []) if str(x).strip()],
+        'criteria': str(parsed.get('criteria') or '').strip(),
+    }
+
+
 def parse_ai_json(raw: str):
     cleaned = raw.strip()
     if cleaned.startswith('```'):
@@ -1149,6 +1196,25 @@ def handler(event: dict, context) -> dict:
                 return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ вернул некорректный ответ, попробуйте снова'})}
 
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps(normalize_event_card(parsed), ensure_ascii=False)}
+
+        elif action == 'game_card':
+            fields = body.get('fields') or {}
+            if not is_user_paid(event):
+                return {'statusCode': 403, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ-наполнение игры доступно по платной подписке'})}
+            if not (fields.get('topic') or '').strip():
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите тему урока'})}
+
+            raw = call_ai([
+                {'role': 'system', 'content': 'Ты профессиональный педагог-игропрактик. Отвечаешь строго валидным JSON без markdown и пояснений, всегда на русском языке.'},
+                {'role': 'user', 'content': build_game_card_prompt(fields)},
+            ], temperature=0.8)
+
+            try:
+                parsed = parse_ai_json(raw)
+            except (json.JSONDecodeError, IndexError):
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ вернул некорректный ответ, попробуйте снова'})}
+
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps(normalize_game_card(parsed), ensure_ascii=False)}
 
         elif action == 'extracurricular_analysis':
             if not is_user_paid(event):
