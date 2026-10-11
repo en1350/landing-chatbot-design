@@ -18,8 +18,15 @@ interface UpgradeModalProps {
 
 type PlanKey = "month" | "quarter" | "year";
 
+const PLAN_OPTIONS: { key: PlanKey; price: string; period: string; perMonth?: string; badge?: string }[] = [
+  { key: "month", price: "199 ₽", period: "1 месяц" },
+  { key: "quarter", price: "477 ₽", period: "3 месяца", perMonth: "159 ₽ / мес" },
+  { key: "year", price: "1668 ₽", period: "12 месяцев", perMonth: "139 ₽ / мес", badge: "Выгоднее на 30%" },
+];
+
 const UpgradeModal = ({ open, onClose, onNeedAuth }: UpgradeModalProps) => {
   const { token, refresh } = useAuth();
+  const [selectedPlan, setSelectedPlan] = useState<PlanKey>("year");
   const [loadingPlan, setLoadingPlan] = useState<PlanKey | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
@@ -101,36 +108,37 @@ const UpgradeModal = ({ open, onClose, onNeedAuth }: UpgradeModalProps) => {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-3 gap-2.5 mt-2">
-          <button
-            onClick={() => pay("month")}
-            disabled={loadingPlan !== null}
-            className="rounded-xl border border-border p-3 text-left hover:border-primary transition-colors disabled:opacity-60"
-          >
-            <p className="font-display text-xl font-bold">199 ₽</p>
-            <p className="text-xs text-muted-foreground mt-0.5">1 месяц</p>
-          </button>
-          <button
-            onClick={() => pay("quarter")}
-            disabled={loadingPlan !== null}
-            className="rounded-xl border border-border p-3 text-left hover:border-primary transition-colors disabled:opacity-60"
-          >
-            <p className="font-display text-xl font-bold">477 ₽</p>
-            <p className="text-xs text-muted-foreground mt-0.5">3 месяца</p>
-            <p className="text-[11px] text-primary font-semibold mt-0.5">159 ₽ / мес</p>
-          </button>
-          <button
-            onClick={() => pay("year")}
-            disabled={loadingPlan !== null}
-            className="rounded-xl border-2 border-coral p-3 relative text-left hover:bg-coral/5 transition-colors disabled:opacity-60"
-          >
-            <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-coral text-coral-foreground text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
-              Выгоднее на 30%
-            </span>
-            <p className="font-display text-xl font-bold">1668 ₽</p>
-            <p className="text-xs text-muted-foreground mt-0.5">12 месяцев</p>
-            <p className="text-[11px] text-primary font-semibold mt-0.5">139 ₽ / мес</p>
-          </button>
+        <div className="grid grid-cols-3 gap-2.5 mt-2" role="radiogroup" aria-label="Выбор тарифа">
+          {PLAN_OPTIONS.map((p) => {
+            const active = selectedPlan === p.key;
+            return (
+              <button
+                key={p.key}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => setSelectedPlan(p.key)}
+                disabled={loadingPlan !== null}
+                className={`relative rounded-xl border-2 p-3 text-left transition-colors disabled:opacity-60 ${
+                  active ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                }`}
+              >
+                {p.badge && (
+                  <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-coral text-coral-foreground text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
+                    {p.badge}
+                  </span>
+                )}
+                {active && (
+                  <span className="absolute top-2 right-2 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                    <Icon name="Check" size={11} />
+                  </span>
+                )}
+                <p className="font-display text-xl font-bold">{p.price}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{p.period}</p>
+                {p.perMonth && <p className="text-[11px] text-primary font-semibold mt-0.5">{p.perMonth}</p>}
+              </button>
+            );
+          })}
         </div>
 
         {error && (
@@ -141,7 +149,7 @@ const UpgradeModal = ({ open, onClose, onNeedAuth }: UpgradeModalProps) => {
         )}
 
         <Button
-          onClick={() => pay("month")}
+          onClick={() => pay(selectedPlan)}
           className="w-full h-11 mt-1 bg-primary hover:bg-primary/90 gap-2"
           disabled={loadingPlan !== null}
         >
@@ -153,7 +161,7 @@ const UpgradeModal = ({ open, onClose, onNeedAuth }: UpgradeModalProps) => {
           ) : (
             <>
               <Icon name="CreditCard" size={17} />
-              Оплатить банковской картой
+              Оплатить {PLAN_OPTIONS.find((p) => p.key === selectedPlan)?.price} банковской картой
             </>
           )}
         </Button>
