@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import ChatWidget from "@/components/ChatWidget";
@@ -70,11 +71,13 @@ const Hero = ({ onScrollToGenerators }: HeroProps) => {
         </div>
 
         <div className="flex justify-center md:justify-end md:pt-12 animate-fade-in w-full" style={{ animationDelay: "0.15s" }}>
-          <img
-            src="https://cdn.poehali.dev/projects/3a27d5a9-016a-43ab-946d-4c4fe8129705/bucket/9d097fa4-a4f2-4d78-9fe8-0b6b95d90b7c.jpg"
-            alt="IT-тренажёры с сертификатом для учеников"
-            className="w-full max-w-xl rounded-3xl shadow-xl shadow-primary/10"
-          />
+          <Link to="/trenazher-dlya-uchenikov" className="group block w-full max-w-xl cursor-pointer" aria-label="Открыть тренажёры для учеников">
+            <img
+              src="https://cdn.poehali.dev/projects/3a27d5a9-016a-43ab-946d-4c4fe8129705/bucket/9d097fa4-a4f2-4d78-9fe8-0b6b95d90b7c.jpg"
+              alt="IT-тренажёры с сертификатом для учеников"
+              className="w-full rounded-3xl shadow-xl shadow-primary/10 transition-transform duration-300 group-hover:scale-[1.02]"
+            />
+          </Link>
         </div>
       </div>
 
