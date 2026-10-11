@@ -29,6 +29,7 @@ const USAGE_LABELS: Record<string, string> = {
   task: "Генератор заданий",
   quiz: "Генератор тестовых заданий",
   antiplagiat: "Антиплагиат",
+  presentation: "Генератор презентаций",
 };
 
 const PLAN_LABELS: Record<string, string> = {
@@ -255,18 +256,29 @@ const ProfileSheet = ({ open, onClose, onNeedAuth }: ProfileSheetProps) => {
                           {new Date(m.created_at).toLocaleDateString("ru-RU")}
                         </p>
                       </div>
-                      <button
-                        onClick={() => handleDownloadMaterial(m)}
-                        disabled={downloadingId === m.id}
-                        className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent transition-colors shrink-0"
-                        title="Скачать .txt"
-                      >
-                        {downloadingId === m.id ? (
-                          <Icon name="Loader2" size={15} className="animate-spin" />
-                        ) : (
-                          <Icon name="Download" size={15} />
-                        )}
-                      </button>
+                      {m.type === "presentation" ? (
+                        <a
+                          href={`/generator-prezentaciy?open=${m.id}`}
+                          className="flex h-8 items-center gap-1.5 rounded-md px-2 text-xs font-medium hover:bg-accent transition-colors shrink-0"
+                          title="Открыть, скачать PPTX или PDF"
+                        >
+                          <Icon name="Presentation" size={15} />
+                          Открыть
+                        </a>
+                      ) : (
+                        <button
+                          onClick={() => handleDownloadMaterial(m)}
+                          disabled={downloadingId === m.id}
+                          className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent transition-colors shrink-0"
+                          title="Скачать .txt"
+                        >
+                          {downloadingId === m.id ? (
+                            <Icon name="Loader2" size={15} className="animate-spin" />
+                          ) : (
+                            <Icon name="Download" size={15} />
+                          )}
+                        </button>
+                      )}
                       <button
                         onClick={() => handleDelete(m.id)}
                         className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-destructive/10 text-destructive transition-colors shrink-0"

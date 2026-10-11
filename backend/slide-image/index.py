@@ -3,6 +3,8 @@ import json
 import os
 import urllib.request
 import urllib.error
+import uuid
+import boto3
 import psycopg2
 
 IMAGES_URL = "https://api.aitunnel.ru/v1/images/generations"
@@ -111,9 +113,26 @@ def handler(event: dict, context) -> dict:
         return err(502, f'Ошибка ИИ-сервиса: {e.read().decode()[:300]}')
 
     if b64.startswith('data:'):
-        image = b64
-    else:
-        mime = 'image/jpeg' if b64.startswith('/9j/') else 'image/webp' if b64.startswith('UklGR') else 'image/png'
-        image = f'data:{mime};base64,{b64}'
+        b64 = b64.split(',', 1)[1]
+    mime = 'image/jpeg' if b64.startswith('/9j/') else 'image/webp' if b64.startswith('UklGR') else 'image/png'
+    ext = {'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/png': 'png'}[mime]
 
-    return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'image': image})}
+    cdn_url = None
+    try:
+        s3 = boto3.client(
+            's3',
+            endpoint_url='https://bucket.poehali.dev',
+            aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
+            aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'],
+        )
+        key = f"presentations/{uuid.uuid4().hex}.{ext}"
+        s3.put_object(Bucket='files', Key=key, Body=base64.b64decode(b64), ContentType=mime)
+        cdn_url = f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{key}"
+    except Exception:
+        cdn_url = None
+
+    return {
+        'statusCode': 200,
+        'headers': cors_headers(),
+        'body': json.dumps({'image': f'data:{mime};base64,{b64}', 'cdn_url': cdn_url})
+    }

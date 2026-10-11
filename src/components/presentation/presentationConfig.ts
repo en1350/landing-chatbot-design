@@ -4,6 +4,7 @@ export interface Slide {
   notes: string;
   image: string;
   imageUrl?: string;
+  cdnUrl?: string;
 }
 
 export interface PresentationData {

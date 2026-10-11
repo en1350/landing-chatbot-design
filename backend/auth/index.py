@@ -525,6 +525,28 @@ def handler(event: dict, context) -> dict:
                 'body': json.dumps({'id': new_id, 'created_at': created_at.isoformat()})
             }
 
+        elif action == 'update_material':
+            user_id = get_user_id_by_token(cur, get_token(event))
+            if not user_id:
+                return {'statusCode': 401, 'headers': cors_headers(), 'body': json.dumps({'error': 'Требуется вход в личный кабинет'})}
+
+            material_id = body_data.get('id')
+            title = (body_data.get('title') or '').strip()
+            content = body_data.get('content') or ''
+            if not title:
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Не указан заголовок материала'})}
+
+            cur.execute(
+                f"UPDATE {SCHEMA}.saved_materials SET title = %s, content = %s "
+                f"WHERE id = %s AND user_id = %s AND is_archived = false",
+                (title, content, material_id, user_id)
+            )
+            updated = cur.rowcount
+            conn.commit()
+            if not updated:
+                return {'statusCode': 404, 'headers': cors_headers(), 'body': json.dumps({'error': 'Материал не найден'})}
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'ok': True})}
+
         elif action == 'list_materials':
             user_id = get_user_id_by_token(cur, get_token(event))
             if not user_id:
@@ -549,7 +571,7 @@ def handler(event: dict, context) -> dict:
             material_id = body_data.get('id')
             cur.execute(
                 f"SELECT id, type, title, content, created_at FROM {SCHEMA}.saved_materials "
-                f"WHERE id = %s AND user_id = %s",
+                f"WHERE id = %s AND user_id = %s AND is_archived = false",
                 (material_id, user_id)
             )
             row = cur.fetchone()

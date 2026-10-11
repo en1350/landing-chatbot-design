@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -11,8 +11,14 @@ import AntiplagiatModal from "@/components/AntiplagiatModal";
 import ProfileSheet from "@/components/ProfileSheet";
 import AuthModal from "@/components/AuthModal";
 import UpgradeModal from "@/components/UpgradeModal";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, AUTH_URL } from "@/context/AuthContext";
 import { toast } from "sonner";
+import SavedPresentations from "@/components/presentation/SavedPresentations";
+import {
+  SavedPresentationMeta,
+  parsePresentation,
+  serializePresentation,
+} from "@/components/presentation/savedPresentations";
 import SlideView from "@/components/presentation/SlideView";
 import ScaledSlide from "@/components/presentation/ScaledSlide";
 import { exportPdf, exportPptx } from "@/components/presentation/exportPresentation";
@@ -66,6 +72,106 @@ const PresentationBuilder = () => {
   const [exporting, setExporting] = useState<"" | "pdf" | "pptx">("");
   const [deck, setDeck] = useState<PresentationData | null>(null);
   const [deckStyle, setDeckStyle] = useState<StyleKey>("modern");
+
+  const [savedId, setSavedId] = useState<number | null>(null);
+  const [saved, setSaved] = useState<SavedPresentationMeta[]>([]);
+  const [loadingList, setLoadingList] = useState(false);
+  const [openingId, setOpeningId] = useState<number | null>(null);
+  const lastSavedRef = useRef("");
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const authPost = useCallback(
+    async (payload: Record<string, unknown>) => {
+      const res = await fetch(AUTH_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { "X-Authorization": token } : {}) },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Ошибка сохранения");
+      return data;
+    },
+    [token]
+  );
+
+  const loadSaved = useCallback(async () => {
+    if (!token) {
+      setSaved([]);
+      return;
+    }
+    setLoadingList(true);
+    try {
+      const data = await authPost({ action: "list_materials" });
+      setSaved((data.items || []).filter((m: { type: string }) => m.type === "presentation"));
+    } catch {
+      setSaved([]);
+    } finally {
+      setLoadingList(false);
+    }
+  }, [token, authPost]);
+
+  useEffect(() => {
+    loadSaved();
+  }, [loadSaved]);
+
+  const openSaved = useCallback(
+    async (id: number) => {
+      setOpeningId(id);
+      try {
+        const data = await authPost({ action: "get_material", id });
+        const parsed = await parsePresentation(data.content || "");
+        if (!parsed) throw new Error("Не удалось открыть презентацию");
+        lastSavedRef.current = serializePresentation(parsed.deck, parsed.style);
+        setDeck(parsed.deck);
+        setDeckStyle(parsed.style);
+        setStyle(parsed.style);
+        setSavedId(id);
+        setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50);
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Не удалось открыть презентацию");
+      } finally {
+        setOpeningId(null);
+      }
+    },
+    [authPost]
+  );
+
+  useEffect(() => {
+    const id = Number(searchParams.get("open"));
+    if (id && token) {
+      openSaved(id);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, token, openSaved, setSearchParams]);
+
+  const deleteSaved = async (id: number) => {
+    try {
+      await authPost({ action: "delete_material", id });
+      setSaved((list) => list.filter((m) => m.id !== id));
+      if (savedId === id) {
+        setSavedId(null);
+        setDeck(null);
+      }
+      toast.success("Презентация удалена");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Не удалось удалить");
+    }
+  };
+
+  useEffect(() => {
+    if (!deck || !savedId || imgBusy.length > 0) return;
+    const content = serializePresentation(deck, deckStyle);
+    if (content === lastSavedRef.current) return;
+    const timer = setTimeout(async () => {
+      try {
+        await authPost({ action: "update_material", id: savedId, title: deck.title, content });
+        lastSavedRef.current = content;
+      } catch {
+        /* повторим при следующем изменении */
+      }
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [deck, deckStyle, savedId, imgBusy.length, authPost]);
 
   const fileRef = useRef<HTMLInputElement>(null);
   const exportRef = useRef<HTMLDivElement>(null);
@@ -145,12 +251,23 @@ const PresentationBuilder = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Не удалось составить презентацию");
       const deckTitle = data.title || topic || "Презентация";
-      setDeck({ title: deckTitle, slides: data.slides });
+      const newDeck: PresentationData = { title: deckTitle, slides: data.slides };
+      setSavedId(null);
+      setDeck(newDeck);
       setDeckStyle(style);
-      toast.success("Презентация готова");
+      toast.success("Презентация готова и сохранена в кабинете");
       if (withImages) {
         setLoading(false);
         void generateAllImages(data.slides, style, deckTitle);
+      }
+      try {
+        const content = serializePresentation(newDeck, style);
+        const saveRes = await authPost({ action: "save_material", type: "presentation", title: deckTitle, content });
+        lastSavedRef.current = content;
+        setSavedId(saveRes.id);
+        loadSaved();
+      } catch {
+        toast.error("Не удалось сохранить презентацию в кабинет");
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Не удалось составить презентацию");
@@ -159,7 +276,7 @@ const PresentationBuilder = () => {
     }
   };
 
-  const requestImage = async (hint: string, styleKey: StyleKey, deckTopic: string): Promise<string> => {
+  const requestImage = async (hint: string, styleKey: StyleKey, deckTopic: string): Promise<{ image: string; cdn: string | null }> => {
     const res = await fetch(IMAGE_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...(token ? { "X-Authorization": token } : {}) },
@@ -167,16 +284,17 @@ const PresentationBuilder = () => {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Не удалось создать иллюстрацию");
-    return data.image as string;
+    return { image: data.image as string, cdn: (data.cdn_url as string) || null };
   };
 
-  const setSlideImage = (index: number, imageUrl: string) =>
-    setDeck((d) => (d ? { ...d, slides: d.slides.map((sl, i) => (i === index ? { ...sl, imageUrl } : sl)) } : d));
+  const setSlideImage = (index: number, imageUrl: string, cdnUrl?: string) =>
+    setDeck((d) => (d ? { ...d, slides: d.slides.map((sl, i) => (i === index ? { ...sl, imageUrl, cdnUrl } : sl)) } : d));
 
   const generateOneImage = async (index: number, hint: string, styleKey: StyleKey, deckTopic: string) => {
     setImgBusy((b) => [...b, index]);
     try {
-      setSlideImage(index, await requestImage(hint, styleKey, deckTopic));
+      const { image, cdn } = await requestImage(hint, styleKey, deckTopic);
+      setSlideImage(index, image, cdn || undefined);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Не удалось создать иллюстрацию");
     } finally {
@@ -403,6 +521,22 @@ const PresentationBuilder = () => {
               )}
             </div>
           </div>
+        </div>
+        <div className="container pb-10 md:pb-14 -mt-4">
+          {user ? (
+            <SavedPresentations
+              items={saved}
+              loading={loadingList}
+              openingId={openingId}
+              activeId={savedId}
+              onOpen={openSaved}
+              onDelete={deleteSaved}
+            />
+          ) : (
+            <div className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
+              Войдите в личный кабинет, чтобы презентации сохранялись и были доступны позже.
+            </div>
+          )}
         </div>
       </main>
 

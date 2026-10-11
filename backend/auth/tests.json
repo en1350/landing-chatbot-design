@@ -116,6 +116,22 @@
         "ok": true
       },
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "update_material without auth returns 401",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "update_material",
+        "id": 1,
+        "title": "x",
+        "content": "y"
+      },
+      "expectedStatus": 401,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
     }
   ]
 }
