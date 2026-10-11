@@ -19,7 +19,7 @@ const Hero = ({ onScrollToGenerators }: HeroProps) => {
         aria-hidden
       />
 
-      <div className="container relative py-16 md:py-24 grid md:grid-cols-2 gap-12 items-center">
+      <div className="container relative py-16 md:py-24 grid md:grid-cols-2 gap-12 items-start">
         <div className="animate-fade-in">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary mb-6">
             <Icon name="Sparkles" size={13} />
@@ -69,7 +69,7 @@ const Hero = ({ onScrollToGenerators }: HeroProps) => {
           </div>
         </div>
 
-        <div className="flex justify-center md:justify-end animate-fade-in w-full" style={{ animationDelay: "0.15s" }}>
+        <div className="flex justify-center md:justify-end md:pt-12 animate-fade-in w-full" style={{ animationDelay: "0.15s" }}>
           <img
             src="https://cdn.poehali.dev/projects/3a27d5a9-016a-43ab-946d-4c4fe8129705/bucket/9d097fa4-a4f2-4d78-9fe8-0b6b95d90b7c.jpg"
             alt="IT-тренажёры с сертификатом для учеников"
