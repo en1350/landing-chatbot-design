@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
-import ChatWidget from "@/components/ChatWidget";
 
 interface HeroProps {
   onScrollToGenerators: () => void;
@@ -79,10 +78,6 @@ const Hero = ({ onScrollToGenerators }: HeroProps) => {
             />
           </Link>
         </div>
-      </div>
-
-      <div id="chat-anchor" className="container relative pb-16 md:pb-24 flex justify-center">
-        <ChatWidget />
       </div>
     </section>
   );

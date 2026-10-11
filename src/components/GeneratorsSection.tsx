@@ -5,6 +5,7 @@ import UpgradeModal from "@/components/UpgradeModal";
 import { GeneratorType } from "@/context/AuthContext";
 import { useUsage } from "@/context/UsageContext";
 import Icon from "@/components/ui/icon";
+import ChatWidget from "@/components/ChatWidget";
 
 const GENERATORS: { type: GeneratorType; icon: string; title: string; accent: string }[] = [
   {
@@ -68,12 +69,18 @@ const GeneratorsSection = ({ onNeedAuth }: GeneratorsSectionProps) => {
         </span>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5 items-stretch">
-        {GENERATORS.map((g, i) => (
-          <div key={g.type} className="animate-fade-in h-full" style={{ animationDelay: `${i * 80}ms` }}>
-            <GeneratorCard {...g} onOpen={() => setActiveType(g.type)} />
-          </div>
-        ))}
+      <div className="grid lg:grid-cols-[minmax(0,1fr)_26rem] gap-8 items-start">
+        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
+          {GENERATORS.map((g, i) => (
+            <div key={g.type} className="animate-fade-in h-full" style={{ animationDelay: `${i * 80}ms` }}>
+              <GeneratorCard {...g} onOpen={() => setActiveType(g.type)} />
+            </div>
+          ))}
+        </div>
+
+        <div id="chat-anchor" className="flex justify-center lg:justify-end w-full scroll-mt-24">
+          <ChatWidget />
+        </div>
       </div>
 
       <GeneratorModal
