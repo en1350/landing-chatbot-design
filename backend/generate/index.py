@@ -836,6 +836,36 @@ def build_extracurricular_prompt(data: dict) -> str:
 Пиши развёрнуто, конкретно, по-деловому, без markdown-разметки (без **, #), обычным текстом с нумерацией разделов."""
 
 
+def build_extracurricular_plan_prompt(data: dict) -> str:
+    rows = data.get('rows') or []
+    period = (data.get('period') or 'год').strip()
+    lines = []
+    for r in rows:
+        total = r.get('total') or 0
+        participants = r.get('participants') or 0
+        pct = round(participants / total * 100, 1) if total else 0
+        lines.append(
+            f"{r.get('year', '')}; {r.get('date', '')}; дисциплина «{r.get('subject', '')}»; "
+            f"группа {r.get('group', '')}; вид «{r.get('type', '')}»; {r.get('desc', '')}; охват {pct}%"
+        )
+    rows_block = "\n".join(lines) if lines else "нет данных"
+
+    return f"""Ты опытный методист и заместитель директора по воспитательной работе. На основе учёта проведённых внеаудиторных мероприятий составь план внеаудиторной деятельности на русском языке на период: {period}.
+
+Данные о проведённых мероприятиях (учебный год; дата; дисциплина; группа; вид деятельности; описание; процент охвата):
+{rows_block}
+
+Что нужно сделать: сохрани удачные форматы с высоким охватом, усиль направления с низким охватом, добавь виды деятельности, которых не хватает, распредели мероприятия равномерно по месяцам периода.
+
+Структура плана (используй именно эти заголовки):
+1. Цель и задачи внеаудиторной деятельности на период.
+2. План мероприятий по месяцам — для каждого мероприятия: название, вид деятельности, целевая группа, ответственный (роль), ожидаемый охват.
+3. Меры по повышению вовлечённости обучающихся.
+4. Ожидаемые результаты и показатели эффективности.
+
+Пиши конкретно, по-деловому, без markdown-разметки (без **, #), обычным текстом с нумерацией разделов и пунктов."""
+
+
 CHAT_SYSTEM_PROMPT = """Ты ИИ-помощник УрокАИ для учителей и педагогов. Ты дружелюбно и по-деловому помогаешь с методическими вопросами: как составить план урока, придумать игру, оценить работу учеников, подобрать технологию обучения и т.д.
 
 Правила:
@@ -1295,6 +1325,21 @@ def handler(event: dict, context) -> dict:
             content = call_ai([
                 {'role': 'system', 'content': 'Ты опытный методист и специалист по воспитательной работе. Отвечай развёрнуто, по-деловому и всегда на русском языке.'},
                 {'role': 'user', 'content': build_extracurricular_prompt(data)},
+            ], temperature=0.6)
+
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'content': content}, ensure_ascii=False)}
+
+        elif action == 'extracurricular_plan':
+            if not is_user_paid(event):
+                return {'statusCode': 403, 'headers': cors_headers(), 'body': json.dumps({'error': 'Составление плана доступно только по платной подписке'})}
+
+            data = body.get('data') or {}
+            if not data.get('rows'):
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Недостаточно данных для составления плана'})}
+
+            content = call_ai([
+                {'role': 'system', 'content': 'Ты опытный методист и специалист по воспитательной работе. Отвечай развёрнуто, по-деловому и всегда на русском языке.'},
+                {'role': 'user', 'content': build_extracurricular_plan_prompt(data)},
             ], temperature=0.6)
 
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'content': content}, ensure_ascii=False)}

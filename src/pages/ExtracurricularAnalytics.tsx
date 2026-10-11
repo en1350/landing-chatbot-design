@@ -20,7 +20,7 @@ import AntiplagiatModal from "@/components/AntiplagiatModal";
 import ProfileSheet from "@/components/ProfileSheet";
 import AuthModal from "@/components/AuthModal";
 import UpgradeModal from "@/components/UpgradeModal";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, AUTH_URL } from "@/context/AuthContext";
 import { downloadDocx, downloadTxt } from "@/lib/download";
 import { toast } from "sonner";
 import StatsPanel from "@/components/extracurricular/StatsPanel";
@@ -32,6 +32,8 @@ const newId = () => Math.random().toString(36).slice(2, 10);
 
 const STORAGE_KEY = "urokai_extracurricular_rows";
 const REPORT_KEY = "urokai_extracurricular_report";
+const PLAN_KEY = "urokai_extracurricular_plan";
+const PLAN_PERIODS = ["Следующий месяц", "Квартал", "Полугодие", "Учебный год"];
 
 const loadStoredRows = (): EventRow[] => {
   try {
@@ -57,6 +59,11 @@ const ExtracurricularAnalytics = () => {
   const [rows, setRows] = useState<EventRow[]>(loadStoredRows);
   const [report, setReport] = useState(() => localStorage.getItem(REPORT_KEY) || "");
   const [loading, setLoading] = useState(false);
+  const [plan, setPlan] = useState(() => localStorage.getItem(PLAN_KEY) || "");
+  const [planPeriod, setPlanPeriod] = useState(PLAN_PERIODS[3]);
+  const [planLoading, setPlanLoading] = useState(false);
+  const [planSaving, setPlanSaving] = useState(false);
+  const [planSaved, setPlanSaved] = useState(false);
 
   useEffect(() => {
     try {
@@ -110,6 +117,15 @@ const ExtracurricularAnalytics = () => {
     toast.success("Мероприятие добавлено");
   };
 
+  useEffect(() => {
+    try {
+      if (plan) localStorage.setItem(PLAN_KEY, plan);
+      else localStorage.removeItem(PLAN_KEY);
+    } catch {
+      /* хранилище недоступно */
+    }
+  }, [plan]);
+
   const removeRow = (id: string) => setRows((prev) => prev.filter((r) => r.id !== id));
 
   const loadDemo = () => {
@@ -121,6 +137,8 @@ const ExtracurricularAnalytics = () => {
     if (rows.length > 0 && !window.confirm("Удалить все мероприятия и справку? Действие необратимо.")) return;
     setRows([]);
     setReport("");
+    setPlan("");
+    setPlanSaved(false);
     toast.success("Данные очищены");
   };
 
@@ -159,6 +177,73 @@ const ExtracurricularAnalytics = () => {
       toast.error(err instanceof Error ? err.message : "Не удалось составить справку");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const generatePlan = async () => {
+    if (!user) {
+      setAuthOpen(true);
+      return;
+    }
+    if (!isPaid) {
+      setUpgradeOpen(true);
+      return;
+    }
+    if (rows.length === 0) {
+      toast.error("Добавьте хотя бы одно мероприятие");
+      return;
+    }
+
+    setPlanLoading(true);
+    try {
+      const res = await fetch(GENERATE_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "X-Authorization": token } : {}),
+        },
+        body: JSON.stringify({
+          action: "extracurricular_plan",
+          data: { rows: rows.map(({ id, ...rest }) => rest), period: planPeriod },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Не удалось составить план");
+      setPlan(data.content || "");
+      setPlanSaved(false);
+      toast.success("План внеаудиторной деятельности готов");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Не удалось составить план");
+    } finally {
+      setPlanLoading(false);
+    }
+  };
+
+  const savePlan = async () => {
+    if (!user || !token) {
+      setAuthOpen(true);
+      return;
+    }
+    setPlanSaving(true);
+    try {
+      const res = await fetch(AUTH_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Authorization": token },
+        body: JSON.stringify({
+          action: "save_material",
+          type: "extracurricular_plan",
+          title: `${planTitle}: ${planPeriod.toLowerCase()}`,
+          content: plan,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Не удалось сохранить");
+      setPlanSaved(true);
+      toast.success("План сохранён в личном кабинете, вкладка «Материалы»");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Не удалось сохранить план");
+    } finally {
+      setPlanSaving(false);
     }
   };
 
@@ -220,6 +305,7 @@ const ExtracurricularAnalytics = () => {
   };
 
   const reportTitle = "Аналитическая справка о вовлечении обучающихся во внеаудиторную деятельность";
+  const planTitle = "План внеаудиторной деятельности";
 
   const levelClass = (p: number) => {
     const l = levelOf(p);
@@ -493,6 +579,82 @@ const ExtracurricularAnalytics = () => {
                 ) : (
                   <p className="py-12 text-center text-muted-foreground">
                     Нажмите «Сформировать справку с ИИ» — документ появится здесь
+                  </p>
+                )}
+              </div>
+
+              <div className="mt-6 rounded-2xl border border-border bg-card p-5 md:p-6 shadow-sm">
+                <h2 className="font-display text-lg font-bold mb-1">📅 {planTitle}</h2>
+                <p className="text-xs text-muted-foreground mb-4 no-print">
+                  ИИ учтёт проведённые мероприятия и охват: усилит слабые направления и распределит новые по месяцам.
+                </p>
+
+                <div className="flex flex-wrap items-center gap-2 mb-4 no-print">
+                  <Select value={planPeriod} onValueChange={setPlanPeriod}>
+                    <SelectTrigger className="w-full sm:w-52" aria-label="Период плана">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PLAN_PERIODS.map((p) => (
+                        <SelectItem key={p} value={p}>
+                          {p}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button className="gap-2" onClick={generatePlan} disabled={planLoading}>
+                    {planLoading ? (
+                      <>
+                        <Icon name="Loader2" size={16} className="animate-spin" />
+                        ИИ составляет план...
+                      </>
+                    ) : (
+                      <>
+                        <Icon name="CalendarPlus" size={16} />
+                        Составить план внеаудиторной деятельности
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {plan ? (
+                  <>
+                    <div className="flex flex-wrap gap-2 mb-4 no-print">
+                      <Button variant="outline" className="gap-1.5" onClick={savePlan} disabled={planSaving || planSaved}>
+                        {planSaving ? (
+                          <Icon name="Loader2" size={15} className="animate-spin" />
+                        ) : (
+                          <Icon name={planSaved ? "Check" : "Save"} size={15} />
+                        )}
+                        {planSaved ? "Сохранено" : "Сохранить в кабинет"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="gap-1.5"
+                        onClick={() => downloadDocx(`${planTitle} — ${planPeriod}`, planTitle, plan)}
+                      >
+                        <Icon name="FileText" size={15} />
+                        Скачать Word
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="gap-1.5"
+                        onClick={() => downloadTxt(`${planTitle} — ${planPeriod}`, [planTitle, "", plan])}
+                      >
+                        <Icon name="Download" size={15} />
+                        Скачать TXT
+                      </Button>
+                    </div>
+                    <div className="rounded-xl border border-border bg-muted/30 p-5 md:p-7">
+                      <h3 className="font-display text-lg font-bold text-primary text-center mb-4">
+                        {planTitle}
+                      </h3>
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{plan}</p>
+                    </div>
+                  </>
+                ) : (
+                  <p className="py-8 text-center text-muted-foreground">
+                    Выберите период и нажмите «Составить план внеаудиторной деятельности»
                   </p>
                 )}
               </div>

@@ -326,6 +326,26 @@
         "error": "string"
       },
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "Extracurricular plan without paid subscription returns 403",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "extracurricular_plan",
+        "data": {
+          "rows": [
+            {
+              "year": "2025-2026"
+            }
+          ]
+        }
+      },
+      "expectedStatus": 403,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
     }
   ]
 }
