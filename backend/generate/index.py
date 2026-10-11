@@ -866,6 +866,117 @@ def parse_ai_json(raw: str):
     return json.loads(cleaned)
 
 
+PM_TASK_JSON_FORMAT = """{"instruction": "инструкция для обучающегося, 2-3 предложения", "tasks": [{"text": "полный текст задания", "level": "basic | medium | high"}], "criteria": [{"grade": "оценка", "criterion": "критерий", "match": "соответствие ПК и ОК"}], "equipment": "материально-техническое обеспечение, каждый пункт с новой строки", "answerKey": "эталон ответа или ключи для преподавателя"}"""
+
+PM_TASK_TYPES = {
+    'practical': 'Практическая работа',
+    'lab': 'Лабораторная работа',
+    'control': 'Контрольная работа',
+    'situational': 'Ситуационные задачи',
+    'test': 'Тестовые задания',
+    'project': 'Проектное задание',
+    'complex': 'Комплексное задание',
+}
+
+PM_LEVELS = {
+    'basic': 'базовый (репродуктивный): задания по образцу и инструкции',
+    'medium': 'средний (конструктивный): применение знаний с анализом и выводами',
+    'high': 'высокий (творческий): нестандартные условия, обоснование решений',
+    'mixed': 'смешанный: распредели задания по уровням basic, medium и high от простого к сложному',
+}
+
+
+def pm_task_context(f: dict) -> str:
+    task_type = PM_TASK_TYPES.get((f.get('taskType') or 'practical').strip(), (f.get('taskType') or 'Практическая работа'))
+    level = PM_LEVELS.get((f.get('level') or 'medium').strip(), PM_LEVELS['medium'])
+    return f"""Профессиональный модуль: {(f.get('pmCode') or '').strip()} {(f.get('pmName') or '').strip() or 'не указан'}
+МДК: {(f.get('mdkCode') or '').strip()} {(f.get('mdkTopic') or '').strip() or 'тема не указана'}
+Вид профессиональной деятельности: {(f.get('vd') or '').strip() or 'не указан'}
+Формируемые профессиональные компетенции (ПК): {(f.get('pk') or '').strip() or 'не указаны'}
+Формируемые общие компетенции (ОК): {(f.get('ok') or '').strip() or 'не указаны'}
+Тип задания: {task_type}
+Количество заданий: {f.get('taskCount') or 5}
+Уровень сложности: {level}
+Время выполнения: {f.get('duration') or 90} минут
+Форма контроля: {(f.get('controlForm') or 'Дифференцированный зачёт').strip()}
+Дополнительные условия: {(f.get('spec') or '').strip() or 'нет'}"""
+
+
+def build_pm_task_prompt(f: dict) -> str:
+    try:
+        count = max(1, min(int(f.get('taskCount') or 5), 20))
+    except (TypeError, ValueError):
+        count = 5
+    return f"""Ты опытный методист СПО, специалист по разработке оценочных средств по профессиональным модулям по методическим рекомендациям О.В. Алтынниковой. Составь комплект заданий на русском языке.
+
+{pm_task_context(f)}
+
+Требования: ровно {count} заданий, каждое конкретное, по теме МДК, выполнимое в рамках указанного времени, с привязкой к профессиональной деятельности и формируемым ПК и ОК. В заданиях указывай реальные операции, исходные данные, требуемый результат и форму отчёта. Критерии оценивания дай по четырём уровням: «отлично» / зачтено, «хорошо», «удовлетворительно», «неудовлетворительно» / не зачтено, с указанием, какие ПК и ОК сформированы. Эталон ответа подробный, чтобы преподаватель мог проверять. Без markdown-разметки.
+
+Верни ответ СТРОГО в формате JSON без markdown, пояснений и текста до/после:
+{PM_TASK_JSON_FORMAT}"""
+
+
+def build_pm_task_refine_prompt(f: dict, instruction: str) -> str:
+    tasks = f.get('tasks') or []
+    task_lines = "\n".join(f"{i}. [{(t.get('level') or 'medium')}] {(t.get('text') or '').strip()}" for i, t in enumerate(tasks, 1)) or "(нет заданий)"
+    crit = f.get('criteria') or []
+    crit_lines = "\n".join(f"- {(c.get('grade') or '').strip()} | {(c.get('criterion') or '').strip()} | {(c.get('match') or '').strip()}" for c in crit) or "(нет)"
+    return f"""Ты опытный методист СПО. Вот текущий комплект заданий по профессиональному модулю.
+
+{pm_task_context(f)}
+
+Инструкция для обучающегося: {(f.get('instructionText') or '').strip() or '(пусто)'}
+
+Текущие задания:
+{task_lines}
+
+Текущие критерии оценивания (оценка | критерий | соответствие):
+{crit_lines}
+
+Материально-техническое обеспечение: {(f.get('equipment') or '').strip() or '(пусто)'}
+Эталон ответа: {(f.get('answerKey') or '').strip() or '(пусто)'}
+
+Преподаватель просит доработать комплект по замечанию: «{instruction}»
+
+Обнови комплект в соответствии с замечанием. Количество заданий сохраняй, если замечание прямо не просит добавить или убрать. Если замечание касается одного задания или раздела, измени в первую очередь его, но верни ВСЕ поля целиком. Эталон ответа обнови так, чтобы он соответствовал заданиям. Без markdown-разметки.
+
+Верни ответ СТРОГО в формате JSON без markdown, пояснений и текста до/после:
+{PM_TASK_JSON_FORMAT}"""
+
+
+def normalize_pm_task(parsed: dict) -> dict:
+    tasks = []
+    for t in parsed.get('tasks') or []:
+        if isinstance(t, str):
+            t = {'text': t}
+        text = str(t.get('text') or '').strip()
+        if not text:
+            continue
+        level = str(t.get('level') or 'medium').strip().lower()
+        if level not in ('basic', 'medium', 'high'):
+            level = 'medium'
+        tasks.append({'text': text, 'level': level})
+    criteria = []
+    for c in parsed.get('criteria') or []:
+        if not isinstance(c, dict):
+            continue
+        row = {
+            'grade': str(c.get('grade') or '').strip(),
+            'criterion': str(c.get('criterion') or '').strip(),
+            'match': str(c.get('match') or '').strip(),
+        }
+        if row['grade'] or row['criterion']:
+            criteria.append(row)
+    return {
+        'instruction': str(parsed.get('instruction') or '').strip(),
+        'tasks': tasks,
+        'criteria': criteria,
+        'equipment': str(parsed.get('equipment') or '').strip(),
+        'answerKey': str(parsed.get('answerKey') or '').strip(),
+    }
+
+
 def normalize_event_card(parsed: dict) -> dict:
     scenario = []
     for s in parsed.get('scenario') or []:
@@ -1299,6 +1410,35 @@ def handler(event: dict, context) -> dict:
                 'goal': parsed.get('goal') or '',
                 'stages': parsed.get('stages') or {},
             }, ensure_ascii=False)}
+
+        elif action in ('pm_task', 'pm_task_refine'):
+            fields = body.get('fields') or {}
+            instruction = (body.get('instruction') or '').strip()
+            if not is_user_paid(event):
+                return {'statusCode': 403, 'headers': cors_headers(), 'body': json.dumps({'error': 'Генератор заданий по ПМ доступен по платной подписке'})}
+            if not ((fields.get('mdkTopic') or '').strip() or (fields.get('pmName') or '').strip()):
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите наименование ПМ или тему МДК'})}
+            if action == 'pm_task_refine':
+                if not instruction:
+                    return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите, что нужно доработать'})}
+                prompt = build_pm_task_refine_prompt(fields, instruction)
+            else:
+                prompt = build_pm_task_prompt(fields)
+
+            raw = call_ai([
+                {'role': 'system', 'content': 'Ты профессиональный методист СПО. Отвечаешь строго валидным JSON без markdown и пояснений, всегда на русском языке.'},
+                {'role': 'user', 'content': with_ovz(prompt, fields)},
+            ], temperature=0.6)
+
+            try:
+                parsed = parse_ai_json(raw)
+            except (json.JSONDecodeError, IndexError):
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ вернул некорректный ответ, попробуйте снова'})}
+
+            result = normalize_pm_task(parsed)
+            if not result['tasks']:
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ не вернул задания, попробуйте снова'})}
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps(result, ensure_ascii=False)}
 
         elif action == 'task_card_refine':
             fields = body.get('fields') or {}

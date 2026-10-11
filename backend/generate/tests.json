@@ -370,6 +370,22 @@
         "error": "string"
       },
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "PM task requires subscription",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "pm_task",
+        "fields": {
+          "mdkTopic": "Тема"
+        }
+      },
+      "expectedStatus": 403,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
     }
   ]
 }
