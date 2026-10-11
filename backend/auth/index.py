@@ -20,6 +20,7 @@ PLANS = {
 }
 
 FREE_LIMIT = 3
+DEPLOY_REV = 2
 
 USAGE_COLUMNS = {
     'lesson': 'lessons_used',
