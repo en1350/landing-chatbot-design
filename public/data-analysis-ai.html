@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Анализ данных с помощью ИИ — Интерактивный курс</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+        font-family: 'Segoe UI', Tahoma, sans-serif;
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        min-height: 100vh;
+        color: #333;
+        overflow-x: hidden;
+    }
+
+    .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .welcome-screen {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.8s ease;
+    }
+
+    .welcome-card {
+        background: white;
+        border-radius: 20px;
+        padding: 50px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        text-align: center;
+        max-width: 500px;
+        width: 100%;
+    }
+
+    .welcome-card .logo {
+        font-size: 4em;
+        margin-bottom: 20px;
+    }
+
+    .welcome-card h1 {
+        color: #1e3c72;
+        margin-bottom: 10px;
+        font-size: 1.8em;
+    }
+
+    .welcome-card p {
+        color: #666;
+        margin-bottom: 30px;
+        line-height: 1.6;
+    }
+
+    .name-input {
+        width: 100%;
+        padding: 15px 20px;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        font-size: 1.1em;
+        margin-bottom: 20px;
+        transition: all 0.3s;
+    }
+
+    .name-input:focus {
+        outline: none;
+        border-color: #2a5298;
+        box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.15);
+    }
+
+    .start-btn {
+        width: 100%;
+        padding: 15px;
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1.1em;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .start-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(30, 60, 114, 0.4);
+    }
+
+    .main-interface {
+        display: none;
+        animation: fadeIn 0.5s ease;
+    }
+
+    .header {
+        background: white;
+        border-radius: 15px;
+        padding: 20px 30px;
+        margin-bottom: 20px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .header h2 {
+        color: #1e3c72;
+        font-size: 1.4em;
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .user-badge {
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        color: white;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+
+    .progress-bar {
+        width: 200px;
+        height: 10px;
+        background: #e0e0e0;
+        border-radius: 5px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #4caf50, #8bc34a);
+        transition: width 0.5s ease;
+    }
+
+    .nav-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        background: white;
+        padding: 10px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+
+    .nav-tab {
+        flex: 1;
+        min-width: 120px;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 10px;
+        background: #f5f5f5;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .nav-tab:hover {
+        background: #e8eaf6;
+    }
+
+    .nav-tab.active {
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        color: white;
+    }
+
+    .nav-tab.completed {
+        background: #4caf50;
+        color: white;
+    }
+
+    .nav-tab.locked {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .section {
+        display: none;
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        animation: slideIn 0.4s ease;
+    }
+
+    .section.active {
+        display: block;
+    }
+
+    .section h3 {
+        color: #1e3c72;
+        margin-bottom: 20px;
+        font-size: 1.6em;
+    }
+
+    .theory-block {
+        background: #f8f9ff;
+        border-left: 4px solid #2a5298;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 0 10px 10px 0;
+    }
+
+    .theory-block h4 {
+        color: #1e3c72;
+        margin-bottom: 10px;
+    }
+
+    .theory-block p, .theory-block li {
+        line-height: 1.7;
+        color: #555;
+        margin-bottom: 10px;
+    }
+
+    .theory-block ul {
+        padding-left: 25px;
+    }
+
+    .theory-block code {
+        background: #e8eaf6;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+        color: #1e3c72;
+    }
+
+    .next-btn {
+        padding: 12px 30px;
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 1em;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 20px;
+        transition: all 0.3s;
+    }
+
+    .next-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(30, 60, 114, 0.3);
+    }
+
+    .task-card {
+        background: #f8f9ff;
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 20px;
+        border: 2px solid #e8eaf6;
+    }
+
+    .task-card h4 {
+        color: #1e3c72;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .task-number {
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+    }
+
+    .task-options {
+        display: grid;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .task-option {
+        padding: 12px 18px;
+        background: white;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .task-option:hover {
+        border-color: #2a5298;
+        background: #f8f9ff;
+    }
+
+    .task-option.selected {
+        border-color: #2a5298;
+        background: #e8eaf6;
+    }
+
+    .task-option.correct {
+        border-color: #4caf50;
+        background: #e8f5e9;
+    }
+
+    .task-option.incorrect {
+        border-color: #f44336;
+        background: #ffebee;
+    }
+
+    .task-input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1em;
+        margin-top: 10px;
+    }
+
+    .task-input:focus {
+        outline: none;
+        border-color: #2a5298;
+    }
+
+    .task-feedback {
+        margin-top: 15px;
+        padding: 12px;
+        border-radius: 8px;
+        display: none;
+    }
+
+    .task-feedback.show {
+        display: block;
+    }
+
+    .task-feedback.correct {
+        background: #e8f5e9;
+        color: #2e7d32;
+        border-left: 4px solid #4caf50;
+    }
+
+    .task-feedback.incorrect {
+        background: #ffebee;
+        color: #c62828;
+        border-left: 4px solid #f44336;
+    }
+
+    .check-btn {
+        padding: 10px 25px;
+        background: #2a5298;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        margin-top: 15px;
+        transition: all 0.3s;
+    }
+
+    .check-btn:hover {
+        background: #1e3c72;
+    }
+
+    .quiz-question {
+        background: #f8f9ff;
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 20px;
+    }
+
+    .quiz-question h4 {
+        color: #1e3c72;
+        margin-bottom: 15px;
+    }
+
+    .quiz-options {
+        display: grid;
+        gap: 10px;
+    }
+
+    .quiz-option {
+        padding: 12px 18px;
+        background: white;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .quiz-option:hover {
+        border-color: #2a5298;
+    }
+
+    .quiz-option.selected {
+        border-color: #2a5298;
+        background: #e8eaf6;
+    }
+
+    .quiz-option.correct {
+        border-color: #4caf50;
+        background: #e8f5e9;
+    }
+
+    .quiz-option.incorrect {
+        border-color: #f44336;
+        background: #ffebee;
+    }
+
+    .game-container {
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        border-radius: 15px;
+        padding: 30px;
+        color: white;
+        text-align: center;
+    }
+
+    .game-header {
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .game-stat {
+        background: rgba(255,255,255,0.2);
+        padding: 10px 20px;
+        border-radius: 10px;
+    }
+
+    .game-stat .label {
+        font-size: 0.9em;
+        opacity: 0.9;
+    }
+
+    .game-stat .value {
+        font-size: 1.5em;
+        font-weight: 700;
+    }
+
+    .game-field {
+        background: rgba(255,255,255,0.1);
+        border-radius: 12px;
+        height: 400px;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 20px;
+        border: 2px solid rgba(255,255,255,0.2);
+    }
+
+    .falling-item {
+        position: absolute;
+        padding: 10px 15px;
+        background: white;
+        color: #1e3c72;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        user-select: none;
+        transition: transform 0.1s;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    }
+
+    .falling-item:hover {
+        transform: scale(1.1);
+    }
+
+    .falling-item.correct-type {
+        background: #4caf50;
+        color: white;
+    }
+
+    .falling-item.wrong-type {
+        background: #f44336;
+        color: white;
+    }
+
+    .game-controls {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .game-btn {
+        padding: 12px 25px;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-size: 1em;
+    }
+
+    .game-btn.start {
+        background: #4caf50;
+        color: white;
+    }
+
+    .game-btn.start:hover {
+        background: #43a047;
+    }
+
+    .game-btn.stop {
+        background: #f44336;
+        color: white;
+    }
+
+    .game-instruction {
+        background: rgba(255,255,255,0.15);
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        line-height: 1.6;
+    }
+
+    .certificate {
+        background: linear-gradient(135deg, #fff9c4, #fff59d);
+        border: 8px double #1e3c72;
+        border-radius: 15px;
+        padding: 40px;
+        text-align: center;
+        position: relative;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+
+    .certificate h2 {
+        color: #1e3c72;
+        font-size: 2em;
+        margin-bottom: 10px;
+    }
+
+    .certificate .cert-subtitle {
+        color: #666;
+        margin-bottom: 30px;
+        font-size: 1.1em;
+    }
+
+    .certificate .cert-name {
+        font-size: 2.5em;
+        color: #1e3c72;
+        font-weight: 700;
+        margin: 20px 0;
+        font-style: italic;
+        border-bottom: 2px solid #1e3c72;
+        display: inline-block;
+        padding: 0 30px 10px;
+    }
+
+    .certificate .cert-text {
+        color: #555;
+        line-height: 1.8;
+        margin: 20px 0;
+        font-size: 1.1em;
+    }
+
+    .grade-display {
+        display: inline-block;
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        color: white;
+        padding: 15px 40px;
+        border-radius: 15px;
+        font-size: 2em;
+        font-weight: 700;
+        margin: 20px 0;
+    }
+
+    .errors-review {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        margin-top: 30px;
+        text-align: left;
+    }
+
+    .errors-review h4 {
+        color: #1e3c72;
+        margin-bottom: 15px;
+        font-size: 1.3em;
+    }
+
+    .error-item {
+        background: #ffebee;
+        border-left: 4px solid #f44336;
+        padding: 12px 15px;
+        margin-bottom: 10px;
+        border-radius: 0 8px 8px 0;
+        color: #333;
+    }
+
+    .error-item.correct-answer {
+        background: #e8f5e9;
+        border-left-color: #4caf50;
+    }
+
+    .error-item strong {
+        color: #1e3c72;
+    }
+
+    .certificate-actions {
+        margin-top: 30px;
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .cert-btn {
+        padding: 12px 25px;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .cert-btn.print {
+        background: #4caf50;
+        color: white;
+    }
+
+    .cert-btn.restart {
+        background: #2a5298;
+        color: white;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media print {
+        body { background: white; }
+        .header, .nav-tabs, .certificate-actions, .next-btn { display: none; }
+        .certificate { box-shadow: none; page-break-inside: avoid; }
+    }
+
+    @media (max-width: 768px) {
+        .welcome-card { padding: 30px 20px; }
+        .section { padding: 20px; }
+        .certificate { padding: 25px 15px; }
+        .certificate .cert-name { font-size: 1.8em; }
+    }
+</style>
+</head>
+<body>
+
+<div class="welcome-screen" id="welcomeScreen">
+    <div class="welcome-card">
+        <div class="logo">🤖📊</div>
+        <h1>Анализ данных с помощью ИИ</h1>
+        <p>Интерактивный курс с теорией, практическими заданиями, тестом и аркадной игрой. Получите сертификат по итогам обучения!</p>
+        <input type="text" class="name-input" id="studentName" placeholder="Введите ваше имя" maxlength="30">
+        <button class="start-btn" onclick="startCourse()">🚀 Начать обучение</button>
+    </div>
+</div>
+
+<div class="main-interface" id="mainInterface">
+    <div class="container">
+        <div class="header">
+            <h2>📊 Анализ данных с помощью ИИ</h2>
+            <div class="user-info">
+                <div class="user-badge" id="userBadge">👤 Студент</div>
+                <div>
+                    <div style="font-size:0.85em; color:#888; margin-bottom:3px;">Прогресс</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" data-section="theory" onclick="showSection('theory')">📖 Теория</button>
+            <button class="nav-tab" data-section="practice" onclick="showSection('practice')">🛠️ Практика (8)</button>
+            <button class="nav-tab" data-section="quiz" onclick="showSection('quiz')">📝 Тест (10)</button>
+            <button class="nav-tab" data-section="game" onclick="showSection('game')">🎮 Игра</button>
+            <button class="nav-tab" data-section="certificate" onclick="showSection('certificate')">🏆 Сертификат</button>
+        </div>
+
+        <div class="section active" id="section-theory">
+            <h3>📖 Теория: Анализ данных с помощью ИИ</h3>
+            
+            <div class="theory-block">
+                <h4>1. Что такое анализ данных?</h4>
+                <p><strong>Анализ данных</strong> — это процесс исследования, очистки, преобразования и моделирования данных с целью обнаружения полезной информации, принятия решений и получения выводов.</p>
+                <p>Современный анализ данных невозможен без методов <strong>искусственного интеллекта (ИИ)</strong> и <strong>машинного обучения (МО)</strong>, которые позволяют обрабатывать огромные объёмы информации и находить скрытые закономерности.</p>
+            </div>
+
+            <div class="theory-block">
+                <h4>2. Типы данных</h4>
+                <ul>
+                    <li><strong>Числовые (количественные):</strong> возраст, цена, температура — можно измерить и сравнить.</li>
+                    <li><strong>Категориальные (качественные):</strong> цвет, город, категория товара — описывают признак.</li>
+                    <li><strong>Текстовые:</strong> отзывы, статьи, сообщения — обрабатываются методами NLP.</li>
+                    <li><strong>Временные ряды:</strong> данные, упорядоченные по времени (курсы валют, продажи).</li>
+                </ul>
+            </div>
+
+            <div class="theory-block">
+                <h4>3. Этапы анализа данных</h4>
+                <ul>
+                    <li><strong>Сбор данных</strong> — получение информации из источников (БД, API, файлы).</li>
+                    <li><strong>Очистка данных</strong> — удаление дубликатов, пропусков, выбросов.</li>
+                    <li><strong>Исследовательский анализ (EDA)</strong> — визуализация и статистика.</li>
+                    <li><strong>Подготовка признаков (Feature Engineering)</strong> — создание переменных для модели.</li>
+                    <li><strong>Построение модели</strong> — выбор алгоритма ИИ и обучение.</li>
+                    <li><strong>Оценка и интерпретация</strong> — проверка качества и выводы.</li>
+                </ul>
+            </div>
+
+            <div class="theory-block">
+                <h4>4. Основные алгоритмы ИИ для анализа данных</h4>
+                <ul>
+                    <li><strong>Линейная регрессия</strong> — предсказание числового значения (цена, спрос).</li>
+                    <li><strong>Логистическая регрессия</strong> — бинарная классификация (спам/не спам).</li>
+                    <li><strong>Деревья решений и Random Forest</strong> — классификация и регрессия.</li>
+                    <li><strong>K-means кластеризация</strong> — группировка похожих объектов.</li>
+                    <li><strong>Нейронные сети</strong> — сложные задачи: распознавание образов, NLP.</li>
+                </ul>
+            </div>
+
+            <div class="theory-block">
+                <h4>5. Метрики качества моделей</h4>
+                <ul>
+                    <li><strong>Accuracy (точность)</strong> — доля правильных ответов среди всех.</li>
+                    <li><strong>Precision (полнота по положительным)</strong> — насколько модель точна в предсказаниях "да".</li>
+                    <li><strong>Recall (чувствительность)</strong> — какую долю реальных "да" нашла модель.</li>
+                    <li><strong>F1-score</strong> — гармоническое среднее Precision и Recall.</li>
+                </ul>
+            </div>
+
+            <div class="theory-block">
+                <h4>6. Визуализация данных</h4>
+                <ul>
+                    <li><strong>Гистограмма</strong> — распределение числовых данных.</li>
+                    <li><strong>Диаграмма рассеяния (scatter plot)</strong> — связь двух переменных.</li>
+                    <li><strong>Box plot</strong> — статистика и выбросы.</li>
+                    <li><strong>Heatmap</strong> — корреляционная матрица.</li>
+                </ul>
+            </div>
+
+            <button class="next-btn" onclick="showSection('practice')">Перейти к практике →</button>
+        </div>
+
+        <div class="section" id="section-practice">
+            <h3>🛠️ Практические задания (8)</h3>
+            <p style="color:#666; margin-bottom:20px;">Выполните все задания. После проверки переходите к следующему.</p>
+            <div id="practiceTasks"></div>
+            <button class="next-btn" onclick="showSection('quiz')" id="practiceNextBtn" style="display:none;">Перейти к тесту →</button>
+        </div>
+
+        <div class="section" id="section-quiz">
+            <h3>📝 Тестовые задания (10)</h3>
+            <p style="color:#666; margin-bottom:20px;">Выберите один правильный ответ в каждом вопросе.</p>
+            <div id="quizQuestions"></div>
+            <button class="next-btn" onclick="submitQuiz()" id="quizSubmitBtn">✅ Завершить тест</button>
+            <button class="next-btn" onclick="showSection('game')" id="quizNextBtn" style="display:none;">Перейти к игре →</button>
+        </div>
+
+        <div class="section" id="section-game">
+            <h3>🎮 Аркадная игра: "Поймай данные"</h3>
+            <div class="game-container">
+                <div class="game-instruction">
+                    <strong>Правила:</strong> Сверху падают карточки с типами данных. Ваша задача — <strong>ловить только числовые данные</strong> (клик по ним), избегая категориальных. У вас 30 секунд!
+                </div>
+                <div class="game-header">
+                    <div class="game-stat">
+                        <div class="label">Счёт</div>
+                        <div class="value" id="gameScore">0</div>
+                    </div>
+                    <div class="game-stat">
+                        <div class="label">Время</div>
+                        <div class="value" id="gameTime">30</div>
+                    </div>
+                    <div class="game-stat">
+                        <div class="label">Ошибки</div>
+                        <div class="value" id="gameErrors">0</div>
+                    </div>
+                </div>
+                <div class="game-field" id="gameField"></div>
+                <div class="game-controls">
+                    <button class="game-btn start" id="gameStartBtn" onclick="startGame()">▶️ Начать игру</button>
+                </div>
+            </div>
+            <button class="next-btn" onclick="showSection('certificate')" id="gameNextBtn" style="display:none; margin-top:20px;">Получить сертификат →</button>
+        </div>
+
+        <div class="section" id="section-certificate">
+            <h3>🏆 Ваш сертификат</h3>
+            <div class="certificate" id="certificateContent">
+                <h2>СЕРТИФИКАТ</h2>
+                <div class="cert-subtitle">об успешном прохождении курса</div>
+                <div style="font-size:1.2em; color:#555;">«Анализ данных с помощью ИИ»</div>
+                <div class="cert-name" id="certName">—</div>
+                <div class="cert-text">
+                    успешно завершил(а) интерактивный курс,<br>
+                    включающий теорию, практические задания, тестирование и игровую проверку знаний.
+                </div>
+                <div class="grade-display" id="gradeDisplay">Оценка: —</div>
+                <div class="cert-text" style="font-size:0.95em;">
+                    <strong>Дата:</strong> <span id="certDate">—</span><br>
+                    <strong>Результат теста:</strong> <span id="certQuizResult">—</span>/10<br>
+                    <strong>Практика:</strong> <span id="certPracticeResult">—</span>/8<br>
+                    <strong>Игра:</strong> <span id="certGameResult">—</span> очков
+                </div>
+                <div class="errors-review" id="errorsReview">
+                    <h4>📋 Разбор ошибок</h4>
+                    <div id="errorsList"></div>
+                </div>
+            </div>
+            <div class="certificate-actions">
+                <button class="cert-btn print" onclick="window.print()">🖨️ Распечатать</button>
+                <button class="cert-btn restart" onclick="restartCourse()">🔄 Пройти заново</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const practiceTasks = [
+    {
+        id: 1,
+        title: 'Классификация типов данных',
+        question: 'Какой из следующих признаков является категориальным?',
+        options: ['Возраст человека', 'Город проживания', 'Температура воздуха', 'Цена товара'],
+        correct: 1,
+        explanation: 'Город проживания — это категориальный признак, так как описывает качество, а не количество.'
+    },
+    {
+        id: 2,
+        title: 'Выбор типа визуализации',
+        question: 'Какой график лучше всего показывает распределение числовых данных?',
+        options: ['Круговая диаграмма', 'Гистограмма', 'Линейный график', 'Диаграмма Венна'],
+        correct: 1,
+        explanation: 'Гистограмма отображает распределение числовых данных по интервалам.'
+    },
+    {
+        id: 3,
+        title: 'Очистка данных',
+        question: 'Что нужно сделать в первую очередь при обнаружении пропусков (NaN) в данных?',
+        options: ['Удалить весь столбец', 'Заменить средним/медианой или удалить строки', 'Оставить как есть', 'Заменить нулями'],
+        correct: 1,
+        explanation: 'Пропуски обычно заполняют средним/медианой или удаляют строки — зависит от контекста.'
+    },
+    {
+        id: 4,
+        title: 'Выбор метрики',
+        question: 'При диагностике редкого заболевания важнее максимизировать:',
+        options: ['Accuracy', 'Precision', 'Recall', 'F1-score'],
+        correct: 2,
+        explanation: 'Recall важен, когда нельзя пропустить положительный случай (больного пациента).'
+    },
+    {
+        id: 5,
+        title: 'Определение выбросов',
+        question: 'Какое значение является выбросом в ряду: [10, 12, 11, 13, 12, 100, 11]?',
+        options: ['10', '12', '100', '13'],
+        correct: 2,
+        explanation: '100 резко отличается от остальных значений (10-13) — это выброс.'
+    },
+    {
+        id: 6,
+        title: 'Сопоставление алгоритма и задачи',
+        question: 'Какой алгоритм подходит для группировки клиентов по поведению без заранее известных меток?',
+        options: ['Линейная регрессия', 'Логистическая регрессия', 'K-means кластеризация', 'Дерево решений'],
+        correct: 2,
+        explanation: 'K-means — алгоритм кластеризации (обучение без учителя), группирует объекты по схожести.'
+    },
+    {
+        id: 7,
+        title: 'Интерпретация результатов',
+        question: 'Модель показала Accuracy = 95%, но Recall = 30%. Что это значит?',
+        options: [
+            'Модель отличная',
+            'Модель хорошо находит positives, но делает много ошибок',
+            'Модель редко ошибается, но пропускает большинство реальных positives',
+            'Данные некорректны'
+        ],
+        correct: 2,
+        explanation: 'Высокий Accuracy при низком Recall говорит о дисбалансе классов — модель пропускает positives.'
+    },
+    {
+        id: 8,
+        title: 'Построение пайплайна',
+        question: 'Расположите этапы анализа данных в правильном порядке:',
+        options: [
+            'Сбор → Очистка → EDA → Модель → Оценка',
+            'Модель → Сбор → Оценка → Очистка → EDA',
+            'EDA → Модель → Сбор → Оценка → Очистка',
+            'Оценка → Сбор → Очистка → EDA → Модель'
+        ],
+        correct: 0,
+        explanation: 'Правильный порядок: Сбор → Очистка → Исследовательский анализ → Построение модели → Оценка.'
+    }
+];
+
+const quizQuestions = [
+    {
+        q: 'Что такое машинное обучение?',
+        options: [
+            'Программирование роботов',
+            'Раздел ИИ, где алгоритмы учатся на данных без явного программирования',
+            'Создание баз данных',
+            'Визуализация информации'
+        ],
+        correct: 1
+    },
+    {
+        q: 'Какой тип обучения используется, когда есть размеченные данные (с метками)?',
+        options: ['Обучение без учителя', 'Обучение с учителем', 'Обучение с подкреплением', 'Трансферное обучение'],
+        correct: 1
+    },
+    {
+        q: 'Что такое переобучение (overfitting)?',
+        options: [
+            'Модель слишком простая',
+            'Модель хорошо работает на обучающих данных, но плохо на новых',
+            'Недостаток данных для обучения',
+            'Медленное обучение модели'
+        ],
+        correct: 1
+    },
+    {
+        q: 'Какая библиотека Python чаще всего используется для анализа данных?',
+        options: ['Django', 'Pandas', 'Flask', 'Pygame'],
+        correct: 1
+    },
+    {
+        q: 'Что показывает коэффициент корреляции?',
+        options: [
+            'Среднее значение',
+            'Силу и направление связи между переменными',
+            'Дисперсию данных',
+            'Медиану выборки'
+        ],
+        correct: 1
+    },
+    {
+        q: 'Какой алгоритм используется для прогнозирования числовых значений?',
+        options: ['K-means', 'Линейная регрессия', 'Naive Bayes', 'PCA'],
+        correct: 1
+    },
+    {
+        q: 'Что такое feature engineering?',
+        options: [
+            'Проектирование интерфейса',
+            'Создание и отбор признаков для модели',
+            'Настройка сервера',
+            'Визуализация данных'
+        ],
+        correct: 1
+    },
+    {
+        q: 'Какая метрика лучше всего подходит для несбалансированных данных?',
+        options: ['Accuracy', 'F1-score', 'MSE', 'R²'],
+        correct: 1
+    },
+    {
+        q: 'Что такое кросс-валидация?',
+        options: [
+            'Проверка кода на ошибки',
+            'Метод оценки модели с разбиением данных на несколько частей',
+            'Сравнение двух моделей',
+            'Визуальная проверка данных'
+        ],
+        correct: 1
+    },
+    {
+        q: 'Какой график показывает связь между двумя числовыми переменными?',
+        options: ['Гистограмма', 'Круговая диаграмма', 'Диаграмма рассеяния (scatter plot)', 'Box plot'],
+        correct: 2
+    }
+];
+
+const gameItems = [
+    { text: 'Возраст: 25', type: 'numeric' },
+    { text: 'Город: Москва', type: 'categorical' },
+    { text: 'Цена: 1500', type: 'numeric' },
+    { text: 'Цвет: красный', type: 'categorical' },
+    { text: 'Рост: 175 см', type: 'numeric' },
+    { text: 'Категория: книги', type: 'categorical' },
+    { text: 'Температура: 22°', type: 'numeric' },
+    { text: 'Имя: Анна', type: 'categorical' },
+    { text: 'Вес: 70 кг', type: 'numeric' },
+    { text: 'Страна: Россия', type: 'categorical' },
+    { text: 'Доход: 50000', type: 'numeric' },
+    { text: 'Пол: женский', type: 'categorical' },
+    { text: 'Оценка: 4.5', type: 'numeric' },
+    { text: 'Тип: смартфон', type: 'categorical' },
+    { text: 'Расстояние: 100 км', type: 'numeric' }
+];
+
+const state = {
+    name: '',
+    practiceAnswers: {},
+    practiceChecked: {},
+    quizAnswers: {},
+    quizSubmitted: false,
+    quizScore: 0,
+    gameScore: 0,
+    gameErrors: 0,
+    gameCompleted: false,
+    gameInterval: null,
+    gameTimer: null,
+    gameTimeLeft: 30
+};
+
+function startCourse() {
+    const name = document.getElementById('studentName').value.trim();
+    if (!name) {
+        alert('Пожалуйста, введите ваше имя!');
+        return;
+    }
+    state.name = name;
+    document.getElementById('userBadge').textContent = '👤 ' + name;
+    document.getElementById('welcomeScreen').style.display = 'none';
+    document.getElementById('mainInterface').style.display = 'block';
+    renderPracticeTasks();
+    renderQuizQuestions();
+    updateProgress();
+}
+
+function showSection(sectionId) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById('section-' + sectionId).classList.add('active');
+    
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector(`.nav-tab[data-section="${sectionId}"]`).classList.add('active');
+    
+    if (sectionId === 'certificate') {
+        generateCertificate();
+    }
+}
+
+function updateProgress() {
+    let completed = 0;
+    const total = 4;
+    if (Object.keys(state.practiceChecked).length === 8) completed++;
+    if (state.quizSubmitted) completed++;
+    if (state.gameCompleted) completed++;
+    completed++;
+    
+    const percent = Math.round((completed / total) * 100);
+    document.getElementById('progressFill').style.width = percent + '%';
+}
+
+function renderPracticeTasks() {
+    const container = document.getElementById('practiceTasks');
+    container.innerHTML = practiceTasks.map(task => `
+        <div class="task-card" id="task-${task.id}">
+            <h4><span class="task-number">${task.id}</span> ${task.title}</h4>
+            <p style="color:#555; margin-bottom:10px;">${task.question}</p>
+            <div class="task-options">
+                ${task.options.map((opt, idx) => `
+                    <div class="task-option" data-task="${task.id}" data-idx="${idx}" onclick="selectPracticeOption(${task.id}, ${idx})">
+                        ${opt}
+                    </div>
+                `).join('')}
+            </div>
+            <button class="check-btn" onclick="checkPracticeTask(${task.id})" id="checkBtn-${task.id}">Проверить</button>
+            <div class="task-feedback" id="feedback-${task.id}"></div>
+        </div>
+    `).join('');
+}
+
+function selectPracticeOption(taskId, idx) {
+    if (state.practiceChecked[taskId] !== undefined) return;
+    state.practiceAnswers[taskId] = idx;
+    document.querySelectorAll(`.task-option[data-task="${taskId}"]`).forEach(el => {
+        el.classList.remove('selected');
+    });
+    document.querySelector(`.task-option[data-task="${taskId}"][data-idx="${idx}"]`).classList.add('selected');
+}
+
+function checkPracticeTask(taskId) {
+    if (state.practiceAnswers[taskId] === undefined) {
+        alert('Выберите вариант ответа!');
+        return;
+    }
+    if (state.practiceChecked[taskId] !== undefined) return;
+    
+    const task = practiceTasks.find(t => t.id === taskId);
+    const selected = state.practiceAnswers[taskId];
+    const isCorrect = selected === task.correct;
+    
+    state.practiceChecked[taskId] = isCorrect;
+    
+    document.querySelectorAll(`.task-option[data-task="${taskId}"]`).forEach((el, idx) => {
+        el.style.pointerEvents = 'none';
+        if (idx === task.correct) el.classList.add('correct');
+        if (idx === selected && !isCorrect) el.classList.add('incorrect');
+    });
+    
+    const feedback = document.getElementById('feedback-' + taskId);
+    feedback.className = 'task-feedback show ' + (isCorrect ? 'correct' : 'incorrect');
+    feedback.innerHTML = `<strong>${isCorrect ? '✅ Правильно!' : '❌ Неправильно.'}</strong> ${task.explanation}`;
+    
+    document.getElementById('checkBtn-' + taskId).style.display = 'none';
+    
+    if (Object.keys(state.practiceChecked).length === 8) {
+        document.getElementById('practiceNextBtn').style.display = 'inline-block';
+    }
+    updateProgress();
+}
+
+function renderQuizQuestions() {
+    const container = document.getElementById('quizQuestions');
+    container.innerHTML = quizQuestions.map((q, idx) => `
+        <div class="quiz-question" id="quiz-${idx}">
+            <h4>Вопрос ${idx + 1}. ${q.q}</h4>
+            <div class="quiz-options">
+                ${q.options.map((opt, optIdx) => `
+                    <div class="quiz-option" data-q="${idx}" data-idx="${optIdx}" onclick="selectQuizOption(${idx}, ${optIdx})">
+                        ${opt}
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `).join('');
+}
+
+function selectQuizOption(qIdx, optIdx) {
+    if (state.quizSubmitted) return;
+    state.quizAnswers[qIdx] = optIdx;
+    document.querySelectorAll(`.quiz-option[data-q="${qIdx}"]`).forEach(el => {
+        el.classList.remove('selected');
+    });
+    document.querySelector(`.quiz-option[data-q="${qIdx}"][data-idx="${optIdx}"]`).classList.add('selected');
+}
+
+function submitQuiz() {
+    if (Object.keys(state.quizAnswers).length < 10) {
+        alert('Ответьте на все вопросы! (' + Object.keys(state.quizAnswers).length + '/10)');
+        return;
+    }
+    
+    state.quizSubmitted = true;
+    let correctCount = 0;
+    
+    quizQuestions.forEach((q, idx) => {
+        const selected = state.quizAnswers[idx];
+        const isCorrect = selected === q.correct;
+        if (isCorrect) correctCount++;
+        
+        document.querySelectorAll(`.quiz-option[data-q="${idx}"]`).forEach((el, optIdx) => {
+            el.style.pointerEvents = 'none';
+            if (optIdx === q.correct) el.classList.add('correct');
+            if (optIdx === selected && !isCorrect) el.classList.add('incorrect');
+        });
+    });
+    
+    document.getElementById('quizSubmitBtn').style.display = 'none';
+    document.getElementById('quizNextBtn').style.display = 'inline-block';
+    state.quizScore = correctCount;
+    updateProgress();
+}
+
+function startGame() {
+    if (state.gameCompleted) return;
+    
+    state.gameScore = 0;
+    state.gameErrors = 0;
+    state.gameTimeLeft = 30;
+    state.gameCompleted = false;
+    
+    document.getElementById('gameScore').textContent = '0';
+    document.getElementById('gameTime').textContent = '30';
+    document.getElementById('gameErrors').textContent = '0';
+    document.getElementById('gameStartBtn').style.display = 'none';
+    document.getElementById('gameField').innerHTML = '';
+    
+    state.gameInterval = setInterval(spawnFallingItem, 1200);
+    state.gameTimer = setInterval(() => {
+        state.gameTimeLeft--;
+        document.getElementById('gameTime').textContent = state.gameTimeLeft;
+        if (state.gameTimeLeft <= 0) {
+            endGame();
+        }
+    }, 1000);
+}
+
+function spawnFallingItem() {
+    const field = document.getElementById('gameField');
+    const itemData = gameItems[Math.floor(Math.random() * gameItems.length)];
+    
+    const item = document.createElement('div');
+    item.className = 'falling-item';
+    item.textContent = itemData.text;
+    item.dataset.type = itemData.type;
+    item.style.left = Math.max(0, Math.random() * (field.offsetWidth - 160)) + 'px';
+    item.style.top = '-50px';
+    
+    item.onclick = () => catchItem(item, itemData.type);
+    
+    field.appendChild(item);
+    
+    let pos = -50;
+    const speed = 2 + Math.random() * 2;
+    const fallInterval = setInterval(() => {
+        if (state.gameTimeLeft <= 0) {
+            clearInterval(fallInterval);
+            return;
+        }
+        pos += speed;
+        item.style.top = pos + 'px';
+        if (pos > field.offsetHeight) {
+            clearInterval(fallInterval);
+            if (item.parentNode) item.parentNode.removeChild(item);
+        }
+    }, 30);
+}
+
+function catchItem(item, type) {
+    if (state.gameTimeLeft <= 0) return;
+    if (item.dataset.caught) return;
+    item.dataset.caught = '1';
+    
+    if (type === 'numeric') {
+        state.gameScore += 10;
+        item.classList.add('correct-type');
+    } else {
+        state.gameErrors++;
+        item.classList.add('wrong-type');
+    }
+    
+    document.getElementById('gameScore').textContent = state.gameScore;
+    document.getElementById('gameErrors').textContent = state.gameErrors;
+    
+    setTimeout(() => {
+        if (item.parentNode) item.parentNode.removeChild(item);
+    }, 200);
+}
+
+function endGame() {
+    clearInterval(state.gameInterval);
+    clearInterval(state.gameTimer);
+    state.gameCompleted = true;
+    document.getElementById('gameField').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:1.5em;">🏁 Игра завершена!</div>';
+    document.getElementById('gameStartBtn').textContent = '✅ Игра завершена';
+    document.getElementById('gameStartBtn').style.display = 'inline-block';
+    document.getElementById('gameStartBtn').disabled = true;
+    document.getElementById('gameNextBtn').style.display = 'inline-block';
+    updateProgress();
+}
+
+function generateCertificate() {
+    document.getElementById('certName').textContent = state.name;
+    document.getElementById('certDate').textContent = new Date().toLocaleDateString('ru-RU');
+    
+    const practiceCorrect = Object.values(state.practiceChecked).filter(v => v).length;
+    document.getElementById('certPracticeResult').textContent = practiceCorrect;
+    
+    const quizCorrect = state.quizScore || 0;
+    document.getElementById('certQuizResult').textContent = quizCorrect;
+    
+    document.getElementById('certGameResult').textContent = state.gameScore;
+    
+    const practiceScore = practiceCorrect / 8;
+    const quizScore = quizCorrect / 10;
+    const gameScore = Math.min(state.gameScore / 100, 1);
+    
+    const totalScore = (practiceScore * 0.4 + quizScore * 0.4 + gameScore * 0.2);
+    let grade = 2;
+    if (totalScore >= 0.9) grade = 5;
+    else if (totalScore >= 0.75) grade = 4;
+    else if (totalScore >= 0.6) grade = 3;
+    
+    const gradeText = {
+        5: 'Отлично (5)',
+        4: 'Хорошо (4)',
+        3: 'Удовлетворительно (3)',
+        2: 'Неудовлетворительно (2)'
+    };
+    document.getElementById('gradeDisplay').textContent = 'Оценка: ' + gradeText[grade];
+    
+    const errorsList = document.getElementById('errorsList');
+    let errorsHTML = '';
+    
+    practiceTasks.forEach(task => {
+        if (state.practiceChecked[task.id] === false) {
+            errorsHTML += `
+                <div class="error-item">
+                    <strong>Практика #${task.id}:</strong> ${task.question}<br>
+                    <em>Правильный ответ:</em> ${task.options[task.correct]}<br>
+                    <small>${task.explanation}</small>
+                </div>
+            `;
+        }
+    });
+    
+    quizQuestions.forEach((q, idx) => {
+        if (state.quizSubmitted && state.quizAnswers[idx] !== q.correct) {
+            errorsHTML += `
+                <div class="error-item">
+                    <strong>Тест, вопрос ${idx + 1}:</strong> ${q.q}<br>
+                    <em>Правильный ответ:</em> ${q.options[q.correct]}
+                </div>
+            `;
+        }
+    });
+    
+    if (!errorsHTML) {
+        errorsHTML = '<div class="error-item correct-answer"><strong>🎉 Ошибок нет! Отличная работа!</strong></div>';
+    }
+    
+    errorsList.innerHTML = errorsHTML;
+}
+
+function restartCourse() {
+    if (!confirm('Начать курс заново? Весь прогресс будет сброшен.')) return;
+    
+    clearInterval(state.gameInterval);
+    clearInterval(state.gameTimer);
+    state.practiceAnswers = {};
+    state.practiceChecked = {};
+    state.quizAnswers = {};
+    state.quizSubmitted = false;
+    state.quizScore = 0;
+    state.gameScore = 0;
+    state.gameErrors = 0;
+    state.gameCompleted = false;
+    
+    document.getElementById('practiceNextBtn').style.display = 'none';
+    document.getElementById('quizSubmitBtn').style.display = 'inline-block';
+    document.getElementById('quizNextBtn').style.display = 'none';
+    document.getElementById('gameStartBtn').style.display = 'inline-block';
+    document.getElementById('gameStartBtn').textContent = '▶️ Начать игру';
+    document.getElementById('gameStartBtn').disabled = false;
+    document.getElementById('gameNextBtn').style.display = 'none';
+    document.getElementById('gameField').innerHTML = '';
+    document.getElementById('gameScore').textContent = '0';
+    document.getElementById('gameTime').textContent = '30';
+    document.getElementById('gameErrors').textContent = '0';
+    
+    renderPracticeTasks();
+    renderQuizQuestions();
+    showSection('theory');
+    updateProgress();
+}
+</script>
+</body>
+</html>

@@ -38,7 +38,8 @@ type TrainerKey =
   | "linear-programs"
   | "code-duel"
   | "sets-python-js"
-  | "os-processes";
+  | "os-processes"
+  | "data-analysis-ai";
 
 interface CategoryItem {
   key: CategoryKey;
@@ -72,6 +73,7 @@ const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "linear-programs": "/linear-programs.html",
   "code-duel": "/code-duel.html",
   "sets-python-js": "/sets-python-js.html",
+  "data-analysis-ai": "/data-analysis-ai.html",
 };
 
 const CATEGORIES: CategoryItem[] = [
@@ -250,6 +252,15 @@ const TRAINERS: TrainerItem[] = [
     title: "Множества: Python и JavaScript",
     description: "Теория с параллельным сравнением двух языков, 10 практических заданий, тест, игра на 3 команды и рефлексия",
     accent: "#4facfe",
+    paid: true,
+  },
+  {
+    key: "data-analysis-ai",
+    category: "informatics",
+    icon: "📊",
+    title: "Анализ данных с помощью ИИ",
+    description: "Теория, 8 практических заданий, тест на 10 вопросов, аркадная игра и именной сертификат с разбором ошибок",
+    accent: "#2a5298",
     paid: true,
   },
 ];
