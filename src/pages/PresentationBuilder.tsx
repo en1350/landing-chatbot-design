@@ -25,6 +25,7 @@ import {
 } from "@/components/presentation/presentationConfig";
 
 const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
+const IMAGE_URL = "https://functions.poehali.dev/a7c1180e-adf0-4b4d-84f3-59bd9e9ce039";
 const MAX_FILE_MB = 5;
 
 const readAsDataUrl = (file: File) =>
@@ -60,6 +61,8 @@ const PresentationBuilder = () => {
   const [fileName, setFileName] = useState("");
   const [reading, setReading] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [withImages, setWithImages] = useState(true);
+  const [imgBusy, setImgBusy] = useState<number[]>([]);
   const [exporting, setExporting] = useState<"" | "pdf" | "pptx">("");
   const [deck, setDeck] = useState<PresentationData | null>(null);
   const [deckStyle, setDeckStyle] = useState<StyleKey>("modern");
@@ -141,14 +144,56 @@ const PresentationBuilder = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Не удалось составить презентацию");
-      setDeck({ title: data.title || topic || "Презентация", slides: data.slides });
+      const deckTitle = data.title || topic || "Презентация";
+      setDeck({ title: deckTitle, slides: data.slides });
       setDeckStyle(style);
       toast.success("Презентация готова");
+      if (withImages) {
+        setLoading(false);
+        void generateAllImages(data.slides, style, deckTitle);
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Не удалось составить презентацию");
     } finally {
       setLoading(false);
     }
+  };
+
+  const requestImage = async (hint: string, styleKey: StyleKey, deckTopic: string): Promise<string> => {
+    const res = await fetch(IMAGE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...(token ? { "X-Authorization": token } : {}) },
+      body: JSON.stringify({ prompt: hint, style: styleKey, topic: deckTopic }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Не удалось создать иллюстрацию");
+    return data.image as string;
+  };
+
+  const setSlideImage = (index: number, imageUrl: string) =>
+    setDeck((d) => (d ? { ...d, slides: d.slides.map((sl, i) => (i === index ? { ...sl, imageUrl } : sl)) } : d));
+
+  const generateOneImage = async (index: number, hint: string, styleKey: StyleKey, deckTopic: string) => {
+    setImgBusy((b) => [...b, index]);
+    try {
+      setSlideImage(index, await requestImage(hint, styleKey, deckTopic));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Не удалось создать иллюстрацию");
+    } finally {
+      setImgBusy((b) => b.filter((x) => x !== index));
+    }
+  };
+
+  const generateAllImages = async (slides: PresentationData["slides"], styleKey: StyleKey, deckTopic: string) => {
+    const targets = slides.map((sl, i) => ({ sl, i })).filter(({ sl, i }) => sl.image && i !== 0 && i !== slides.length - 1);
+    let next = 0;
+    const worker = async () => {
+      while (next < targets.length) {
+        const { sl, i } = targets[next++];
+        await generateOneImage(i, sl.image, styleKey, deckTopic);
+      }
+    };
+    await Promise.all([worker(), worker(), worker()]);
   };
 
   const handleExport = async (kind: "pdf" | "pptx") => {
@@ -269,6 +314,16 @@ const PresentationBuilder = () => {
                 </div>
               </div>
 
+              <label className="mt-4 flex items-start gap-2.5 rounded-lg border border-border bg-muted/30 p-3 cursor-pointer">
+                <input type="checkbox" checked={withImages} onChange={(e) => setWithImages(e.target.checked)} className="mt-0.5" />
+                <span className="text-sm leading-snug">
+                  <b>Создать иллюстрации ИИ</b>
+                  <span className="block text-xs text-muted-foreground mt-0.5">
+                    Картинки появятся на слайдах по очереди, это займёт пару минут. Любую можно перегенерировать.
+                  </span>
+                </span>
+              </label>
+
               <Button className="w-full mt-5 gap-2" onClick={generate} disabled={loading || reading}>
                 {loading ? (
                   <>
@@ -303,11 +358,11 @@ const PresentationBuilder = () => {
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <Button className="gap-1.5" onClick={() => handleExport("pptx")} disabled={!!exporting}>
+                      <Button className="gap-1.5" onClick={() => handleExport("pptx")} disabled={!!exporting || imgBusy.length > 0}>
                         {exporting === "pptx" ? <Icon name="Loader2" size={15} className="animate-spin" /> : <Icon name="Presentation" size={15} />}
                         Скачать PPTX
                       </Button>
-                      <Button variant="outline" className="gap-1.5" onClick={() => handleExport("pdf")} disabled={!!exporting}>
+                      <Button variant="outline" className="gap-1.5" onClick={() => handleExport("pdf")} disabled={!!exporting || imgBusy.length > 0}>
                         {exporting === "pdf" ? <Icon name="Loader2" size={15} className="animate-spin" /> : <Icon name="FileDown" size={15} />}
                         Скачать PDF
                       </Button>
@@ -320,6 +375,22 @@ const PresentationBuilder = () => {
                         <ScaledSlide>
                           <SlideView slide={sl} index={i} total={deck.slides.length} deckTitle={deck.title} theme={theme} />
                         </ScaledSlide>
+                        {sl.image && i !== 0 && i !== deck.slides.length - 1 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="mt-1 h-7 gap-1.5 px-2 text-xs"
+                            disabled={imgBusy.includes(i)}
+                            onClick={() => generateOneImage(i, sl.image, deckStyle, deck.title)}
+                          >
+                            {imgBusy.includes(i) ? (
+                              <Icon name="Loader2" size={13} className="animate-spin" />
+                            ) : (
+                              <Icon name="ImagePlus" size={13} />
+                            )}
+                            {sl.imageUrl ? "Другая иллюстрация" : "Создать иллюстрацию"}
+                          </Button>
+                        )}
                         {sl.notes && (
                           <p className="mt-1.5 text-xs text-muted-foreground leading-snug">
                             <b>Заметки:</b> {sl.notes}

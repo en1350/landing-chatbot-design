@@ -45,7 +45,9 @@ export async function exportPptx(data: PresentationData, theme: StyleTheme) {
         sl.bullets.map((b) => ({ text: b, options: { bullet: true, breakLine: true } })),
         { x: 0.65, y: 1.65, w: bw, h: 3.4, fontSize: 20, color: hex(theme.text), fontFace: theme.bodyFont, valign: "top", paraSpaceAfter: 10 }
       );
-      if (sl.image) {
+      if (sl.imageUrl) {
+        slide.addImage({ data: sl.imageUrl, x: 6.8, y: 1.7, w: 2.6, h: 2.7, sizing: { type: "cover", w: 2.6, h: 2.7 } });
+      } else if (sl.image) {
         slide.addShape(pptx.ShapeType.roundRect, {
           x: 6.8, y: 1.7, w: 2.6, h: 2.7, fill: { color: "FFFFFF", transparency: 100 }, line: { color: hex(theme.accent), width: 2, dashType: "dash" }, rectRadius: 0.15,
         });

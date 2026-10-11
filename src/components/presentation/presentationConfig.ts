@@ -3,6 +3,7 @@ export interface Slide {
   bullets: string[];
   notes: string;
   image: string;
+  imageUrl?: string;
 }
 
 export interface PresentationData {

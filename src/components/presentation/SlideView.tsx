@@ -63,28 +63,37 @@ const SlideView = ({ slide, index, total, deckTitle, theme }: Props) => {
             </div>
           ))}
         </div>
-        {slide.image && (
-          <div
-            style={{
-              width: 250,
-              height: 260,
-              flexShrink: 0,
-              border: `3px dashed ${theme.accent}`,
-              borderRadius: 18,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: 18,
-              textAlign: "center",
-              color: theme.muted,
-              fontSize: 17,
-              lineHeight: 1.35,
-            }}
-          >
-            <div style={{ fontSize: 40, marginBottom: 8 }}>🖼️</div>
-            {slide.image}
-          </div>
+        {slide.imageUrl ? (
+          <img
+            src={slide.imageUrl}
+            alt=""
+            crossOrigin="anonymous"
+            style={{ width: 250, height: 260, flexShrink: 0, objectFit: "cover", borderRadius: 18, border: `3px solid ${theme.accent}` }}
+          />
+        ) : (
+          slide.image && (
+            <div
+              style={{
+                width: 250,
+                height: 260,
+                flexShrink: 0,
+                border: `3px dashed ${theme.accent}`,
+                borderRadius: 18,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: 18,
+                textAlign: "center",
+                color: theme.muted,
+                fontSize: 17,
+                lineHeight: 1.35,
+              }}
+            >
+              <div style={{ fontSize: 40, marginBottom: 8 }}>🖼️</div>
+              {slide.image}
+            </div>
+          )
         )}
       </div>
       <div style={{ position: "absolute", right: 40, bottom: 22, fontSize: 16, color: theme.muted }}>
