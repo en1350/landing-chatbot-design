@@ -23,6 +23,7 @@ import { useUsage } from "@/context/UsageContext";
 import { downloadTxt, downloadDocx } from "@/lib/download";
 import { saveLessonCardPrefill, matchTechnologies } from "@/components/lesson-card/prefill";
 import { saveTaskCardPrefill, COMPONENT_TO_TASK_TYPE } from "@/components/task-card/taskCardConfig";
+import OvzSelect from "@/components/OvzSelect";
 import { saveGameCardPrefill, matchPeopleBucket } from "@/components/game-card/gameCardConfig";
 import { saveEventPrefill, mapIntensiveToEvent } from "@/components/event-card/eventCardConfig";
 
@@ -238,6 +239,7 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
     professionalOrientation: "",
   });
 
+  const [ovz, setOvz] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -259,6 +261,7 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
     setIntensiveFields({ topic: "", audience: "schoolchildren", duration: "1day", format: "intensive", goal: "", regionalComponent: "", professionalOrientation: "" });
     setTaskFields({ subject: "", topic: "", goal: "", component: "balanced", competencies: [], regionalComponent: "", professionalOrientation: "" });
     setQuizFields({ subject: "", topic: "", questionCount: "10", difficulty: "mixed", questionTypes: ["single"], regionalComponent: "", professionalOrientation: "" });
+    setOvz([]);
     setResult(null);
     setError(null);
     setLoading(false);
@@ -286,7 +289,7 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
     setLoading(true);
     setError(null);
     try {
-      const fields: Record<string, string> =
+      const baseFields: Record<string, string> =
         type === "lesson"
           ? { ...lessonFields, competencies: lessonFields.competencies.join(", ") }
           : type === "game"
@@ -296,6 +299,7 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
           : type === "quiz"
           ? { ...quizFields, questionTypes: quizFields.questionTypes.join(",") }
           : { ...taskFields, competencies: taskFields.competencies.join(", ") };
+      const fields: Record<string, string> = { ...baseFields, ovz: ovz.join(", ") };
       const registered = await registerGeneratorUse(type);
       if (!registered) {
         onNeedUpgrade();
@@ -931,6 +935,8 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
                 </div>
               </>
             )}
+
+            {type !== "antiplagiat" && <OvzSelect value={ovz} onChange={setOvz} disabled={loading} />}
 
             {error && (
               <p className="text-sm text-destructive flex items-center gap-1.5">

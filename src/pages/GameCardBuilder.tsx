@@ -14,6 +14,7 @@ import AuthModal from "@/components/AuthModal";
 import UpgradeModal from "@/components/UpgradeModal";
 import { useAuth } from "@/context/AuthContext";
 import { downloadDocx, downloadTxt } from "@/lib/download";
+import OvzSelect from "@/components/OvzSelect";
 import { toast } from "sonner";
 import GameCardPreview from "@/components/game-card/GameCardPreview";
 import {
@@ -51,6 +52,7 @@ const GameCardBuilder = () => {
   const [tips, setTips] = useState<string[]>([]);
   const [criteria, setCriteria] = useState("");
   const [loading, setLoading] = useState(false);
+  const [ovz, setOvz] = useState<string[]>([]);
   const [prefilled, setPrefilled] = useState(false);
 
   useEffect(() => {
@@ -101,7 +103,7 @@ const GameCardBuilder = () => {
         },
         body: JSON.stringify({
           action: "game_card",
-          fields: { topic, gameType, time, people, goal, scenario },
+          fields: { topic, gameType, time, people, goal, scenario, ovz },
         }),
       });
       const data = await res.json();
@@ -124,6 +126,7 @@ const GameCardBuilder = () => {
   const resetAll = () => {
     setTopic("");
     setScenario("");
+    setOvz([]);
     setAiGoal("");
     setStages([]);
     setRules("");
@@ -276,6 +279,10 @@ const GameCardBuilder = () => {
                   rows={4}
                   placeholder="Особые условия, материалы, ограничения, пожелания..."
                 />
+              </div>
+
+              <div className="mt-5">
+                <OvzSelect value={ovz} onChange={setOvz} disabled={loading} />
               </div>
 
               <Button className="w-full mt-5 gap-2" onClick={generate} disabled={loading}>

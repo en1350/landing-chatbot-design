@@ -12,6 +12,7 @@ import ProfileSheet from "@/components/ProfileSheet";
 import AuthModal from "@/components/AuthModal";
 import UpgradeModal from "@/components/UpgradeModal";
 import { useAuth, AUTH_URL } from "@/context/AuthContext";
+import OvzSelect from "@/components/OvzSelect";
 import { toast } from "sonner";
 import SavedPresentations from "@/components/presentation/SavedPresentations";
 import {
@@ -67,6 +68,7 @@ const PresentationBuilder = () => {
   const [fileName, setFileName] = useState("");
   const [reading, setReading] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [ovz, setOvz] = useState<string[]>([]);
   const [withImages, setWithImages] = useState(true);
   const [imgBusy, setImgBusy] = useState<number[]>([]);
   const [exporting, setExporting] = useState<"" | "pdf" | "pptx">("");
@@ -258,7 +260,7 @@ const PresentationBuilder = () => {
         },
         body: JSON.stringify({
           action: "presentation",
-          fields: { topic, style, slidesCount, sourceText },
+          fields: { topic, style, slidesCount, sourceText, ovz },
         }),
       });
       const data = await res.json();
@@ -454,6 +456,10 @@ const PresentationBuilder = () => {
                   </span>
                 </span>
               </label>
+
+              <div className="mt-5">
+                <OvzSelect value={ovz} onChange={setOvz} disabled={loading} />
+              </div>
 
               <Button className="w-full mt-5 gap-2" onClick={generate} disabled={loading || reading}>
                 {loading ? (

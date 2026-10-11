@@ -14,6 +14,7 @@ import AuthModal from "@/components/AuthModal";
 import UpgradeModal from "@/components/UpgradeModal";
 import { useAuth } from "@/context/AuthContext";
 import { downloadDocx, downloadTxt } from "@/lib/download";
+import OvzSelect from "@/components/OvzSelect";
 import { toast } from "sonner";
 import TaskCardPreview from "@/components/task-card/TaskCardPreview";
 import { TIME_OPTIONS, TASK_TYPES, takeTaskCardPrefill } from "@/components/task-card/taskCardConfig";
@@ -43,6 +44,7 @@ const TaskCardBuilder = () => {
   const [competencies, setCompetencies] = useState<string[]>([]);
   const [extraCompetencies, setExtraCompetencies] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [ovz, setOvz] = useState<string[]>([]);
   const [prefilled, setPrefilled] = useState(false);
 
   const [refineOpen, setRefineOpen] = useState(false);
@@ -121,6 +123,7 @@ const TaskCardBuilder = () => {
             taskType,
             selfAssessment,
             competencies: allCompetencies,
+            ovz,
           },
         }),
       });
@@ -176,6 +179,7 @@ const TaskCardBuilder = () => {
             taskType,
             selfAssessment,
             competencies: allCompetencies,
+            ovz,
           },
         }),
       });
@@ -397,6 +401,10 @@ const TaskCardBuilder = () => {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              <div className="mt-5">
+                <OvzSelect value={ovz} onChange={setOvz} disabled={loading} />
               </div>
 
               <Button className="w-full mt-5 gap-2" onClick={fillWithAI} disabled={loading}>

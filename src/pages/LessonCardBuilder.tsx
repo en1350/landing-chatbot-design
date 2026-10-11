@@ -14,6 +14,7 @@ import AuthModal from "@/components/AuthModal";
 import UpgradeModal from "@/components/UpgradeModal";
 import { useAuth } from "@/context/AuthContext";
 import { downloadDocx, downloadTxt } from "@/lib/download";
+import OvzSelect from "@/components/OvzSelect";
 import { toast } from "sonner";
 import LessonCardPreview from "@/components/lesson-card/LessonCardPreview";
 import { OK_LIST, STAGES, TECHNOLOGIES, LESSON_TYPES, type LessonType } from "@/components/lesson-card/lessonCardConfig";
@@ -48,6 +49,7 @@ const LessonCardBuilder = () => {
   const [contents, setContents] = useState<Record<string, string>>(emptyContents);
   const [extraCompetencies, setExtraCompetencies] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [ovz, setOvz] = useState<string[]>([]);
   const [prefilled, setPrefilled] = useState(false);
 
   const [refineOpen, setRefineOpen] = useState(false);
@@ -134,6 +136,7 @@ const LessonCardBuilder = () => {
             duration,
             lessonType,
             competencies: allCompetencies,
+            ovz,
             technologies,
             times,
           },
@@ -194,6 +197,7 @@ const LessonCardBuilder = () => {
             duration,
             lessonType,
             competencies: allCompetencies,
+            ovz,
             technologies,
             times,
             contents,
@@ -488,6 +492,10 @@ const LessonCardBuilder = () => {
                 ⏰ Общее время: {totalTime} мин из {target} мин
                 {totalTime > target && " — превышение!"}
                 {totalTime < target && " — есть резерв"}
+              </div>
+
+              <div className="mt-4">
+                <OvzSelect value={ovz} onChange={setOvz} disabled={loading} />
               </div>
 
               <Button className="w-full mt-4 gap-2" onClick={fillWithAI} disabled={loading}>

@@ -14,6 +14,7 @@ import AuthModal from "@/components/AuthModal";
 import UpgradeModal from "@/components/UpgradeModal";
 import { useAuth } from "@/context/AuthContext";
 import { downloadDocx, downloadTxt } from "@/lib/download";
+import OvzSelect from "@/components/OvzSelect";
 import { toast } from "sonner";
 import EventCardPreview from "@/components/event-card/EventCardPreview";
 import {
@@ -71,6 +72,7 @@ const EventCardBuilder = () => {
   const [scenario, setScenario] = useState<ScenarioBlock[]>(defaultScenario);
 
   const [loading, setLoading] = useState(false);
+  const [ovz, setOvz] = useState<string[]>([]);
   const [prefilled, setPrefilled] = useState(false);
   const [refineOpen, setRefineOpen] = useState(false);
   const [refineInstruction, setRefineInstruction] = useState("");
@@ -126,6 +128,7 @@ const EventCardBuilder = () => {
     description,
     result,
     materials,
+    ovz,
     scenario: scenario.map(({ title: t, time, desc }) => ({ title: t, time, desc })),
   });
 
@@ -480,6 +483,10 @@ const EventCardBuilder = () => {
                   <Label>Стоимость (₽, 0 = бесплатно)</Label>
                   <Input type="number" min={0} value={price} onChange={(e) => setPrice(e.target.value)} />
                 </div>
+              </div>
+
+              <div className="mt-5">
+                <OvzSelect value={ovz} onChange={setOvz} disabled={loading} />
               </div>
 
               <Button className="w-full mt-5 gap-2" onClick={fillWithAI} disabled={loading}>

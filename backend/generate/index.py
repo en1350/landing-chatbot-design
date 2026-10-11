@@ -109,14 +109,57 @@ PRACTICE_DURATION_MAP = {
 }
 
 
+def get_ovz(f: dict) -> list:
+    raw = f.get('ovz')
+    if isinstance(raw, list):
+        items = [str(x).strip() for x in raw]
+    elif isinstance(raw, str):
+        items = [x.strip() for x in raw.split(',')]
+    else:
+        items = []
+    return [x for x in items if x]
+
+
+def build_ovz_note(f: dict) -> str:
+    ovz = get_ovz(f)
+    if not ovz:
+        return ""
+    cats = ", ".join(ovz)
+    return (
+        f"Среди обучающихся есть дети/студенты с ОВЗ (ограниченными возможностями здоровья): {cats}. "
+        f"Обязательно адаптируй материал под эти категории: добавь отдельный блок «Адаптация для обучающихся с ОВЗ» "
+        f"с конкретными приёмами для каждой указанной категории (формат подачи, наглядность, темп, формулировки заданий, "
+        f"допустимые средства поддержки, способ проверки результата). Не снижай образовательную цель, меняй только способы достижения."
+    )
+
+
+def with_ovz(prompt: str, f: dict) -> str:
+    ovz = get_ovz(f)
+    if not ovz:
+        return prompt
+    marker = 'Верни ответ СТРОГО'
+    note = (
+        f"Среди обучающихся есть дети/студенты с ОВЗ (ограниченными возможностями здоровья): {', '.join(ovz)}. "
+        f"Встрой адаптацию под эти категории прямо в текст существующих полей ответа: укажи конкретные приёмы "
+        f"(формат подачи, наглядность, темп, формулировки заданий, допустимые средства поддержки, способ проверки результата) "
+        f"и помечай их словами «Для обучающихся с ОВЗ:». Не меняй структуру и названия полей JSON и не снижай образовательную цель."
+    )
+    if marker in prompt:
+        return prompt.replace(marker, note + "\n\n" + marker, 1)
+    return prompt + "\n\n" + note
+
+
 def build_extra_context_lines(f: dict) -> str:
     lines = []
     regional = (f.get('regionalComponent') or '').strip()
     professional = (f.get('professionalOrientation') or '').strip()
+    ovz = get_ovz(f)
     if regional:
         lines.append(f"Региональный компонент: {regional}")
     if professional:
         lines.append(f"Профессиональная направленность: {professional}")
+    if ovz:
+        lines.append(f"Обучающиеся с ОВЗ: {', '.join(ovz)}")
     return ("\n" + "\n".join(lines)) if lines else ""
 
 
@@ -128,7 +171,11 @@ def build_extra_context_instruction(f: dict) -> str:
         parts.append(f"обязательно учти региональный компонент «{regional}» (используй местные примеры, факты, реалии региона)")
     if professional:
         parts.append(f"обязательно учти профессиональную направленность «{professional}» (подбирай примеры и контекст под этот профиль)")
-    return (" Также " + "; ".join(parts) + ".") if parts else ""
+    result = (" Также " + "; ".join(parts) + ".") if parts else ""
+    note = build_ovz_note(f)
+    if note:
+        result += " " + note
+    return result
 
 
 def build_competencies_lines(f: dict) -> str:
@@ -1143,7 +1190,7 @@ def handler(event: dict, context) -> dict:
 
             raw = call_ai([
                 {'role': 'system', 'content': 'Ты профессиональный педагог-методист. Отвечаешь строго валидным JSON без markdown и пояснений, всегда на русском языке.'},
-                {'role': 'user', 'content': build_lesson_card_prompt(fields)},
+                {'role': 'user', 'content': with_ovz(build_lesson_card_prompt(fields), fields)},
             ], temperature=0.7)
 
             cleaned = raw.strip()
@@ -1170,7 +1217,7 @@ def handler(event: dict, context) -> dict:
 
             raw = call_ai([
                 {'role': 'system', 'content': 'Ты профессиональный педагог-методист. Отвечаешь строго валидным JSON без markdown и пояснений, всегда на русском языке.'},
-                {'role': 'user', 'content': build_task_card_prompt(fields)},
+                {'role': 'user', 'content': with_ovz(build_task_card_prompt(fields), fields)},
             ], temperature=0.7)
 
             cleaned = raw.strip()
@@ -1201,7 +1248,7 @@ def handler(event: dict, context) -> dict:
 
             raw = call_ai([
                 {'role': 'system', 'content': 'Ты профессиональный педагог-методист, дорабатываешь карточку урока по запросу преподавателя. Отвечаешь строго валидным JSON без markdown и пояснений, всегда на русском языке.'},
-                {'role': 'user', 'content': build_lesson_card_refine_prompt(fields, instruction)},
+                {'role': 'user', 'content': with_ovz(build_lesson_card_refine_prompt(fields, instruction), fields)},
             ], temperature=0.6)
 
             cleaned = raw.strip()
@@ -1231,7 +1278,7 @@ def handler(event: dict, context) -> dict:
 
             raw = call_ai([
                 {'role': 'system', 'content': 'Ты профессиональный педагог-методист, дорабатываешь карточку учебного задания по запросу преподавателя. Отвечаешь строго валидным JSON без markdown и пояснений, всегда на русском языке.'},
-                {'role': 'user', 'content': build_task_card_refine_prompt(fields, instruction)},
+                {'role': 'user', 'content': with_ovz(build_task_card_refine_prompt(fields, instruction), fields)},
             ], temperature=0.6)
 
             cleaned = raw.strip()
@@ -1260,7 +1307,7 @@ def handler(event: dict, context) -> dict:
             if action == 'event_card_refine' and not instruction:
                 return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите, что нужно доработать'})}
 
-            prompt = build_event_card_prompt(fields) if action == 'event_card' else build_event_card_refine_prompt(fields, instruction)
+            prompt = with_ovz(build_event_card_prompt(fields) if action == 'event_card' else build_event_card_refine_prompt(fields, instruction), fields)
             raw = call_ai([
                 {'role': 'system', 'content': 'Ты профессиональный методист образовательных событий. Отвечаешь строго валидным JSON без markdown и пояснений, всегда на русском языке.'},
                 {'role': 'user', 'content': prompt},
@@ -1282,7 +1329,7 @@ def handler(event: dict, context) -> dict:
 
             raw = call_ai([
                 {'role': 'system', 'content': 'Ты профессиональный педагог-игропрактик. Отвечаешь строго валидным JSON без markdown и пояснений, всегда на русском языке.'},
-                {'role': 'user', 'content': build_game_card_prompt(fields)},
+                {'role': 'user', 'content': with_ovz(build_game_card_prompt(fields), fields)},
             ], temperature=0.8)
 
             try:
@@ -1301,7 +1348,7 @@ def handler(event: dict, context) -> dict:
 
             raw = call_ai([
                 {'role': 'system', 'content': 'Ты профессиональный методист и автор презентаций. Отвечаешь строго валидным JSON без markdown и пояснений, всегда на русском языке.'},
-                {'role': 'user', 'content': build_presentation_prompt(fields)},
+                {'role': 'user', 'content': with_ovz(build_presentation_prompt(fields), fields)},
             ], temperature=0.7)
 
             try:
