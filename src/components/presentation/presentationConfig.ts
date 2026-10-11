@@ -92,3 +92,59 @@ export const getTheme = (key: string): StyleTheme => STYLES.find((s) => s.key ==
 
 export const isCover = (index: number) => index === 0;
 export const isLast = (index: number, total: number) => index === total - 1 && total > 1;
+
+const CHAR_W = 0.56;
+
+const countLines = (text: string, fontSize: number, width: number) => {
+  const perLine = Math.max(8, Math.floor(width / (fontSize * CHAR_W)));
+  const words = text.split(/\s+/).filter(Boolean);
+  let lines = 1;
+  let cur = 0;
+  for (const w of words) {
+    const len = w.length;
+    if (cur === 0) cur = len;
+    else if (cur + 1 + len <= perLine) cur += 1 + len;
+    else {
+      lines += 1;
+      cur = len;
+    }
+    while (cur > perLine) {
+      lines += 1;
+      cur -= perLine;
+    }
+  }
+  return lines;
+};
+
+export const fitTitleSize = (text: string, width: number, maxFs: number, minFs: number, maxLines = 2) => {
+  for (let fs = maxFs; fs > minFs; fs -= 2) {
+    if (countLines(text, fs, width) <= maxLines) return fs;
+  }
+  return minFs;
+};
+
+export const fitBulletsSize = (
+  bullets: string[],
+  width: number,
+  height: number,
+  maxFs: number,
+  minFs: number,
+  lineHeight = 1.35
+) => {
+  for (let fs = maxFs; fs > minFs; fs -= 1) {
+    const textW = width - fs * 1.6;
+    const gap = fs * 0.55;
+    const total = bullets.reduce((sum, b) => sum + countLines(b, fs, textW) * fs * lineHeight + gap, 0);
+    if (total <= height) return fs;
+  }
+  return minFs;
+};
+
+export const LAYOUT = {
+  padX: 64,
+  padTop: 44,
+  imageW: 240,
+  imageH: 250,
+  gap: 28,
+  titleMaxLines: 2,
+};
