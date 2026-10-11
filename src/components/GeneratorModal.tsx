@@ -23,6 +23,7 @@ import { useUsage } from "@/context/UsageContext";
 import { downloadTxt, downloadDocx } from "@/lib/download";
 import { saveLessonCardPrefill, matchTechnologies } from "@/components/lesson-card/prefill";
 import { saveTaskCardPrefill, COMPONENT_TO_TASK_TYPE } from "@/components/task-card/taskCardConfig";
+import { saveGameCardPrefill, matchPeopleBucket } from "@/components/game-card/gameCardConfig";
 import { saveEventPrefill, mapIntensiveToEvent } from "@/components/event-card/eventCardConfig";
 
 const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
@@ -357,6 +358,15 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
       technologies: matchTechnologies(lessonFields.technology),
     });
     window.location.href = "/konstruktor-uroka";
+  };
+
+  const handleOpenGameBuilder = () => {
+    saveGameCardPrefill({
+      topic: gameFields.subject,
+      time: `${gameFields.duration} минут`,
+      people: matchPeopleBucket(gameFields.peopleCount) || "",
+    });
+    window.location.href = "/konstruktor-igry";
   };
 
   const handleOpenEventBuilder = () => {
@@ -984,6 +994,17 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
               </Button>
             )}
 
+            {type === "game" && (
+              <Button
+                variant="outline"
+                className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
+                onClick={handleOpenGameBuilder}
+              >
+                <Icon name="LayoutTemplate" size={16} />
+                Открыть в конструкторе игры
+              </Button>
+            )}
+
             {type === "intensive" && (
               <Button
                 variant="outline"
@@ -1130,6 +1151,17 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
               >
                 <Icon name="LayoutTemplate" size={16} />
                 Оформить карточку задания
+              </Button>
+            )}
+
+            {type === "game" && (
+              <Button
+                variant="outline"
+                className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
+                onClick={handleOpenGameBuilder}
+              >
+                <Icon name="LayoutTemplate" size={16} />
+                Оформить карточку игры
               </Button>
             )}
 

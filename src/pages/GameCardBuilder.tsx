@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -22,6 +22,7 @@ import {
   GAME_TIMES,
   GAME_TYPES,
   GameStage,
+  takeGameCardPrefill,
 } from "@/components/game-card/gameCardConfig";
 
 const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
@@ -50,6 +51,16 @@ const GameCardBuilder = () => {
   const [tips, setTips] = useState<string[]>([]);
   const [criteria, setCriteria] = useState("");
   const [loading, setLoading] = useState(false);
+  const [prefilled, setPrefilled] = useState(false);
+
+  useEffect(() => {
+    const data = takeGameCardPrefill();
+    if (!data) return;
+    if (data.topic) setTopic(data.topic);
+    if (data.time && (GAME_TIMES as readonly string[]).includes(data.time)) setTime(data.time);
+    if (data.people && (GAME_PEOPLE as readonly string[]).includes(data.people)) setPeople(data.people);
+    setPrefilled(true);
+  }, []);
 
   const previewData = {
     topic,
@@ -194,6 +205,13 @@ const GameCardBuilder = () => {
               карточку можно распечатать или скачать в Word.
             </p>
           </div>
+
+          {prefilled && (
+            <div className="mb-6 flex items-start gap-2.5 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm no-print">
+              <Icon name="CheckCircle2" size={17} className="text-primary mt-0.5 shrink-0" />
+              <span>Данные перенесены из генератора игры. Проверьте поля и нажмите «Составить игру с помощью ИИ».</span>
+            </div>
+          )}
 
           <div className="grid gap-6 lg:grid-cols-2">
             <div className="rounded-2xl border border-border bg-card p-5 md:p-6 shadow-sm no-print">
