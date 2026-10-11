@@ -216,6 +216,24 @@
             opacity: 0.7;
         }
     </style>
+<style id="mobile-adapt">
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+img,svg,video,canvas{max-width:100%}
+button,[role="button"],select,input[type="radio"]+*,input[type="checkbox"]+*{touch-action:manipulation}
+@media (max-width:640px){
+  html,body{max-width:100%;overflow-x:hidden}
+  body{overflow-wrap:break-word;-webkit-tap-highlight-color:transparent}
+  img,svg,video{height:auto}
+  table{display:block;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  th,td{min-width:92px;overflow-wrap:normal;word-break:normal;hyphens:none}
+  pre{max-width:100%;overflow-x:auto;white-space:pre-wrap}
+  input:not([type="radio"]):not([type="checkbox"]):not([type="range"]),select,textarea{font-size:16px !important;max-width:100%}
+  button,.btn{min-height:44px}
+  label{min-height:36px}
+  h1{font-size:clamp(20px,6vw,28px) !important;line-height:1.25}
+  h2{font-size:clamp(18px,5vw,24px) !important}
+}
+</style>
 </head>
 <body>
 

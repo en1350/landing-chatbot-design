@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta charset="UTF-8">
 <title>AI Arcade: Архитектура нейросети + Сертификат</title>
 <style>
@@ -186,6 +187,31 @@
         .print-btn, .restart-btn { display: none !important; }
         #certificate::before { content: '🏆'; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
+</style>
+<style id="mobile-adapt">
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+img,svg,video,canvas{max-width:100%}
+button,[role="button"],select,input[type="radio"]+*,input[type="checkbox"]+*{touch-action:manipulation}
+@media (max-width:640px){
+  html,body{max-width:100%;overflow-x:hidden}
+  body{overflow-wrap:break-word;-webkit-tap-highlight-color:transparent}
+  img,svg,video{height:auto}
+  table{display:block;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  th,td{min-width:92px;overflow-wrap:normal;word-break:normal;hyphens:none}
+  pre{max-width:100%;overflow-x:auto;white-space:pre-wrap}
+  input:not([type="radio"]):not([type="checkbox"]):not([type="range"]),select,textarea{font-size:16px !important;max-width:100%}
+  button,.btn{min-height:44px}
+  label{min-height:36px}
+  h1{font-size:clamp(20px,6vw,28px) !important;line-height:1.25}
+  h2{font-size:clamp(18px,5vw,24px) !important}
+}
+</style>
+<style id="touch-pad-css">
+#touchPad{display:none;position:fixed;left:0;right:0;bottom:0;z-index:50;padding:8px 10px calc(8px + env(safe-area-inset-bottom));gap:8px;justify-content:space-between;align-items:center;background:rgba(5,5,26,.85);border-top:1px solid #00f0ff55;user-select:none;-webkit-user-select:none;touch-action:none}
+#touchPad .grp{display:flex;gap:8px}
+#touchPad button{min-width:54px;min-height:54px;padding:0 12px;border-radius:14px;border:2px solid #00f0ff;background:rgba(0,240,255,.12);color:#fff;font-size:20px;font-weight:700;text-transform:none;touch-action:none}
+#touchPad button:active{background:rgba(0,240,255,.4)}
+@media (hover:none) and (pointer:coarse){#touchPad{display:flex}body{padding-bottom:80px}}
 </style>
 </head>
 <body>
@@ -593,6 +619,22 @@ function gameLoop() {
 }
 
 gameLoop();
+</script>
+<div id="touchPad">
+  <div class="grp"><button data-k="ArrowLeft">←</button><button data-k="ArrowRight">→</button></div>
+  <div class="grp"><button data-k="ArrowUp">↑</button><button data-k="ArrowDown">↓</button></div>
+  <div class="grp"><button data-k="a">A</button><button data-k="s">S</button><button data-k=" ">🔥</button></div>
+</div>
+<script>
+document.querySelectorAll('#touchPad button').forEach(function(b){
+  var k=b.dataset.k;
+  function down(e){e.preventDefault();document.dispatchEvent(new KeyboardEvent('keydown',{key:k}));}
+  function up(e){e.preventDefault();document.dispatchEvent(new KeyboardEvent('keyup',{key:k}));}
+  b.addEventListener('pointerdown',down);
+  b.addEventListener('pointerup',up);
+  b.addEventListener('pointercancel',up);
+  b.addEventListener('pointerleave',up);
+});
 </script>
 </body>
 </html>
