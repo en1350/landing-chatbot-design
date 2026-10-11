@@ -144,6 +144,19 @@ const PresentationBuilder = () => {
     }
   }, [searchParams, token, openSaved, setSearchParams]);
 
+  const renameSaved = async (id: number, title: string): Promise<boolean> => {
+    try {
+      await authPost({ action: "update_material", id, title });
+      setSaved((list) => list.map((m) => (m.id === id ? { ...m, title } : m)));
+      if (savedId === id) setDeck((d) => (d ? { ...d, title } : d));
+      toast.success("Название изменено");
+      return true;
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Не удалось переименовать");
+      return false;
+    }
+  };
+
   const deleteSaved = async (id: number) => {
     try {
       await authPost({ action: "delete_material", id });
@@ -531,6 +544,7 @@ const PresentationBuilder = () => {
               activeId={savedId}
               onOpen={openSaved}
               onDelete={deleteSaved}
+              onRename={renameSaved}
             />
           ) : (
             <div className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">

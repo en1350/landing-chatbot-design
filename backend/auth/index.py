@@ -532,15 +532,21 @@ def handler(event: dict, context) -> dict:
 
             material_id = body_data.get('id')
             title = (body_data.get('title') or '').strip()
-            content = body_data.get('content') or ''
             if not title:
                 return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Не указан заголовок материала'})}
 
-            cur.execute(
-                f"UPDATE {SCHEMA}.saved_materials SET title = %s, content = %s "
-                f"WHERE id = %s AND user_id = %s AND is_archived = false",
-                (title, content, material_id, user_id)
-            )
+            if 'content' in body_data:
+                cur.execute(
+                    f"UPDATE {SCHEMA}.saved_materials SET title = %s, content = %s "
+                    f"WHERE id = %s AND user_id = %s AND is_archived = false",
+                    (title, body_data.get('content') or '', material_id, user_id)
+                )
+            else:
+                cur.execute(
+                    f"UPDATE {SCHEMA}.saved_materials SET title = %s "
+                    f"WHERE id = %s AND user_id = %s AND is_archived = false",
+                    (title, material_id, user_id)
+                )
             updated = cur.rowcount
             conn.commit()
             if not updated:
