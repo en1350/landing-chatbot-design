@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Интерактивный урок: Коммуникационное оборудование сетей</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+    min-height: 100vh;
+    color: #fff;
+    padding: 20px;
+  }
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    overflow: hidden;
+  }
+  header {
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    padding: 25px 30px;
+    text-align: center;
+  }
+  header h1 { font-size: 26px; margin-bottom: 5px; }
+  header p { opacity: 0.9; font-size: 14px; }
+
+  .screen { display: none; padding: 30px; animation: fadeIn 0.4s; }
+  .screen.active { display: block; }
+  @keyframes fadeIn { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:translateY(0);} }
+
+  .progress-bar {
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    margin: 0 30px 20px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #48bb78, #38b2ac);
+    width: 0%;
+    transition: width 0.4s;
+  }
+
+  h2 { color: #f6e05e; margin-bottom: 18px; font-size: 22px; }
+  h3 { color: #90cdf4; margin: 16px 0 10px; font-size: 17px; }
+  p, li { line-height: 1.7; font-size: 15px; margin-bottom: 10px; }
+  ul { padding-left: 22px; }
+
+  .field { margin-bottom: 16px; }
+  .field label { display: block; margin-bottom: 6px; font-weight: 600; color: #f6e05e; }
+  .field input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    border-radius: 10px;
+    font-size: 15px;
+  }
+  .field input:focus { outline: none; border-color: #f6e05e; background: rgba(255,255,255,0.12); }
+
+  .btn {
+    padding: 12px 28px;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 10px;
+    margin-right: 8px;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.3); }
+  .btn-primary { background: linear-gradient(90deg, #667eea, #764ba2); color: #fff; }
+  .btn-success { background: linear-gradient(90deg, #48bb78, #38b2ac); color: #fff; }
+  .btn-secondary { background: rgba(255,255,255,0.15); color: #fff; }
+
+  .theory-card {
+    background: rgba(255,255,255,0.06);
+    border-left: 4px solid #667eea;
+    padding: 16px 20px;
+    border-radius: 0 10px 10px 0;
+    margin: 14px 0;
+  }
+  .device-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin: 18px 0;
+  }
+  .device {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    transition: all 0.2s;
+  }
+  .device:hover { transform: translateY(-3px); border-color: #f6e05e; }
+  .device .icon { font-size: 40px; margin-bottom: 8px; }
+  .device h4 { color: #f6e05e; margin-bottom: 6px; font-size: 15px; }
+  .device p { font-size: 13px; opacity: 0.9; }
+
+  .sim-scenario {
+    background: rgba(255,255,255,0.06);
+    padding: 18px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .sim-scenario .task {
+    background: rgba(246,224,94,0.1);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border-left: 3px solid #f6e05e;
+  }
+  .sim-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+  }
+  .sim-option {
+    background: rgba(255,255,255,0.08);
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    padding: 14px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .sim-option:hover { border-color: #90cdf4; background: rgba(255,255,255,0.12); }
+  .sim-option.selected { border-color: #48bb78; background: rgba(72,187,120,0.2); }
+  .sim-option.wrong { border-color: #f56565; background: rgba(245,101,101,0.2); }
+  .sim-option .ico { font-size: 32px; display: block; margin-bottom: 6px; }
+
+  .question {
+    background: rgba(255,255,255,0.06);
+    padding: 18px;
+    border-radius: 12px;
+    margin-bottom: 14px;
+  }
+  .question .q-text { font-weight: 600; margin-bottom: 12px; color: #f6e05e; }
+  .q-options label {
+    display: block;
+    padding: 10px 14px;
+    margin: 6px 0;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .q-options label:hover { background: rgba(255,255,255,0.12); }
+  .q-options input { margin-right: 8px; }
+  .q-options input:checked + span { color: #f6e05e; font-weight: 600; }
+
+  .result-score {
+    text-align: center;
+    padding: 30px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 16px;
+    margin-bottom: 20px;
+  }
+  .score-big {
+    font-size: 72px;
+    font-weight: 700;
+    background: linear-gradient(90deg, #f6e05e, #ed8936);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .score-label { font-size: 18px; opacity: 0.9; margin-top: 6px; }
+
+  .error-review {
+    background: rgba(245,101,101,0.08);
+    border-left: 4px solid #f56565;
+    padding: 14px 18px;
+    border-radius: 0 10px 10px 0;
+    margin-bottom: 12px;
+  }
+  .error-review .joke {
+    color: #fbd38d;
+    font-style: italic;
+    margin-top: 8px;
+    font-size: 14px;
+  }
+  .correct-review {
+    background: rgba(72,187,120,0.08);
+    border-left: 4px solid #48bb78;
+    padding: 14px 18px;
+    border-radius: 0 10px 10px 0;
+    margin-bottom: 12px;
+  }
+
+  .certificate {
+    background: linear-gradient(135deg, #fff9e6 0%, #fff 50%, #fff9e6 100%);
+    color: #2c3e50;
+    border: 8px double #b8860b;
+    border-radius: 8px;
+    padding: 50px 40px;
+    text-align: center;
+    position: relative;
+    margin: 40px 0 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+  }
+  .certificate::before {
+    content: "🏆";
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 60px;
+    background: #fff;
+    padding: 0 14px;
+    border-radius: 50%;
+  }
+  .cert-title {
+    font-family: 'Georgia', serif;
+    font-size: 34px;
+    color: #8b4513;
+    margin-bottom: 8px;
+    letter-spacing: 3px;
+  }
+  .cert-sub {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 24px;
+    letter-spacing: 2px;
+  }
+  .cert-name {
+    font-family: 'Georgia', serif;
+    font-size: 32px;
+    color: #2c3e50;
+    border-bottom: 2px solid #b8860b;
+    padding-bottom: 10px;
+    margin: 20px auto;
+    display: inline-block;
+    min-width: 300px;
+  }
+  .cert-text {
+    font-size: 15px;
+    line-height: 1.7;
+    margin: 20px 0;
+    color: #333;
+  }
+  .cert-grade {
+    font-size: 48px;
+    color: #b8860b;
+    font-weight: 700;
+    margin: 14px 0;
+  }
+  .cert-footer {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 30px;
+    font-size: 13px;
+    color: #555;
+  }
+  .cert-footer div { border-top: 1px solid #888; padding-top: 6px; min-width: 150px; }
+
+  @media print {
+    body { background: #fff; padding: 0; }
+    .container { box-shadow: none; border: none; background: #fff; }
+    header, .progress-bar, .no-print, .screen:not(.active) { display: none !important; }
+    .screen.active { padding: 0; }
+    .certificate { box-shadow: none; page-break-inside: avoid; }
+  }
+
+  @media (max-width: 600px) {
+    .screen { padding: 20px 16px; }
+    .cert-title { font-size: 24px; }
+    .cert-name { font-size: 22px; min-width: 200px; }
+    .score-big { font-size: 54px; }
+    .certificate { padding: 40px 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🌐 Коммуникационное оборудование сетей</h1>
+    <p>Интерактивный урок • Теория • Симулятор • Тест • Сертификат</p>
+  </header>
+
+  <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+  <div class="screen active" id="screen-intro">
+    <h2>👋 Добро пожаловать!</h2>
+    <p>Прежде чем начать, представьтесь, пожалуйста. Данные понадобятся для сертификата.</p>
+    <div class="field">
+      <label>Ваше имя и фамилия</label>
+      <input type="text" id="userName" placeholder="Например: Иванов Иван">
+    </div>
+    <div class="field">
+      <label>Группа</label>
+      <input type="text" id="userGroup" placeholder="Например: ИС-21">
+    </div>
+    <button class="btn btn-primary" onclick="startLesson()">🚀 Начать урок</button>
+  </div>
+
+  <div class="screen" id="screen-theory">
+    <h2>📚 Теоретический блок</h2>
+    <p>Коммуникационное оборудование — это устройства, обеспечивающие передачу данных между узлами компьютерной сети. Рассмотрим основные из них.</p>
+
+    <div class="device-grid">
+      <div class="device">
+        <div class="icon">🔀</div>
+        <h4>Концентратор (Hub)</h4>
+        <p>Простейшее устройство. Рассылает сигнал всем портам. Работает на физическом уровне. Устарел.</p>
+      </div>
+      <div class="device">
+        <div class="icon">🔌</div>
+        <h4>Коммутатор (Switch)</h4>
+        <p>Передаёт кадры только адресату по MAC-адресу. Работает на канальном уровне (L2).</p>
+      </div>
+      <div class="device">
+        <div class="icon">🌍</div>
+        <h4>Маршрутизатор (Router)</h4>
+        <p>Соединяет разные сети, маршрутизирует пакеты по IP. Работает на сетевом уровне (L3).</p>
+      </div>
+      <div class="device">
+        <div class="icon">📡</div>
+        <h4>Точка доступа (AP)</h4>
+        <p>Обеспечивает беспроводное подключение клиентов по Wi-Fi к проводной сети.</p>
+      </div>
+      <div class="device">
+        <div class="icon">🛡️</div>
+        <h4>Межсетевой экран (Firewall)</h4>
+        <p>Фильтрует трафик по заданным правилам. Обеспечивает безопасность сети.</p>
+      </div>
+      <div class="device">
+        <div class="icon">📦</div>
+        <h4>Модель OSI (7 уровней)</h4>
+        <p>Физический → Канальный → Сетевой → Транспортный → Сеансовый → Представительный → Прикладной</p>
+      </div>
+    </div>
+
+    <div class="theory-card">
+      <h3>💡 Запомните</h3>
+      <p><b>Hub</b> — "кричит" всем. <b>Switch</b> — шепчет адресату. <b>Router</b> — знает дорогу между сетями.</p>
+    </div>
+
+    <button class="btn btn-primary" onclick="goTo('screen-sim')">➡️ К практическому симулятору</button>
+  </div>
+
+  <div class="screen" id="screen-sim">
+    <h2>🎮 Практический симулятор "Собери сеть"</h2>
+    <p>Представьте, что вы сетевой архитектор. Для каждой задачи выберите подходящее оборудование.</p>
+
+    <div class="sim-scenario" data-correct="switch">
+      <div class="task">
+        <b>Задача 1:</b> В офисе 20 компьютеров в одной подсети. Нужно соединить их между собой, чтобы они обменивались данными эффективно, без широковещательного шума.
+      </div>
+      <div class="sim-options">
+        <div class="sim-option" data-val="hub"><span class="ico">🔀</span>Концентратор</div>
+        <div class="sim-option" data-val="switch"><span class="ico">🔌</span>Коммутатор</div>
+        <div class="sim-option" data-val="router"><span class="ico">🌍</span>Маршрутизатор</div>
+        <div class="sim-option" data-val="ap"><span class="ico">📡</span>Точка доступа</div>
+      </div>
+    </div>
+
+    <div class="sim-scenario" data-correct="router">
+      <div class="task">
+        <b>Задача 2:</b> Нужно соединить офисную сеть (192.168.1.0/24) с сетью филиала (192.168.2.0/24) и обеспечить выход в Интернет.
+      </div>
+      <div class="sim-options">
+        <div class="sim-option" data-val="switch"><span class="ico">🔌</span>Коммутатор</div>
+        <div class="sim-option" data-val="hub"><span class="ico">🔀</span>Концентратор</div>
+        <div class="sim-option" data-val="router"><span class="ico">🌍</span>Маршрутизатор</div>
+        <div class="sim-option" data-val="ap"><span class="ico">📡</span>Точка доступа</div>
+      </div>
+    </div>
+
+    <div class="sim-scenario" data-correct="ap">
+      <div class="task">
+        <b>Задача 3:</b> В переговорной комнате уже есть проводная сеть. Нужно дать возможность сотрудникам подключать ноутбуки и смартфоны без кабелей.
+      </div>
+      <div class="sim-options">
+        <div class="sim-option" data-val="router"><span class="ico">🌍</span>Маршрутизатор</div>
+        <div class="sim-option" data-val="ap"><span class="ico">📡</span>Точка доступа</div>
+        <div class="sim-option" data-val="switch"><span class="ico">🔌</span>Коммутатор</div>
+        <div class="sim-option" data-val="firewall"><span class="ico">🛡️</span>Firewall</div>
+      </div>
+    </div>
+
+    <div class="sim-scenario" data-correct="firewall">
+      <div class="task">
+        <b>Задача 4:</b> Компания выходит в Интернет. Нужно защитить внутреннюю сеть от нежелательных подключений и атак извне.
+      </div>
+      <div class="sim-options">
+        <div class="sim-option" data-val="hub"><span class="ico">🔀</span>Концентратор</div>
+        <div class="sim-option" data-val="switch"><span class="ico">🔌</span>Коммутатор</div>
+        <div class="sim-option" data-val="firewall"><span class="ico">🛡️</span>Межсетевой экран</div>
+        <div class="sim-option" data-val="ap"><span class="ico">📡</span>Точка доступа</div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="checkSim()">✅ Проверить симулятор</button>
+    <button class="btn btn-secondary" onclick="goTo('screen-test')">➡️ К тесту</button>
+  </div>
+
+  <div class="screen" id="screen-test">
+    <h2>📝 Тестовые задания</h2>
+    <p>10 вопросов. Отвечайте внимательно — от этого зависит ваш сертификат!</p>
+
+    <div id="testContainer"></div>
+
+    <button class="btn btn-success" onclick="finishTest()">🏁 Завершить и получить результат</button>
+  </div>
+
+  <div class="screen" id="screen-result">
+    <h2>📊 Результаты урока</h2>
+    <div class="result-score">
+      <div class="score-big" id="scoreBig">0</div>
+      <div class="score-label" id="scoreLabel">правильных ответов</div>
+      <div style="margin-top:14px;font-size:20px;">Ваша оценка: <b id="gradeBig">—</b></div>
+    </div>
+
+    <h3>🔍 Разбор ответов</h3>
+    <div id="reviewContainer"></div>
+
+    <button class="btn btn-primary no-print" onclick="showCertificate()">🏆 Получить сертификат</button>
+    <button class="btn btn-secondary no-print" onclick="restart()">🔄 Пройти заново</button>
+  </div>
+
+  <div class="screen" id="screen-cert">
+    <h2 class="no-print">🏆 Ваш сертификат</h2>
+    <p class="no-print" style="margin-bottom:14px;">Нажмите Ctrl+P (или ⌘+P), чтобы распечатать сертификат.</p>
+    <div class="certificate" id="certBody">
+      <div class="cert-title">СЕРТИФИКАТ</div>
+      <div class="cert-sub">О ПРОХОЖДЕНИИ ИНТЕРАКТИВНОГО УРОКА</div>
+      <div style="margin-top:20px;font-size:14px;color:#666;">Настоящий сертификат подтверждает, что</div>
+      <div class="cert-name" id="certName">—</div>
+      <div class="cert-text">
+        группа <b id="certGroup">—</b><br>
+        успешно прошёл(а) интерактивный урок<br>
+        <b>«Коммуникационное оборудование сетей»</b>
+      </div>
+      <div class="cert-grade" id="certGrade">—</div>
+      <div style="font-size:14px;color:#555;">Дата: <span id="certDate">—</span></div>
+      <div class="cert-footer">
+        <div>Преподаватель<br><i>Сетевых Наук И.О.</i></div>
+        <div>Подпись<br><i>______________</i></div>
+      </div>
+    </div>
+    <button class="btn btn-primary no-print" onclick="window.print()">🖨️ Распечатать</button>
+    <button class="btn btn-secondary no-print" onclick="restart()">🔄 Новый урок</button>
+  </div>
+</div>
+
+<script>
+const testQuestions = [
+  {
+    q: "На каком уровне модели OSI работает коммутатор (Switch)?",
+    options: ["Физическом", "Канальном", "Сетевом", "Транспортном"],
+    correct: 1,
+    joke: "Канальный уровень — это как почтальон, который знает номер квартиры. А вы выбрали этаж дома 😄"
+  },
+  {
+    q: "Какое устройство рассылает данные всем подключённым портам без разбора?",
+    options: ["Маршрутизатор", "Коммутатор", "Концентратор (Hub)", "Firewall"],
+    correct: 2,
+    joke: "Hub — как бабушка у подъезда: рассказывает новости всем, даже кому не надо 📢"
+  },
+  {
+    q: "Что использует маршрутизатор для принятия решений о пути пакета?",
+    options: ["MAC-адрес", "IP-адрес", "Номер порта", "Имя компьютера"],
+    correct: 1,
+    joke: "IP-адрес — это как индекс города. MAC — это паспорт, а порт — номер квартиры. Не путайте адресатов! 🗺️"
+  },
+  {
+    q: "Какое устройство обеспечивает беспроводное подключение клиентов?",
+    options: ["Switch", "Hub", "Access Point", "Router"],
+    correct: 2,
+    joke: "Точка доступа — это как Wi-Fi-фея, которая дарит интернет без проводов 🧚"
+  },
+  {
+    q: "Сколько уровней в модели OSI?",
+    options: ["5", "6", "7", "8"],
+    correct: 2,
+    joke: "7 уровней — как гномов у Белоснежки. Только вместо шахты они передают пакеты 🍎"
+  },
+  {
+    q: "Какое устройство фильтрует трафик по правилам безопасности?",
+    options: ["Hub", "Switch", "Firewall", "Repeater"],
+    correct: 2,
+    joke: "Firewall — как строгий охранник: «Ваши документы! А ну-ка проходите по правилам!» 🛡️"
+  },
+  {
+    q: "На каком уровне работает маршрутизатор?",
+    options: ["Физическом", "Канальном", "Сетевом", "Прикладном"],
+    correct: 2,
+    joke: "Сетевой уровень — это как навигатор в машине. Он знает, как доехать из одной сети в другую 🚗"
+  },
+  {
+    q: "Что такое MAC-адрес?",
+    options: ["Адрес компьютера в сети", "Уникальный идентификатор сетевого интерфейса", "Адрес веб-сайта", "Пароль от Wi-Fi"],
+    correct: 1,
+    joke: "MAC — это как отпечаток пальца сетевой карты. Его нельзя изменить (ну, почти) 🖐️"
+  },
+  {
+    q: "Какое устройство соединяет РАЗНЫЕ сети?",
+    options: ["Hub", "Switch", "Repeater", "Router"],
+    correct: 3,
+    joke: "Только маршрутизатор — как дипломат между странами. Остальные работают внутри одного государства 🌐"
+  },
+  {
+    q: "Что делает коммутатор с кадром, адресат которого ему неизвестен?",
+    options: ["Отбрасывает его", "Рассылает во все порты кроме источника", "Сохраняет в память", "Шлёт на маршрутизатор"],
+    correct: 1,
+    joke: "Коммутатор в растерянности кричит: «Эй, кто тут?!» — как в пустом доме, когда ищешь кота 🐱"
+  }
+];
+
+let user = { name: '', group: '' };
+let simScore = 0;
+let testScore = 0;
+let userAnswers = [];
+
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  updateProgress(id);
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function updateProgress(id) {
+  const map = {
+    'screen-intro': 0,
+    'screen-theory': 20,
+    'screen-sim': 40,
+    'screen-test': 70,
+    'screen-result': 90,
+    'screen-cert': 100
+  };
+  document.getElementById('progress').style.width = (map[id] || 0) + '%';
+}
+
+function startLesson() {
+  const name = document.getElementById('userName').value.trim();
+  const group = document.getElementById('userGroup').value.trim();
+  if (!name || !group) {
+    alert('Пожалуйста, введите имя и группу 😊');
+    return;
+  }
+  user.name = name;
+  user.group = group;
+  renderTest();
+  goTo('screen-theory');
+}
+
+document.addEventListener('click', e => {
+  const opt = e.target.closest('.sim-option');
+  if (!opt) return;
+  const scenario = opt.closest('.sim-scenario');
+  scenario.querySelectorAll('.sim-option').forEach(o => o.classList.remove('selected', 'wrong'));
+  opt.classList.add('selected');
+});
+
+function checkSim() {
+  simScore = 0;
+  document.querySelectorAll('.sim-scenario').forEach(sc => {
+    const correct = sc.dataset.correct;
+    const selected = sc.querySelector('.sim-option.selected');
+    sc.querySelectorAll('.sim-option').forEach(o => o.classList.remove('wrong'));
+    if (selected) {
+      if (selected.dataset.val === correct) {
+        simScore++;
+      } else {
+        selected.classList.add('wrong');
+      }
+    }
+  });
+  if (simScore === 4) {
+    alert('🎉 Отлично! Все 4 задачи решены верно!');
+  } else {
+    alert(`Результат симулятора: ${simScore} из 4. Красным отмечены ошибки. Можно попробовать ещё раз или идти к тесту.`);
+  }
+}
+
+function renderTest() {
+  const c = document.getElementById('testContainer');
+  c.innerHTML = testQuestions.map((q, i) => `
+    <div class="question">
+      <div class="q-text">${i+1}. ${q.q}</div>
+      <div class="q-options">
+        ${q.options.map((o, j) => `
+          <label><input type="radio" name="q${i}" value="${j}"><span>${o}</span></label>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function finishTest() {
+  testScore = 0;
+  userAnswers = [];
+  testQuestions.forEach((q, i) => {
+    const sel = document.querySelector(`input[name="q${i}"]:checked`);
+    const userAns = sel ? parseInt(sel.value) : -1;
+    const isCorrect = userAns === q.correct;
+    if (isCorrect) testScore++;
+    userAnswers.push({ q: q.q, userAns, correct: q.correct, options: q.options, isCorrect, joke: q.joke });
+  });
+
+  const total = simScore * 0.4 + testScore * 0.6;
+  const percent = (total / 7.6) * 100;
+  let grade;
+  if (percent >= 90) grade = 5;
+  else if (percent >= 75) grade = 4;
+  else if (percent >= 50) grade = 3;
+  else grade = 2;
+
+  document.getElementById('scoreBig').textContent = testScore + ' / 10';
+  document.getElementById('scoreLabel').textContent = `Симулятор: ${simScore}/4 • Тест: ${testScore}/10`;
+  document.getElementById('gradeBig').textContent = grade;
+
+  const rev = document.getElementById('reviewContainer');
+  rev.innerHTML = userAnswers.map((a, i) => {
+    if (a.isCorrect) {
+      return `<div class="correct-review"><b>✅ Вопрос ${i+1}:</b> ${a.q}<br><b>Ваш ответ:</b> ${a.options[a.userAns]} — <i>верно!</i></div>`;
+    } else {
+      const userTxt = a.userAns === -1 ? '(нет ответа)' : a.options[a.userAns];
+      return `<div class="error-review">
+        <b>❌ Вопрос ${i+1}:</b> ${a.q}<br>
+        <b>Ваш ответ:</b> ${userTxt}<br>
+        <b>Правильный ответ:</b> ${a.options[a.correct]}
+        <div class="joke">💬 ${a.joke}</div>
+      </div>`;
+    }
+  }).join('');
+
+  window._grade = grade;
+  window._percent = Math.round(percent);
+
+  goTo('screen-result');
+}
+
+function showCertificate() {
+  document.getElementById('certName').textContent = user.name;
+  document.getElementById('certGroup').textContent = user.group;
+  document.getElementById('certGrade').textContent = `Оценка: ${window._grade}`;
+  const today = new Date();
+  const months = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  document.getElementById('certDate').textContent = `${today.getDate()} ${months[today.getMonth()]} ${today.getFullYear()} г.`;
+  goTo('screen-cert');
+}
+
+function restart() {
+  user = { name: '', group: '' };
+  simScore = 0;
+  testScore = 0;
+  userAnswers = [];
+  document.getElementById('userName').value = '';
+  document.getElementById('userGroup').value = '';
+  document.querySelectorAll('.sim-option').forEach(o => {
+    o.classList.remove('selected','wrong');
+  });
+  goTo('screen-intro');
+}
+</script>
+</body>
+</html>

@@ -35,6 +35,7 @@ type TrainerKey =
   | "digital-info"
   | "database-lesson"
   | "tcpip-addresses"
+  | "network-equipment"
   | "linear-programs"
   | "code-duel"
   | "sets-python-js"
@@ -70,6 +71,7 @@ const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "digital-info": "/computer-digital-info.html",
   "database-lesson": "/database-lesson.html",
   "tcpip-addresses": "/tcpip-addresses.html",
+  "network-equipment": "/network-equipment.html",
   "linear-programs": "/linear-programs.html",
   "code-duel": "/code-duel.html",
   "sets-python-js": "/sets-python-js.html",
@@ -226,6 +228,14 @@ const TRAINERS: TrainerItem[] = [
     description: "Теория, симулятор командной строки (ipconfig, ping, netstat), тест на 10 вопросов и сертификат",
     accent: "#1E3C72",
     paid: true,
+  },
+  {
+    key: "network-equipment",
+    category: "networks",
+    icon: "🔌",
+    title: "Коммуникационное оборудование сетей",
+    description: "Теория про хаб, коммутатор, маршрутизатор и межсетевой экран, симулятор «Собери сеть», тест на 10 вопросов и сертификат",
+    accent: "#2C5364",
   },
   {
     key: "linear-programs",
