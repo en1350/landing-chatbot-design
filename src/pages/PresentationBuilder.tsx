@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import Icon from "@/components/ui/icon";
 import DecomposerModal from "@/components/DecomposerModal";
 import RandomizerModal from "@/components/RandomizerModal";
@@ -71,6 +72,10 @@ const PresentationBuilder = () => {
   const [ovz, setOvz] = useState<string[]>([]);
   const [withImages, setWithImages] = useState(true);
   const [imgBusy, setImgBusy] = useState<number[]>([]);
+  const [refineOpen, setRefineOpen] = useState(false);
+  const [refineText, setRefineText] = useState("");
+  const [refining, setRefining] = useState(false);
+  const [refineError, setRefineError] = useState<string | null>(null);
   const [exporting, setExporting] = useState<"" | "pdf" | "pptx">("");
   const [deck, setDeck] = useState<PresentationData | null>(null);
   const [deckStyle, setDeckStyle] = useState<StyleKey>("modern");
@@ -329,6 +334,81 @@ const PresentationBuilder = () => {
     await Promise.all([worker(), worker(), worker()]);
   };
 
+  const REFINE_HINTS = ["Сделай проще", "Добавь пример", "Сократи текст", "Добавь вопросы для обсуждения"];
+
+  const handleRefine = async () => {
+    if (!deck) return;
+    if (!user) {
+      setAuthOpen(true);
+      return;
+    }
+    if (!isPaid) {
+      setUpgradeOpen(true);
+      return;
+    }
+    const instruction = refineText.trim();
+    if (!instruction) return;
+
+    setRefining(true);
+    setRefineError(null);
+    try {
+      const res = await fetch(GENERATE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { "X-Authorization": token } : {}) },
+        body: JSON.stringify({
+          action: "presentation_refine",
+          instruction,
+          fields: {
+            title: deck.title,
+            style: deckStyle,
+            ovz,
+            slides: deck.slides.map(({ title, bullets, notes, image }) => ({ title, bullets, notes, image })),
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Не удалось доработать презентацию");
+
+      const pool = deck.slides.filter((sl) => sl.imageUrl);
+      const used = new Set<number>();
+      const slides = (data.slides as PresentationData["slides"]).map((sl, i) => {
+        const hint = (sl.image || "").trim();
+        let idx = pool.findIndex((o, k) => !used.has(k) && hint && (o.image || "").trim() === hint);
+        if (idx === -1) {
+          const same = deck.slides[i];
+          idx = same && same.imageUrl && (same.image || "").trim() === hint ? pool.indexOf(same) : -1;
+          if (idx !== -1 && used.has(idx)) idx = -1;
+        }
+        if (idx === -1) return { ...sl, imageUrl: undefined, cdnUrl: undefined };
+        used.add(idx);
+        return { ...sl, imageUrl: pool[idx].imageUrl, cdnUrl: pool[idx].cdnUrl };
+      });
+
+      setDeck({ ...deck, slides });
+      setRefineText("");
+      setRefineOpen(false);
+      toast.success("Презентация доработана");
+
+      if (withImages) {
+        const missing = slides
+          .map((sl, i) => ({ sl, i }))
+          .filter(({ sl, i }) => sl.image && !sl.imageUrl && i !== 0 && i !== slides.length - 1);
+        let next = 0;
+        const worker = async () => {
+          while (next < missing.length) {
+            const { sl, i } = missing[next++];
+            await generateOneImage(i, sl.image, deckStyle, deck.title);
+          }
+        };
+        void Promise.all([worker(), worker(), worker()]);
+      }
+    } catch (err) {
+      setRefineError(err instanceof Error ? err.message : "Не удалось доработать презентацию");
+    } finally {
+      setRefining(false);
+    }
+  };
+
   const handleExport = async (kind: "pdf" | "pptx") => {
     if (!deck) return;
     setExporting(kind);
@@ -499,12 +579,72 @@ const PresentationBuilder = () => {
                         {exporting === "pptx" ? <Icon name="Loader2" size={15} className="animate-spin" /> : <Icon name="Presentation" size={15} />}
                         Скачать PPTX
                       </Button>
+                      <Button
+                        variant="outline"
+                        className="gap-1.5 border-primary/30 text-primary hover:bg-primary/5"
+                        onClick={() => setRefineOpen((v) => !v)}
+                        disabled={imgBusy.length > 0}
+                      >
+                        <Icon name="Sparkles" size={15} />
+                        Доработать с ИИ
+                      </Button>
                       <Button variant="outline" className="gap-1.5" onClick={() => handleExport("pdf")} disabled={!!exporting || imgBusy.length > 0}>
                         {exporting === "pdf" ? <Icon name="Loader2" size={15} className="animate-spin" /> : <Icon name="FileDown" size={15} />}
                         Скачать PDF
                       </Button>
                     </div>
                   </div>
+
+                  {refineOpen && (
+                    <div className="mb-5 rounded-xl border border-primary/30 bg-primary/5 p-3.5 space-y-2.5 animate-fade-in">
+                      <label className="text-sm font-medium block">Что доработать или исправить?</label>
+                      <Textarea
+                        value={refineText}
+                        onChange={(e) => setRefineText(e.target.value)}
+                        placeholder="Например: сделай проще, добавь пример на слайд 3, сократи тезисы..."
+                        rows={3}
+                        disabled={refining}
+                      />
+                      <div className="flex flex-wrap gap-1.5">
+                        {REFINE_HINTS.map((h) => (
+                          <button
+                            key={h}
+                            type="button"
+                            disabled={refining}
+                            onClick={() => setRefineText(h)}
+                            className="rounded-full border border-border bg-background px-3 py-1 text-xs hover:bg-accent transition-colors disabled:opacity-50"
+                          >
+                            {h}
+                          </button>
+                        ))}
+                      </div>
+                      {refineError && (
+                        <p className="text-sm text-destructive flex items-center gap-1.5">
+                          <Icon name="AlertCircle" size={14} />
+                          {refineError}
+                        </p>
+                      )}
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="flex-1"
+                          disabled={refining}
+                          onClick={() => {
+                            setRefineOpen(false);
+                            setRefineText("");
+                            setRefineError(null);
+                          }}
+                        >
+                          Отмена
+                        </Button>
+                        <Button size="sm" className="flex-1 gap-1.5" onClick={handleRefine} disabled={refining || !refineText.trim()}>
+                          {refining ? <Icon name="Loader2" size={15} className="animate-spin" /> : <Icon name="Sparkles" size={15} />}
+                          {refining ? "ИИ дорабатывает..." : "Применить"}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="grid gap-5 sm:grid-cols-2">
                     {deck.slides.map((sl, i) => (

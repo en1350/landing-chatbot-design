@@ -810,6 +810,38 @@ def build_presentation_prompt(f: dict) -> str:
 {{"title": "название презентации", "slides": [{{"title": "заголовок слайда", "bullets": ["тезис 1", "тезис 2"], "notes": "заметки докладчика", "image": "подсказка для изображения"}}]}}"""
 
 
+def build_presentation_refine_prompt(f: dict, instruction: str) -> str:
+    title = (f.get('title') or '').strip() or 'Презентация'
+    style = (f.get('style') or 'modern').strip()
+    style_hint = PRESENTATION_STYLE_HINTS.get(style, PRESENTATION_STYLE_HINTS['modern'])
+    slides = f.get('slides') or []
+    blocks = []
+    for i, sl in enumerate(slides, 1):
+        bullets = "\n".join(f"  - {b}" for b in (sl.get('bullets') or [])) or "  (нет тезисов)"
+        blocks.append(
+            f"Слайд {i}: {(sl.get('title') or '').strip()}\n{bullets}\n"
+            f"  Заметки докладчика: {(sl.get('notes') or '').strip() or '(пусто)'}\n"
+            f"  Подсказка для изображения: {(sl.get('image') or '').strip() or '(нет)'}"
+        )
+    slides_block = "\n\n".join(blocks)
+    count = len(slides)
+
+    return f"""Ты опытный методист и дизайнер учебных презентаций. Вот текущая презентация на русском языке.
+
+Название: {title}
+Стиль: {style_hint}
+Количество слайдов: {count}
+
+{slides_block}
+
+Преподаватель просит доработать презентацию по замечанию: «{instruction}»
+
+Обнови слайды в соответствии с замечанием. Сохраняй количество слайдов ({count}), если замечание прямо не просит добавить или убрать слайды. Первый слайд остаётся титульным, последний итоговым. Если замечание касается одного слайда или части материала, измени в первую очередь его, но верни ВСЕ слайды целиком. Заголовок слайда до 8 слов, от 3 до 5 тезисов, каждый до 15 слов. Не меняй подсказку для изображения, если замечание её не касается. Без markdown-разметки.
+
+Верни ответ СТРОГО в формате JSON без markdown, пояснений и текста до/после:
+{{"title": "название презентации", "slides": [{{"title": "заголовок слайда", "bullets": ["тезис 1", "тезис 2"], "notes": "заметки докладчика", "image": "подсказка для изображения"}}]}}"""
+
+
 def normalize_presentation(parsed: dict) -> dict:
     slides = []
     for sl in (parsed.get('slides') or []):
@@ -1359,6 +1391,31 @@ def handler(event: dict, context) -> dict:
             result = normalize_presentation(parsed)
             if not result['slides']:
                 return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ не составил слайды, попробуйте снова'})}
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps(result, ensure_ascii=False)}
+
+        elif action == 'presentation_refine':
+            fields = body.get('fields') or {}
+            instruction = (body.get('instruction') or '').strip()
+            if not is_user_paid(event):
+                return {'statusCode': 403, 'headers': cors_headers(), 'body': json.dumps({'error': 'Доработка презентаций доступна по платной подписке'})}
+            if not instruction:
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите, что нужно доработать'})}
+            if not (fields.get('slides') or []):
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Нет слайдов для доработки'})}
+
+            raw = call_ai([
+                {'role': 'system', 'content': 'Ты профессиональный методист и автор презентаций. Отвечаешь строго валидным JSON без markdown и пояснений, всегда на русском языке.'},
+                {'role': 'user', 'content': with_ovz(build_presentation_refine_prompt(fields, instruction), fields)},
+            ], temperature=0.7)
+
+            try:
+                parsed = parse_ai_json(raw)
+            except (json.JSONDecodeError, IndexError):
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ вернул некорректный ответ, попробуйте снова'})}
+
+            result = normalize_presentation(parsed)
+            if not result['slides']:
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ не вернул слайды, попробуйте снова'})}
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps(result, ensure_ascii=False)}
 
         elif action == 'extracurricular_analysis':
