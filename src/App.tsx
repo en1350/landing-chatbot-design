@@ -14,6 +14,7 @@ import QualityAnalysisTool from "./pages/QualityAnalysisTool";
 import LessonCardBuilder from "./pages/LessonCardBuilder";
 import TaskCardBuilder from "./pages/TaskCardBuilder";
 import GameCardBuilder from "./pages/GameCardBuilder";
+import PresentationBuilder from "./pages/PresentationBuilder";
 import ExtracurricularAnalytics from "./pages/ExtracurricularAnalytics";
 import EventCardBuilder from "./pages/EventCardBuilder";
 import { UsageProvider } from "./context/UsageContext";
@@ -38,6 +39,7 @@ const App = () => (
               <Route path="/kachestvo-znaniy" element={<QualityAnalysisTool />} />
               <Route path="/konstruktor-uroka" element={<LessonCardBuilder />} />
               <Route path="/konstruktor-zadaniy" element={<TaskCardBuilder />} />
+              <Route path="/generator-prezentaciy" element={<PresentationBuilder />} />
               <Route path="/konstruktor-igry" element={<GameCardBuilder />} />
               <Route path="/konstruktor-masterklassov" element={<EventCardBuilder />} />
               <Route path="/vneauditornaya-deyatelnost" element={<ExtracurricularAnalytics />} />

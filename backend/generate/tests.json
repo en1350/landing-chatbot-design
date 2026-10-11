@@ -310,6 +310,22 @@
         "error": "string"
       },
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "Presentation requires subscription",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "presentation",
+        "fields": {
+          "topic": "Космос"
+        }
+      },
+      "expectedStatus": 403,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
     }
   ]
 }

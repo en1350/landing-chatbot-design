@@ -87,6 +87,12 @@ const Navbar = ({
             Конструктор игры
           </Link>
           <Link
+            to="/generator-prezentaciy"
+            className="story-link px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
+          >
+            Презентации
+          </Link>
+          <Link
             to="/trenazher-dlya-uchenikov"
             className="story-link px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
           >
@@ -145,6 +151,13 @@ const Navbar = ({
                 className="text-left px-3 py-3 rounded-lg text-base font-medium hover:bg-accent transition-colors"
               >
                 Конструктор игры
+              </Link>
+              <Link
+                to="/generator-prezentaciy"
+                onClick={() => setOpen(false)}
+                className="text-left px-3 py-3 rounded-lg text-base font-medium hover:bg-accent transition-colors"
+              >
+                Генератор презентаций
               </Link>
               <Link
                 to="/trenazher-dlya-uchenikov"

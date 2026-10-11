@@ -731,6 +731,52 @@ def normalize_game_card(parsed: dict) -> dict:
     }
 
 
+PRESENTATION_STYLE_HINTS = {
+    'modern': 'современный деловой стиль: чёткие тезисы, лаконичные формулировки, цифры и факты',
+    'creative': 'творческий стиль: яркие образы, метафоры, неожиданные вопросы к аудитории',
+    'game': 'игровой стиль: интерактив, квесты, загадки, задания для зрителей, элементы соревнования',
+    'storyteller': 'стиль визуального рассказчика: связная история, минимум текста на слайде, образные подписи, подсказки какой образ или фото показать',
+}
+
+
+def build_presentation_prompt(f: dict) -> str:
+    topic = (f.get('topic') or '').strip() or 'тема не указана'
+    style = (f.get('style') or 'modern').strip()
+    style_hint = PRESENTATION_STYLE_HINTS.get(style, PRESENTATION_STYLE_HINTS['modern'])
+    try:
+        count = int(f.get('slidesCount') or 10)
+    except (TypeError, ValueError):
+        count = 10
+    count = max(3, min(count, 25))
+    source = (f.get('sourceText') or '').strip()[:12000]
+    source_block = f"\n\nИсходный текст, на основе которого нужно построить презентацию (опирайся на него, не выдумывай факты):\n{source}" if source else ""
+
+    return f"""Ты опытный методист и дизайнер учебных презентаций. Составь содержание презентации на русском языке.
+
+Тема: {topic}
+Стиль: {style_hint}
+Количество слайдов: ровно {count} (включая титульный и заключительный){source_block}
+
+Требования: первый слайд титульный, последний слайд итоговый (выводы или вопросы). На каждом слайде: короткий заголовок до 8 слов и от 3 до 5 тезисов, каждый тезис до 15 слов. Для каждого слайда добавь заметки докладчика (1-2 предложения) и подсказку, какое изображение уместно на слайде (одно короткое предложение). Без markdown-разметки.
+
+Верни ответ СТРОГО в формате JSON без markdown, пояснений и текста до/после:
+{{"title": "название презентации", "slides": [{{"title": "заголовок слайда", "bullets": ["тезис 1", "тезис 2"], "notes": "заметки докладчика", "image": "подсказка для изображения"}}]}}"""
+
+
+def normalize_presentation(parsed: dict) -> dict:
+    slides = []
+    for sl in (parsed.get('slides') or []):
+        if not isinstance(sl, dict):
+            continue
+        slides.append({
+            'title': str(sl.get('title') or '').strip(),
+            'bullets': [str(x).strip() for x in (sl.get('bullets') or []) if str(x).strip()],
+            'notes': str(sl.get('notes') or '').strip(),
+            'image': str(sl.get('image') or '').strip(),
+        })
+    return {'title': str(parsed.get('title') or '').strip(), 'slides': slides}
+
+
 def parse_ai_json(raw: str):
     cleaned = raw.strip()
     if cleaned.startswith('```'):
@@ -1215,6 +1261,28 @@ def handler(event: dict, context) -> dict:
                 return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ вернул некорректный ответ, попробуйте снова'})}
 
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps(normalize_game_card(parsed), ensure_ascii=False)}
+
+        elif action == 'presentation':
+            fields = body.get('fields') or {}
+            if not is_user_paid(event):
+                return {'statusCode': 403, 'headers': cors_headers(), 'body': json.dumps({'error': 'Генератор презентаций доступен по платной подписке'})}
+            if not (fields.get('topic') or '').strip() and not (fields.get('sourceText') or '').strip():
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите тему или загрузите документ'})}
+
+            raw = call_ai([
+                {'role': 'system', 'content': 'Ты профессиональный методист и автор презентаций. Отвечаешь строго валидным JSON без markdown и пояснений, всегда на русском языке.'},
+                {'role': 'user', 'content': build_presentation_prompt(fields)},
+            ], temperature=0.7)
+
+            try:
+                parsed = parse_ai_json(raw)
+            except (json.JSONDecodeError, IndexError):
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ вернул некорректный ответ, попробуйте снова'})}
+
+            result = normalize_presentation(parsed)
+            if not result['slides']:
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ не составил слайды, попробуйте снова'})}
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps(result, ensure_ascii=False)}
 
         elif action == 'extracurricular_analysis':
             if not is_user_paid(event):
