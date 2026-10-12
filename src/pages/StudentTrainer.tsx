@@ -11,7 +11,6 @@ import ProfileSheet from "@/components/ProfileSheet";
 import AuthModal from "@/components/AuthModal";
 import UpgradeModal from "@/components/UpgradeModal";
 import { useAuth } from "@/context/AuthContext";
-import InfoBasicsInteractive from "@/components/student-trainer/InfoBasicsInteractive";
 import AlgorithmsTask from "@/components/student-trainer/AlgorithmsTask";
 import BackwardsAnalysisTask from "@/components/student-trainer/BackwardsAnalysisTask";
 import NetworkProtocolsTask from "@/components/student-trainer/NetworkProtocolsTask";
@@ -22,7 +21,6 @@ import TrainerFullscreen from "@/components/student-trainer/TrainerFullscreen";
 type CategoryKey = "informatics" | "networks" | "programming" | "os";
 
 type TrainerKey =
-  | "info-basics"
   | "algorithms"
   | "backwards"
   | "network-protocols"
@@ -110,14 +108,6 @@ const CATEGORIES: CategoryItem[] = [
 ];
 
 const TRAINERS: TrainerItem[] = [
-  {
-    key: "info-basics",
-    category: "informatics",
-    icon: "📚",
-    title: "Работа с информацией",
-    description: "Тест, классификация, сопоставление и обработчик текста — один интерактив в 4 шага",
-    accent: "#2563EB",
-  },
   {
     key: "algorithms",
     category: "programming",
@@ -485,7 +475,6 @@ const StudentTrainer = () => {
                     />
                   ) : (
                     <div className="mx-auto w-full max-w-3xl p-4 sm:p-8">
-                      {active === "info-basics" && <InfoBasicsInteractive />}
                       {active === "algorithms" && <AlgorithmsTask />}
                       {active === "backwards" && <BackwardsAnalysisTask />}
                       {active === "network-protocols" && <NetworkProtocolsTask />}
