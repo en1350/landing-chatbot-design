@@ -6,8 +6,8 @@ interface Props {
 }
 
 const Bar = ({ label, value, max, color }: { label: string; value: number; max: number; color: string }) => (
-  <div className="flex items-center gap-3">
-    <span className="w-40 shrink-0 text-right text-xs text-muted-foreground truncate">{label}</span>
+  <div className="flex items-center gap-2 sm:gap-3">
+    <span className="w-24 sm:w-40 shrink-0 text-right text-[11px] sm:text-xs leading-tight text-muted-foreground line-clamp-2 sm:truncate">{label}</span>
     <div className="flex-1 h-6 rounded-full bg-muted overflow-hidden">
       <div
         className="h-full rounded-full flex items-center justify-end pr-2.5 text-[11px] font-bold text-white transition-all"
@@ -69,7 +69,7 @@ const StatsPanel = ({ rows }: Props) => {
 
   return (
     <div className="space-y-7">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         {cards.map((c) => (
           <div key={c.label} className={`rounded-2xl p-5 text-center text-white bg-gradient-to-br ${c.bg} shadow-md`}>
             <p className="font-display text-3xl font-extrabold leading-tight">{c.value}</p>

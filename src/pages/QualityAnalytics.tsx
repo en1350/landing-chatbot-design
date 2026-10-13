@@ -415,7 +415,7 @@ ${riskStudents.length === 0 ? "<p>Студентов группы риска н�
   return (
     <div className="space-y-6">
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="grid grid-cols-3 lg:grid-cols-6 h-auto w-full gap-1 p-1">
+        <TabsList className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 h-auto w-full gap-1 p-1">
           <TabsTrigger value="input" className="text-xs py-2">① Данные</TabsTrigger>
           <TabsTrigger value="grades" disabled={!initialized} className="text-xs py-2">② Оценки</TabsTrigger>
           <TabsTrigger value="group" disabled={!initialized} className="text-xs py-2">③ Группа</TabsTrigger>
@@ -450,15 +450,15 @@ ${riskStudents.length === 0 ? "<p>Студентов группы риска н�
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button className="gap-2" onClick={applyData}>
+            <Button className="gap-2 w-full sm:w-auto h-auto py-2 whitespace-normal text-left sm:text-center" onClick={applyData}>
               <Icon name="Check" size={16} />
               Применить и перейти к оценкам
             </Button>
-            <Button variant="outline" className="gap-2" onClick={loadDemo}>
+            <Button variant="outline" className="gap-2 w-full sm:w-auto" onClick={loadDemo}>
               <Icon name="ClipboardList" size={16} />
               Загрузить демо-данные
             </Button>
-            <Button variant="destructive" className="gap-2" onClick={clearAll}>
+            <Button variant="destructive" className="gap-2 w-full sm:w-auto" onClick={clearAll}>
               <Icon name="Trash2" size={16} />
               Очистить всё
             </Button>
@@ -479,7 +479,7 @@ ${riskStudents.length === 0 ? "<p>Студентов группы риска н�
                   <thead>
                     <tr className="bg-secondary/60">
                       <th className="p-2 text-left">№</th>
-                      <th className="p-2 text-left">ФИО студента</th>
+                      <th className="p-2 text-left sticky left-0 z-10 bg-secondary">ФИО студента</th>
                       {skills.map((s) => (
                         <th key={s} className="p-2 text-left min-w-[140px]">{s}</th>
                       ))}
@@ -494,7 +494,7 @@ ${riskStudents.length === 0 ? "<p>Студентов группы риска н�
                       return (
                         <tr key={st} className="border-t border-border">
                           <td className="p-2">{i + 1}</td>
-                          <td className="p-2 font-semibold whitespace-nowrap">{st}</td>
+                          <td className="p-2 font-semibold whitespace-nowrap sticky left-0 z-10 bg-card">{st}</td>
                           {skills.map((_, k) => (
                             <td key={k} className="p-2">
                               <select
@@ -535,7 +535,7 @@ ${riskStudents.length === 0 ? "<p>Студентов группы риска н�
             <p className="text-sm text-muted-foreground text-center py-10">Сначала заполните оценки</p>
           ) : (
             <>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
                 <div className="rounded-xl p-4 text-white bg-gradient-to-br from-[#1e3c72] to-[#2a5298]">
                   <p className="text-xs opacity-90 mb-1">Средний балл группы</p>
                   <p className="font-display text-2xl font-bold">{groupAvg.toFixed(2)}</p>
@@ -987,7 +987,7 @@ const QualityAnalytics = () => {
       />
 
       <main className="flex-1">
-        <div className="container py-10 md:py-14">
+        <div className="container py-6 sm:py-10 md:py-14">
           <Link
             to="/"
             className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
@@ -998,7 +998,7 @@ const QualityAnalytics = () => {
 
           <div className="max-w-2xl mb-8">
             <span className="text-xs font-bold uppercase tracking-widest text-coral">Для педагога</span>
-            <h1 className="font-display text-3xl md:text-4xl font-bold mt-2 flex items-center gap-3">
+            <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mt-2 flex items-center gap-3">
               <span className="text-3xl">📊</span> Аналитическая справка качества обученности
             </h1>
             <p className="text-muted-foreground mt-3 leading-relaxed">

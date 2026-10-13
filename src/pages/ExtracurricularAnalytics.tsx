@@ -328,7 +328,7 @@ const ExtracurricularAnalytics = () => {
       />
 
       <main className="flex-1">
-        <div className="container py-10 md:py-14">
+        <div className="container py-6 sm:py-10 md:py-14">
           <Link
             to="/"
             className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 no-print"
@@ -339,7 +339,7 @@ const ExtracurricularAnalytics = () => {
 
           <div className="max-w-2xl mb-8 no-print">
             <span className="text-xs font-bold uppercase tracking-widest text-coral">Для педагога</span>
-            <h1 className="font-display text-3xl md:text-4xl font-bold mt-2 mb-3">
+            <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mt-2 mb-3">
               Вовлечение во внеаудиторную деятельность
             </h1>
             <p className="text-muted-foreground">
@@ -348,16 +348,16 @@ const ExtracurricularAnalytics = () => {
           </div>
 
           <Tabs defaultValue="input">
-            <TabsList className="grid grid-cols-4 w-full max-w-2xl no-print">
-              <TabsTrigger value="input" className="text-xs sm:text-sm">Ввод</TabsTrigger>
-              <TabsTrigger value="table" className="text-xs sm:text-sm">Таблица</TabsTrigger>
-              <TabsTrigger value="stats" className="text-xs sm:text-sm">Статистика</TabsTrigger>
-              <TabsTrigger value="report" className="text-xs sm:text-sm">Справка</TabsTrigger>
+            <TabsList className="grid grid-cols-2 sm:grid-cols-4 h-auto gap-1 w-full max-w-2xl no-print">
+              <TabsTrigger value="input" className="text-sm py-2">Ввод</TabsTrigger>
+              <TabsTrigger value="table" className="text-sm py-2">Таблица</TabsTrigger>
+              <TabsTrigger value="stats" className="text-sm py-2">Статистика</TabsTrigger>
+              <TabsTrigger value="report" className="text-sm py-2">Справка</TabsTrigger>
             </TabsList>
 
             {/* ===== ВВОД ===== */}
             <TabsContent value="input" className="mt-6">
-              <div className="rounded-2xl border border-border bg-card p-5 md:p-6 shadow-sm">
+              <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm">
                 <h2 className="font-display text-lg font-bold mb-4">Добавить мероприятие</h2>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   <div>
@@ -409,15 +409,15 @@ const ExtracurricularAnalytics = () => {
                 </div>
 
                 <div className="flex flex-wrap gap-2 mt-5">
-                  <Button className="gap-2" onClick={addRow}>
+                  <Button className="gap-2 w-full sm:w-auto" onClick={addRow}>
                     <Icon name="Plus" size={16} />
                     Добавить
                   </Button>
-                  <Button variant="outline" className="gap-2" onClick={loadDemo}>
+                  <Button variant="outline" className="gap-2 w-full sm:w-auto" onClick={loadDemo}>
                     <Icon name="Sparkles" size={16} />
                     Загрузить пример
                   </Button>
-                  <Button variant="ghost" className="gap-2 text-destructive hover:text-destructive" onClick={clearAll}>
+                  <Button variant="ghost" className="gap-2 w-full sm:w-auto text-destructive hover:text-destructive" onClick={clearAll}>
                     <Icon name="Trash2" size={16} />
                     Очистить всё
                   </Button>
@@ -460,7 +460,7 @@ const ExtracurricularAnalytics = () => {
 
             {/* ===== ТАБЛИЦА ===== */}
             <TabsContent value="table" className="mt-6">
-              <div className="rounded-2xl border border-border bg-card p-5 md:p-6 shadow-sm">
+              <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm">
                 <div className="flex flex-wrap gap-2 mb-4 no-print">
                   <Button variant="outline" size="sm" className="gap-1.5" onClick={exportCsv}>
                     <Icon name="FileSpreadsheet" size={15} />
@@ -498,11 +498,11 @@ const ExtracurricularAnalytics = () => {
                               <td className="px-2.5 py-2 whitespace-nowrap">
                                 {r.date ? new Date(r.date).toLocaleDateString("ru-RU") : "—"}
                               </td>
-                              <td className="px-2.5 py-2 min-w-[180px]">{r.subject}</td>
+                              <td className="px-2.5 py-2 min-w-[140px] sm:min-w-[180px]">{r.subject}</td>
                               <td className="px-2.5 py-2">{r.group}</td>
                               <td className="px-2.5 py-2">{r.total}</td>
                               <td className="px-2.5 py-2 whitespace-nowrap">{r.type}</td>
-                              <td className="px-2.5 py-2 min-w-[160px]">{r.desc || "—"}</td>
+                              <td className="px-2.5 py-2 min-w-[130px] sm:min-w-[160px]">{r.desc || "—"}</td>
                               <td className="px-2.5 py-2">{r.participants}</td>
                               <td className={`px-2.5 py-2 font-bold ${levelClass(p)}`}>{p.toFixed(1)}%</td>
                               <td className="px-2.5 py-2 no-print">
@@ -525,14 +525,14 @@ const ExtracurricularAnalytics = () => {
 
             {/* ===== СТАТИСТИКА ===== */}
             <TabsContent value="stats" className="mt-6">
-              <div className="rounded-2xl border border-border bg-card p-5 md:p-6 shadow-sm">
+              <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm">
                 <StatsPanel rows={rows} />
               </div>
             </TabsContent>
 
             {/* ===== СПРАВКА ===== */}
             <TabsContent value="report" className="mt-6">
-              <div className="rounded-2xl border border-border bg-card p-5 md:p-6 shadow-sm">
+              <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm">
                 <div className="flex flex-wrap gap-2 mb-4 no-print">
                   <Button className="gap-2" onClick={generateReport} disabled={loading}>
                     {loading ? (
@@ -583,7 +583,7 @@ const ExtracurricularAnalytics = () => {
                 )}
               </div>
 
-              <div className="mt-6 rounded-2xl border border-border bg-card p-5 md:p-6 shadow-sm">
+              <div className="mt-6 rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm">
                 <h2 className="font-display text-lg font-bold mb-1">📅 {planTitle}</h2>
                 <p className="text-xs text-muted-foreground mb-4 no-print">
                   ИИ учтёт проведённые мероприятия и охват: усилит слабые направления и распределит новые по месяцам.
