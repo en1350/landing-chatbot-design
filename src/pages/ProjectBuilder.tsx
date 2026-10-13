@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -20,6 +20,8 @@ import ProjectPreview from "@/components/project/ProjectPreview";
 import { PROJECT_TYPES, ProjectPlan, planToLines } from "@/components/project/projectTypes";
 
 const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
+
+const DRAFT_KEY = "urokai_project_draft";
 
 const REFINE_HINTS = ["Добавь больше рисков", "Сократи сроки", "Сделай задачи подробнее", "Добавь KPI"];
 
@@ -67,6 +69,53 @@ const ProjectBuilder = () => {
     [token]
   );
 
+  const applyProject = (f: Partial<Record<string, string>> | undefined, p: ProjectPlan | null, id: number | null) => {
+    const v = f || {};
+    setTopic(v.topic || "");
+    setProjectType(v.projectType || PROJECT_TYPES[0]);
+    setOrg(v.org || "");
+    setAudience(v.audience || "");
+    setDuration(v.duration || "3 месяца");
+    setTeamSize(v.teamSize || "");
+    setBudget(v.budget || "");
+    setExtra(v.extra || "");
+    setPlan(p);
+    setSavedId(id);
+  };
+
+  const draftReady = useRef(false);
+  useEffect(() => {
+    if (searchParams.get("open")) {
+      draftReady.current = true;
+      return;
+    }
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (d && (d.plan || (d.fields && d.fields.topic))) applyProject(d.fields, d.plan || null, d.savedId || null);
+      }
+    } catch {
+      /* черновик повреждён */
+    }
+    draftReady.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!draftReady.current) return;
+    try {
+      if (!plan && !topic.trim()) localStorage.removeItem(DRAFT_KEY);
+      else
+        localStorage.setItem(
+          DRAFT_KEY,
+          JSON.stringify({ fields: { topic, projectType, org, audience, duration, teamSize, budget, extra }, plan, savedId })
+        );
+    } catch {
+      /* хранилище недоступно */
+    }
+  }, [topic, projectType, org, audience, duration, teamSize, budget, extra, plan, savedId]);
+
   useEffect(() => {
     const id = Number(searchParams.get("open"));
     if (!id || !token) return;
@@ -76,17 +125,7 @@ const ProjectBuilder = () => {
         const data = await authPost({ action: "get_material", id });
         const parsed = JSON.parse(data.content || "{}");
         if (!parsed.plan) throw new Error("Не удалось открыть проект");
-        const f = parsed.fields || {};
-        setTopic(f.topic || "");
-        setProjectType(f.projectType || PROJECT_TYPES[0]);
-        setOrg(f.org || "");
-        setAudience(f.audience || "");
-        setDuration(f.duration || "3 месяца");
-        setTeamSize(f.teamSize || "");
-        setBudget(f.budget || "");
-        setExtra(f.extra || "");
-        setPlan(parsed.plan);
-        setSavedId(id);
+        applyProject(parsed.fields, parsed.plan, id);
         toast.success("Проект открыт из личного кабинета");
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Не удалось открыть проект");
@@ -175,6 +214,34 @@ const ProjectBuilder = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const exportFile = () => {
+    if (!plan) return;
+    const blob = new Blob([JSON.stringify({ fields: baseFields, plan }, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${(plan.name || "project").replace(/[\\/:*?"<>|]+/g, " ").trim()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const importFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const d = JSON.parse(String(reader.result));
+        if (!d.plan || !Array.isArray(d.plan.tasks)) throw new Error();
+        applyProject(d.fields, d.plan, null);
+        toast.success("Проект загружен из файла");
+      } catch {
+        toast.error("Не удалось прочитать файл проекта");
+      }
+    };
+    reader.readAsText(file);
   };
 
   const clearAll = () => {
@@ -366,6 +433,25 @@ const ProjectBuilder = () => {
                 </div>
               )}
 
+              <input
+                ref={fileRef}
+                type="file"
+                accept="application/json,.json"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) importFile(f);
+                  e.target.value = "";
+                }}
+              />
+              <Button variant="outline" className="w-full mt-2.5 gap-2" onClick={() => fileRef.current?.click()}>
+                <Icon name="FolderOpen" size={16} />
+                Загрузить проект из файла
+              </Button>
+              <p className="mt-2 text-center text-xs text-muted-foreground">
+                Черновик сохраняется в этом браузере автоматически.
+              </p>
+
               <Button variant="ghost" className="w-full mt-2 gap-1.5 text-muted-foreground" onClick={clearAll}>
                 <Icon name="Trash2" size={15} />
                 Очистить
@@ -388,7 +474,11 @@ const ProjectBuilder = () => {
                 <div className="mt-4 flex flex-wrap gap-2 no-print">
                   <Button className="gap-1.5" onClick={savePlan} disabled={saving}>
                     {saving ? <Icon name="Loader2" size={15} className="animate-spin" /> : <Icon name={savedId ? "Check" : "Save"} size={15} />}
-                    {savedId ? "Обновить в кабинете" : "Сохранить в личный кабинет"}
+                    {savedId ? "Сохранить изменения" : "Сохранить проект"}
+                  </Button>
+                  <Button variant="outline" className="gap-1.5" onClick={exportFile}>
+                    <Icon name="HardDriveDownload" size={15} />
+                    Файл проекта
                   </Button>
                   <Button variant="outline" className="gap-1.5" onClick={() => window.print()}>
                     <Icon name="Printer" size={15} />
