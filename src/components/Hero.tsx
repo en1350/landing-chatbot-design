@@ -73,7 +73,7 @@ const Hero = ({ onScrollToGenerators }: HeroProps) => {
           <div className="w-full max-w-xl">
           <Link to="/trenazher-dlya-uchenikov" className="group block w-full cursor-pointer" aria-label="Открыть тренажёры для учеников">
             <img
-              src="https://cdn.poehali.dev/projects/3a27d5a9-016a-43ab-946d-4c4fe8129705/bucket/9d097fa4-a4f2-4d78-9fe8-0b6b95d90b7c.jpg"
+              src="https://cdn.poehali.dev/projects/3a27d5a9-016a-43ab-946d-4c4fe8129705/bucket/ad2cfcda-8fef-49ee-b33d-b5336f3b406e.png"
               alt="IT-тренажёры с сертификатом для учеников"
               className="w-full rounded-3xl shadow-xl shadow-primary/10 transition-transform duration-300 group-hover:scale-[1.02]"
             />
