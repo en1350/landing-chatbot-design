@@ -31,6 +31,13 @@ const Index = () => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
 
+  useEffect(() => {
+    const id = window.location.hash.replace("#", "");
+    if (!id) return;
+    const timer = setTimeout(() => scrollTo(id), 150);
+    return () => clearTimeout(timer);
+  }, []);
+
   const openAuth = () => {
     setProfileOpen(false);
     setAuthOpen(true);
