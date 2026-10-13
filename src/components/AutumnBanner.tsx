@@ -1,44 +1,19 @@
-import Icon from "@/components/ui/icon";
-import { Button } from "@/components/ui/button";
-import bannerImg from "@/assets/autumn-banner.jpg";
+import { Link } from "react-router-dom";
 
-interface AutumnBannerProps {
-  onScrollToGenerators: () => void;
-}
-
-const AutumnBanner = ({ onScrollToGenerators }: AutumnBannerProps) => {
+const AutumnBanner = () => {
   return (
     <section className="container py-6 md:py-8">
-      <div className="relative overflow-hidden rounded-2xl shadow-lg animate-fade-in">
+      <Link
+        to="/generator-prezentaciy"
+        aria-label="Открыть генератор презентаций"
+        className="group block overflow-hidden rounded-2xl shadow-lg animate-fade-in"
+      >
         <img
-          src={bannerImg}
-          alt="Осенний учебный сезон"
-          className="h-48 w-full object-cover sm:h-56 md:h-64"
+          src="https://cdn.poehali.dev/projects/3a27d5a9-016a-43ab-946d-4c4fe8129705/bucket/ce900e0e-f936-487f-b13f-cd5ef3209cb8.jpg"
+          alt="УрокАИ: создавай презентации и проверяй работы на антиплагиат"
+          className="w-full h-auto transition-transform duration-300 group-hover:scale-[1.01]"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/85 via-primary/50 to-transparent" />
-        <div className="absolute inset-0 flex items-center">
-          <div className="px-6 sm:px-10 max-w-md">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm mb-3">
-              <Icon name="Leaf" size={13} />
-              Новый учебный сезон
-            </span>
-            <h2 className="font-display text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight text-balance">
-              Готовьтесь к урокам быстрее этой осенью
-            </h2>
-            <p className="mt-2 text-sm text-white/85 hidden sm:block">
-              Планы уроков, задания и проверка тетрадей — с помощью ИИ за минуты
-            </p>
-            <Button
-              size="sm"
-              onClick={onScrollToGenerators}
-              className="mt-4 gap-1.5 bg-white text-primary hover:bg-white/90"
-            >
-              <Icon name="Wand2" size={15} />
-              Попробовать
-            </Button>
-          </div>
-        </div>
-      </div>
+      </Link>
     </section>
   );
 };

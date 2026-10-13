@@ -83,7 +83,7 @@ const Index = () => {
       />
 
       <main className="flex-1">
-        <AutumnBanner onScrollToGenerators={() => scrollTo("generators")} />
+        <AutumnBanner />
         <div className="container relative z-10 flex justify-center -mb-4 md:-mb-8">
           <Button
             variant="outline"
