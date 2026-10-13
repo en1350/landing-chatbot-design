@@ -85,6 +85,7 @@ const Index = () => {
 
       <main className="flex-1">
         <AutumnBanner />
+        <NewsSection />
         <div className="container relative z-10 flex justify-center -mb-4 md:-mb-8">
           <Button
             variant="outline"
@@ -99,7 +100,6 @@ const Index = () => {
         <GeneratorsSection onNeedAuth={openAuth} />
         <NotebookCheck id="notebook" onNeedAuth={openAuth} onNeedUpgrade={openUpgrade} />
         <QualityAnalyticsPromo id="quality-analytics" />
-        <NewsSection />
       </main>
 
       <Footer

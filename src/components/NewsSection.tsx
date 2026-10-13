@@ -11,31 +11,37 @@ interface NewsItem {
 
 const NewsSection = () => {
   const [items, setItems] = useState<NewsItem[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     adminGet("news")
       .then((d) => setItems(d.news || []))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoaded(true));
   }, []);
 
-  if (items.length === 0) return null;
-
   return (
-    <section className="container py-12">
-      <h2 className="font-display text-2xl md:text-3xl font-bold mb-6 flex items-center gap-2">
-        <Icon name="Newspaper" size={26} className="text-primary" />
-        Новости сайта
-      </h2>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {items.slice(0, 6).map((n) => (
-          <article key={n.id} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-            <div className="text-xs text-muted-foreground mb-2">
-              {new Date(n.created_at).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" })}
-            </div>
-            <h3 className="font-display font-semibold text-lg mb-2">{n.title}</h3>
-            <p className="text-sm text-muted-foreground whitespace-pre-line">{n.body}</p>
-          </article>
-        ))}
+    <section className="container pb-4">
+      <div className="rounded-2xl border border-primary/20 bg-card shadow-md overflow-hidden animate-fade-in">
+        <div className="flex items-center gap-2 bg-primary px-5 py-3 text-primary-foreground">
+          <Icon name="Newspaper" size={18} />
+          <h2 className="font-display font-semibold">Новости сайта</h2>
+        </div>
+        <div className="max-h-64 overflow-y-auto divide-y divide-border">
+          {items.map((n) => (
+            <article key={n.id} className="px-5 py-4">
+              <div className="text-xs text-muted-foreground mb-1">
+                {new Date(n.created_at).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" })}
+              </div>
+              <h3 className="font-semibold mb-1">{n.title}</h3>
+              <p className="text-sm text-muted-foreground whitespace-pre-line">{n.body}</p>
+            </article>
+          ))}
+          {loaded && items.length === 0 && (
+            <p className="px-5 py-6 text-sm text-muted-foreground">Пока новостей нет. Скоро здесь появятся обновления сайта.</p>
+          )}
+          {!loaded && <p className="px-5 py-6 text-sm text-muted-foreground">Загрузка...</p>}
+        </div>
       </div>
     </section>
   );
