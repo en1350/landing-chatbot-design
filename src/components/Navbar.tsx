@@ -22,9 +22,24 @@ interface NavbarProps {
 }
 
 const NAV_LINKS = [
-  { label: "Декомпозитор компетенций", key: "decomposer" },
-  { label: "Рандомайзер", key: "randomizer" },
-  { label: "Антиплагиат", key: "antiplagiat" },
+  { label: "Декомпозитор компетенций", key: "decomposer", icon: "Network" },
+  { label: "Рандомайзер", key: "randomizer", icon: "Shuffle" },
+  { label: "Антиплагиат", key: "antiplagiat", icon: "ShieldCheck" },
+];
+
+const QUICK_LINKS = [
+  { label: "Конструктор урока", to: "/konstruktor-uroka", icon: "BookOpen" },
+  { label: "Конструктор заданий", to: "/konstruktor-zadaniy", icon: "ClipboardList" },
+  { label: "Презентации", to: "/generator-prezentaciy", icon: "Presentation" },
+  { label: "Конструктор игры", to: "/konstruktor-igry", icon: "Gamepad2" },
+];
+
+const MORE_LINKS = [
+  { label: "Тренажёр для учеников", to: "/trenazher-dlya-uchenikov", icon: "Brain" },
+  { label: "Мастер-классы", to: "/konstruktor-masterklassov", icon: "Sparkles" },
+  { label: "Задания по ПМ", to: "/generator-zadaniy-pm", icon: "Briefcase" },
+  { label: "Аналитика качества", to: "/analitika-kachestva", icon: "BarChart3" },
+  { label: "Внеаудиторная деятельность", to: "/vneauditornaya-deyatelnost", icon: "Users" },
 ];
 
 const Navbar = ({
@@ -133,75 +148,82 @@ const Navbar = ({
               <Icon name="Menu" size={22} />
             </button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-[85vw] max-w-72">
+          <SheetContent side="right" className="w-[88vw] max-w-sm overflow-y-auto p-4">
             <SheetTitle className="font-display">Меню</SheetTitle>
-            <div className="mt-8 flex flex-col gap-1">
+
+            <button
+              onClick={() => {
+                setOpen(false);
+                user ? onOpenProfile() : onOpenAuth();
+              }}
+              className="mt-4 flex w-full items-center gap-3 rounded-xl bg-primary px-4 py-3 text-primary-foreground font-semibold"
+            >
+              <Icon name={user ? "User" : "LogIn"} size={20} />
+              {user ? "Личный кабинет" : "Войти"}
+            </button>
+
+            <p className="mt-6 mb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">Популярное</p>
+            <div className="grid grid-cols-2 gap-2">
+              {QUICK_LINKS.map((q) => (
+                <Link
+                  key={q.to}
+                  to={q.to}
+                  onClick={() => setOpen(false)}
+                  className="flex min-h-[88px] flex-col items-start justify-between rounded-xl border border-border bg-card p-3 hover:bg-accent transition-colors"
+                >
+                  <Icon name={q.icon} size={22} className="text-primary" />
+                  <span className="text-sm font-semibold leading-tight">{q.label}</span>
+                </Link>
+              ))}
+            </div>
+
+            <p className="mt-6 mb-1 text-xs font-bold uppercase tracking-widest text-muted-foreground">Инструменты</p>
+            <div className="flex flex-col">
               {NAV_LINKS.map((l) => (
                 <button
                   key={l.key}
                   onClick={() => handleClick(l.key)}
-                  className="text-left px-3 py-3 rounded-lg text-base font-medium hover:bg-accent transition-colors"
+                  className="flex items-center gap-3 px-2 py-3 rounded-lg text-left text-base font-medium hover:bg-accent transition-colors"
                 >
+                  <Icon name={l.icon} size={18} className="text-muted-foreground" />
                   {l.label}
                 </button>
               ))}
-              <Link
-                to="/konstruktor-uroka"
-                onClick={() => setOpen(false)}
-                className="text-left px-3 py-3 rounded-lg text-base font-medium hover:bg-accent transition-colors"
-              >
-                Конструктор урока
-              </Link>
-              <Link
-                to="/konstruktor-zadaniy"
-                onClick={() => setOpen(false)}
-                className="text-left px-3 py-3 rounded-lg text-base font-medium hover:bg-accent transition-colors"
-              >
-                Конструктор заданий
-              </Link>
-              <Link
-                to="/konstruktor-igry"
-                onClick={() => setOpen(false)}
-                className="text-left px-3 py-3 rounded-lg text-base font-medium hover:bg-accent transition-colors"
-              >
-                Конструктор игры
-              </Link>
-              <Link
-                to="/trenazher-dlya-uchenikov"
-                onClick={() => setOpen(false)}
-                className="text-left px-3 py-3 rounded-lg text-base font-medium hover:bg-accent transition-colors"
-              >
-                Тренажёр для учеников
-              </Link>
               <button
                 onClick={() => {
                   setOpen(false);
                   onOpenNotebook();
                 }}
-                className="text-left px-3 py-3 rounded-lg text-base font-medium hover:bg-accent transition-colors"
+                className="flex items-center gap-3 px-2 py-3 rounded-lg text-left text-base font-medium hover:bg-accent transition-colors"
               >
+                <Icon name="NotebookPen" size={18} className="text-muted-foreground" />
                 Проверка тетради
               </button>
+            </div>
+
+            <p className="mt-6 mb-1 text-xs font-bold uppercase tracking-widest text-muted-foreground">Ещё</p>
+            <div className="flex flex-col">
+              {MORE_LINKS.map((m) => (
+                <Link
+                  key={m.to}
+                  to={m.to}
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 px-2 py-3 rounded-lg text-base font-medium hover:bg-accent transition-colors"
+                >
+                  <Icon name={m.icon} size={18} className="text-muted-foreground" />
+                  {m.label}
+                </Link>
+              ))}
               {isAdmin && (
                 <Link
                   to="/admin"
                   onClick={() => setOpen(false)}
-                  className="text-left px-3 py-3 rounded-lg text-base font-semibold text-primary hover:bg-accent transition-colors"
+                  className="flex items-center gap-3 px-2 py-3 rounded-lg text-base font-semibold text-primary hover:bg-accent transition-colors"
                 >
+                  <Icon name="Shield" size={18} />
                   Админка
                 </Link>
               )}
-              <div className="h-px bg-border my-2" />
-              <button
-                onClick={() => {
-                  setOpen(false);
-                  user ? onOpenProfile() : onOpenAuth();
-                }}
-                className="text-left px-3 py-3 rounded-lg text-base font-medium hover:bg-accent transition-colors flex items-center gap-2"
-              >
-                <Icon name={user ? "User" : "LogIn"} size={18} />
-                {user ? "Личный кабинет" : "Войти"}
-              </button>
             </div>
           </SheetContent>
         </Sheet>
