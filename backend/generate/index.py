@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 import base64
 import io
 import json
@@ -1119,7 +1120,11 @@ def build_notebook_system_prompt(subject: str) -> str:
 Замечания пиши кратко, конкретно, на русском языке, с указанием номера задания если возможно, учитывая специфику предмета «{subj}»."""
 
 
-PROJECT_JSON_FORMAT = """{"name": "название проекта", "description": "краткое описание 2-3 предложения", "problem": {"text": "в чём проблема", "relevance": "актуальность", "scale": "масштаб и последствия"}, "audience": [{"segment": "сегмент", "traits": "характеристики", "needs": "потребности", "size": "оценка численности"}], "smart": {"s": "конкретность", "m": "измеримость", "a": "достижимость", "r": "значимость", "t": "срок"}, "goal": "итоговая формулировка цели", "tasks": [{"name": "задача", "responsible": "роль ответственного", "startWeek": 1, "endWeek": 3, "priority": "Высокий | Средний | Низкий"}], "stages": [{"name": "этап", "result": "результат этапа", "period": "сроки", "responsible": "ответственный"}], "milestones": [{"when": "срок", "name": "веха", "criterion": "критерий достижения"}], "team": [{"role": "роль", "duties": "зона ответственности", "load": "загрузка"}], "stakeholders": [{"name": "сторона", "type": "тип", "interest": "интерес и влияние", "strategy": "стратегия взаимодействия"}], "lifecycle": [{"phase": "Инициация | Планирование | Исполнение | Мониторинг | Завершение", "actions": "основные действия", "results": "результаты", "period": "сроки"}], "assumptions": [{"text": "допущение", "basis": "обоснование"}], "constraints": [{"type": "Время | Бюджет | Ресурсы | Нормативные | Организационные", "description": "описание", "impact": "влияние", "mitigation": "как смягчить"}], "risks": [{"risk": "риск", "category": "категория", "probability": 3, "impact": 4, "strategy": "Избежание | Снижение | Передача | Принятие", "measures": "меры реагирования"}], "kpi": [{"name": "показатель", "target": "целевое значение", "frequency": "частота измерения"}], "reporting": [{"type": "отчёт или совещание", "frequency": "периодичность", "content": "содержание"}], "changeProcedure": "порядок внесения изменений"}"""
+PROJECT_FORMAT_1 = """{"name": "название проекта", "description": "краткое описание 2 предложения", "problem": {"text": "в чём проблема", "relevance": "актуальность", "scale": "масштаб и последствия"}, "audience": [{"segment": "сегмент", "traits": "характеристики", "needs": "потребности", "size": "оценка численности"}], "smart": {"s": "конкретность", "m": "измеримость", "a": "достижимость", "r": "значимость", "t": "срок"}, "goal": "итоговая формулировка цели", "tasks": [{"name": "задача", "responsible": "роль ответственного", "startWeek": 1, "endWeek": 3, "priority": "Высокий | Средний | Низкий"}], "stages": [{"name": "этап", "result": "результат этапа", "period": "сроки", "responsible": "ответственный"}], "milestones": [{"when": "срок", "name": "веха", "criterion": "критерий достижения"}]}"""
+
+PROJECT_FORMAT_2 = """{"team": [{"role": "роль", "duties": "зона ответственности", "load": "загрузка"}], "stakeholders": [{"name": "сторона", "type": "тип", "interest": "интерес и влияние", "strategy": "стратегия взаимодействия"}], "lifecycle": [{"phase": "Инициация | Планирование | Исполнение | Мониторинг | Завершение", "actions": "основные действия", "results": "результаты", "period": "сроки"}], "assumptions": [{"text": "допущение", "basis": "обоснование"}], "constraints": [{"type": "Время | Бюджет | Ресурсы | Нормативные | Организационные", "description": "описание", "impact": "влияние", "mitigation": "как смягчить"}], "risks": [{"risk": "риск", "category": "категория", "probability": 3, "impact": 4, "strategy": "Избежание | Снижение | Передача | Принятие", "measures": "меры реагирования"}], "kpi": [{"name": "показатель", "target": "целевое значение", "frequency": "частота измерения"}], "reporting": [{"type": "отчёт или совещание", "frequency": "периодичность", "content": "содержание"}], "changeProcedure": "порядок внесения изменений"}"""
+
+PROJECT_JSON_FORMAT = PROJECT_FORMAT_1[:-1] + ", " + PROJECT_FORMAT_2[1:]
 
 
 def project_context(f: dict) -> str:
@@ -1138,21 +1143,28 @@ def project_context(f: dict) -> str:
     return "\n".join(lines)
 
 
-def build_project_prompt(f: dict) -> str:
-    return f"""Ты опытный руководитель проектов и методист. Составь полный план проекта на русском языке по исходным данным.
+def build_project_prompt(f: dict, part: int = 1) -> str:
+    if part == 1:
+        req = """- цель по критериям SMART, итоговая формулировка цели одним предложением;
+- 2-3 сегмента аудитории;
+- 5-7 задач; startWeek и endWeek целые числа (недели от начала проекта), укладываются в длительность проекта;
+- 4-5 этапов, 3-4 вехи."""
+        fmt = PROJECT_FORMAT_1
+    else:
+        req = """- 3-5 участников команды, 3-4 стейкхолдера;
+- жизненный цикл: ровно 5 фаз (Инициация, Планирование, Исполнение, Мониторинг, Завершение);
+- 3-4 допущения, 3-4 ограничения, 5-6 рисков (probability и impact целые числа от 1 до 5), 4-5 KPI, 3 вида отчётности."""
+        fmt = PROJECT_FORMAT_2
+    return f"""Ты опытный руководитель проектов и методист. Составь часть плана проекта на русском языке по исходным данным.
 
 {project_context(f)}
 
 Требования:
-- цель по критериям SMART, итоговая формулировка цели одним предложением;
-- 5-9 задач; startWeek и endWeek целые числа (недели от начала проекта), укладываются в длительность проекта;
-- 4-6 этапов, 3-5 вех, 3-6 участников команды, 3-5 стейкхолдеров;
-- жизненный цикл: ровно 5 фаз (Инициация, Планирование, Исполнение, Мониторинг, Завершение);
-- 3-5 допущений, 3-5 ограничений, 5-7 рисков (probability и impact целые числа от 1 до 5), 4-6 KPI, 3-4 вида отчётности;
-- всё конкретно, применимо к теме, без общих фраз.
+{req}
+- каждое текстовое поле — одна короткая фраза (до 15 слов), конкретно по теме, без общих слов.
 
 Верни строго валидный JSON без markdown и пояснений в формате:
-{PROJECT_JSON_FORMAT}"""
+{fmt}"""
 
 
 def build_project_refine_prompt(f: dict, instruction: str) -> str:
@@ -1166,7 +1178,7 @@ def build_project_refine_prompt(f: dict, instruction: str) -> str:
 
 Замечание пользователя: {instruction}
 
-Верни полный обновлённый план строго валидным JSON без markdown и пояснений в формате:
+Текстовые поля пиши короткими фразами (до 15 слов). Верни полный обновлённый план строго валидным JSON без markdown и пояснений в формате:
 {PROJECT_JSON_FORMAT}"""
 
 
@@ -1724,20 +1736,18 @@ def handler(event: dict, context) -> dict:
                 return {'statusCode': 403, 'headers': cors_headers(), 'body': json.dumps({'error': 'Генератор проектов доступен по платной подписке'})}
             if not (fields.get('topic') or '').strip():
                 return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите тему или идею проекта'})}
-            if action == 'project_refine':
-                if not instruction:
-                    return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите, что нужно доработать'})}
-                prompt = build_project_refine_prompt(fields, instruction)
-            else:
-                prompt = build_project_prompt(fields)
-
-            raw = call_ai([
-                {'role': 'system', 'content': 'Ты опытный руководитель проектов. Отвечаешь строго валидным JSON без markdown и пояснений, всегда на русском языке.'},
-                {'role': 'user', 'content': prompt},
-            ], temperature=0.6)
-
+            sys_msg = {'role': 'system', 'content': 'Ты опытный руководитель проектов. Отвечаешь строго валидным JSON без markdown и пояснений, всегда на русском языке.'}
             try:
-                parsed = parse_ai_json(raw)
+                if action == 'project_refine':
+                    if not instruction:
+                        return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите, что нужно доработать'})}
+                    raw = call_ai([sys_msg, {'role': 'user', 'content': build_project_refine_prompt(fields, instruction)}], temperature=0.5)
+                    parsed = parse_ai_json(raw)
+                else:
+                    with ThreadPoolExecutor(max_workers=2) as pool:
+                        f1 = pool.submit(call_ai, [sys_msg, {'role': 'user', 'content': build_project_prompt(fields, 1)}], 0.5)
+                        f2 = pool.submit(call_ai, [sys_msg, {'role': 'user', 'content': build_project_prompt(fields, 2)}], 0.5)
+                        parsed = {**parse_ai_json(f1.result()), **parse_ai_json(f2.result())}
             except (json.JSONDecodeError, IndexError):
                 return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ вернул некорректный ответ, попробуйте снова'})}
 
