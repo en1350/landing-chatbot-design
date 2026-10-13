@@ -21,6 +21,7 @@ import ExtracurricularAnalytics from "./pages/ExtracurricularAnalytics";
 import EventCardBuilder from "./pages/EventCardBuilder";
 import Admin from "./pages/Admin";
 import VisitTracker from "./components/VisitTracker";
+import ScrollToTop from "./components/ScrollToTop";
 import { UsageProvider } from "./context/UsageContext";
 import { AuthProvider } from "./context/AuthContext";
 
@@ -34,6 +35,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <ScrollToTop />
             <VisitTracker />
             <Routes>
               <Route path="/" element={<Index />} />
