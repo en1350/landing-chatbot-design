@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import AntiplagiatModal from "@/components/AntiplagiatModal";
 import ProfileSheet from "@/components/ProfileSheet";
 import AuthModal from "@/components/AuthModal";
 import UpgradeModal from "@/components/UpgradeModal";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, AUTH_URL } from "@/context/AuthContext";
 import { downloadDocx, downloadTxt } from "@/lib/download";
 import { toast } from "sonner";
 import ProjectPreview from "@/components/project/ProjectPreview";
@@ -49,6 +49,51 @@ const ProjectBuilder = () => {
   const [refining, setRefining] = useState(false);
   const [refineError, setRefineError] = useState<string | null>(null);
 
+  const [savedId, setSavedId] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const authPost = useCallback(
+    async (payload: Record<string, unknown>) => {
+      const res = await fetch(AUTH_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { "X-Authorization": token } : {}) },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Ошибка сохранения");
+      return data;
+    },
+    [token]
+  );
+
+  useEffect(() => {
+    const id = Number(searchParams.get("open"));
+    if (!id || !token) return;
+    setSearchParams({}, { replace: true });
+    (async () => {
+      try {
+        const data = await authPost({ action: "get_material", id });
+        const parsed = JSON.parse(data.content || "{}");
+        if (!parsed.plan) throw new Error("Не удалось открыть проект");
+        const f = parsed.fields || {};
+        setTopic(f.topic || "");
+        setProjectType(f.projectType || PROJECT_TYPES[0]);
+        setOrg(f.org || "");
+        setAudience(f.audience || "");
+        setDuration(f.duration || "3 месяца");
+        setTeamSize(f.teamSize || "");
+        setBudget(f.budget || "");
+        setExtra(f.extra || "");
+        setPlan(parsed.plan);
+        setSavedId(id);
+        toast.success("Проект открыт из личного кабинета");
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Не удалось открыть проект");
+      }
+    })();
+  }, [searchParams, token, authPost, setSearchParams]);
+
   const baseFields = { topic, projectType, org, audience, duration, teamSize, budget, extra };
 
   const checkAccess = () => {
@@ -83,6 +128,7 @@ const ProjectBuilder = () => {
     setLoading(true);
     try {
       setPlan(await request("project_gen", baseFields));
+      setSavedId(null);
       toast.success("План проекта готов — проверьте и при необходимости доработайте");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Не удалось составить план");
@@ -107,11 +153,36 @@ const ProjectBuilder = () => {
     }
   };
 
+  const savePlan = async () => {
+    if (!plan) return;
+    if (!user || !token) {
+      setAuthOpen(true);
+      return;
+    }
+    setSaving(true);
+    try {
+      const content = JSON.stringify({ fields: baseFields, plan });
+      if (savedId) {
+        await authPost({ action: "update_material", id: savedId, title: plan.name || "План проекта", content });
+        toast.success("Изменения сохранены в личном кабинете");
+      } else {
+        const res = await authPost({ action: "save_material", type: "project", title: plan.name || "План проекта", content });
+        setSavedId(res.id);
+        toast.success("План сохранён в личном кабинете, вкладка «Материалы»");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Не удалось сохранить план");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const clearAll = () => {
     if ((plan || topic) && !window.confirm("Очистить все поля и результат?")) return;
     [setTopic, setOrg, setAudience, setTeamSize, setBudget, setExtra].forEach((fn) => fn(""));
     setDuration("3 месяца");
     setPlan(null);
+    setSavedId(null);
     setRefineOpen(false);
   };
 
@@ -315,6 +386,10 @@ const ProjectBuilder = () => {
               )}
               {plan && (
                 <div className="mt-4 flex flex-wrap gap-2 no-print">
+                  <Button className="gap-1.5" onClick={savePlan} disabled={saving}>
+                    {saving ? <Icon name="Loader2" size={15} className="animate-spin" /> : <Icon name={savedId ? "Check" : "Save"} size={15} />}
+                    {savedId ? "Обновить в кабинете" : "Сохранить в личный кабинет"}
+                  </Button>
                   <Button variant="outline" className="gap-1.5" onClick={() => window.print()}>
                     <Icon name="Printer" size={15} />
                     Печать / PDF

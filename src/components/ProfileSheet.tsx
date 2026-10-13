@@ -256,13 +256,13 @@ const ProfileSheet = ({ open, onClose, onNeedAuth }: ProfileSheetProps) => {
                           {new Date(m.created_at).toLocaleDateString("ru-RU")}
                         </p>
                       </div>
-                      {m.type === "presentation" ? (
+                      {m.type === "presentation" || m.type === "project" ? (
                         <a
-                          href={`/generator-prezentaciy?open=${m.id}`}
+                          href={m.type === "project" ? `/generator-proektov?open=${m.id}` : `/generator-prezentaciy?open=${m.id}`}
                           className="flex h-8 items-center gap-1.5 rounded-md px-2 text-xs font-medium hover:bg-accent transition-colors shrink-0"
-                          title="Открыть, скачать PPTX или PDF"
+                          title={m.type === "project" ? "Открыть план проекта" : "Открыть, скачать PPTX или PDF"}
                         >
-                          <Icon name="Presentation" size={15} />
+                          <Icon name={m.type === "project" ? "FolderKanban" : "Presentation"} size={15} />
                           Открыть
                         </a>
                       ) : (
