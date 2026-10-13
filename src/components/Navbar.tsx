@@ -36,6 +36,7 @@ const QUICK_LINKS = [
 
 const MORE_LINKS = [
   { label: "Тренажёр для учеников", to: "/trenazher-dlya-uchenikov", icon: "Brain" },
+  { label: "Генератор проектов", to: "/generator-proektov", icon: "FolderKanban" },
   { label: "Мастер-классы", to: "/konstruktor-masterklassov", icon: "Sparkles" },
   { label: "Задания по ПМ", to: "/generator-zadaniy-pm", icon: "Briefcase" },
   { label: "Аналитика качества", to: "/analitika-kachestva", icon: "BarChart3" },

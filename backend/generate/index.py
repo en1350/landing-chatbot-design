@@ -1119,6 +1119,135 @@ def build_notebook_system_prompt(subject: str) -> str:
 Замечания пиши кратко, конкретно, на русском языке, с указанием номера задания если возможно, учитывая специфику предмета «{subj}»."""
 
 
+PROJECT_JSON_FORMAT = """{"name": "название проекта", "description": "краткое описание 2-3 предложения", "problem": {"text": "в чём проблема", "relevance": "актуальность", "scale": "масштаб и последствия"}, "audience": [{"segment": "сегмент", "traits": "характеристики", "needs": "потребности", "size": "оценка численности"}], "smart": {"s": "конкретность", "m": "измеримость", "a": "достижимость", "r": "значимость", "t": "срок"}, "goal": "итоговая формулировка цели", "tasks": [{"name": "задача", "responsible": "роль ответственного", "startWeek": 1, "endWeek": 3, "priority": "Высокий | Средний | Низкий"}], "stages": [{"name": "этап", "result": "результат этапа", "period": "сроки", "responsible": "ответственный"}], "milestones": [{"when": "срок", "name": "веха", "criterion": "критерий достижения"}], "team": [{"role": "роль", "duties": "зона ответственности", "load": "загрузка"}], "stakeholders": [{"name": "сторона", "type": "тип", "interest": "интерес и влияние", "strategy": "стратегия взаимодействия"}], "lifecycle": [{"phase": "Инициация | Планирование | Исполнение | Мониторинг | Завершение", "actions": "основные действия", "results": "результаты", "period": "сроки"}], "assumptions": [{"text": "допущение", "basis": "обоснование"}], "constraints": [{"type": "Время | Бюджет | Ресурсы | Нормативные | Организационные", "description": "описание", "impact": "влияние", "mitigation": "как смягчить"}], "risks": [{"risk": "риск", "category": "категория", "probability": 3, "impact": 4, "strategy": "Избежание | Снижение | Передача | Принятие", "measures": "меры реагирования"}], "kpi": [{"name": "показатель", "target": "целевое значение", "frequency": "частота измерения"}], "reporting": [{"type": "отчёт или совещание", "frequency": "периодичность", "content": "содержание"}], "changeProcedure": "порядок внесения изменений"}"""
+
+
+def project_context(f: dict) -> str:
+    lines = [
+        f"Тема / идея проекта: {(f.get('topic') or '').strip()}",
+        f"Тип проекта: {(f.get('projectType') or 'Учебный проект').strip()}",
+        f"Организация: {(f.get('org') or 'не указана').strip()}",
+        f"Целевая аудитория: {(f.get('audience') or 'определи самостоятельно').strip()}",
+        f"Длительность: {(f.get('duration') or '3 месяца').strip()}",
+        f"Размер команды: {(f.get('teamSize') or 'определи самостоятельно').strip()}",
+        f"Бюджет: {(f.get('budget') or 'не указан').strip()}",
+    ]
+    extra = (f.get('extra') or '').strip()
+    if extra:
+        lines.append(f"Дополнительные пожелания: {extra}")
+    return "\n".join(lines)
+
+
+def build_project_prompt(f: dict) -> str:
+    return f"""Ты опытный руководитель проектов и методист. Составь полный план проекта на русском языке по исходным данным.
+
+{project_context(f)}
+
+Требования:
+- цель по критериям SMART, итоговая формулировка цели одним предложением;
+- 5-9 задач; startWeek и endWeek целые числа (недели от начала проекта), укладываются в длительность проекта;
+- 4-6 этапов, 3-5 вех, 3-6 участников команды, 3-5 стейкхолдеров;
+- жизненный цикл: ровно 5 фаз (Инициация, Планирование, Исполнение, Мониторинг, Завершение);
+- 3-5 допущений, 3-5 ограничений, 5-7 рисков (probability и impact целые числа от 1 до 5), 4-6 KPI, 3-4 вида отчётности;
+- всё конкретно, применимо к теме, без общих фраз.
+
+Верни строго валидный JSON без markdown и пояснений в формате:
+{PROJECT_JSON_FORMAT}"""
+
+
+def build_project_refine_prompt(f: dict, instruction: str) -> str:
+    current = json.dumps(f.get('project') or {}, ensure_ascii=False)
+    return f"""Ты опытный руководитель проектов. Ниже исходные данные и текущий план проекта. Доработай план по замечанию пользователя, сохранив структуру и всё, что замечание не затрагивает.
+
+{project_context(f)}
+
+Текущий план (JSON):
+{current}
+
+Замечание пользователя: {instruction}
+
+Верни полный обновлённый план строго валидным JSON без markdown и пояснений в формате:
+{PROJECT_JSON_FORMAT}"""
+
+
+def _s(v) -> str:
+    return str(v).strip() if v is not None else ''
+
+
+def _int(v, lo, hi, default):
+    try:
+        n = int(v)
+    except (TypeError, ValueError):
+        return default
+    return max(lo, min(hi, n))
+
+
+def _rows(parsed: dict, key: str, fields: list) -> list:
+    items = parsed.get(key)
+    if not isinstance(items, list):
+        return []
+    out = []
+    for it in items:
+        if isinstance(it, dict):
+            out.append({k: _s(it.get(k)) for k in fields})
+    return out
+
+
+def normalize_project(parsed: dict) -> dict:
+    if not isinstance(parsed, dict):
+        parsed = {}
+    problem = parsed.get('problem') if isinstance(parsed.get('problem'), dict) else {}
+    smart = parsed.get('smart') if isinstance(parsed.get('smart'), dict) else {}
+
+    tasks = []
+    for it in parsed.get('tasks') or []:
+        if isinstance(it, dict) and _s(it.get('name')):
+            start = _int(it.get('startWeek'), 1, 200, 1)
+            end = _int(it.get('endWeek'), 1, 200, start)
+            if end < start:
+                end = start
+            tasks.append({
+                'name': _s(it.get('name')),
+                'responsible': _s(it.get('responsible')),
+                'startWeek': start,
+                'endWeek': end,
+                'priority': _s(it.get('priority')) or 'Средний',
+            })
+
+    risks = []
+    for it in parsed.get('risks') or []:
+        if isinstance(it, dict) and _s(it.get('risk')):
+            risks.append({
+                'risk': _s(it.get('risk')),
+                'category': _s(it.get('category')),
+                'probability': _int(it.get('probability'), 1, 5, 3),
+                'impact': _int(it.get('impact'), 1, 5, 3),
+                'strategy': _s(it.get('strategy')),
+                'measures': _s(it.get('measures')),
+            })
+
+    return {
+        'name': _s(parsed.get('name')),
+        'description': _s(parsed.get('description')),
+        'problem': {k: _s(problem.get(k)) for k in ('text', 'relevance', 'scale')},
+        'audience': _rows(parsed, 'audience', ['segment', 'traits', 'needs', 'size']),
+        'smart': {k: _s(smart.get(k)) for k in ('s', 'm', 'a', 'r', 't')},
+        'goal': _s(parsed.get('goal')),
+        'tasks': tasks,
+        'stages': _rows(parsed, 'stages', ['name', 'result', 'period', 'responsible']),
+        'milestones': _rows(parsed, 'milestones', ['when', 'name', 'criterion']),
+        'team': _rows(parsed, 'team', ['role', 'duties', 'load']),
+        'stakeholders': _rows(parsed, 'stakeholders', ['name', 'type', 'interest', 'strategy']),
+        'lifecycle': _rows(parsed, 'lifecycle', ['phase', 'actions', 'results', 'period']),
+        'assumptions': _rows(parsed, 'assumptions', ['text', 'basis']),
+        'constraints': _rows(parsed, 'constraints', ['type', 'description', 'impact', 'mitigation']),
+        'risks': risks,
+        'kpi': _rows(parsed, 'kpi', ['name', 'target', 'frequency']),
+        'reporting': _rows(parsed, 'reporting', ['type', 'frequency', 'content']),
+        'changeProcedure': _s(parsed.get('changeProcedure')),
+    }
+
+
 def handler(event: dict, context) -> dict:
     """Генерация учебных материалов, ИИ-чат-помощник через AITunnel. Декомпозитор компетенций, проверка тетради по фото, план коррекционной работы (аналитика качества обученности) и ИИ-анализ качества знаний по дисциплинам доступны только пользователям с платной подпиской. Антиплагиат (проверка текста и извлечение из PDF/DOCX) доступен бесплатно с лимитом попыток, учёт которых ведётся в backend/auth."""
     method = event.get('httpMethod', 'GET')
@@ -1587,6 +1716,35 @@ def handler(event: dict, context) -> dict:
             ], temperature=0.6)
 
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'content': content}, ensure_ascii=False)}
+
+        elif action in ('project_gen', 'project_refine'):
+            fields = body.get('fields') or {}
+            instruction = (body.get('instruction') or '').strip()
+            if not is_user_paid(event):
+                return {'statusCode': 403, 'headers': cors_headers(), 'body': json.dumps({'error': 'Генератор проектов доступен по платной подписке'})}
+            if not (fields.get('topic') or '').strip():
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите тему или идею проекта'})}
+            if action == 'project_refine':
+                if not instruction:
+                    return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите, что нужно доработать'})}
+                prompt = build_project_refine_prompt(fields, instruction)
+            else:
+                prompt = build_project_prompt(fields)
+
+            raw = call_ai([
+                {'role': 'system', 'content': 'Ты опытный руководитель проектов. Отвечаешь строго валидным JSON без markdown и пояснений, всегда на русском языке.'},
+                {'role': 'user', 'content': prompt},
+            ], temperature=0.6)
+
+            try:
+                parsed = parse_ai_json(raw)
+            except (json.JSONDecodeError, IndexError):
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ вернул некорректный ответ, попробуйте снова'})}
+
+            result = normalize_project(parsed)
+            if not result['tasks']:
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ не составил план, попробуйте снова'})}
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps(result, ensure_ascii=False)}
 
         elif action == 'extract_text':
             file_base64 = body.get('file_base64') or ''

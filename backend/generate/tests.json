@@ -386,6 +386,22 @@
         "error": "string"
       },
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "Project gen requires paid",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "project_gen",
+        "fields": {
+          "topic": "тест"
+        }
+      },
+      "expectedStatus": 403,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
     }
   ]
 }
