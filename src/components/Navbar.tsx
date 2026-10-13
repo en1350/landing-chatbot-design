@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { adminGet } from "@/lib/adminApi";
 import { Link } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
@@ -36,7 +37,18 @@ const Navbar = ({
   onOpenPricing,
 }: NavbarProps) => {
   const [open, setOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, token } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!user || !token) {
+      setIsAdmin(false);
+      return;
+    }
+    adminGet("check", token)
+      .then(() => setIsAdmin(true))
+      .catch(() => setIsAdmin(false));
+  }, [user, token]);
 
   const handleClick = (key: string) => {
     setOpen(false);
@@ -98,6 +110,14 @@ const Navbar = ({
           >
             Проверка тетради
           </button>
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className="story-link px-3 py-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+            >
+              Админка
+            </Link>
+          )}
         </nav>
 
         <div className="hidden md:flex items-center gap-2">
@@ -162,6 +182,15 @@ const Navbar = ({
               >
                 Проверка тетради
               </button>
+              {isAdmin && (
+                <Link
+                  to="/admin"
+                  onClick={() => setOpen(false)}
+                  className="text-left px-3 py-3 rounded-lg text-base font-semibold text-primary hover:bg-accent transition-colors"
+                >
+                  Админка
+                </Link>
+              )}
               <div className="h-px bg-border my-2" />
               <button
                 onClick={() => {
