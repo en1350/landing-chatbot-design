@@ -256,7 +256,7 @@ const TaskCardBuilder = () => {
       />
 
       <main className="flex-1">
-        <div className="container py-10 md:py-14">
+        <div className="container py-6 sm:py-10 md:py-14">
           <Link
             to="/"
             className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 no-print"
@@ -267,7 +267,7 @@ const TaskCardBuilder = () => {
 
           <div className="max-w-2xl mb-8 no-print">
             <span className="text-xs font-bold uppercase tracking-widest text-coral">Для педагога</span>
-            <h1 className="font-display text-3xl md:text-4xl font-bold mt-2 mb-3">Конструктор учебных заданий</h1>
+            <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mt-2 mb-3">Конструктор учебных заданий</h1>
             <p className="text-muted-foreground">
               Задайте параметры задания — ИИ составит формулировку и критерии оценки. Готовую карточку можно
               распечатать или скачать в Word.
@@ -283,7 +283,7 @@ const TaskCardBuilder = () => {
 
           <div className="grid gap-6 lg:grid-cols-2">
             {/* ===== ФОРМА ===== */}
-            <div className="rounded-2xl border border-border bg-card p-5 md:p-6 shadow-sm no-print">
+            <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm no-print">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-semibold mb-1.5">Дисциплина</label>
@@ -483,7 +483,7 @@ const TaskCardBuilder = () => {
             </div>
 
             {/* ===== ПРЕДПРОСМОТР ===== */}
-            <div className="rounded-2xl border border-border bg-card p-5 md:p-6 shadow-sm">
+            <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm">
               <h2 className="font-display text-lg font-bold mb-4 no-print">👁️ Предпросмотр карточки</h2>
               <TaskCardPreview data={previewData} />
               <div className="mt-4 flex flex-wrap gap-2 no-print">

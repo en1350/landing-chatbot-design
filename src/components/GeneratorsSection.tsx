@@ -54,7 +54,7 @@ const GeneratorsSection = ({ onNeedAuth }: GeneratorsSectionProps) => {
     <section id="generators" className="container pt-6 pb-16 md:pt-8 md:pb-24">
       <div className="text-center max-w-2xl mx-auto mb-4">
         <span className="text-xs font-bold uppercase tracking-widest text-coral">Инструменты</span>
-        <h2 className="font-display text-3xl md:text-4xl font-bold mt-2">
+        <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mt-2">
           Генераторы для педагога
         </h2>
         <p className="text-muted-foreground mt-3 leading-relaxed">

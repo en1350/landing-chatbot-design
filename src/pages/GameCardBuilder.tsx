@@ -191,7 +191,7 @@ const GameCardBuilder = () => {
       />
 
       <main className="flex-1">
-        <div className="container py-10 md:py-14">
+        <div className="container py-6 sm:py-10 md:py-14">
           <Link
             to="/"
             className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 no-print"
@@ -202,7 +202,7 @@ const GameCardBuilder = () => {
 
           <div className="max-w-2xl mb-8 no-print">
             <span className="text-xs font-bold uppercase tracking-widest text-coral">Для педагога</span>
-            <h1 className="font-display text-3xl md:text-4xl font-bold mt-2 mb-3">Конструктор игровых уроков</h1>
+            <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mt-2 mb-3">Конструктор игровых уроков</h1>
             <p className="text-muted-foreground">
               Выберите параметры игры — ИИ придумает сценарий с таймингом, правилами и материалами. Готовую
               карточку можно распечатать или скачать в Word.
@@ -217,7 +217,7 @@ const GameCardBuilder = () => {
           )}
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <div className="rounded-2xl border border-border bg-card p-5 md:p-6 shadow-sm no-print">
+            <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm no-print">
               <div>
                 <label className="block text-sm font-semibold mb-1.5">Тема урока</label>
                 <Input
@@ -309,7 +309,7 @@ const GameCardBuilder = () => {
               </Button>
             </div>
 
-            <div className="rounded-2xl border border-border bg-card p-5 md:p-6 shadow-sm">
+            <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm">
               <h2 className="font-display text-lg font-bold mb-4 no-print">👁️ Карточка игры</h2>
               <GameCardPreview data={previewData} />
               <div className="mt-4 flex flex-wrap gap-2 no-print">

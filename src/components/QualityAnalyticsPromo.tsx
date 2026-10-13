@@ -38,11 +38,11 @@ const QualityAnalyticsPromo = ({ id }: QualityAnalyticsPromoProps) => {
   const { isPaid } = useAuth();
 
   return (
-    <section id={id} className="container py-16 md:py-24">
+    <section id={id} className="container py-10 sm:py-16 md:py-24">
       <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
         <div className="animate-fade-in">
           <span className="text-xs font-bold uppercase tracking-widest text-coral">Для педагога</span>
-          <h2 className="font-display text-3xl md:text-4xl font-bold mt-2 leading-tight">
+          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mt-2 leading-tight">
             Аналитика качества обученности
           </h2>
           <p className="text-muted-foreground mt-4 leading-relaxed max-w-md">

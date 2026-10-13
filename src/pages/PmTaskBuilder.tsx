@@ -222,7 +222,7 @@ const PmTaskBuilder = () => {
 
           <div className="max-w-2xl mb-8 no-print">
             <span className="text-xs font-bold uppercase tracking-widest text-coral">Для педагога</span>
-            <h1 className="font-display text-3xl md:text-4xl font-bold mt-2 mb-3">Генератор заданий по профессиональному модулю</h1>
+            <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mt-2 mb-3">Генератор заданий по профессиональному модулю</h1>
             <p className="text-muted-foreground">
               Укажите ПМ, МДК и компетенции — ИИ составит задания, критерии оценивания и эталон ответа по методике
               Алтынниковой О.В. Результат можно доработать замечанием, распечатать или скачать в Word.
@@ -230,7 +230,7 @@ const PmTaskBuilder = () => {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <div className="rounded-2xl border border-border bg-card p-5 md:p-6 shadow-sm no-print">
+            <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm no-print">
               <div>
                 <label className="block text-sm font-semibold mb-1.5">Наименование ПМ</label>
                 <Input value={pmName} onChange={(e) => setPmName(e.target.value)} placeholder="Например: Выполнение работ по профессии" />
@@ -410,7 +410,7 @@ const PmTaskBuilder = () => {
               </Button>
             </div>
 
-            <div className="rounded-2xl border border-border bg-card p-5 md:p-6 shadow-sm">
+            <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm">
               <h2 className="font-display text-lg font-bold mb-4 no-print">📋 Сгенерированное задание</h2>
               <PmTaskPreview
                 data={{

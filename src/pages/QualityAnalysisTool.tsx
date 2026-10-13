@@ -47,7 +47,7 @@ const QualityAnalysisTool = () => {
       />
 
       <main className="flex-1">
-        <div className="container py-10 md:py-14">
+        <div className="container py-6 sm:py-10 md:py-14">
           <Link
             to="/"
             className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
@@ -58,7 +58,7 @@ const QualityAnalysisTool = () => {
 
           <div className="max-w-2xl mb-8">
             <span className="text-xs font-bold uppercase tracking-widest text-coral">Для педагога</span>
-            <h1 className="font-display text-3xl md:text-4xl font-bold mt-2 flex items-center gap-3">
+            <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mt-2 flex items-center gap-3">
               <span className="text-3xl">📊</span> Качественный анализ по предметам и дисциплинам
             </h1>
             <p className="text-muted-foreground mt-3 leading-relaxed">

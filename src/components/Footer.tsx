@@ -10,7 +10,7 @@ interface FooterProps {
 const Footer = ({ onOpenProfile, onOpenRandomizer, onOpenAntiplagiat }: FooterProps) => {
   return (
     <footer className="border-t border-border/60 bg-secondary/30">
-      <div className="container py-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="container py-8 sm:py-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
         <div>
           <div className="flex items-center gap-2 mb-3">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">

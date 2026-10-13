@@ -36,7 +36,7 @@ const PlanCards = ({ onSelect, compact = false }: PlanCardsProps) => {
   const { isPaid } = useAuth();
 
   return (
-    <div className={compact ? "space-y-3" : "grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto"}>
+    <div className={compact ? "space-y-3" : "grid sm:grid-cols-3 gap-4 sm:gap-6 max-w-4xl mx-auto"}>
       {PLANS.map((p) => (
         <div
           key={p.name}

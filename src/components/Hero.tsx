@@ -19,7 +19,7 @@ const Hero = ({ onScrollToGenerators }: HeroProps) => {
         aria-hidden
       />
 
-      <div className="container relative pt-16 pb-6 md:pt-24 md:pb-8 grid md:grid-cols-2 gap-12 items-start">
+      <div className="container relative pt-10 pb-6 sm:pt-16 md:pt-24 md:pb-8 grid md:grid-cols-2 gap-12 items-start">
         <div className="animate-fade-in">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary mb-6">
             <Icon name="Sparkles" size={13} />

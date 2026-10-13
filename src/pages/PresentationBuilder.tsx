@@ -440,7 +440,7 @@ const PresentationBuilder = () => {
       />
 
       <main className="flex-1">
-        <div className="container py-10 md:py-14">
+        <div className="container py-6 sm:py-10 md:py-14">
           <Link
             to="/"
             className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
@@ -451,7 +451,7 @@ const PresentationBuilder = () => {
 
           <div className="max-w-2xl mb-8">
             <span className="text-xs font-bold uppercase tracking-widest text-coral">Для педагога</span>
-            <h1 className="font-display text-3xl md:text-4xl font-bold mt-2 mb-3">Генератор презентаций</h1>
+            <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mt-2 mb-3">Генератор презентаций</h1>
             <p className="text-muted-foreground">
               Укажите тему или загрузите документ — ИИ соберёт готовые слайды с заметками докладчика. Скачайте
               результат в PowerPoint или PDF.
@@ -459,7 +459,7 @@ const PresentationBuilder = () => {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] items-start">
-            <div className="rounded-2xl border border-border bg-card p-5 md:p-6 shadow-sm">
+            <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm">
               <div>
                 <label className="block text-sm font-semibold mb-1.5">Тема презентации</label>
                 <Input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Например: Солнечная система" />
@@ -559,7 +559,7 @@ const PresentationBuilder = () => {
               )}
             </div>
 
-            <div className="rounded-2xl border border-border bg-card p-5 md:p-6 shadow-sm min-h-[20rem]">
+            <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm min-h-[20rem]">
               {!deck ? (
                 <div className="flex h-full min-h-[16rem] flex-col items-center justify-center text-center text-muted-foreground">
                   <div className="text-5xl mb-3">📊</div>
