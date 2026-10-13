@@ -18,6 +18,8 @@ import GameCardBuilder from "./pages/GameCardBuilder";
 import PresentationBuilder from "./pages/PresentationBuilder";
 import ExtracurricularAnalytics from "./pages/ExtracurricularAnalytics";
 import EventCardBuilder from "./pages/EventCardBuilder";
+import Admin from "./pages/Admin";
+import VisitTracker from "./components/VisitTracker";
 import { UsageProvider } from "./context/UsageContext";
 import { AuthProvider } from "./context/AuthContext";
 
@@ -31,6 +33,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <VisitTracker />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/reset-password" element={<ResetPassword />} />
@@ -45,6 +48,7 @@ const App = () => (
               <Route path="/konstruktor-igry" element={<GameCardBuilder />} />
               <Route path="/konstruktor-masterklassov" element={<EventCardBuilder />} />
               <Route path="/vneauditornaya-deyatelnost" element={<ExtracurricularAnalytics />} />
+              <Route path="/admin" element={<Admin />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

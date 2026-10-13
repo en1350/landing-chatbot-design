@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import AutumnBanner from "@/components/AutumnBanner";
+import NewsSection from "@/components/NewsSection";
 import { Button } from "@/components/ui/button";
 import Icon from "@/components/ui/icon";
 import GeneratorsSection from "@/components/GeneratorsSection";
@@ -98,6 +99,7 @@ const Index = () => {
         <GeneratorsSection onNeedAuth={openAuth} />
         <NotebookCheck id="notebook" onNeedAuth={openAuth} onNeedUpgrade={openUpgrade} />
         <QualityAnalyticsPromo id="quality-analytics" />
+        <NewsSection />
       </main>
 
       <Footer

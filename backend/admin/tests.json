@@ -1,0 +1,1 @@
+{"tests": [{"name": "Public news", "method": "GET", "path": "/", "expectedStatus": 200, "expectedBody": {"news": []}, "bodyMatcher": "partial"}]}
