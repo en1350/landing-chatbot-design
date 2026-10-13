@@ -6,6 +6,8 @@ interface Stats {
   today: { views: number; visitors: number };
   week: { views: number; visitors: number };
   month: { views: number; visitors: number };
+  total: { views: number; visitors: number };
+  online: number;
   daily: { date: string; views: number; visitors: number }[];
   top_pages: { path: string; views: number }[];
   sources: { source: string; views: number }[];
@@ -36,6 +38,8 @@ const StatsTab = ({ token }: { token: string }) => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <Metric label="Сейчас на сайте" value={s.online} hint="За последние 5 минут" />
+        <Metric label="Всего посетителей" value={s.total.visitors} hint={`Просмотров: ${s.total.views}`} />
         <Metric label="Посетителей сегодня" value={s.today.visitors} hint={`Просмотров: ${s.today.views}`} />
         <Metric label="Посетителей за 7 дней" value={s.week.visitors} hint={`Просмотров: ${s.week.views}`} />
         <Metric label="Посетителей за 30 дней" value={s.month.visitors} hint={`Просмотров: ${s.month.views}`} />

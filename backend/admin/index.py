@@ -78,6 +78,13 @@ def handler(event: dict, context) -> dict:
                     f"WHERE created_at > now() - interval '30 days'"
                 )
                 month_views, month_visitors = cur.fetchone()
+                cur.execute(f"SELECT count(*), count(DISTINCT visitor_id) FROM {SCHEMA}.site_visits")
+                total_views, total_visitors = cur.fetchone()
+                cur.execute(
+                    f"SELECT count(DISTINCT visitor_id) FROM {SCHEMA}.site_visits "
+                    f"WHERE created_at > now() - interval '5 minutes'"
+                )
+                online = cur.fetchone()[0]
                 cur.execute(
                     f"SELECT to_char(d::date, 'YYYY-MM-DD'), "
                     f"coalesce((SELECT count(*) FROM {SCHEMA}.site_visits v WHERE v.created_at::date = d::date), 0), "
@@ -107,6 +114,8 @@ def handler(event: dict, context) -> dict:
                     'today': {'views': today_views, 'visitors': today_visitors},
                     'week': {'views': week_views, 'visitors': week_visitors},
                     'month': {'views': month_views, 'visitors': month_visitors},
+                    'total': {'views': total_views, 'visitors': total_visitors},
+                    'online': online,
                     'daily': daily,
                     'top_pages': top_pages,
                     'sources': sources,
