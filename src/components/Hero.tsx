@@ -71,11 +71,6 @@ const Hero = ({ onScrollToGenerators }: HeroProps) => {
 
         <div className="flex justify-center md:justify-end md:pt-12 animate-fade-in w-full" style={{ animationDelay: "0.15s" }}>
           <div className="w-full max-w-xl">
-          <img
-            src="https://cdn.poehali.dev/projects/3a27d5a9-016a-43ab-946d-4c4fe8129705/bucket/de42b256-d170-4a30-a938-1a79091d41f2.png"
-            alt="Инструменты для преподавателей на сайте УрокАИ"
-            className="mx-auto mb-4 w-full max-w-sm rounded-3xl shadow-xl shadow-primary/10"
-          />
           <Link to="/trenazher-dlya-uchenikov" className="group block w-full cursor-pointer" aria-label="Открыть тренажёры для учеников">
             <img
               src="https://cdn.poehali.dev/projects/3a27d5a9-016a-43ab-946d-4c4fe8129705/bucket/9d097fa4-a4f2-4d78-9fe8-0b6b95d90b7c.jpg"
