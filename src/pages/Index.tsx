@@ -64,6 +64,9 @@ const Index = () => {
       .then((data) => {
         if (data.paid) {
           localStorage.removeItem("urokai_pending_payment");
+          const w = window as unknown as { _tmr?: unknown[] };
+          w._tmr = w._tmr || [];
+          w._tmr.push({ type: "reachGoal", id: "3784935", goal: "Конверсия" });
           refresh();
         }
       })
