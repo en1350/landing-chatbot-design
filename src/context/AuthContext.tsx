@@ -9,7 +9,7 @@ export interface AuthUser {
   name: string;
 }
 
-export type SubscriptionPlan = "free" | "30days" | "90days" | "7days" | "year";
+export type SubscriptionPlan = "free" | "30days" | "90days" | "year";
 
 export type GeneratorType = "lesson" | "game" | "intensive" | "task" | "antiplagiat" | "quiz";
 
