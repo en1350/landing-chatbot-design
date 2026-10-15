@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { adminGet } from "@/lib/adminApi";
 import StatsTab from "@/components/admin/StatsTab";
 import NewsTab from "@/components/admin/NewsTab";
+import FeedbackTab from "@/components/admin/FeedbackTab";
 
 const Admin = () => {
   const { token, user } = useAuth();
@@ -46,12 +47,16 @@ const Admin = () => {
         <TabsList className="mb-4">
           <TabsTrigger value="stats">Посетители и метрика</TabsTrigger>
           <TabsTrigger value="news">Новости</TabsTrigger>
+          <TabsTrigger value="feedback">Отзывы</TabsTrigger>
         </TabsList>
         <TabsContent value="stats">
           <StatsTab token={token} />
         </TabsContent>
         <TabsContent value="news">
           <NewsTab token={token} />
+        </TabsContent>
+        <TabsContent value="feedback">
+          <FeedbackTab token={token} />
         </TabsContent>
       </Tabs>
     </div>

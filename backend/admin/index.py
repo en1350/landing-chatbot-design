@@ -56,6 +56,14 @@ def handler(event: dict, context) -> dict:
                 items = [{'id': r[0], 'title': r[1], 'body': r[2], 'created_at': r[3]} for r in cur.fetchall()]
                 return resp(200, {'news': items})
 
+            if action == 'feedback_public':
+                cur.execute(
+                    f"SELECT id, name, kind, message, created_at FROM {SCHEMA}.feedback "
+                    f"WHERE status = 'approved' ORDER BY created_at DESC LIMIT 30"
+                )
+                items = [{'id': r[0], 'name': r[1], 'kind': r[2], 'message': r[3], 'created_at': r[4]} for r in cur.fetchall()]
+                return resp(200, {'feedback': items})
+
             if not get_admin_email(cur, event):
                 return resp(403, {'error': 'Нет доступа'})
 
@@ -134,6 +142,17 @@ def handler(event: dict, context) -> dict:
                 ]
                 return resp(200, {'news': items})
 
+            if action == 'feedback_all':
+                cur.execute(
+                    f"SELECT id, name, kind, message, status, created_at FROM {SCHEMA}.feedback "
+                    f"ORDER BY (status = 'pending') DESC, created_at DESC LIMIT 200"
+                )
+                items = [
+                    {'id': r[0], 'name': r[1], 'kind': r[2], 'message': r[3], 'status': r[4], 'created_at': r[5]}
+                    for r in cur.fetchall()
+                ]
+                return resp(200, {'feedback': items})
+
             return resp(400, {'error': 'Неизвестное действие'})
 
         body = json.loads(event.get('body') or '{}')
@@ -152,8 +171,48 @@ def handler(event: dict, context) -> dict:
             conn.commit()
             return resp(200, {'ok': True})
 
+        if action == 'feedback_submit':
+            name = str(body.get('name') or '').strip()[:80]
+            message = str(body.get('message') or '').strip()
+            kind = body.get('kind') if body.get('kind') in ('review', 'wish') else 'review'
+            visitor_id = str(body.get('visitor_id') or '')[:64]
+            if not name or len(message) < 10:
+                return resp(400, {'error': 'Укажите имя и напишите сообщение не короче 10 символов'})
+            if len(message) > 1500:
+                return resp(400, {'error': 'Сообщение слишком длинное (максимум 1500 символов)'})
+            if visitor_id:
+                cur.execute(
+                    f"SELECT count(*) FROM {SCHEMA}.feedback WHERE visitor_id = %s "
+                    f"AND created_at > now() - interval '1 day'",
+                    (visitor_id,),
+                )
+                if cur.fetchone()[0] >= 3:
+                    return resp(429, {'error': 'Лимит: не более 3 сообщений в сутки'})
+            cur.execute(
+                f"INSERT INTO {SCHEMA}.feedback (name, kind, message, visitor_id) VALUES (%s, %s, %s, %s)",
+                (name, kind, message, visitor_id or None),
+            )
+            conn.commit()
+            return resp(200, {'ok': True})
+
         if not get_admin_email(cur, event):
             return resp(403, {'error': 'Нет доступа'})
+
+        if action == 'feedback_moderate':
+            status = body.get('status')
+            if status not in ('approved', 'rejected', 'pending'):
+                return resp(400, {'error': 'Неверный статус'})
+            cur.execute(
+                f"UPDATE {SCHEMA}.feedback SET status = %s, moderated_at = now() WHERE id = %s",
+                (status, int(body.get('id'))),
+            )
+            conn.commit()
+            return resp(200, {'ok': True})
+
+        if action == 'feedback_delete':
+            cur.execute(f"DELETE FROM {SCHEMA}.feedback WHERE id = %s", (int(body.get('id')),))
+            conn.commit()
+            return resp(200, {'ok': True})
 
         if action == 'news_create':
             title = (body.get('title') or '').strip()

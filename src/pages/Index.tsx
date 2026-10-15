@@ -9,6 +9,7 @@ import GeneratorsSection from "@/components/GeneratorsSection";
 import NotebookCheck from "@/components/NotebookCheck";
 import QualityAnalyticsPromo from "@/components/QualityAnalyticsPromo";
 import PopularSections from "@/components/PopularSections";
+import FeedbackSection from "@/components/FeedbackSection";
 import Footer from "@/components/Footer";
 import DecomposerModal from "@/components/DecomposerModal";
 import RandomizerModal from "@/components/RandomizerModal";
@@ -105,6 +106,7 @@ const Index = () => {
         <GeneratorsSection onNeedAuth={openAuth} />
         <NotebookCheck id="notebook" onNeedAuth={openAuth} onNeedUpgrade={openUpgrade} />
         <QualityAnalyticsPromo id="quality-analytics" />
+        <FeedbackSection />
       </main>
 
       <Footer
