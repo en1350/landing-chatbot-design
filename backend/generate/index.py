@@ -1067,6 +1067,50 @@ CHAT_SYSTEM_PROMPT = """Ты ИИ-помощник УрокАИ для учит�
 - Можешь использовать 1-2 уместных эмодзи"""
 
 
+def build_tech_matrix_prompt(data: dict) -> str:
+    fgos = data.get('fgos') or {}
+    names = [str(n).strip() for n in (data.get('technologies') or []) if str(n).strip()]
+    count = _int(data.get('count'), 1, 10, 5)
+    ctx = [
+        f"Дисциплина / МДК / ПМ: {_s(data.get('subject')) or 'не указано'}",
+        f"Образовательная организация: {_s(data.get('org')) or 'не указано'}",
+        f"Профессиональная направленность: {_s(data.get('prof')) or 'не указано'}",
+        f"Курс / группа: {_s(data.get('course')) or 'не указано'}",
+    ]
+    if fgos.get('on'):
+        ctx.append("Требования ФГОС СПО учитываются.")
+        if _s(fgos.get('code')):
+            ctx.append(f"Профессия / специальность: {_s(fgos.get('code'))}")
+        if _s(fgos.get('level')):
+            ctx.append(f"Уровень: {_s(fgos.get('level'))}")
+        if _s(fgos.get('komps')):
+            ctx.append(f"Формируемые компетенции: {_s(fgos.get('komps'))}")
+        if _s(fgos.get('req')):
+            ctx.append(f"Учтённые требования: {_s(fgos.get('req'))}")
+    else:
+        ctx.append("Требования ФГОС СПО отдельно не указаны, опирайся на общие принципы компетентностного подхода.")
+    ctx_block = "\n".join(ctx)
+
+    if names:
+        task = "Заполни матрицу для следующих технологий обучения (названия не меняй, порядок сохрани):\n" + "\n".join(f"- {n}" for n in names)
+    else:
+        task = f"Подбери {count} наиболее подходящих современных технологий обучения для этой дисциплины и группы и заполни по ним матрицу."
+
+    return f"""Ты опытный методист колледжа. Составь строки «Матрицы используемых технологий обучения» для методической документации преподавателя.
+
+{ctx_block}
+
+{task}
+
+Для каждой технологии напиши:
+- t: название технологии;
+- o: обоснование выбора технологии (3-4 предложения): связь со спецификой дисциплины и профессии, уровнем группы, требованиями ФГОС СПО и формируемыми компетенциями;
+- r: методическая и практическая результативность применения (3-4 предложения): какие измеримые показатели отслеживаются (качество знаний, средний балл, сформированность ПК и ОК, результаты практики, участие в конкурсах). Не выдумывай конкретную статистику: вместо чисел ставь пропуски «___», чтобы преподаватель вписал свои данные.
+
+Пиши по-деловому, на русском языке, без markdown-разметки.
+Верни строго валидный JSON без пояснений в формате: {{"rows": [{{"t": "...", "o": "...", "r": "..."}}]}}"""
+
+
 def build_decompose_prompt(competency: str) -> str:
     c = competency or 'выбранная компетенция'
     return f"""Ты опытный методист, специалист по таксономии Блума. Разложи компетенцию «{c}» на 5 уровней освоения по таксономии Блума: Знание, Понимание, Применение, Анализ, Оценка.
@@ -1713,6 +1757,31 @@ def handler(event: dict, context) -> dict:
             ], temperature=0.6)
 
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'content': content}, ensure_ascii=False)}
+
+        elif action == 'tech_matrix':
+            if not is_user_paid(event):
+                return {'statusCode': 403, 'headers': cors_headers(), 'body': json.dumps({'error': 'Заполнение матрицы с ИИ доступно только по платной подписке'})}
+
+            data = body.get('data') or {}
+            if not _s(data.get('subject')):
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите дисциплину, МДК или модуль'})}
+
+            raw = call_ai([
+                {'role': 'system', 'content': 'Ты опытный методист колледжа. Отвечаешь строго валидным JSON без markdown и пояснений, всегда на русском языке.'},
+                {'role': 'user', 'content': build_tech_matrix_prompt(data)},
+            ], temperature=0.6)
+
+            try:
+                parsed = parse_ai_json(raw)
+            except json.JSONDecodeError:
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ вернул некорректный ответ, попробуйте снова'})}
+
+            rows = []
+            for r in (parsed.get('rows') or []) if isinstance(parsed, dict) else []:
+                if isinstance(r, dict) and _s(r.get('t')):
+                    rows.append({'t': _s(r.get('t')), 'o': _s(r.get('o')), 'r': _s(r.get('r'))})
+
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'rows': rows}, ensure_ascii=False)}
 
         elif action == 'extracurricular_plan':
             if not is_user_paid(event):

@@ -41,6 +41,7 @@ const MORE_LINKS = [
   { label: "Задания по ПМ", to: "/generator-zadaniy-pm", icon: "Briefcase" },
   { label: "Аналитика качества", to: "/analitika-kachestva", icon: "BarChart3" },
   { label: "Внеаудиторная деятельность", to: "/vneauditornaya-deyatelnost", icon: "Users" },
+  { label: "Матрица технологий обучения", to: "/matritsa-tehnologiy", icon: "Grid3x3" },
 ];
 
 const Navbar = ({

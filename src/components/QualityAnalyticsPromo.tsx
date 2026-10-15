@@ -32,6 +32,12 @@ const TOOLS = [
     title: "Справка по внеаудиторной деятельности",
     gradient: "from-[#1e8449] to-[#27ae60]",
   },
+  {
+    to: "/matritsa-tehnologiy",
+    icon: "🧩",
+    title: "Матрица используемых технологий обучения",
+    gradient: "from-[#5b21b6] to-[#7c3aed]",
+  },
 ];
 
 const QualityAnalyticsPromo = ({ id }: QualityAnalyticsPromoProps) => {

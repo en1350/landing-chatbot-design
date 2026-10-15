@@ -402,6 +402,22 @@
         "error": "string"
       },
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "Tech matrix without paid subscription returns 403",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "tech_matrix",
+        "data": {
+          "subject": "МДК 01.01"
+        }
+      },
+      "expectedStatus": 403,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
     }
   ]
 }
