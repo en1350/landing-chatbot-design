@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import Icon from "@/components/ui/icon";
-import { Button } from "@/components/ui/button";
 
 const Hero = () => {
   return (
@@ -15,23 +14,8 @@ const Hero = () => {
         aria-hidden
       />
 
-      <div className="container relative pt-10 pb-6 sm:pt-16 md:pt-24 md:pb-8 grid md:grid-cols-2 gap-12 items-start">
-        <div className="animate-fade-in">
-          <div className="flex flex-col sm:flex-row flex-wrap gap-3">
-            <Button
-              size="lg"
-              variant="outline"
-              className="w-full sm:w-auto h-12 px-6 text-base gap-2 border-border"
-              onClick={() => document.getElementById("chat-anchor")?.scrollIntoView({ behavior: "smooth" })}
-            >
-              <Icon name="MessageCircle" size={18} />
-              Спросить у ИИ
-            </Button>
-          </div>
-
-        </div>
-
-        <div className="flex justify-center md:justify-end md:pt-12 animate-fade-in w-full" style={{ animationDelay: "0.15s" }}>
+      <div className="container relative pt-6 pb-6 md:pb-8">
+        <div className="flex justify-center animate-fade-in w-full" style={{ animationDelay: "0.15s" }}>
           <div className="w-full max-w-xl">
           <Link to="/trenazher-dlya-uchenikov" className="group block w-full cursor-pointer" aria-label="Открыть тренажёры для учеников">
             <img
