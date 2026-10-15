@@ -21,18 +21,7 @@ const Hero = ({ onScrollToGenerators }: HeroProps) => {
 
       <div className="container relative pt-10 pb-6 sm:pt-16 md:pt-24 md:pb-8 grid md:grid-cols-2 gap-12 items-start">
         <div className="animate-fade-in">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary mb-6">
-            <Icon name="Sparkles" size={13} />
-            3 бесплатные генерации на все инструменты
-          </span>
-
-          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-[3.4rem] font-bold leading-[1.15] sm:leading-[1.1] tracking-tight text-balance">
-            ИИ-помощник,<br />
-            который готовит уроки<br />
-            <span className="text-coral">за вас</span>
-          </h1>
-
-          <p className="mt-6 text-base sm:text-lg text-muted-foreground max-w-lg leading-relaxed">
+          <p className="text-base sm:text-lg text-muted-foreground max-w-lg leading-relaxed">
             Планы уроков, игры, интенсивы и задания — за минуты вместо часов.
             Плюс проверка тетрадей по фото и тренажёры для учеников.
           </p>

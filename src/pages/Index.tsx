@@ -89,6 +89,12 @@ const Index = () => {
       />
 
       <main className="flex-1">
+        <div className="container flex justify-center pt-4">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary">
+            <Icon name="Sparkles" size={13} />
+            3 бесплатные генерации на все инструменты
+          </span>
+        </div>
         <AutumnBanner />
         <NewsSection />
         <div className="container relative z-10 flex justify-center mb-4">
