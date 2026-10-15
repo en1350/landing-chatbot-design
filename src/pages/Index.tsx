@@ -89,10 +89,18 @@ const Index = () => {
       />
 
       <main className="flex-1">
-        <div className="container flex justify-center pt-4">
+        <div className="container flex flex-wrap items-center justify-center gap-x-5 gap-y-2 pt-4">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary">
             <Icon name="Sparkles" size={13} />
             3 бесплатные генерации на все инструменты
+          </span>
+          <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Icon name="Zap" size={16} className="text-primary shrink-0" />
+            Результат за 30 секунд
+          </span>
+          <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Icon name="ShieldCheck" size={16} className="text-primary shrink-0" />
+            Соответствует ФГОС
           </span>
         </div>
         <AutumnBanner />
@@ -108,7 +116,7 @@ const Index = () => {
           </Button>
         </div>
         <PopularSections onScrollTo={scrollTo} />
-        <Hero onScrollToGenerators={() => scrollTo("generators")} />
+        <Hero />
         <GeneratorsSection onNeedAuth={openAuth} />
         <NotebookCheck id="notebook" onNeedAuth={openAuth} onNeedUpgrade={openUpgrade} />
         <QualityAnalyticsPromo id="quality-analytics" />

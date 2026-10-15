@@ -2,11 +2,7 @@ import { Link } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 
-interface HeroProps {
-  onScrollToGenerators: () => void;
-}
-
-const Hero = ({ onScrollToGenerators }: HeroProps) => {
+const Hero = () => {
   return (
     <section id="top" className="relative overflow-hidden paper-texture">
       <div
@@ -21,20 +17,7 @@ const Hero = ({ onScrollToGenerators }: HeroProps) => {
 
       <div className="container relative pt-10 pb-6 sm:pt-16 md:pt-24 md:pb-8 grid md:grid-cols-2 gap-12 items-start">
         <div className="animate-fade-in">
-          <p className="text-base sm:text-lg text-muted-foreground max-w-lg leading-relaxed">
-            Планы уроков, игры, интенсивы и задания — за минуты вместо часов.
-            Плюс проверка тетрадей по фото и тренажёры для учеников.
-          </p>
-
-          <div className="mt-8 flex flex-col sm:flex-row flex-wrap gap-3">
-            <Button
-              size="lg"
-              onClick={onScrollToGenerators}
-              className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 gap-2 h-12 px-6 text-base shadow-lg shadow-primary/20"
-            >
-              <Icon name="Wand2" size={18} />
-              Попробовать бесплатно
-            </Button>
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3">
             <Button
               size="lg"
               variant="outline"
@@ -46,16 +29,6 @@ const Hero = ({ onScrollToGenerators }: HeroProps) => {
             </Button>
           </div>
 
-          <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
-            <div className="flex items-center gap-1.5">
-              <Icon name="Zap" size={16} className="text-primary shrink-0" />
-              Результат за 30 секунд
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Icon name="ShieldCheck" size={16} className="text-primary shrink-0" />
-              Соответствует ФГОС
-            </div>
-          </div>
         </div>
 
         <div className="flex justify-center md:justify-end md:pt-12 animate-fade-in w-full" style={{ animationDelay: "0.15s" }}>
