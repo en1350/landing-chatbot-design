@@ -12,6 +12,7 @@ interface FeedbackItem {
   kind: "review" | "wish";
   message: string;
   created_at: string;
+  admin_reply: string | null;
 }
 
 const VISITOR_KEY = "urokai_visitor_id";
@@ -135,6 +136,15 @@ const FeedbackSection = () => {
                   </span>
                 </div>
                 <p className="text-sm leading-relaxed whitespace-pre-line">{f.message}</p>
+                {f.admin_reply && (
+                  <div className="mt-3 rounded-xl border-l-4 border-primary bg-primary/5 p-3">
+                    <div className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-primary">
+                      <Icon name="BadgeCheck" size={14} />
+                      Ответ администратора
+                    </div>
+                    <p className="text-sm leading-relaxed whitespace-pre-line">{f.admin_reply}</p>
+                  </div>
+                )}
                 <div className="mt-2 text-xs text-muted-foreground">
                   {new Date(f.created_at).toLocaleDateString("ru-RU")}
                 </div>

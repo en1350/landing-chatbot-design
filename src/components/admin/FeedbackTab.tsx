@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 import Icon from "@/components/ui/icon";
 import { adminGet, adminPost } from "@/lib/adminApi";
 
@@ -11,6 +13,7 @@ interface Item {
   message: string;
   status: "pending" | "approved" | "rejected";
   created_at: string;
+  admin_reply: string | null;
 }
 
 const STATUS: Record<Item["status"], { label: string; cls: string }> = {
@@ -20,7 +23,10 @@ const STATUS: Record<Item["status"], { label: string; cls: string }> = {
 };
 
 const FeedbackTab = ({ token }: { token: string }) => {
+  const { toast } = useToast();
   const [items, setItems] = useState<Item[]>([]);
+  const [replyId, setReplyId] = useState<number | null>(null);
+  const [replyText, setReplyText] = useState("");
 
   const load = useCallback(() => {
     adminGet("feedback_all", token).then((d) => setItems(d.feedback)).catch(() => {});
@@ -30,6 +36,18 @@ const FeedbackTab = ({ token }: { token: string }) => {
 
   const moderate = async (id: number, status: Item["status"]) => {
     await adminPost("feedback_moderate", { id, status }, token);
+    load();
+  };
+
+  const startReply = (f: Item) => {
+    setReplyId(f.id);
+    setReplyText(f.admin_reply || "");
+  };
+
+  const saveReply = async (id: number) => {
+    await adminPost("feedback_reply", { id, reply: replyText }, token);
+    setReplyId(null);
+    toast({ title: replyText.trim() ? "Ответ сохранён" : "Ответ удалён" });
     load();
   };
 
@@ -60,6 +78,32 @@ const FeedbackTab = ({ token }: { token: string }) => {
             </span>
           </div>
           <p className="text-sm whitespace-pre-line">{f.message}</p>
+          {replyId === f.id ? (
+            <div className="space-y-2">
+              <Textarea
+                rows={3}
+                maxLength={1500}
+                placeholder="Ответ администратора (пустой текст удалит ответ)"
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+              />
+              <div className="flex gap-2">
+                <Button size="sm" onClick={() => saveReply(f.id)}>
+                  Сохранить ответ
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setReplyId(null)}>
+                  Отмена
+                </Button>
+              </div>
+            </div>
+          ) : (
+            f.admin_reply && (
+              <div className="rounded-lg border-l-4 border-primary bg-primary/5 p-3 text-sm whitespace-pre-line">
+                <b className="block text-xs text-primary mb-1">Ваш ответ</b>
+                {f.admin_reply}
+              </div>
+            )
+          )}
           <div className="flex flex-wrap gap-2">
             {f.status !== "approved" && (
               <Button size="sm" className="gap-1.5" onClick={() => moderate(f.id, "approved")}>
@@ -73,6 +117,10 @@ const FeedbackTab = ({ token }: { token: string }) => {
                 Отклонить
               </Button>
             )}
+            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => startReply(f)}>
+              <Icon name="Reply" size={14} />
+              {f.admin_reply ? "Изменить ответ" : "Ответить"}
+            </Button>
             <Button size="sm" variant="ghost" className="gap-1.5 text-destructive" onClick={() => remove(f.id)}>
               <Icon name="Trash2" size={14} />
               Удалить

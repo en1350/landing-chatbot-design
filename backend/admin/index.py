@@ -58,10 +58,14 @@ def handler(event: dict, context) -> dict:
 
             if action == 'feedback_public':
                 cur.execute(
-                    f"SELECT id, name, kind, message, created_at FROM {SCHEMA}.feedback "
+                    f"SELECT id, name, kind, message, created_at, admin_reply, replied_at FROM {SCHEMA}.feedback "
                     f"WHERE status = 'approved' ORDER BY created_at DESC LIMIT 30"
                 )
-                items = [{'id': r[0], 'name': r[1], 'kind': r[2], 'message': r[3], 'created_at': r[4]} for r in cur.fetchall()]
+                items = [
+                    {'id': r[0], 'name': r[1], 'kind': r[2], 'message': r[3], 'created_at': r[4],
+                     'admin_reply': r[5], 'replied_at': r[6]}
+                    for r in cur.fetchall()
+                ]
                 return resp(200, {'feedback': items})
 
             if not get_admin_email(cur, event):
@@ -144,11 +148,12 @@ def handler(event: dict, context) -> dict:
 
             if action == 'feedback_all':
                 cur.execute(
-                    f"SELECT id, name, kind, message, status, created_at FROM {SCHEMA}.feedback "
+                    f"SELECT id, name, kind, message, status, created_at, admin_reply FROM {SCHEMA}.feedback "
                     f"ORDER BY (status = 'pending') DESC, created_at DESC LIMIT 200"
                 )
                 items = [
-                    {'id': r[0], 'name': r[1], 'kind': r[2], 'message': r[3], 'status': r[4], 'created_at': r[5]}
+                    {'id': r[0], 'name': r[1], 'kind': r[2], 'message': r[3], 'status': r[4], 'created_at': r[5],
+                     'admin_reply': r[6]}
                     for r in cur.fetchall()
                 ]
                 return resp(200, {'feedback': items})
@@ -206,6 +211,21 @@ def handler(event: dict, context) -> dict:
                 f"UPDATE {SCHEMA}.feedback SET status = %s, moderated_at = now() WHERE id = %s",
                 (status, int(body.get('id'))),
             )
+            conn.commit()
+            return resp(200, {'ok': True})
+
+        if action == 'feedback_reply':
+            reply = (body.get('reply') or '').strip()[:1500]
+            if reply:
+                cur.execute(
+                    f"UPDATE {SCHEMA}.feedback SET admin_reply = %s, replied_at = now() WHERE id = %s",
+                    (reply, int(body.get('id'))),
+                )
+            else:
+                cur.execute(
+                    f"UPDATE {SCHEMA}.feedback SET admin_reply = NULL, replied_at = NULL WHERE id = %s",
+                    (int(body.get('id')),),
+                )
             conn.commit()
             return resp(200, {'ok': True})
 
