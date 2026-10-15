@@ -40,7 +40,8 @@ type TrainerKey =
   | "os-processes"
   | "data-analysis-ai"
   | "binary-search"
-  | "linear-complexity";
+  | "linear-complexity"
+  | "quadratic-complexity";
 
 interface CategoryItem {
   key: CategoryKey;
@@ -78,6 +79,7 @@ const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "data-analysis-ai": "/data-analysis-ai.html",
   "binary-search": "/binary-search.html",
   "linear-complexity": "/linear-complexity.html",
+  "quadratic-complexity": "/quadratic-complexity.html",
 };
 
 const CATEGORIES: CategoryItem[] = [
@@ -112,6 +114,14 @@ const CATEGORIES: CategoryItem[] = [
 ];
 
 const TRAINERS: TrainerItem[] = [
+  {
+    key: "quadratic-complexity",
+    category: "programming",
+    icon: "📉",
+    title: "Сложность алгоритма O(n²)",
+    description: "Вложенные циклы на примере countPairs: визуализация сравнений, цена квадрата, разбор ошибки и мини-тест",
+    accent: "#ff6b7a",
+  },
   {
     key: "linear-complexity",
     category: "programming",

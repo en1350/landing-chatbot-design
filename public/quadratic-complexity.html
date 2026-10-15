@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Квадратичная сложность · O(n²) · вложенные циклы</title>
+<style>
+  :root{
+    --bg:#0f1424; --card:#1c2340; --card2:#222a4d;
+    --acc:#6c8cff; --acc2:#8ab4ff; --acc-d:#3b5fd9;
+    --ok:#3fd49a; --warn:#ffb454; --err:#ff6b7a;
+    --txt:#e6ebff; --mut:#8a95b8; --line:#2a335a;
+    --mono:"JetBrains Mono","Fira Code",Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:"Inter","Segoe UI",system-ui,sans-serif;background:
+    radial-gradient(1200px 600px at 10% -10%,#2a3a7a33,transparent 60%),
+    radial-gradient(900px 500px at 110% 10%,#5a3a9a22,transparent 60%),
+    var(--bg);color:var(--txt);min-height:100vh;line-height:1.55}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 22px 60px}
+  header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:26px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand .logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#ff6b7a,#a46cff);display:grid;place-items:center;font-weight:800;color:#fff;box-shadow:0 8px 24px #ff6b7a55}
+  h1{margin:0;font-size:24px;letter-spacing:.2px}
+  .sub{color:var(--mut);font-size:13px;margin-top:2px}
+  .tag-pill{display:inline-block;padding:3px 10px;border-radius:999px;background:#6c8cff22;color:var(--acc2);font-size:12px;font-weight:600;border:1px solid #6c8cff44}
+  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px}
+  .c12{grid-column:span 12}.c7{grid-column:span 7}.c5{grid-column:span 5}
+  .card{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  .card h2{margin:0 0 4px;font-size:17px;color:#fff;display:flex;align-items:center;gap:10px}
+  .card h2 .num{width:26px;height:26px;border-radius:8px;background:var(--acc-d);display:grid;place-items:center;font-size:13px;color:#fff}
+  .card .hint{color:var(--mut);font-size:13px;margin:0 0 14px}
+  code{font-family:var(--mono);background:#1a2044;padding:1px 6px;border-radius:4px;color:var(--acc2);font-size:12.5px}
+  pre.code{margin:0;background:#0b1022;border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-family:var(--mono);font-size:13.5px;line-height:1.65;overflow:auto;color:#d8defc}
+  pre.code .kw{color:#ff79c6}
+  pre.code .fn{color:#8ab4ff}
+  pre.code .com{color:#6b7a9a;font-style:italic}
+  pre.code .ln{display:block;border-radius:4px;padding:0 4px;margin:0 -4px}
+  pre.code .ln.on{background:#ffb45422;outline:1px solid #ffb45466}
+  .viz{display:flex;align-items:flex-end;gap:6px;flex-wrap:wrap;min-height:110px;padding:14px;background:#0b1022;border:1px solid var(--line);border-radius:12px}
+  .cell{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .cell .bar{width:44px;border-radius:8px 8px 4px 4px;background:linear-gradient(180deg,#3a4a8a,#2a3570);display:grid;place-items:center;font-family:var(--mono);font-weight:700;color:#fff;transition:all .25s;box-shadow:inset 0 -4px 0 #00000033}
+  .cell .idx{font-size:11px;color:var(--mut);font-family:var(--mono)}
+  .cell.ci .bar{background:linear-gradient(180deg,#8ab4ff,#4a6fe0);transform:translateY(-4px);box-shadow:0 6px 16px #6c8cff66}
+  .cell.cj .bar{background:linear-gradient(180deg,#ffb454,#e08a2a);color:#1b1020;transform:translateY(-4px);box-shadow:0 6px 16px #ffb45466}
+  .cell.hit .bar{background:linear-gradient(180deg,#3fd49a,#1f9a6e);color:#06241a}
+  .matrix{display:grid;gap:3px;margin-top:14px;padding:12px;background:#0b1022;border:1px solid var(--line);border-radius:12px;overflow:auto}
+  .matrix .m{height:28px;min-width:28px;border-radius:6px;background:#161d3a;display:grid;place-items:center;font-family:var(--mono);font-size:11px;color:var(--mut);transition:background .2s}
+  .matrix .m.head{background:transparent;color:var(--acc2);font-weight:700}
+  .matrix .m.skip{background:transparent;opacity:.25}
+  .matrix .m.done{background:#3a4a8a;color:#fff}
+  .matrix .m.hit{background:#1f9a6e;color:#06241a}
+  .matrix .m.now{background:#ffb454;color:#1b1020;font-weight:700}
+  .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px}
+  button.btn{font:inherit;font-size:13px;font-weight:600;padding:9px 14px;border-radius:10px;border:1px solid transparent;background:var(--acc);color:#fff;cursor:pointer;transition:.15s}
+  button.btn:hover{background:var(--acc-d)}
+  button.btn.ghost{background:transparent;color:var(--acc2);border-color:var(--line)}
+  button.btn.ghost:hover{background:#6c8cff15}
+  .speed{display:flex;align-items:center;gap:8px;color:var(--mut);font-size:12.5px;margin-left:auto}
+  .speed input{accent-color:var(--acc)}
+  .state{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+  .state .box{background:#0b1022;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .state .box b{display:block;font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+  .state .box .v{font-family:var(--mono);font-size:18px;font-weight:700;color:#fff}
+  .state .box .v .small{font-size:12px;color:var(--mut);font-weight:500;margin-left:6px}
+  .log{margin-top:12px;background:#0b1022;border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-family:var(--mono);font-size:12.5px;color:#c7d0f0;min-height:60px;max-height:160px;overflow:auto;line-height:1.7}
+  .log .ok{color:var(--ok)}.log .warn{color:var(--warn)}.log .mut{color:var(--mut)}
+  svg.graph{width:100%;height:260px;display:block}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:12.5px;color:var(--mut)}
+  .legend span{display:flex;align-items:center;gap:6px}
+  .legend i{width:14px;height:3px;border-radius:2px;display:inline-block}
+  .slider-wrap{display:flex;align-items:center;gap:12px;margin-top:10px}
+  .slider-wrap label{font-size:12.5px;color:var(--mut);min-width:120px}
+  .slider-wrap input[type=range]{flex:1;accent-color:var(--acc)}
+  .slider-wrap .v{font-family:var(--mono);color:var(--acc2);font-weight:700;min-width:56px;text-align:right}
+  table.t{width:100%;border-collapse:collapse;margin-top:14px;font-size:13px}
+  table.t th{text-align:left;color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:8px 10px;border-bottom:1px solid var(--line)}
+  table.t td{padding:8px 10px;border-bottom:1px solid var(--line);font-family:var(--mono)}
+  table.t td.bad{color:var(--err);font-weight:700}
+  table.t td.ok{color:var(--ok)}
+  .review{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+  .review .col{background:#0b1022;border:1px solid var(--line);border-radius:12px;padding:14px}
+  .review .col.bad{border-color:#ff6b7a44}
+  .review .col.good{border-color:#3fd49a44}
+  .review h4{margin:0 0 8px;font-size:13px}
+  .review .bad h4{color:var(--err)}
+  .review .good h4{color:var(--ok)}
+  .review p{margin:8px 0;font-size:13px;color:#c7d0f0}
+  .quiz{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:14px}
+  .qz{background:#0b1022;border:1px solid var(--line);border-radius:12px;padding:14px}
+  .qz pre.code{font-size:12.5px;padding:10px;margin-bottom:10px}
+  .qz .opts{display:flex;gap:8px;flex-wrap:wrap}
+  .qz .opts button{font:inherit;font-family:var(--mono);font-size:13px;padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--acc2);cursor:pointer}
+  .qz .opts button:hover{background:#6c8cff15}
+  .qz .opts button.right{background:#3fd49a22;border-color:#3fd49a;color:var(--ok)}
+  .qz .opts button.wrong{background:#ff6b7a22;border-color:var(--err);color:var(--err)}
+  .qz .fb{margin-top:10px;font-size:12.5px;color:#c7d0f0;min-height:18px}
+  .sol-card{background:#0b1022;border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+  .sol-card h4{margin:0 0 10px;display:flex;align-items:center;gap:10px;font-size:15px}
+  .badge{padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+  .badge.bad{background:#ff6b7a22;color:var(--err);border:1px solid #ff6b7a44}
+  .badge.warn{background:#ffb45422;color:var(--warn);border:1px solid #ffb45444}
+  .badge.ok{background:#3fd49a22;color:var(--ok);border:1px solid #3fd49a44}
+  .sol-meta{display:flex;gap:16px;margin:10px 0;font-size:12.5px;color:var(--mut);font-family:var(--mono)}
+  .sol-meta .val{color:#fff;font-weight:600}
+  .sol-desc{font-size:13.5px;color:#c7d0f0;line-height:1.6;margin-top:8px}
+  .sol-desc ul{margin:8px 0;padding-left:18px}
+  .biz{display:flex;gap:14px;align-items:center;padding:14px;background:linear-gradient(120deg,#2a3570,#1c2340);border:1px solid var(--line);border-radius:12px;margin-top:10px}
+  .biz .ico{width:44px;height:44px;border-radius:10px;background:#6c8cff33;display:grid;place-items:center;font-size:22px;flex-shrink:0}
+  .biz .txt{font-size:13.5px;color:#d8defc}
+  .biz .txt b{color:#fff}
+  .tips{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;font-size:13.5px;color:#c7d0f0}
+  .tips>div{background:#0b1022;padding:14px;border-radius:10px;border:1px solid var(--line)}
+  .tips b{color:#fff;display:block;margin-bottom:6px}
+  .jsdoc{background:#0b1022;border:1px solid #3fd49a44;border-radius:12px;padding:16px;margin-top:14px;font-family:var(--mono);font-size:13px;line-height:1.7;color:#d8defc;white-space:pre-wrap}
+  .jsdoc .tag{color:#ff79c6;font-weight:700}
+  .jsdoc .type{color:#8ab4ff}
+  .jsdoc .desc{color:#a1e77a}
+  @media(max-width:860px){[class^="c"]{grid-column:1/-1}.review{grid-template-columns:1fr}.state{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="brand">
+    <div class="logo">n²</div>
+    <div>
+      <h1>Квадратичная сложность · O(n²)</h1>
+      <div class="sub">Вложенные циклы · countPairs · интерактив</div>
+    </div>
+  </div>
+  <span class="tag-pill">Алгоритмы и структуры данных</span>
+</header>
+
+<section class="card" style="margin-bottom:18px">
+  <h2><span class="num">1</span> Бизнес-контекст</h2>
+  <p class="hint">Реальная задача: найти пары платежей, которые вместе дают нужную сумму (сверка транзакций).</p>
+  <div class="biz">
+    <div class="ico">💳</div>
+    <div class="txt">
+      <b>Задача:</b> в списке платежей найти все пары, сумма которых равна заданной (например, парный возврат).<br>
+      <b>Вход:</b> массив <code>arr</code> из n сумм и число <code>target</code>.<br>
+      <b>Риск:</b> «в лоб» код проверяет каждую пару. На 1 000 платежей это терпимо, на 100 000 сервис «зависает».
+    </div>
+  </div>
+</section>
+
+<div class="grid">
+
+  <section class="card c12">
+    <h2><span class="num">2</span> Теория: откуда берётся n²</h2>
+    <p class="hint">Как отличить квадратичную сложность от линейной по виду кода.</p>
+    <div class="tips">
+      <div><b>1. Вложенный цикл</b>Внешний цикл делает n шагов, и на каждом внутренний тоже до n шагов. Итого n · n = <code>n²</code> операций.</div>
+      <div><b>2. Внутренний цикл от i+1</b>Сумма (n−1)+(n−2)+…+1 = <code>n(n−1)/2</code>. Это половина n², но константу 1/2 отбрасываем: всё равно <code>O(n²)</code>.</div>
+      <div><b>3. Рост в 100 раз</b>Увеличили данные в 10 раз — время выросло в <code>100</code> раз. Это главный признак квадратичной сложности.</div>
+      <div><b>4. Лучшего и худшего случая нет</b>Если нет досрочного выхода, <code>countPairs</code> всегда делает ровно n(n−1)/2 сравнений.</div>
+    </div>
+    <div style="margin-top:14px;padding:12px 16px;background:#3fd49a11;border:1px solid #3fd49a44;border-radius:10px;color:#3fd49a;font-size:13.5px">
+      <b>💡 Ключевой вывод:</b> считаем не циклы, а как они связаны. Вложены друг в друга, и оба зависят от n, значит сложности перемножаются: O(n) · O(n) = O(n²).
+    </div>
+  </section>
+
+  <section class="card c5">
+    <h2><span class="num">3</span> Рост сложности</h2>
+    <p class="hint">Двигайте ползунок n: квадратичная кривая уходит вверх быстрее всех.</p>
+    <svg class="graph" id="graph" viewBox="0 0 500 260"></svg>
+    <div class="slider-wrap">
+      <label>Размер входа n:</label>
+      <input type="range" id="nSlider" min="1" max="100" value="30">
+      <div class="v" id="nVal">n = 30</div>
+    </div>
+    <div class="legend">
+      <span><i style="background:#ffb454"></i>O(n)</span>
+      <span><i style="background:#ff79c6"></i>O(n log n)</span>
+      <span><i style="background:#ff6b7a"></i>O(n²)</span>
+    </div>
+  </section>
+
+  <section class="card c7">
+    <h2><span class="num">4</span> Пошаговая визуализация countPairs</h2>
+    <p class="hint">Синий элемент — внешний цикл (i), оранжевый — внутренний (j). Клетка таблицы — одно сравнение.</p>
+    <pre class="code" id="codeView"></pre>
+    <div class="viz" id="viz"></div>
+    <div class="matrix" id="matrix"></div>
+    <div class="state">
+      <div class="box"><b>i</b><div class="v" id="sI">—</div></div>
+      <div class="box"><b>j</b><div class="v" id="sJ">—</div></div>
+      <div class="box"><b>Сравнений</b><div class="v" id="sOps">0<span class="small" id="sTotal"></span></div></div>
+      <div class="box"><b>Пар найдено</b><div class="v" id="sFound">0</div></div>
+    </div>
+    <div class="controls">
+      <button class="btn" id="btnStep">▶ Шаг</button>
+      <button class="btn ghost" id="btnPlay">⏵ Старт</button>
+      <button class="btn ghost" id="btnReset">↺ Сброс</button>
+      <button class="btn ghost" id="btnNew">🎲 Новый массив</button>
+      <div class="speed"><span>Скорость:</span><input type="range" id="spd" min="80" max="900" value="600" step="20"></div>
+    </div>
+    <div class="log" id="log"></div>
+  </section>
+
+  <section class="card c12">
+    <h2><span class="num">5</span> Цена квадрата в секундах</h2>
+    <p class="hint">Допустим, компьютер выполняет 1 миллиард простых операций в секунду.</p>
+    <table class="t" id="costTable"></table>
+  </section>
+
+  <section class="card c12">
+    <h2><span class="num">6</span> Примеры решений: пара с заданной суммой</h2>
+    <p class="hint">Задача: есть ли в массиве два числа, сумма которых равна target.</p>
+
+    <div class="sol-card">
+      <h4><span class="badge bad">Плохо</span> Подход 1: Два вложенных цикла</h4>
+      <pre class="code" style="font-size:12.5px;padding:10px">function hasPair(arr, target) {
+  for (let i = 0; i &lt; arr.length; i++) {
+    for (let j = i + 1; j &lt; arr.length; j++) {
+      if (arr[i] + arr[j] === target) return true;
+    }
+  }
+  return false;
+}</pre>
+      <div class="sol-meta"><span>Время: <span class="val" style="color:var(--err)">O(n²)</span></span><span>Память: <span class="val" style="color:var(--ok)">O(1)</span></span></div>
+      <div class="sol-desc">Просто и надёжно, подходит для небольших массивов (сотни элементов). На больших данных быстро становится узким местом.</div>
+    </div>
+
+    <div class="sol-card">
+      <h4><span class="badge warn">Компромисс</span> Подход 2: Сортировка + два указателя</h4>
+      <pre class="code" style="font-size:12.5px;padding:10px">function hasPair(arr, target) {
+  const a = [...arr].sort((x, y) =&gt; x - y);
+  let l = 0, r = a.length - 1;
+  while (l &lt; r) {
+    const s = a[l] + a[r];
+    if (s === target) return true;
+    if (s &lt; target) l++; else r--;
+  }
+  return false;
+}</pre>
+      <div class="sol-meta"><span>Время: <span class="val" style="color:var(--warn)">O(n log n)</span></span><span>Память: <span class="val" style="color:var(--warn)">O(n)</span></span></div>
+      <div class="sol-desc">Сортировка стоит n log n, а сам поиск за один проход — O(n). Побеждает самое дорогое: O(n log n).</div>
+    </div>
+
+    <div class="sol-card" style="border-color:#3fd49a44">
+      <h4><span class="badge ok">Оптимально</span> Подход 3: Хэш-таблица</h4>
+      <pre class="code" style="font-size:12.5px;padding:10px">function hasPair(arr, target) {
+  const seen = new Set();
+  for (const x of arr) {
+    if (seen.has(target - x)) return true;
+    seen.add(x);
+  }
+  return false;
+}</pre>
+      <div class="sol-meta"><span>Время: <span class="val" style="color:var(--ok)">O(n)</span></span><span>Память: <span class="val" style="color:var(--err)">O(n)</span></span></div>
+      <div class="sol-desc">Вместо внутреннего цикла — мгновенный поиск в Set за O(1). Платим памятью за скорость (Space-Time Tradeoff).</div>
+    </div>
+  </section>
+
+  <section class="card c12">
+    <h2><span class="num">7</span> Code Review: типичная ошибка Junior'ов</h2>
+    <p class="hint">Две ошибки в разные стороны: «два цикла — всегда n²» и «внутренний цикл короче — значит быстрее порядка».</p>
+    <div class="review">
+      <div class="col bad">
+        <h4>✗ Junior-ответ</h4>
+        <p>«В функции два цикла <code>for</code>, значит сложность <code>O(n²)</code>.»</p>
+        <pre class="code" style="font-size:12.5px;padding:10px">for (let i = 0; i &lt; n; i++) { a(i); }
+for (let j = 0; j &lt; n; j++) { b(j); }</pre>
+        <p><b>Почему это ошибка:</b> циклы идут <b>друг за другом</b>, а не друг в друге. Складываем: <code>n + n = 2n</code> → <code>O(n)</code>.</p>
+        <p style="color:var(--err)">Квадрат даёт только <b>вложенность</b> двух циклов, зависящих от n.</p>
+      </div>
+      <div class="col good">
+        <h4>✓ Senior-ответ</h4>
+        <p>«Циклы вложены, оба зависят от n. Внутренний стартует с <code>i+1</code>, значит сравнений <code>n(n−1)/2</code>. Константу 1/2 и младший член отбрасываем: <code>O(n²)</code>.»</p>
+        <p><b>Обратный случай:</b> если внутренний цикл выполняется константное число раз (<code>j &lt; 3</code>), это <code>n · 3 = O(n)</code>, хотя циклы вложены.</p>
+        <p style="color:var(--ok)">Смотрите на то, от чего зависит число итераций каждого цикла.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card c12">
+    <h2><span class="num">8</span> Проверьте себя</h2>
+    <p class="hint">Определите сложность каждого фрагмента.</p>
+    <div class="quiz" id="quiz"></div>
+  </section>
+
+  <section class="card c12">
+    <h2><span class="num">9</span> Итоговый JSDoc с обоснованием</h2>
+    <p class="hint">Так должен выглядеть комментарий к функции после анализа.</p>
+    <div class="jsdoc" id="jsdoc"></div>
+  </section>
+
+</div>
+</div>
+
+<script>
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+const CODE_LINES=[
+ 'function countPairs(arr, target) {',
+ '  let count = 0;',
+ '  for (let i = 0; i < arr.length; i++) {',
+ '    for (let j = i + 1; j < arr.length; j++) {',
+ '      if (arr[i] + arr[j] === target) {',
+ '        count++;',
+ '      }',
+ '    }',
+ '  }',
+ '  return count;',
+ '}'
+];
+function hl(l){
+  return esc(l)
+   .replace(/\b(function|let|const|if|return|for)\b/g,'<span class="kw">$1</span>')
+   .replace(/\b(countPairs)\b/g,'<span class="fn">$1</span>');
+}
+function renderCode(active){
+  document.getElementById('codeView').innerHTML=CODE_LINES.map((l,i)=>
+    `<span class="ln${active.includes(i)?' on':''}">${hl(l)||' '}</span>`).join('');
+}
+
+let arr=[],target=0,S={};
+
+function init(){
+  const n=arr.length;
+  S={i:0,j:1,ops:0,found:0,done:false,playing:false,timer:null,hits:{},seen:{}};
+  document.getElementById('sTotal').textContent='из '+(n*(n-1)/2);
+  renderAll(); clearLog();
+  log(`Ищем пары с суммой <b>${target}</b>. n = <b>${n}</b>, всего сравнений: <b>${n*(n-1)/2}</b>.`,'mut');
+}
+function renderAll(){
+  const n=arr.length;
+  const mx=Math.max(...arr,1);
+  const hitIdx=new Set();
+  Object.keys(S.hits).forEach(k=>{const [a,b]=k.split(',');hitIdx.add(+a);hitIdx.add(+b)});
+  document.getElementById('viz').innerHTML=arr.map((x,idx)=>{
+    let c='cell';
+    if(!S.done){ if(idx===S.i)c+=' ci'; else if(idx===S.j)c+=' cj'; }
+    if(hitIdx.has(idx))c+=' hit';
+    const h=Math.max(24,Math.round(x/mx*80));
+    return `<div class="${c}"><div class="bar" style="height:${h}px">${x}</div><div class="idx">${idx}</div></div>`;
+  }).join('');
+
+  let m=`<div class="m head"></div>`;
+  for(let c=0;c<n;c++) m+=`<div class="m head">${c}</div>`;
+  for(let r=0;r<n;r++){
+    m+=`<div class="m head">${r}</div>`;
+    for(let c=0;c<n;c++){
+      const key=r+','+c;
+      let cls='m',txt='';
+      if(c<=r){cls+=' skip';txt='·'}
+      else if(S.hits[key]){cls+=' hit';txt='✓'}
+      else if(S.seen[key]){cls+=' done'}
+      if(!S.done&&r===S.i&&c===S.j){cls='m now';txt='?'}
+      m+=`<div class="${cls}">${txt}</div>`;
+    }
+  }
+  const mt=document.getElementById('matrix');
+  mt.style.gridTemplateColumns=`repeat(${n+1},minmax(28px,1fr))`;
+  mt.innerHTML=m;
+
+  document.getElementById('sI').textContent=S.done?'✓':S.i;
+  document.getElementById('sJ').textContent=S.done?'✓':S.j;
+  document.getElementById('sOps').firstChild.textContent=S.ops;
+  document.getElementById('sFound').textContent=S.found;
+  renderCode(S.done?[9]:[2,3,4]);
+}
+function log(msg,cls=''){
+  const l=document.getElementById('log');
+  l.innerHTML+=`<div class="${cls}">› ${msg}</div>`;
+  l.scrollTop=l.scrollHeight;
+}
+function clearLog(){document.getElementById('log').innerHTML=''}
+
+function step(){
+  const n=arr.length;
+  if(S.done){log('Алгоритм завершён. Нажмите «Сброс» или «Новый массив».','warn');return false}
+  const {i,j}=S;
+  const sum=arr[i]+arr[j];
+  S.seen[i+','+j]=true;
+  S.ops++;
+  if(sum===target){
+    S.found++; S.hits[i+','+j]=true;
+    log(`arr[${i}] + arr[${j}] = ${arr[i]} + ${arr[j]} = ${sum} = target → <b>пара найдена</b>`,'ok');
+  } else {
+    log(`arr[${i}] + arr[${j}] = ${sum} ≠ ${target} → пропускаем`,'mut');
+  }
+  S.j++;
+  if(S.j>=n){
+    S.i++; S.j=S.i+1;
+    if(S.j<n) log(`Внешний цикл: i = ${S.i}, внутренний начинается заново с j = ${S.j}`,'warn');
+  }
+  if(S.i>=n-1){
+    S.done=true;
+    renderAll();
+    log(`✓ Готово. Пар: <b>${S.found}</b>. Сравнений: <b>${S.ops}</b> = n(n−1)/2 = ${n}·${n-1}/2. Сложность O(n²).`,'ok');
+    return false;
+  }
+  renderAll();
+  return true;
+}
+function play(){
+  if(S.playing){pause();return}
+  S.playing=true;
+  document.getElementById('btnPlay').textContent='⏸ Пауза';
+  const tick=()=>{
+    if(!S.playing)return;
+    if(!step()){pause();return}
+    S.timer=setTimeout(tick,980-parseInt(document.getElementById('spd').value));
+  };
+  tick();
+}
+function pause(){
+  S.playing=false;
+  clearTimeout(S.timer);
+  document.getElementById('btnPlay').textContent='⏵ Старт';
+}
+function newRand(){
+  const n=6+Math.floor(Math.random()*3);
+  arr=Array.from({length:n},()=>2+Math.floor(Math.random()*18));
+  const a=Math.floor(Math.random()*n);
+  let b=Math.floor(Math.random()*n); if(b===a)b=(a+1)%n;
+  target=arr[a]+arr[b];
+  init();
+}
+document.getElementById('btnStep').onclick=()=>step();
+document.getElementById('btnPlay').onclick=()=>play();
+document.getElementById('btnReset').onclick=()=>{pause();init()};
+document.getElementById('btnNew').onclick=()=>{pause();newRand()};
+
+function drawGraph(){
+  const n=parseInt(document.getElementById('nSlider').value);
+  document.getElementById('nVal').textContent='n = '+n;
+  const W=500,H=260,P=40,maxN=100,maxY=10000;
+  const x=v=>P+(v/maxN)*(W-2*P);
+  const y=v=>H-P-(Math.min(v,maxY)/maxY)*(H-2*P);
+  const path=fn=>{let d='';for(let i=1;i<=maxN;i++){d+=(i===1?'M':'L')+x(i).toFixed(1)+','+y(fn(i)).toFixed(1)}return d};
+  const funcs=[
+    {f:k=>k,c:'#ffb454',l:'O(n)'},
+    {f:k=>k*Math.log2(k+1),c:'#ff79c6',l:'O(n log n)'},
+    {f:k=>k*k,c:'#ff6b7a',l:'O(n²)'}
+  ];
+  let s=`<defs><marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#8a95b8"/></marker></defs>`;
+  for(let i=0;i<=5;i++){const yy=P+i*(H-2*P)/5;s+=`<line x1="${P}" y1="${yy}" x2="${W-P}" y2="${yy}" stroke="#2a335a" stroke-dasharray="2,3"/>`}
+  s+=`<line x1="${P}" y1="${H-P}" x2="${W-P+10}" y2="${H-P}" stroke="#8a95b8" marker-end="url(#arr)"/>`;
+  s+=`<line x1="${P}" y1="${H-P}" x2="${P}" y2="${P-10}" stroke="#8a95b8" marker-end="url(#arr)"/>`;
+  s+=`<text x="${W-P+14}" y="${H-P+4}" fill="#8a95b8" font-size="11" font-family="monospace">n</text>`;
+  s+=`<text x="${P-4}" y="${P-14}" fill="#8a95b8" font-size="11" font-family="monospace">операции</text>`;
+  funcs.forEach(f=>{s+=`<path d="${path(f.f)}" fill="none" stroke="${f.c}" stroke-width="2.2" opacity="0.9"/>`});
+  funcs.forEach(f=>{s+=`<circle cx="${x(n)}" cy="${y(f.f(n))}" r="4.5" fill="${f.c}" stroke="#0f1424" stroke-width="2"/>`});
+  s+=`<line x1="${x(n)}" y1="${P}" x2="${x(n)}" y2="${H-P}" stroke="#6c8cff" stroke-dasharray="3,3" opacity="0.5"/>`;
+  s+=`<text x="${x(n)+6}" y="${P+12}" fill="#8ab4ff" font-size="11" font-family="monospace">n=${n}</text>`;
+  funcs.slice().sort((a,b)=>a.f(n)-b.f(n)).forEach((v,i)=>{
+    s+=`<text x="${W-P-8}" y="${P+16+i*14}" fill="${v.c}" font-size="11" font-family="monospace" text-anchor="end">${v.l} = ${v.f(n).toFixed(0)}</text>`;
+  });
+  document.getElementById('graph').innerHTML=s;
+}
+document.getElementById('nSlider').oninput=drawGraph;
+
+(function(){
+  const fmt=t=>{
+    if(t<1e-6)return '< 1 мкс';
+    if(t<1e-3)return (t*1e6).toFixed(0)+' мкс';
+    if(t<1)return (t*1e3).toFixed(0)+' мс';
+    if(t<60)return t.toFixed(1)+' с';
+    if(t<3600)return (t/60).toFixed(1)+' мин';
+    return (t/3600).toFixed(1)+' ч';
+  };
+  const rows=[10,100,1000,10000,100000,1000000];
+  let h='<tr><th>n</th><th>O(n)</th><th>время</th><th>O(n²)</th><th>время</th></tr>';
+  rows.forEach(n=>{
+    const sq=n*n, bad=sq/1e9>=1;
+    h+=`<tr><td>${n.toLocaleString('ru-RU')}</td><td class="ok">${n.toLocaleString('ru-RU')}</td><td class="ok">${fmt(n/1e9)}</td><td class="${bad?'bad':''}">${sq.toLocaleString('ru-RU')}</td><td class="${bad?'bad':''}">${fmt(sq/1e9)}</td></tr>`;
+  });
+  document.getElementById('costTable').innerHTML=h;
+})();
+
+const QUIZ=[
+ {code:'for (let i = 0; i < n; i++) {\n  for (let j = 0; j < n; j++) {\n    work();\n  }\n}',ans:'O(n²)',opts:['O(n)','O(n²)','O(n³)'],why:'Два вложенных цикла по n: n · n = n².'},
+ {code:'for (let i = 0; i < n; i++) work();\nfor (let j = 0; j < n; j++) work();',ans:'O(n)',opts:['O(n)','O(n²)','O(2n²)'],why:'Циклы идут подряд: n + n = 2n, константу отбрасываем.'},
+ {code:'for (let i = 0; i < n; i++) {\n  for (let j = 0; j < 5; j++) {\n    work();\n  }\n}',ans:'O(n)',opts:['O(n)','O(n²)','O(5n²)'],why:'Внутренний цикл всегда 5 шагов (константа): 5n = O(n).'},
+ {code:'for (let i = 1; i < n; i *= 2) {\n  for (let j = 0; j < n; j++) {\n    work();\n  }\n}',ans:'O(n log n)',opts:['O(n²)','O(n log n)','O(n)'],why:'Внешний цикл удваивает i, это log n шагов; внутренний n шагов: n log n.'}
+];
+document.getElementById('quiz').innerHTML=QUIZ.map((q,qi)=>`
+  <div class="qz" data-q="${qi}">
+    <pre class="code">${esc(q.code)}</pre>
+    <div class="opts">${q.opts.map(o=>`<button data-o="${esc(o)}">${esc(o)}</button>`).join('')}</div>
+    <div class="fb"></div>
+  </div>`).join('');
+document.getElementById('quiz').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  const box=b.closest('.qz'), q=QUIZ[+box.dataset.q];
+  const ok=b.dataset.o===q.ans;
+  box.querySelectorAll('button').forEach(x=>x.classList.remove('right','wrong'));
+  b.classList.add(ok?'right':'wrong');
+  box.querySelector('.fb').innerHTML=(ok?'✓ Верно. ':'✗ Не совсем. ')+esc(q.why);
+});
+
+document.getElementById('jsdoc').innerHTML=
+`<span class="tag">/**</span>
+<span class="tag"> * </span><span class="desc">Считает пары платежей, сумма которых равна target.</span>
+<span class="tag"> *</span>
+<span class="tag"> * </span><span class="tag">@param</span>  {<span class="type">Array&lt;number&gt;</span>} arr - Суммы платежей, длина n.
+<span class="tag"> * </span><span class="tag">@param</span>  {<span class="type">number</span>} target - Искомая сумма пары.
+<span class="tag"> * </span><span class="tag">@returns</span> {<span class="type">number</span>} Количество подходящих пар.
+<span class="tag"> *</span>
+<span class="tag"> * </span><span class="tag">@timeComplexity</span>  <span class="type">O(n²)</span>
+<span class="tag"> *   </span><span class="desc">— два вложенных цикла, внутренний стартует с i+1;
+</span><span class="tag"> *   </span><span class="desc">  число сравнений n(n−1)/2, константу 1/2 отбрасываем;
+</span><span class="tag"> *   </span><span class="desc">  лучший и худший случай совпадают (нет раннего выхода).
+</span><span class="tag"> *</span>
+<span class="tag"> * </span><span class="tag">@spaceComplexity</span> <span class="type">O(1)</span>
+<span class="tag"> *   </span><span class="desc">— только счётчик и индексы i, j.
+</span><span class="tag"> *</span>
+<span class="tag"> * </span><span class="tag">@optimization</span> <span class="desc">Для больших n заменить внутренний цикл поиском в Set: O(n) по времени, O(n) по памяти.</span>
+<span class="tag"> */</span>`;
+
+newRand();
+drawGraph();
+</script>
+</body>
+</html>
