@@ -90,7 +90,7 @@ const Index = () => {
       <main className="flex-1">
         <AutumnBanner />
         <NewsSection />
-        <div className="container relative z-10 flex justify-center -mb-4 md:-mb-8">
+        <div className="container relative z-10 flex justify-center mb-4">
           <Button
             variant="outline"
             className="gap-2 rounded-full border-primary/30 bg-primary/5 hover:bg-primary/10"
@@ -100,8 +100,8 @@ const Index = () => {
             Мудрая минутка
           </Button>
         </div>
-        <Hero onScrollToGenerators={() => scrollTo("generators")} />
         <PopularSections onScrollTo={scrollTo} />
+        <Hero onScrollToGenerators={() => scrollTo("generators")} />
         <GeneratorsSection onNeedAuth={openAuth} />
         <NotebookCheck id="notebook" onNeedAuth={openAuth} onNeedUpgrade={openUpgrade} />
         <QualityAnalyticsPromo id="quality-analytics" />
