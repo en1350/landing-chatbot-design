@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интерактивный урок: Бинарный поиск (Binary Search)</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --accent: #38bdf8;
+            --accent-hover: #0ea5e9;
+            --success: #22c55e;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --pointer-left: #f472b6;
+            --pointer-right: #a78bfa;
+            --pointer-mid: #fbbf24;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container { max-width: 1000px; margin: 0 auto; }
+        
+        header { text-align: center; margin-bottom: 40px; padding: 20px; background: var(--card-bg); border-radius: 12px; border-left: 5px solid var(--accent); }
+        h1 { font-size: 2.2rem; margin-bottom: 10px; color: var(--accent); }
+        .context { background: rgba(56, 189, 248, 0.1); padding: 15px; border-radius: 8px; color: var(--text-secondary); font-style: italic; margin-top: 15px; }
+
+        .section { background: var(--card-bg); padding: 25px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: none; }
+        .section.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        h2 { color: var(--accent); margin-bottom: 15px; border-bottom: 1px solid #334155; padding-bottom: 10px; }
+        
+        nav { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px; justify-content: center; }
+        nav button {
+            padding: 10px 20px; background: var(--card-bg); color: var(--text-secondary);
+            border: 1px solid #334155; border-radius: 8px; cursor: pointer; font-weight: bold;
+            transition: all 0.2s;
+        }
+        nav button:hover, nav button.active { background: var(--accent); color: var(--bg-color); border-color: var(--accent); }
+
+        .steps { list-style: none; counter-reset: step-counter; }
+        .steps li { counter-increment: step-counter; margin-bottom: 12px; padding-left: 40px; position: relative; }
+        .steps li::before {
+            content: counter(step-counter);
+            position: absolute; left: 0; top: 0;
+            background: var(--accent); color: var(--bg-color);
+            width: 28px; height: 28px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 0.9rem;
+        }
+        code { background: #0f172a; padding: 2px 6px; border-radius: 4px; font-family: 'Courier New', monospace; color: var(--warning); }
+
+        .visualizer-controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: all 0.2s; }
+        .btn-primary { background: var(--accent); color: var(--bg-color); }
+        .btn-primary:hover { background: var(--accent-hover); }
+        .btn-secondary { background: #475569; color: white; }
+        .btn-secondary:hover { background: #64748b; }
+        .btn-hint { background: var(--warning); color: #000; font-size: 0.9rem; padding: 5px 10px; margin-top: 10px; }
+        .btn-hint:hover { background: #d97706; }
+
+        .array-container { display: flex; justify-content: center; gap: 8px; margin: 30px 0; flex-wrap: wrap; }
+        .array-item {
+            width: 50px; height: 50px; background: #334155; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 1.1rem; position: relative;
+            transition: all 0.3s ease; border: 2px solid transparent;
+        }
+        .array-item.active { background: var(--accent); color: var(--bg-color); transform: scale(1.1); }
+        .array-item.found { background: var(--success); color: white; box-shadow: 0 0 15px var(--success); }
+        .array-item.discarded { opacity: 0.3; }
+        
+        .pointer { position: absolute; bottom: -35px; font-size: 0.8rem; font-weight: bold; transition: all 0.3s ease; text-align: center; width: 50px; }
+        .pointer-left { color: var(--pointer-left); }
+        .pointer-right { color: var(--pointer-right); }
+        .pointer-mid { color: var(--pointer-mid); bottom: -55px; }
+
+        .log-box { background: #0f172a; padding: 15px; border-radius: 8px; font-family: monospace; color: var(--success); min-height: 60px; border-left: 3px solid var(--success); }
+
+        .editor-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 768px) { .editor-container { grid-template-columns: 1fr; } }
+        textarea {
+            width: 100%; height: 300px; background: #0f172a; color: #e2e8f0;
+            border: 1px solid #334155; border-radius: 8px; padding: 15px;
+            font-family: 'Courier New', monospace; font-size: 0.95rem; resize: vertical;
+        }
+        textarea:focus { outline: 2px solid var(--accent); border-color: transparent; }
+        .test-results { background: #0f172a; padding: 15px; border-radius: 8px; }
+        .test-pass { color: var(--success); }
+        .test-fail { color: var(--error); }
+
+        .mistake-box { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--error); border-radius: 8px; padding: 20px; margin-top: 20px; }
+        .mistake-box h3 { color: var(--error); display: flex; align-items: center; gap: 10px; }
+        .code-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+        .code-bad { background: rgba(239, 68, 68, 0.2); padding: 10px; border-radius: 6px; border-left: 3px solid var(--error); }
+        .code-good { background: rgba(34, 197, 94, 0.2); padding: 10px; border-radius: 6px; border-left: 3px solid var(--success); }
+
+        .quiz-option, .quest-option {
+            display: block; padding: 12px; margin: 8px 0; background: #334155;
+            border-radius: 6px; cursor: pointer; transition: background 0.2s; border: 2px solid transparent;
+        }
+        .quiz-option:hover, .quest-option:hover { background: #475569; }
+        .quiz-option.correct, .quest-option.correct { background: rgba(34, 197, 94, 0.3); border-color: var(--success); }
+        .quiz-option.wrong, .quest-option.wrong { background: rgba(239, 68, 68, 0.3); border-color: var(--error); }
+        
+        .hint-box {
+            display: none; background: rgba(245, 158, 11, 0.15); border: 1px solid var(--warning);
+            color: #fcd34d; padding: 15px; border-radius: 8px; margin-top: 15px; font-size: 0.95rem;
+        }
+        .hint-box.show { display: block; animation: fadeIn 0.3s; }
+
+        .quest-stats { display: flex; justify-content: space-between; background: #0f172a; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; }
+        .quest-stats span { color: var(--accent); }
+
+        .certificate { 
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); 
+            border: 15px solid var(--accent); padding: 40px; text-align: center; 
+            border-radius: 10px; position: relative; margin: 20px 0; color: #0f172a;
+        }
+        .certificate::before { content: ''; position: absolute; top: 10px; left: 10px; right: 10px; bottom: 10px; border: 3px solid var(--warning); border-radius: 5px; pointer-events: none; }
+        .certificate h1 { color: var(--bg-color); font-size: 2.5rem; margin-bottom: 20px; }
+        .certificate .name { font-size: 2.5rem; color: var(--accent-hover); margin: 20px 0; font-family: 'Georgia', serif; font-style: italic; border-bottom: 2px solid var(--bg-color); display: inline-block; padding: 0 30px; }
+        .certificate .grade-cert { font-size: 80px; font-weight: bold; color: var(--success); margin: 20px 0; text-shadow: 2px 2px 0px rgba(0,0,0,0.1); }
+        
+        .error-breakdown { 
+            text-align: left; 
+            background: white; 
+            padding: 25px; 
+            border-radius: 8px; 
+            margin-top: 20px; 
+            border: 1px solid #cbd5e1; 
+            color: #0f172a;
+        }
+        .error-breakdown h3 { color: #0f172a; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        
+        input[type="text"] { padding: 10px; border: 2px solid var(--accent); border-radius: 8px; font-size: 16px; width: 300px; background: white; color: #0f172a; }
+
+        @media print {
+            body * { visibility: hidden; }
+            #certificateContent, #certificateContent * { visibility: visible; }
+            #certificateContent { position: absolute; left: 0; top: 0; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🔍 Базовый бинарный поиск (Binary Search)</h1>
+        <p>Алгоритм поиска со сложностью <strong>O(log n)</strong></p>
+        <div class="context">
+            💼 <strong>Бизнес-контекст:</strong> Быстрый поиск ID пользователя или товара в огромной предварительно отсортированной базе данных.
+        </div>
+    </header>
+
+    <nav>
+        <button onclick="showSection('theory', this)" class="active">📚 Теория</button>
+        <button onclick="showSection('visualizer', this)">👁️ Визуализация</button>
+        <button onclick="showSection('practice', this)">💻 Практика</button>
+        <button onclick="showSection('quest', this)">🎮 Квест</button>
+        <button onclick="showSection('certificate', this)">🏆 Сертификат</button>
+    </nav>
+
+    <div id="theory" class="section active">
+        <h2>📚 Архитектура и шаги алгоритма</h2>
+        <ul class="steps">
+            <li>Инициализируйте указатели: <code>left = 0</code> и <code>right = arr.length - 1</code>.</li>
+            <li>Запустите цикл: <code>while (left &lt;= right)</code>.</li>
+            <li>Вычислите средний индекс: <code>mid = Math.floor((left + right) / 2)</code>.</li>
+            <li>Если <code>arr[mid] === target</code>, верните <code>mid</code>.</li>
+            <li>Если <code>arr[mid] &lt; target</code>, обновите <code>left = mid + 1</code>.</li>
+            <li>Иначе обновите <code>right = mid - 1</code>.</li>
+            <li>Если цикл завершился, верните <code>-1</code>.</li>
+        </ul>
+
+        <div class="mistake-box">
+            <h3>⚠️ Ошибка Junior'а: <code>left &lt; right</code></h3>
+            <p>Если целевой элемент находится на последней оставшейся позиции (<code>left === right</code>), цикл без равенства <strong>не выполнится</strong>, и функция вернет <code>-1</code>.</p>
+            <div class="code-compare">
+                <div class="code-bad"><strong>Неправильно:</strong><br><code>while (left &lt; right)</code></div>
+                <div class="code-good"><strong>Правильно:</strong><br><code>while (left &lt;= right)</code></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="visualizer" class="section">
+        <h2>👁️ Интерактивная визуализация</h2>
+        <p>Поиск числа <strong>23</strong> в массиве.</p>
+        <div class="visualizer-controls">
+            <button class="btn btn-primary" onclick="startVisualization()">▶ Запустить</button>
+            <button class="btn btn-secondary" onclick="resetVisualization()">🔄 Сбросить</button>
+        </div>
+        <div class="array-container" id="arrayContainer"></div>
+        <div class="log-box" id="vizLog">Нажмите "Запустить", чтобы начать...</div>
+    </div>
+
+    <div id="practice" class="section">
+        <h2>💻 Практика: Напиши свой код</h2>
+        <p>Исправьте функцию ниже, чтобы она прошла все тесты. <button class="btn btn-hint" onclick="toggleHint('practiceHint')">💡 Подсказка</button></p>
+        <div id="practiceHint" class="hint-box">Обратите внимание на условие цикла <code>while</code>. Должно ли быть строгое неравенство или нестрогое? Также проверьте, как обновляются границы.</div>
+        
+        <div class="editor-container">
+            <textarea id="codeEditor" spellcheck="false">
+function binarySearch(arr, target) {
+  let left = 0;
+  let right = arr.length - 1;
+  
+  // ИСПРАВЬТЕ ОШИБКУ ЗДЕСЬ:
+  while (left < right) { 
+    let mid = Math.floor((left + right) / 2);
+    
+    if (arr[mid] === target) {
+      return mid;
+    }
+    
+    if (arr[mid] < target) {
+      left = mid + 1;
+    } else {
+      right = mid - 1;
+    }
+  }
+  return -1;
+}
+            </textarea>
+            <div>
+                <button class="btn btn-primary" onclick="runTests()" style="width: 100%; margin-bottom: 15px;">▶ Запустить тесты</button>
+                <div class="test-results" id="testResults">
+                    <p style="color: var(--text-secondary);">Результаты тестов появятся здесь...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="quest" class="section">
+        <h2>🎮 Квест: Спасение Базы Данных</h2>
+        <p>Система безопасности заблокировала доступ. Вам, как агенту оптимизации, нужно найти 3 критических ID, чтобы предотвратить сбой. За каждый правильный ответ +10 баллов. За использование подсказки -5 баллов.</p>
+        
+        <div class="quest-stats">
+            <div>Уровень: <span id="questLevel">1</span> / 3</div>
+            <div>Баллы: <span id="questScore">0</span></div>
+            <div>Подсказки: <span id="hintsUsed">0</span></div>
+        </div>
+
+        <div id="questContainer">
+        </div>
+        <button class="btn btn-hint" onclick="showQuestHint()">💡 Взять подсказку (-5 баллов)</button>
+        <div id="questHintBox" class="hint-box"></div>
+    </div>
+
+    <div id="certificate" class="section">
+        <h2>🏆 Итоговая аттестация</h2>
+        <div style="text-align:center; margin-bottom:20px;">
+            <input type="text" id="studentName" placeholder="Введите ваше имя" value="Агент Оптимизации">
+            <button class="btn btn-primary" onclick="generateCertificate()" style="margin-top: 10px;">✨ Сформировать сертификат</button>
+        </div>
+        <div id="certificateContent">
+            <p style="text-align:center; color:var(--text-secondary);">Пройдите практику и квест, чтобы получить сертификат.</p>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    function showSection(id, btn) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+        if(btn) btn.classList.add('active');
+    }
+
+    function toggleHint(id) {
+        const el = document.getElementById(id);
+        el.classList.toggle('show');
+    }
+
+    const vizArray = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91];
+    const targetViz = 23;
+    let isAnimating = false;
+
+    function renderArray() {
+        const container = document.getElementById('arrayContainer');
+        container.innerHTML = '';
+        vizArray.forEach((val, idx) => {
+            const item = document.createElement('div');
+            item.className = 'array-item';
+            item.id = `item-${idx}`;
+            item.textContent = val;
+            container.appendChild(item);
+        });
+    }
+
+    function logViz(msg) { document.getElementById('vizLog').textContent = `> ${msg}`; }
+    function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+    async function startVisualization() {
+        if (isAnimating) return;
+        isAnimating = true;
+        resetVisualization();
+        let left = 0, right = vizArray.length - 1;
+        logViz(`Начало поиска. left = ${left}, right = ${right}`);
+        await sleep(1000);
+
+        while (left <= right) {
+            document.getElementById(`item-${left}`).style.borderColor = 'var(--pointer-left)';
+            document.getElementById(`item-${right}`).style.borderColor = 'var(--pointer-right)';
+            let mid = Math.floor((left + right) / 2);
+            logViz(`mid = (${left}+${right})/2 = ${mid}. arr[${mid}] = ${vizArray[mid]}`);
+            
+            const midEl = document.getElementById(`item-${mid}`);
+            midEl.classList.add('active');
+            addPointer(mid, 'left', 'L'); addPointer(mid, 'right', 'R'); addPointer(mid, 'mid', 'M');
+            await sleep(1500);
+
+            if (vizArray[mid] === targetViz) {
+                midEl.classList.remove('active'); midEl.classList.add('found');
+                logViz(`✅ Успех! arr[${mid}] === ${targetViz}. Возвращаем индекс ${mid}.`);
+                isAnimating = false; return;
+            } else if (vizArray[mid] < targetViz) {
+                logViz(`${vizArray[mid]} < ${targetViz}. Сдвигаем left = mid + 1 (${mid + 1})`);
+                await sleep(1000);
+                for(let i = left; i <= mid; i++) { document.getElementById(`item-${i}`).classList.add('discarded'); removePointers(i); }
+                left = mid + 1;
+            } else {
+                logViz(`${vizArray[mid]} > ${targetViz}. Сдвигаем right = mid - 1 (${mid - 1})`);
+                await sleep(1000);
+                for(let i = mid; i <= right; i++) { document.getElementById(`item-${i}`).classList.add('discarded'); removePointers(i); }
+                right = mid - 1;
+            }
+            midEl.classList.remove('active');
+            await sleep(500);
+        }
+        logViz(`❌ Элемент не найден. Возвращаем -1.`);
+        isAnimating = false;
+    }
+
+    function addPointer(idx, type, label) {
+        const el = document.getElementById(`item-${idx}`);
+        const ptr = document.createElement('div');
+        ptr.className = `pointer pointer-${type}`;
+        ptr.id = `ptr-${type}-${idx}`;
+        ptr.textContent = `${label}=${idx}`;
+        el.appendChild(ptr);
+    }
+    function removePointers(idx) {
+        ['left', 'right', 'mid'].forEach(type => {
+            const ptr = document.getElementById(`ptr-${type}-${idx}`);
+            if (ptr) ptr.remove();
+        });
+    }
+    function resetVisualization() {
+        isAnimating = false; renderArray(); logViz('Готово к запуску.');
+    }
+
+    let practiceScore = 0;
+    let practiceErrors = [];
+
+    function runTests() {
+        const code = document.getElementById('codeEditor').value;
+        const resultsDiv = document.getElementById('testResults');
+        resultsDiv.innerHTML = '';
+        practiceScore = 0;
+        practiceErrors = [];
+
+        const testCases = [
+            { arr: [1, 3, 5, 7, 9], target: 5, expected: 2, name: "Поиск в середине" },
+            { arr: [1, 3, 5, 7, 9], target: 1, expected: 0, name: "Поиск первого элемента" },
+            { arr: [1, 3, 5, 7, 9], target: 9, expected: 4, name: "Поиск последнего (проверка <=)" },
+            { arr: [1, 3, 5, 7, 9], target: 4, expected: -1, name: "Элемент не найден" },
+            { arr: [42], target: 42, expected: 0, name: "Массив из 1 элемента (критический!)" }
+        ];
+
+        let userFunc;
+        try {
+            userFunc = new Function('arr', 'target', code + '\nreturn binarySearch(arr, target);');
+        } catch (e) {
+            resultsDiv.innerHTML = `<p class="test-fail">❌ Синтаксическая ошибка: ${e.message}</p>`;
+            practiceErrors.push("Синтаксическая ошибка в коде.");
+            return;
+        }
+
+        testCases.forEach((tc, i) => {
+            try {
+                const result = userFunc(tc.arr, tc.target);
+                if (result === tc.expected) {
+                    practiceScore += 10;
+                    resultsDiv.innerHTML += `<p class="test-pass">✅ Тест ${i+1} (${tc.name}): Пройден.</p>`;
+                } else {
+                    resultsDiv.innerHTML += `<p class="test-fail">❌ Тест ${i+1} (${tc.name}): Ожидалось ${tc.expected}, получено ${result}</p>`;
+                    practiceErrors.push(`Тест "${tc.name}": ожидалось ${tc.expected}, ваш код вернул ${result}.`);
+                }
+            } catch (e) {
+                resultsDiv.innerHTML += `<p class="test-fail">❌ Тест ${i+1}: Ошибка выполнения</p>`;
+                practiceErrors.push(`Тест "${tc.name}": ошибка выполнения (${e.message}).`);
+            }
+        });
+
+        if (practiceScore === 50) {
+            resultsDiv.innerHTML += `<h3 style="color: var(--success); margin-top: 15px;">🎉 Все тесты пройдены!</h3>`;
+        } else {
+            resultsDiv.innerHTML += `<h3 style="color: var(--warning); margin-top: 15px;">⚠️ Пройдено на ${practiceScore} из 50 баллов.</h3>`;
+        }
+    }
+
+    const questData = [
+        {
+            question: "Уровень 1: База данных пользователей. Массив: [10, 20, 30, 40, 50, 60, 70]. Target = 60. Чему будет равен индекс mid на самом первом шаге?",
+            options: ["A) 2 (значение 30)", "B) 3 (значение 40)", "C) 4 (значение 50)"],
+            correct: 1,
+            hint: "Формула: Math.floor((0 + 6) / 2).",
+            explanation: "left=0, right=6. mid = Math.floor(6/2) = 3."
+        },
+        {
+            question: "Уровень 2: Массив: [5, 15, 25, 35, 45]. Target = 5. Первый mid = 2 (значение 25). Так как 25 > 5, что мы должны сделать?",
+            options: ["A) left = mid + 1", "B) right = mid - 1", "C) Вернуть -1"],
+            correct: 1,
+            hint: "Если значение в середине больше искомого, значит искомое значение находится левее.",
+            explanation: "Так как arr[mid] > target, мы отбрасываем правую часть, включая mid. right = mid - 1."
+        },
+        {
+            question: "Уровень 3: Критический сбой! Массив: [100]. Target = 100. Какое условие цикла гарантирует, что мы проверим этот единственный элемент?",
+            options: ["A) while (left < right)", "B) while (left <= right)", "C) while (left != right)"],
+            correct: 1,
+            hint: "При left=0 и right=0, какое условие истинно?",
+            explanation: "Только условие <= истинно при 0 <= 0. Строгое неравенство < пропустит этот элемент."
+        }
+    ];
+
+    let currentQuest = 0;
+    let questScore = 0;
+    let hintsUsedInQuest = 0;
+    let questErrors = [];
+
+    function renderQuest() {
+        if (currentQuest >= questData.length) {
+            document.getElementById('questContainer').innerHTML = `
+                <div style="text-align:center; padding: 40px;">
+                    <h3 style="color: var(--success); font-size: 1.5rem;">🎉 Квест пройден!</h3>
+                    <p>Вы спасли базу данных. Переходите к получению сертификата.</p>
+                    <button class="btn btn-primary" onclick="showSection('certificate', document.querySelectorAll('nav button')[4])" style="margin-top:20px;">🏆 Получить сертификат</button>
+                </div>
+            `;
+            return;
+        }
+
+        const q = questData[currentQuest];
+        let html = `<h3>${q.question}</h3><div style="margin-top:15px;">`;
+        q.options.forEach((opt, idx) => {
+            html += `<div class="quest-option" onclick="checkQuestAnswer(${idx}, this)">${opt}</div>`;
+        });
+        html += `</div><div id="questFeedback" style="margin-top:15px; font-weight:bold;"></div>`;
+        document.getElementById('questContainer').innerHTML = html;
+        document.getElementById('questHintBox').textContent = q.hint;
+        document.getElementById('questHintBox').classList.remove('show');
+        document.getElementById('questLevel').textContent = currentQuest + 1;
+    }
+
+    function showQuestHint() {
+        document.getElementById('questHintBox').classList.add('show');
+        hintsUsedInQuest++;
+        document.getElementById('hintsUsed').textContent = hintsUsedInQuest;
+    }
+
+    function checkQuestAnswer(selectedIdx, element) {
+        const q = questData[currentQuest];
+        const options = document.querySelectorAll('.quest-option');
+        options.forEach(opt => opt.style.pointerEvents = 'none');
+
+        const feedback = document.getElementById('questFeedback');
+        if (selectedIdx === q.correct) {
+            element.classList.add('correct');
+            questScore += 10;
+            feedback.textContent = "✅ Верно! " + q.explanation;
+            feedback.style.color = "var(--success)";
+        } else {
+            element.classList.add('wrong');
+            options[q.correct].classList.add('correct');
+            questScore = Math.max(0, questScore - 5);
+            feedback.textContent = "❌ Неверно. " + q.explanation;
+            feedback.style.color = "var(--error)";
+            questErrors.push(`Квест, Уровень ${currentQuest + 1}: неверный выбор. Правильный ответ: ${q.options[q.correct]}`);
+        }
+        
+        document.getElementById('questScore').textContent = questScore;
+        setTimeout(() => {
+            currentQuest++;
+            renderQuest();
+        }, 2500);
+    }
+
+    function generateCertificate() {
+        const name = document.getElementById('studentName').value.trim() || "Агент Оптимизации";
+        
+        const totalScore = 10 + practiceScore + questScore; 
+        const maxScore = 90;
+        const percentage = Math.round((totalScore / maxScore) * 100);
+
+        let grade = 1;
+        let gradeText = "Требуется повторение";
+        if (percentage >= 85) { grade = 5; gradeText = "Отлично"; }
+        else if (percentage >= 70) { grade = 4; gradeText = "Хорошо"; }
+        else if (percentage >= 50) { grade = 3; gradeText = "Удовлетворительно"; }
+        else if (percentage >= 30) { grade = 2; gradeText = "Неудовлетворительно"; }
+
+        let errorHtml = "";
+        const allErrors = [...practiceErrors, ...questErrors];
+        
+        if (allErrors.length === 0) {
+            if (grade >= 4) {
+                errorHtml = "<p style='color:#166534; font-weight:bold; background:#dcfce7; padding:15px; border-radius:6px;'>🎉 Ошибок не найдено! Вы отлично усвоили материал о бинарном поиске, включая граничные условия (left <= right).</p>";
+            } else {
+                errorHtml = "<p style='color:#92400e; font-weight:bold; background:#fef3c7; padding:15px; border-radius:6px;'>⚠️ Вы не выполнили задания (практику или квест) или набрали слишком мало баллов. Пожалуйста, пройдите все этапы урока, чтобы получить полный разбор.</p>";
+            }
+        } else {
+            errorHtml = "<ul style='list-style-type: none; padding: 0;'>";
+            if (practiceErrors.length > 0) {
+                errorHtml += "<li style='margin-bottom: 15px; padding: 15px; background: #fef2f2; border-left: 4px solid #ef4444; border-radius: 4px;'><strong style='color:#991b1b;'>❌ Практика (Код):</strong><br>" + practiceErrors.join("<br>") + "<br><em style='color:#7f1d1d; display:block; margin-top:8px;'>💡 Совет: Проверьте условие цикла while (должно быть left <= right) и обновление границ.</em></li>";
+            }
+            if (questErrors.length > 0) {
+                errorHtml += "<li style='margin-bottom: 15px; padding: 15px; background: #fff7ed; border-left: 4px solid #f97316; border-radius: 4px;'><strong style='color:#9a3412;'>❌ Квест:</strong><br>" + questErrors.join("<br>") + "</li>";
+            }
+            if (hintsUsedInQuest > 0) {
+                errorHtml += `<li style='margin-bottom: 15px; padding: 15px; background: #fefce8; border-left: 4px solid #eab308; border-radius: 4px;'><strong style='color:#854d0e;'>💡 Подсказки:</strong> Вы использовали ${hintsUsedInQuest} подсказок в квесте. Старайтесь сначала анализировать условие самостоятельно.</li>`;
+            }
+            errorHtml += "</ul>";
+        }
+
+        const date = new Date().toLocaleDateString('ru-RU');
+
+        document.getElementById('certificateContent').innerHTML = `
+            <div class="certificate">
+                <h1>🏆 СЕРТИФИКАТ</h1>
+                <p style="font-size:1.2rem;">настоящим подтверждается, что</p>
+                <div class="name">${name}</div>
+                <p style="font-size:1.2rem; margin-top:20px;">успешно завершил(а) интерактивный курс<br><strong>«Базовый бинарный поиск (Binary Search)»</strong></p>
+                <div class="grade-cert">${grade}</div>
+                <p style="font-size:1.2rem; font-weight:bold; color: var(--bg-color);">${gradeText} (${percentage}%)</p>
+                <p>Баллы: ${totalScore} из ${maxScore} | Подсказок использовано: ${hintsUsedInQuest}</p>
+                <p style="margin-top:30px; font-size:1rem; color:#64748b;">Дата выдачи: ${date}</p>
+                <p style="margin-top:10px; font-size:1rem; color:#64748b;">Подпись инструктора: _________________</p>
+            </div>
+            
+            <div class="error-breakdown">
+                <h3>🔍 Детальный разбор ошибок и рекомендации:</h3>
+                ${errorHtml}
+            </div>
+            
+            <div style="text-align:center; margin-top: 20px;">
+                <button class="btn btn-primary" onclick="window.print()">🖨️ Распечатать / Сохранить как PDF</button>
+                <button class="btn btn-secondary" onclick="location.reload()" style="margin-left: 10px;">🔄 Пройти заново</button>
+            </div>
+        `;
+    }
+
+    renderArray();
+    renderQuest();
+</script>
+
+</body>
+</html>

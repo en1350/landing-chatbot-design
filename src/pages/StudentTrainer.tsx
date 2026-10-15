@@ -38,7 +38,8 @@ type TrainerKey =
   | "code-duel"
   | "sets-python-js"
   | "os-processes"
-  | "data-analysis-ai";
+  | "data-analysis-ai"
+  | "binary-search";
 
 interface CategoryItem {
   key: CategoryKey;
@@ -74,6 +75,7 @@ const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "code-duel": "/code-duel.html",
   "sets-python-js": "/sets-python-js.html",
   "data-analysis-ai": "/data-analysis-ai.html",
+  "binary-search": "/binary-search.html",
 };
 
 const CATEGORIES: CategoryItem[] = [
@@ -108,6 +110,14 @@ const CATEGORIES: CategoryItem[] = [
 ];
 
 const TRAINERS: TrainerItem[] = [
+  {
+    key: "binary-search",
+    category: "programming",
+    icon: "🔍",
+    title: "Бинарный поиск",
+    description: "Теория, визуализация алгоритма, практика с кодом, квест и сертификат",
+    accent: "#38bdf8",
+  },
   {
     key: "algorithms",
     category: "programming",
