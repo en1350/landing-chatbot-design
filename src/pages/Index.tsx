@@ -8,6 +8,7 @@ import Icon from "@/components/ui/icon";
 import GeneratorsSection from "@/components/GeneratorsSection";
 import NotebookCheck from "@/components/NotebookCheck";
 import QualityAnalyticsPromo from "@/components/QualityAnalyticsPromo";
+import PopularSections from "@/components/PopularSections";
 import Footer from "@/components/Footer";
 import DecomposerModal from "@/components/DecomposerModal";
 import RandomizerModal from "@/components/RandomizerModal";
@@ -100,6 +101,7 @@ const Index = () => {
           </Button>
         </div>
         <Hero onScrollToGenerators={() => scrollTo("generators")} />
+        <PopularSections onScrollTo={scrollTo} />
         <GeneratorsSection onNeedAuth={openAuth} />
         <NotebookCheck id="notebook" onNeedAuth={openAuth} onNeedUpgrade={openUpgrade} />
         <QualityAnalyticsPromo id="quality-analytics" />
