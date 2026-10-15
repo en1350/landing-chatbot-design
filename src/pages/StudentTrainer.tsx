@@ -39,7 +39,8 @@ type TrainerKey =
   | "sets-python-js"
   | "os-processes"
   | "data-analysis-ai"
-  | "binary-search";
+  | "binary-search"
+  | "linear-complexity";
 
 interface CategoryItem {
   key: CategoryKey;
@@ -76,6 +77,7 @@ const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "sets-python-js": "/sets-python-js.html",
   "data-analysis-ai": "/data-analysis-ai.html",
   "binary-search": "/binary-search.html",
+  "linear-complexity": "/linear-complexity.html",
 };
 
 const CATEGORIES: CategoryItem[] = [
@@ -110,6 +112,14 @@ const CATEGORIES: CategoryItem[] = [
 ];
 
 const TRAINERS: TrainerItem[] = [
+  {
+    key: "linear-complexity",
+    category: "programming",
+    icon: "📈",
+    title: "Сложность алгоритма O(n)",
+    description: "Анализ линейного прохода на примере findMax: теория, график роста, визуализация, разбор ошибок",
+    accent: "#6c8cff",
+  },
   {
     key: "binary-search",
     category: "programming",
