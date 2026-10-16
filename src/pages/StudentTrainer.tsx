@@ -41,7 +41,8 @@ type TrainerKey =
   | "data-analysis-ai"
   | "binary-search"
   | "linear-complexity"
-  | "quadratic-complexity";
+  | "quadratic-complexity"
+  | "set-theory";
 
 interface CategoryItem {
   key: CategoryKey;
@@ -80,6 +81,7 @@ const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "binary-search": "/binary-search.html",
   "linear-complexity": "/linear-complexity.html",
   "quadratic-complexity": "/quadratic-complexity.html",
+  "set-theory": "/set-theory.html",
 };
 
 const CATEGORIES: CategoryItem[] = [
@@ -114,6 +116,14 @@ const CATEGORIES: CategoryItem[] = [
 ];
 
 const TRAINERS: TrainerItem[] = [
+  {
+    key: "set-theory",
+    category: "informatics",
+    icon: "📚",
+    title: "Теория множеств",
+    description: "Теория, диаграммы Эйлера-Венна, практика с операциями над множествами, тест, игра на 2 команды и сертификат",
+    accent: "#667eea",
+  },
   {
     key: "quadratic-complexity",
     category: "programming",
