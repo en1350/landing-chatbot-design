@@ -101,7 +101,15 @@
   @media print {
     body * { visibility: hidden; }
     .cert-card, .cert-card * { visibility: visible; }
-    .cert-card { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; border: 4px solid #333; }
+    html, body { background: #fff !important; }
+    body::before { display: none !important; }
+    .cert-card { position: absolute; left: 0; top: 0; width: 100%; max-width: none; margin: 0; box-shadow: none !important; border: 4px double #1e293b !important; border-radius: 0; background: #fff !important; background-image: none !important; }
+    .cert-card::before { display: none !important; }
+    .cert-card, .cert-card * { color: #000 !important; -webkit-text-fill-color: #000 !important; text-shadow: none !important; background-image: none !important; -webkit-background-clip: border-box !important; background-clip: border-box !important; }
+    .cert-card .cert-title { font-size: 2rem; }
+    .cert-card .cert-name { font-size: 2.2rem; border-bottom: 2px solid #000; display: inline-block; padding: 0 20px 6px; }
+    .cert-card .cert-grade { font-size: 1.5rem; font-weight: 800; }
+    .cert-card p { color: #000 !important; }
   }
 </style>
 <style id="cert-contrast">
