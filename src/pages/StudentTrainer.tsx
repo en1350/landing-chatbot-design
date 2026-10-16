@@ -43,7 +43,8 @@ type TrainerKey =
   | "linear-complexity"
   | "quadratic-complexity"
   | "set-theory"
-  | "internet-ai";
+  | "internet-ai"
+  | "modeling-luntik";
 
 interface CategoryItem {
   key: CategoryKey;
@@ -84,6 +85,7 @@ const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "quadratic-complexity": "/quadratic-complexity.html",
   "set-theory": "/set-theory.html",
   "internet-ai": "/internet-ai.html",
+  "modeling-luntik": "/modeling-luntik.html",
 };
 
 const CATEGORIES: CategoryItem[] = [
@@ -118,6 +120,14 @@ const CATEGORIES: CategoryItem[] = [
 ];
 
 const TRAINERS: TrainerItem[] = [
+  {
+    key: "modeling-luntik",
+    category: "informatics",
+    icon: "🌙",
+    title: "Модели и моделирование",
+    description: "Теория, 3 симуляции, 5 практических заданий, тест на 10 вопросов и сертификат с разбором ошибок",
+    accent: "#9b59b6",
+  },
   {
     key: "internet-ai",
     category: "informatics",
