@@ -38,6 +38,12 @@ const TOOLS = [
     title: "Матрица используемых технологий обучения",
     gradient: "from-[#5b21b6] to-[#7c3aed]",
   },
+  {
+    to: "/proektnaya-deyatelnost",
+    icon: "🔬",
+    title: "Справка по проектной и исследовательской деятельности",
+    gradient: "from-[#0f766e] to-[#14b8a6]",
+  },
 ];
 
 const QualityAnalyticsPromo = ({ id }: QualityAnalyticsPromoProps) => {

@@ -19,6 +19,7 @@ import GameCardBuilder from "./pages/GameCardBuilder";
 import PresentationBuilder from "./pages/PresentationBuilder";
 import ExtracurricularAnalytics from "./pages/ExtracurricularAnalytics";
 import TechMatrix from "./pages/TechMatrix";
+import ProjectActivity from "./pages/ProjectActivity";
 import EventCardBuilder from "./pages/EventCardBuilder";
 import Admin from "./pages/Admin";
 import VisitTracker from "./components/VisitTracker";
@@ -54,6 +55,7 @@ const App = () => (
               <Route path="/konstruktor-masterklassov" element={<EventCardBuilder />} />
               <Route path="/vneauditornaya-deyatelnost" element={<ExtracurricularAnalytics />} />
               <Route path="/matritsa-tehnologiy" element={<TechMatrix />} />
+              <Route path="/proektnaya-deyatelnost" element={<ProjectActivity />} />
               <Route path="/admin" element={<Admin />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

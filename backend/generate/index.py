@@ -1027,6 +1027,31 @@ def build_extracurricular_prompt(data: dict) -> str:
 Пиши развёрнуто, конкретно, по-деловому, без markdown-разметки (без **, #), обычным текстом с нумерацией разделов."""
 
 
+def build_project_activity_prompt(data: dict) -> str:
+    rows = data.get('rows') or []
+    lines = []
+    for r in rows:
+        lines.append(
+            f"{r.get('year', '')}; направление «{r.get('category', '')}»; «{r.get('title', '')}»; "
+            f"уровень {r.get('level', '')}; содержание: {r.get('content', '')}; результат: {r.get('result', '')}"
+        )
+    rows_block = "\n".join(lines) if lines else "нет данных"
+
+    return f"""Ты опытный методист и заместитель директора по научно-методической работе. На основе учёта проектной и исследовательской деятельности педагога составь развёрнутую аналитическую справку на русском языке.
+
+Данные (год; направление; название; уровень; содержание деятельности; результат):
+{rows_block}
+
+Составь справку из следующих разделов (используй именно эти заголовки):
+1. Общие показатели — количество проектов и исследований, охваченные годы, распределение по направлениям.
+2. Уровни представления результатов — муниципальный, региональный, всероссийский, международный; динамика по годам.
+3. Содержательный анализ — основные темы, методы и подходы, их связь с образовательным процессом.
+4. Результативность — награды, публикации, внедрение в практику, значимость результатов.
+5. Выводы и рекомендации — сильные стороны, зоны роста, конкретные шаги по развитию проектной и исследовательской деятельности.
+
+Опирайся только на переданные данные, не выдумывай факты. Пиши развёрнуто, по-деловому, без markdown-разметки (без **, #), обычным текстом с нумерацией разделов."""
+
+
 def build_extracurricular_plan_prompt(data: dict) -> str:
     rows = data.get('rows') or []
     period = (data.get('period') or 'год').strip()
@@ -1754,6 +1779,21 @@ def handler(event: dict, context) -> dict:
             content = call_ai([
                 {'role': 'system', 'content': 'Ты опытный методист и специалист по воспитательной работе. Отвечай развёрнуто, по-деловому и всегда на русском языке.'},
                 {'role': 'user', 'content': build_extracurricular_prompt(data)},
+            ], temperature=0.6)
+
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'content': content}, ensure_ascii=False)}
+
+        elif action == 'project_activity_analysis':
+            if not is_user_paid(event):
+                return {'statusCode': 403, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ-справка по проектной деятельности доступна только по платной подписке'})}
+
+            data = body.get('data') or {}
+            if not data.get('rows'):
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Недостаточно данных для анализа'})}
+
+            content = call_ai([
+                {'role': 'system', 'content': 'Ты опытный методист и специалист по научно-методической работе. Отвечай развёрнуто, по-деловому и всегда на русском языке.'},
+                {'role': 'user', 'content': build_project_activity_prompt(data)},
             ], temperature=0.6)
 
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'content': content}, ensure_ascii=False)}

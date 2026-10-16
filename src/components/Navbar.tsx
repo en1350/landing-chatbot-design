@@ -42,6 +42,7 @@ const MORE_LINKS = [
   { label: "Аналитика качества", to: "/analitika-kachestva", icon: "BarChart3" },
   { label: "Внеаудиторная деятельность", to: "/vneauditornaya-deyatelnost", icon: "Users" },
   { label: "Матрица технологий обучения", to: "/matritsa-tehnologiy", icon: "Grid3x3" },
+  { label: "Проектная деятельность", to: "/proektnaya-deyatelnost", icon: "FlaskConical" },
 ];
 
 const Navbar = ({
