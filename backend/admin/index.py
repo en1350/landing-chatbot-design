@@ -119,7 +119,7 @@ def handler(event: dict, context) -> dict:
                 cur.execute(f"SELECT count(*) FROM {SCHEMA}.users WHERE created_at > now() - interval '7 days'")
                 users_week = cur.fetchone()[0]
                 cur.execute(
-                    f"SELECT count(DISTINCT user_id) FROM {SCHEMA}.subscriptions WHERE is_active = true AND plan <> 'free'"
+                    f"SELECT count(DISTINCT user_id) FROM {SCHEMA}.subscriptions WHERE is_active = true AND plan <> 'free' AND (expires_at IS NULL OR expires_at > now())"
                 )
                 paid = cur.fetchone()[0]
                 return resp(200, {
