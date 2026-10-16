@@ -14,6 +14,7 @@ import ProfileSheet from "@/components/ProfileSheet";
 import AuthModal from "@/components/AuthModal";
 import UpgradeModal from "@/components/UpgradeModal";
 import { useAuth } from "@/context/AuthContext";
+import SaveMaterialButton from "@/components/SaveMaterialButton";
 
 const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
 
@@ -814,6 +815,15 @@ ${riskStudents.length === 0 ? "<p>Студентов группы риска н�
                     <Icon name={aiPlanInExport ? "CheckCircle2" : "FilePlus2"} size={15} />
                     {aiPlanInExport ? "Добавлено в документ на экспорт" : "Добавить в документ на экспорт"}
                   </Button>
+                )}
+                {aiPlan && (
+                  <SaveMaterialButton
+                    size="sm"
+                    className="mt-3 ml-0 sm:ml-2"
+                    type="correction_plan"
+                    title={`План коррекционной работы: ${discipline}, ${group}`}
+                    content={aiPlan}
+                  />
                 )}
               </div>
 

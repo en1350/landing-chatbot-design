@@ -17,6 +17,7 @@ import UpgradeModal from "@/components/UpgradeModal";
 import { useAuth } from "@/context/AuthContext";
 import { downloadDocx, downloadTxt } from "@/lib/download";
 import { toast } from "sonner";
+import SaveMaterialButton from "@/components/SaveMaterialButton";
 
 const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
 
@@ -380,6 +381,7 @@ const CorrectionWork = () => {
                         <Icon name="Download" size={15} />
                         TXT
                       </Button>
+                      <SaveMaterialButton type="correction_work_report" title={reportTitle} content={report} onNeedAuth={() => setAuthOpen(true)} />
                     </>
                   )}
                 </div>

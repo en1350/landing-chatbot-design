@@ -23,6 +23,7 @@ import UpgradeModal from "@/components/UpgradeModal";
 import { useAuth, AUTH_URL } from "@/context/AuthContext";
 import { downloadDocx, downloadTxt } from "@/lib/download";
 import { toast } from "sonner";
+import SaveMaterialButton from "@/components/SaveMaterialButton";
 import StatsPanel from "@/components/extracurricular/StatsPanel";
 import { EventRow, YEARS, ACTIVITY_TYPES, DEMO_ROWS, pct, levelOf } from "@/components/extracurricular/types";
 
@@ -561,6 +562,7 @@ const ExtracurricularAnalytics = () => {
                         <Icon name="Download" size={15} />
                         TXT
                       </Button>
+                      <SaveMaterialButton type="extracurricular_report" title={reportTitle} content={report} onNeedAuth={() => setAuthOpen(true)} />
                     </>
                   )}
                 </div>

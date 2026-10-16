@@ -39,6 +39,7 @@ import {
   emptyMatrix,
 } from "@/components/tech-matrix/techMatrixConfig";
 import { toast } from "sonner";
+import SaveMaterialButton from "@/components/SaveMaterialButton";
 
 const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
 const DRAFT_KEY = "urokai_tech_matrix_draft";
@@ -621,6 +622,7 @@ const TechMatrix = () => {
                   <Icon name="Download" size={15} />
                   TXT
                 </Button>
+                <SaveMaterialButton type="tech_matrix_report" title={`${REPORT_TITLE}${data.subject ? `: ${data.subject}` : ""}`} content={report} onNeedAuth={() => setAuthOpen(true)} />
               </div>
               <div className="rounded-xl border border-border bg-muted/30 p-5 md:p-7">
                 <h2 className="font-display text-lg font-bold text-primary text-center mb-4">{REPORT_TITLE}</h2>
