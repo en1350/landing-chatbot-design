@@ -459,11 +459,14 @@ button,[role="button"],select,input[type="radio"]+*,input[type="checkbox"]+*{tou
 <script>
 // ============ ИИ-АНАЛИЗ (через backend УрокАИ) ============
 const AI_GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
+const AUTH_API_URL = "https://functions.poehali.dev/ae160342-bedb-4bc9-9b23-07195233be12";
 const TOKEN_KEY = "urokai_token_v1";
 let aiAnalysisText = null;
 let aiAnalysisLoading = false;
 let aiAnalysisError = null;
 let aiAnalysisNeedsUpgrade = false;
+let aiAnalysisSaved = false;
+let aiAnalysisSaving = false;
 
 function getAuthToken() {
     try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
@@ -773,6 +776,7 @@ function renderAiAnalysisBlock() {
             <div style="margin-top:15px">
                 <button class="btn btn-secondary" onclick="runAiAnalysis()">🔄 Сформировать заново</button>
                 <button class="btn btn-success" onclick="downloadAiAnalysis()">📥 Скачать документ</button>
+                <button class="btn btn-secondary" id="ai-save-btn" onclick="saveAiAnalysis()" ${aiAnalysisSaved || aiAnalysisSaving ? 'disabled' : ''}>${aiAnalysisSaving ? '⏳ Сохраняю…' : (aiAnalysisSaved ? '✅ Сохранено' : '💾 Сохранить в кабинет')}</button>
             </div>`;
         return;
     }
@@ -780,6 +784,36 @@ function renderAiAnalysisBlock() {
     container.innerHTML = `
         <p style="color:#7f8c8d;margin-bottom:12px;font-size:14px;">ИИ разберёт все внесённые данные по дисциплинам и группам, выделит проблемные зоны и даст конкретные рекомендации.</p>
         <button class="btn btn-primary" onclick="runAiAnalysis()">📄 Сформировать документ</button>`;
+}
+
+async function saveAiAnalysis() {
+    if (!aiAnalysisText || aiAnalysisSaved || aiAnalysisSaving) return;
+    const token = getAuthToken();
+    if (!token) { alert('Войдите в личный кабинет на сайте УрокАИ, чтобы сохранить справку'); return; }
+
+    aiAnalysisSaving = true;
+    renderAiAnalysisBlock();
+    try {
+        const res = await fetch(AUTH_API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Authorization': token },
+            body: JSON.stringify({
+                action: 'save_material',
+                type: 'kz_analysis_report',
+                title: 'Аналитическая справка по качественному анализу (' + getToday() + ')',
+                content: aiAnalysisText,
+            }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Не удалось сохранить');
+        aiAnalysisSaved = true;
+        alert('Справка сохранена в личном кабинете, вкладка «Материалы»');
+    } catch (err) {
+        alert(err instanceof Error ? err.message : 'Не удалось сохранить справку');
+    } finally {
+        aiAnalysisSaving = false;
+        renderAiAnalysisBlock();
+    }
 }
 
 function downloadAiAnalysis() {
@@ -795,6 +829,7 @@ async function runAiAnalysis() {
     aiAnalysisLoading = true;
     aiAnalysisError = null;
     aiAnalysisNeedsUpgrade = false;
+    aiAnalysisSaved = false;
     renderAiAnalysisBlock();
 
     try {
