@@ -1136,6 +1136,38 @@ def build_tech_matrix_prompt(data: dict) -> str:
 Верни строго валидный JSON без пояснений в формате: {{"rows": [{{"t": "...", "o": "...", "r": "..."}}]}}"""
 
 
+def build_tech_matrix_analysis_prompt(data: dict) -> str:
+    fgos = data.get('fgos') or {}
+    rows = data.get('rows') or []
+    lines = []
+    for i, r in enumerate(rows, 1):
+        lines.append(f"{i}. Технология: {_s(r.get('t'))}\n   Обоснование: {_s(r.get('o'))}\n   Результативность: {_s(r.get('r'))}")
+    rows_block = "\n".join(lines) if lines else "нет данных"
+    fgos_line = "Требования ФГОС СПО учитываются." if fgos.get('on') else "Требования ФГОС СПО отдельно не указаны."
+    if fgos.get('on') and _s(fgos.get('komps')):
+        fgos_line += f" Формируемые компетенции: {_s(fgos.get('komps'))}."
+
+    return f"""Ты опытный методист колледжа и заместитель директора по учебно-методической работе. На основе заполненной «Матрицы используемых технологий обучения» составь развёрнутую аналитическую справку на русском языке.
+
+Дисциплина / МДК / ПМ: {_s(data.get('subject')) or 'не указано'}
+Образовательная организация: {_s(data.get('org')) or 'не указано'}
+Профессиональная направленность: {_s(data.get('prof')) or 'не указано'}
+Курс / группа: {_s(data.get('course')) or 'не указано'}
+{fgos_line}
+
+Матрица технологий:
+{rows_block}
+
+Составь справку из следующих разделов (используй именно эти заголовки):
+1. Общая характеристика — сколько технологий применяется, какие группы они образуют (проектные, проблемные, цифровые, игровые и т.д.).
+2. Обоснование выбора технологий — как они связаны со спецификой дисциплины, профессии и требованиями ФГОС СПО.
+3. Результативность применения — какие показатели отслеживаются и каких результатов достигнуто; если в данных остались пропуски «___», отметь, какие показатели нужно дополнить.
+4. Влияние на формирование компетенций — вклад технологий в профессиональные и общие компетенции.
+5. Выводы и рекомендации — сильные стороны, зоны роста, какие технологии стоит добавить или усилить.
+
+Опирайся только на переданные данные, не выдумывай цифры и факты. Пиши развёрнуто, по-деловому, без markdown-разметки (без **, #), обычным текстом с нумерацией разделов."""
+
+
 def build_decompose_prompt(competency: str) -> str:
     c = competency or 'выбранная компетенция'
     return f"""Ты опытный методист, специалист по таксономии Блума. Разложи компетенцию «{c}» на 5 уровней освоения по таксономии Блума: Знание, Понимание, Применение, Анализ, Оценка.
@@ -1822,6 +1854,23 @@ def handler(event: dict, context) -> dict:
                     rows.append({'t': _s(r.get('t')), 'o': _s(r.get('o')), 'r': _s(r.get('r'))})
 
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'rows': rows}, ensure_ascii=False)}
+
+        elif action == 'tech_matrix_analysis':
+            if not is_user_paid(event):
+                return {'statusCode': 403, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ-справка по матрице технологий доступна только по платной подписке'})}
+
+            data = body.get('data') or {}
+            rows = [r for r in (data.get('rows') or []) if isinstance(r, dict) and (_s(r.get('t')) or _s(r.get('o')) or _s(r.get('r')))]
+            if not rows:
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Заполните хотя бы одну строку матрицы'})}
+            data['rows'] = rows
+
+            content = call_ai([
+                {'role': 'system', 'content': 'Ты опытный методист колледжа. Отвечай развёрнуто, по-деловому и всегда на русском языке.'},
+                {'role': 'user', 'content': build_tech_matrix_analysis_prompt(data)},
+            ], temperature=0.6)
+
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'content': content}, ensure_ascii=False)}
 
         elif action == 'extracurricular_plan':
             if not is_user_paid(event):

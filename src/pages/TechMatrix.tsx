@@ -21,7 +21,7 @@ import ProfileSheet from "@/components/ProfileSheet";
 import AuthModal from "@/components/AuthModal";
 import UpgradeModal from "@/components/UpgradeModal";
 import { useAuth, AUTH_URL } from "@/context/AuthContext";
-import { downloadDocx } from "@/lib/download";
+import { downloadDocx, downloadTxt } from "@/lib/download";
 import {
   downloadMatrixCsv,
   downloadMatrixExcel,
@@ -43,6 +43,7 @@ import { toast } from "sonner";
 const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
 const DRAFT_KEY = "urokai_tech_matrix_draft";
 const DOC_TITLE = "Матрица используемых технологий обучения";
+const REPORT_TITLE = "Аналитическая справка по используемым технологиям обучения";
 
 const loadDraft = (): MatrixData => {
   try {
@@ -77,6 +78,8 @@ const TechMatrix = () => {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [showRef, setShowRef] = useState(false);
+  const [report, setReport] = useState("");
+  const [reportLoading, setReportLoading] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => localStorage.setItem(DRAFT_KEY, JSON.stringify(data)), 500);
@@ -132,6 +135,42 @@ const TechMatrix = () => {
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || "Не удалось заполнить матрицу");
     return (json.rows || []) as TechRow[];
+  };
+
+  const generateReport = async () => {
+    if (!requirePaid()) return;
+    const rows = filledRows(data.rows);
+    if (rows.length === 0) {
+      toast.error("Заполните хотя бы одну строку матрицы");
+      return;
+    }
+    setReportLoading(true);
+    try {
+      const res = await fetch(GENERATE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { "X-Authorization": token } : {}) },
+        body: JSON.stringify({
+          action: "tech_matrix_analysis",
+          data: {
+            subject: data.subject,
+            org: data.org,
+            prof: matrixProf(data),
+            course: data.course,
+            fgos: data.fgos,
+            rows,
+          },
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Не удалось составить справку");
+      setReport(json.content || "");
+      toast.success("Аналитическая справка готова");
+      setTimeout(() => document.getElementById("tech-report")?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Не удалось составить справку");
+    } finally {
+      setReportLoading(false);
+    }
   };
 
   const requireSubject = () => {
@@ -546,8 +585,49 @@ const TechMatrix = () => {
                 <Icon name="Printer" size={15} />
                 Печать / PDF
               </Button>
+              <Button className="gap-1.5" onClick={generateReport} disabled={reportLoading}>
+                {reportLoading ? (
+                  <>
+                    <Icon name="Loader2" size={15} className="animate-spin" />
+                    ИИ составляет справку...
+                  </>
+                ) : (
+                  <>
+                    <Icon name="Sparkles" size={15} />
+                    Сформировать аналитическую справку
+                  </>
+                )}
+              </Button>
             </div>
+            {!isPaid && (
+              <p className="mt-3 text-xs text-muted-foreground no-print">
+                Аналитическая справка от ИИ доступна по подписке.
+              </p>
+            )}
           </section>
+
+          {report && (
+            <section id="tech-report" className="rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm mb-6">
+              <div className="flex flex-wrap gap-2 mb-4 no-print">
+                <Button variant="outline" className="gap-1.5" onClick={() => window.print()}>
+                  <Icon name="Printer" size={15} />
+                  Печать
+                </Button>
+                <Button variant="outline" className="gap-1.5" onClick={() => downloadDocx(REPORT_TITLE, REPORT_TITLE, report)}>
+                  <Icon name="FileText" size={15} />
+                  Word
+                </Button>
+                <Button variant="outline" className="gap-1.5" onClick={() => downloadTxt(REPORT_TITLE, [REPORT_TITLE, "", report])}>
+                  <Icon name="Download" size={15} />
+                  TXT
+                </Button>
+              </div>
+              <div className="rounded-xl border border-border bg-muted/30 p-5 md:p-7">
+                <h2 className="font-display text-lg font-bold text-primary text-center mb-4">{REPORT_TITLE}</h2>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{report}</p>
+              </div>
+            </section>
+          )}
 
           <section className="rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm no-print">
             <button

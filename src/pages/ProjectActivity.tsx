@@ -79,6 +79,7 @@ const ProjectActivity = () => {
   const [report, setReport] = useState(() => localStorage.getItem(REPORT_KEY) || "");
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [tab, setTab] = useState("table");
 
   useEffect(() => {
     try {
@@ -150,6 +151,7 @@ const ProjectActivity = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Не удалось составить справку");
       setReport(data.content || "");
+      setTab("report");
       toast.success("Аналитическая справка готова");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Не удалось составить справку");
@@ -193,7 +195,7 @@ const ProjectActivity = () => {
             </p>
           </div>
 
-          <Tabs defaultValue="table">
+          <Tabs value={tab} onValueChange={setTab}>
             <TabsList className="grid grid-cols-2 h-auto gap-1 w-full max-w-md no-print">
               <TabsTrigger value="table" className="text-sm py-2">Таблица</TabsTrigger>
               <TabsTrigger value="report" className="text-sm py-2">Справка</TabsTrigger>
@@ -252,7 +254,20 @@ const ProjectActivity = () => {
               <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-4 no-print">
                   <h2 className="font-display text-lg font-bold">Записей: {rows.length}</h2>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    <Button className="gap-1.5" onClick={generateReport} disabled={loading}>
+                      {loading ? (
+                        <>
+                          <Icon name="Loader2" size={15} className="animate-spin" />
+                          ИИ составляет справку...
+                        </>
+                      ) : (
+                        <>
+                          <Icon name="Sparkles" size={15} />
+                          Сформировать аналитическую справку
+                        </>
+                      )}
+                    </Button>
                     <Button variant="outline" className="gap-1.5" onClick={() => window.print()} disabled={rows.length === 0}>
                       <Icon name="Printer" size={15} />
                       Печать
