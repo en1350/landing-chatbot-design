@@ -6,13 +6,6 @@ interface QualityAnalyticsPromoProps {
   id?: string;
 }
 
-const FEATURES = [
-  "Диагностика по 5-балльной шкале",
-  "Аналитика по группе и по каждому студенту",
-  "Учёт охвата внеаудиторных мероприятий",
-  "План коррекционной работы и справки от ИИ",
-];
-
 const TOOLS = [
   {
     to: "/analitika-kachestva",
@@ -57,29 +50,11 @@ const QualityAnalyticsPromo = ({ id }: QualityAnalyticsPromoProps) => {
 
   return (
     <section id={id} className="container py-10 sm:py-16 md:py-24">
-      <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-        <div className="animate-fade-in">
-          <span className="text-xs font-bold uppercase tracking-widest text-coral">Для педагога</span>
-          <p className="text-muted-foreground mt-4 leading-relaxed max-w-md">
-            Уровневая аналитика качества освоения предметных умений, автоматизированный расчёт
-            качества знаний по группам и дисциплинам и учёт вовлечения студентов во внеаудиторную
-            деятельность: сводные таблицы, динамика, готовые справки от ИИ.
-          </p>
-          <ul className="mt-6 space-y-3">
-            {FEATURES.map((t) => (
-              <li key={t} className="flex items-center gap-2.5 text-sm">
-                <Icon name="CheckCircle2" size={17} className="text-primary shrink-0" />
-                {t}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div>
-        <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold leading-tight mb-5 animate-fade-in">
+      <div>
+        <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold leading-tight mb-8 text-center animate-fade-in">
           Аналитические справки для портфолио
         </h2>
-        <div className="grid sm:grid-cols-2 gap-4 [&>*:last-child:nth-child(odd)]:sm:col-span-2">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {TOOLS.map((tool, i) => (
             <Link
               key={tool.to}
@@ -105,7 +80,6 @@ const QualityAnalyticsPromo = ({ id }: QualityAnalyticsPromoProps) => {
               </span>
             </Link>
           ))}
-        </div>
         </div>
       </div>
     </section>
