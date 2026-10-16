@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IT-Челлендж: Интернет + ИИ 🚀</title>
+<style>
+  :root {
+    --bg-dark: #0a0a12;
+    --bg-card: rgba(20, 20, 35, 0.6);
+    --primary: #00f0ff;
+    --secondary: #ff007f;
+    --accent: #ffea00;
+    --success: #00ff9d;
+    --danger: #ff4757;
+    --text-main: #ffffff;
+    --text-muted: #a0a0b0;
+    --glass: rgba(255, 255, 255, 0.05);
+    --border: rgba(255, 255, 255, 0.1);
+    --glow-primary: 0 0 20px rgba(0, 240, 255, 0.3);
+    --glow-secondary: 0 0 20px rgba(255, 0, 127, 0.3);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg-dark); color: var(--text-main); min-height: 100vh; line-height: 1.6; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 10% 20%, rgba(0, 240, 255, 0.15) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(255, 0, 127, 0.15) 0%, transparent 40%); z-index: -1; pointer-events: none; }
+  .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+  header { text-align: center; padding: 40px 20px; margin-bottom: 30px; }
+  h1 { font-size: 2.8rem; font-weight: 900; background: linear-gradient(90deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; letter-spacing: -1px; }
+  .subtitle { color: var(--text-muted); font-size: 1.2rem; font-weight: 500; }
+  .nav-tabs { display: flex; justify-content: center; gap: 12px; margin-bottom: 30px; flex-wrap: wrap; }
+  .tab-btn { background: var(--glass); border: 1px solid var(--border); color: var(--text-muted); padding: 12px 24px; border-radius: 50px; cursor: pointer; font-weight: 700; font-size: 0.95rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); backdrop-filter: blur(10px); }
+  .tab-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-main); transform: translateY(-2px); }
+  .tab-btn.active { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border-color: transparent; box-shadow: var(--glow-primary); }
+  .section { display: none; animation: fadeIn 0.5s ease; }
+  .section.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 30px; margin-bottom: 25px; backdrop-filter: blur(16px); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); }
+  .card h2 { color: var(--primary); margin-bottom: 20px; font-size: 1.6rem; display: flex; align-items: center; gap: 12px; }
+  .theory-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 20px; }
+  .theory-item { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 16px; border: 1px solid var(--border); transition: all 0.3s; }
+  .theory-item:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: var(--glow-primary); }
+  .theory-item h3 { color: var(--secondary); margin-bottom: 10px; font-size: 1.2rem; }
+  .theory-item p { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 10px; }
+  .tag { display: inline-block; background: rgba(0, 240, 255, 0.1); color: var(--primary); padding: 4px 10px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; margin: 3px 3px 3px 0; }
+  .sim-box { background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 16px; padding: 25px; margin-top: 20px; }
+  .sim-input-group { display: flex; gap: 10px; margin-bottom: 15px; }
+  .sim-input { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-main); padding: 12px 16px; border-radius: 12px; font-size: 1rem; outline: none; transition: 0.3s; }
+  .sim-input:focus { border-color: var(--primary); box-shadow: var(--glow-primary); }
+  .terminal-output { background: #000; color: var(--success); font-family: 'Courier New', monospace; padding: 15px; border-radius: 12px; min-height: 80px; font-size: 0.9rem; white-space: pre-wrap; border-left: 3px solid var(--success); }
+  .prompt-builder { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+  .prompt-category { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; }
+  .prompt-category h4 { color: var(--accent); margin-bottom: 10px; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+  .prompt-option { display: block; width: 100%; text-align: left; padding: 8px 12px; margin-bottom: 6px; background: var(--glass); border: 1px solid var(--border); border-radius: 8px; color: var(--text-muted); cursor: pointer; transition: 0.2s; font-size: 0.9rem; }
+  .prompt-option:hover { border-color: var(--primary); color: var(--text-main); }
+  .prompt-option.selected { background: rgba(0, 240, 255, 0.15); border-color: var(--primary); color: var(--primary); font-weight: 600; }
+  .ai-response { background: linear-gradient(135deg, rgba(255, 0, 127, 0.1), rgba(0, 240, 255, 0.1)); border: 1px solid var(--secondary); border-radius: 16px; padding: 20px; margin-top: 20px; display: none; animation: fadeIn 0.5s; }
+  .ai-response h4 { color: var(--secondary); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .task { background: rgba(255,255,255,0.03); border-radius: 16px; padding: 20px; margin-bottom: 15px; border-left: 4px solid var(--primary); transition: 0.3s; }
+  .task:hover { background: rgba(255,255,255,0.05); }
+  .task p { margin-bottom: 15px; font-weight: 600; font-size: 1.05rem; }
+  .options label { display: block; padding: 12px 16px; margin: 8px 0; background: var(--glass); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; transition: all 0.2s; font-size: 0.95rem; }
+  .options label:hover { background: rgba(255,255,255,0.1); border-color: var(--primary); }
+  .options input { margin-right: 10px; accent-color: var(--primary); }
+  .feedback { margin-top: 12px; padding: 12px; border-radius: 10px; font-weight: 600; display: none; font-size: 0.95rem; }
+  .feedback.correct { background: rgba(0, 255, 157, 0.15); color: var(--success); border: 1px solid var(--success); display: block; }
+  .feedback.wrong { background: rgba(255, 71, 87, 0.15); color: var(--danger); border: 1px solid var(--danger); display: block; }
+  .btn { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; padding: 12px 28px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.3s; margin-top: 10px; font-size: 1rem; }
+  .btn:hover { transform: translateY(-2px); box-shadow: var(--glow-primary); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+  .btn-secondary { background: rgba(255,255,255,0.1); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: rgba(255,255,255,0.2); box-shadow: none; }
+  .result-box { text-align: center; padding: 40px; background: linear-gradient(135deg, rgba(0, 240, 255, 0.05), rgba(255, 0, 127, 0.05)); border: 1px solid var(--border); border-radius: 24px; }
+  .grade-display { font-size: 5rem; font-weight: 900; margin: 20px 0; text-shadow: 0 0 30px currentColor; }
+  .grade-5 { color: var(--success); }
+  .grade-4 { color: var(--accent); }
+  .grade-3 { color: var(--primary); }
+  .grade-2 { color: var(--danger); }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 30px 0; }
+  .stat-item { background: var(--glass); padding: 20px; border-radius: 16px; border: 1px solid var(--border); }
+  .stat-value { font-size: 1.8rem; font-weight: 900; color: var(--primary); }
+  .stat-label { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+  .cert-card { background: linear-gradient(135deg, #1a1a2e, #16213e); border: 2px solid transparent; background-clip: padding-box; position: relative; border-radius: 24px; padding: 40px; margin: 30px auto; max-width: 600px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+  .cert-card::before { content: ''; position: absolute; inset: -2px; border-radius: 26px; background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent)); z-index: -1; }
+  .cert-title { font-size: 2rem; font-weight: 900; color: var(--text-main); margin-bottom: 10px; }
+  .cert-name { font-size: 2.2rem; font-weight: 900; background: linear-gradient(90deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 20px 0; }
+  .cert-grade { font-size: 1.3rem; color: var(--accent); font-weight: 700; margin: 15px 0; }
+  .error-review { text-align: left; margin-top: 30px; padding-top: 30px; border-top: 1px solid var(--border); }
+  .error-item { background: rgba(255, 71, 87, 0.1); border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 4px solid var(--danger); }
+  .error-item.perfect { background: rgba(0, 255, 157, 0.1); border-left-color: var(--success); text-align: center; }
+  .error-q { margin-bottom: 8px; color: var(--text-main); font-weight: 600; }
+  .error-user { color: var(--danger); font-size: 0.9rem; margin-bottom: 4px; }
+  .error-correct { color: var(--success); font-size: 0.9rem; font-weight: 600; }
+  .name-input { width: 100%; max-width: 400px; padding: 14px 20px; border-radius: 12px; border: 2px solid var(--border); background: rgba(0,0,0,0.3); color: var(--text-main); font-size: 1.1rem; text-align: center; margin: 20px auto; display: block; outline: none; transition: 0.3s; }
+  .name-input:focus { border-color: var(--primary); box-shadow: var(--glow-primary); }
+  @media (max-width: 600px) {
+    h1 { font-size: 2rem; }
+    .nav-tabs { flex-direction: column; }
+    .tab-btn { width: 100%; text-align: center; }
+    .cert-name { font-size: 1.6rem; }
+  }
+  @media print {
+    body * { visibility: hidden; }
+    .cert-card, .cert-card * { visibility: visible; }
+    .cert-card { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; border: 4px solid #333; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>🌐 Интернет + ИИ 🤖</h1>
+    <p class="subtitle">Прокачай свои скиллы: теория, симуляторы, квиз и цифровой сертификат</p>
+  </header>
+
+  <nav class="nav-tabs">
+    <button class="tab-btn active" onclick="showTab('theory', event)">📚 Теория</button>
+    <button class="tab-btn" onclick="showTab('simulators', event)">🎮 Симуляторы</button>
+    <button class="tab-btn" onclick="showTab('practice', event)">📝 Квиз-челлендж</button>
+    <button class="tab-btn" onclick="showTab('results', event)">🏆 Сертификат</button>
+  </nav>
+
+  <section id="theory" class="section active">
+    <div class="card">
+      <h2>🚀 Как работает Интернет (База)</h2>
+      <p style="color: var(--text-muted); margin-bottom: 20px;">Интернет — это не магия, а набор строгих правил (протоколов). Давай разберем главные сервисы, которыми ты пользуешься каждый день.</p>
+      <div class="theory-grid">
+        <div class="theory-item">
+          <h3>🌍 WWW (Web)</h3>
+          <p>Глобальная паутина документов. Ты вводишь адрес, браузер стучится на сервер, и тот присылает код (HTML/CSS/JS), который рисует красивую картинку.</p>
+          <span class="tag">HTTP/HTTPS</span>
+          <span class="tag">Порт 80/443</span>
+        </div>
+        <div class="theory-item">
+          <h3>🔖 DNS</h3>
+          <p>Телефонная книга интернета. Компьютеры не понимают "youtube.com", они понимают IP-адреса (типа 142.250.185.78). DNS переводит имена в цифры.</p>
+          <span class="tag">DNS</span>
+          <span class="tag">Порт 53</span>
+        </div>
+        <div class="theory-item">
+          <h3>✉️ Почта и 💬 Мессенджеры</h3>
+          <p>Почта асинхронна: SMTP отправляет, IMAP/POP3 забирает. Мессенджеры работают в реальном времени через постоянные соединения (WebSocket).</p>
+          <span class="tag">SMTP:25</span>
+          <span class="tag">IMAP:143</span>
+          <span class="tag">WebSocket</span>
+        </div>
+        <div class="theory-item">
+          <h3>☁️ Облака (Cloud)</h3>
+          <p><b>IaaS:</b> Аренда "железа" (серверов).<br><b>PaaS:</b> Аренда среды для разработки.<br><b>SaaS:</b> Готовая программа в браузере (Google Docs, Notion).</p>
+          <span class="tag">IaaS</span>
+          <span class="tag">PaaS</span>
+          <span class="tag">SaaS</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🧠 Искусственный Интеллект (AI)</h2>
+      <div class="theory-grid">
+        <div class="theory-item">
+          <h3>📝 NLP (Язык)</h3>
+          <p>Обработка естественного языка. То, что позволяет ChatGPT понимать твой кривой текст и отвечать на него. Лежит в основе переводчиков и чат-ботов.</p>
+        </div>
+        <div class="theory-item">
+          <h3>👁️ Computer Vision</h3>
+          <p>Компьютерное зрение. Распознавание лиц в iPhone, фильтрация запрещенного контента в соцсетях и беспилотные автомобили.</p>
+        </div>
+        <div class="theory-item" style="grid-column: 1 / -1; border-color: var(--accent);">
+          <h3 style="color: var(--accent);">💡 Формула идеального промпта</h3>
+          <p>Чтобы ИИ не галлюцинировал (не выдумывал факты), используй структуру: <br>
+          <b style="color: var(--primary);">[Роль]</b> + <b style="color: var(--secondary);">[Задача]</b> + <b style="color: var(--accent);">[Контекст]</b> + <b style="color: var(--success);">[Формат ответа]</b></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="simulators" class="section">
+    <div class="card">
+      <h2>🎮 Интерактивные симуляторы</h2>
+      <p style="color: var(--text-muted); margin-bottom: 20px;">Попробуй себя в роли системного администратора и промпт-инженера!</p>
+
+      <div class="sim-box">
+        <h3 style="color: var(--primary); margin-bottom: 15px;">🔍 Симулятор DNS-резолвера</h3>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">Введи доменное имя, чтобы увидеть, как DNS превращает его в IP-адрес.</p>
+        <div class="sim-input-group">
+          <input type="text" id="dnsInput" class="sim-input" placeholder="например, google.com или yandex.ru" value="example.com">
+          <button class="btn" onclick="simulateDNS()" style="margin-top:0;">Резолвить</button>
+        </div>
+        <div class="terminal-output" id="dnsOutput">Ожидание запроса...</div>
+      </div>
+
+      <div class="sim-box">
+        <h3 style="color: var(--secondary); margin-bottom: 15px;">🤖 Конструктор промптов</h3>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">Собери идеальный запрос, выбрав по одному варианту в каждой категории.</p>
+        <div class="prompt-builder">
+          <div class="prompt-category">
+            <h4>1. Роль</h4>
+            <button class="prompt-option" onclick="selectPrompt(this, 'role')">Ты опытный маркетолог</button>
+            <button class="prompt-option" onclick="selectPrompt(this, 'role')">Ты строгий учитель</button>
+            <button class="prompt-option" onclick="selectPrompt(this, 'role')">Ты дружелюбный бот</button>
+          </div>
+          <div class="prompt-category">
+            <h4>2. Задача</h4>
+            <button class="prompt-option" onclick="selectPrompt(this, 'task')">Напиши пост о пользе сна</button>
+            <button class="prompt-option" onclick="selectPrompt(this, 'task')">Объясни квантовую физику</button>
+            <button class="prompt-option" onclick="selectPrompt(this, 'task')">Составь меню на неделю</button>
+          </div>
+          <div class="prompt-category">
+            <h4>3. Контекст</h4>
+            <button class="prompt-option" onclick="selectPrompt(this, 'context')">Для аудитории школьников 14 лет</button>
+            <button class="prompt-option" onclick="selectPrompt(this, 'context')">Для занятых офисных работников</button>
+            <button class="prompt-option" onclick="selectPrompt(this, 'context')">Для новичков без спец. знаний</button>
+          </div>
+          <div class="prompt-category">
+            <h4>4. Формат</h4>
+            <button class="prompt-option" onclick="selectPrompt(this, 'format')">Список из 5 пунктов с эмодзи</button>
+            <button class="prompt-option" onclick="selectPrompt(this, 'format')">Таблица в Markdown</button>
+            <button class="prompt-option" onclick="selectPrompt(this, 'format')">Короткий абзац до 100 слов</button>
+          </div>
+        </div>
+        <button class="btn" onclick="generatePrompt()" style="width: 100%;">✨ Сгенерировать ответ ИИ</button>
+        <div class="ai-response" id="aiResponse">
+          <h4>🤖 Ответ нейросети:</h4>
+          <p id="aiText" style="color: var(--text-main); line-height: 1.7;"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="practice" class="section">
+    <div class="card">
+      <h2>📝 Квиз-челлендж</h2>
+      <p style="color: var(--text-muted); margin-bottom: 20px;">10 вопросов, чтобы закрепить базу. Без уровней, просто проверяем знания!</p>
+      <div id="quizContainer"></div>
+    </div>
+  </section>
+
+  <section id="results" class="section">
+    <div class="result-box">
+      <h2 style="color: var(--text-main); margin-bottom: 10px;">🏆 Твои результаты</h2>
+      <p style="color: var(--text-muted);">Введи свое имя, чтобы забрать цифровой сертификат и увидеть разбор полетов.</p>
+      <input type="text" id="studentName" class="name-input" placeholder="Твое Имя и Фамилия" maxlength="40">
+      <button class="btn" onclick="generateResults()" style="font-size: 1.1rem; padding: 14px 32px;">🚀 Сформировать итог</button>
+
+      <div id="finalResults" style="display: none; margin-top: 40px;">
+        <div class="cert-card" id="certCard">
+          <div class="cert-title">🎓 DIGITAL CERTIFICATE</div>
+          <p style="color: var(--text-muted);">Успешно пройден курс</p>
+          <div class="cert-name" id="certNameDisplay">Имя Фамилия</div>
+          <p style="color: var(--text-muted);">по теме «Сервисы Интернета и Искусственный Интеллект»</p>
+          <div class="cert-grade" id="certGradeDisplay">Оценка: 5 (Отлично)</div>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 20px;" id="certDate"></p>
+        </div>
+        <button class="btn btn-secondary" onclick="window.print()">🖨️ Сохранить / Распечатать</button>
+        <div class="error-review">
+          <h3 style="color: var(--text-main); margin-bottom: 20px;">📋 Разбор ошибок</h3>
+          <div id="errorsList"></div>
+        </div>
+      </div>
+
+      <button class="btn btn-secondary" onclick="resetAll()" style="margin-top: 40px; color: var(--danger); border-color: var(--danger);">🔄 Начать всё заново</button>
+    </div>
+  </section>
+</div>
+
+<script>
+  const quizData = [
+    { q: "Какой протокол защищает данные при просмотре сайтов (шифрует трафик)?", options: ["HTTP", "FTP", "HTTPS", "SMTP"], correct: 2 },
+    { q: "Что делает DNS-сервер?", options: ["Хранит файлы сайта", "Преобразует домены (ya.ru) в IP-адреса", "Отправляет электронную почту", "Сжимает видео"], correct: 1 },
+    { q: "Какой протокол используется именно для ОТПРАВКИ писем?", options: ["POP3", "IMAP", "SMTP", "WebSocket"], correct: 2 },
+    { q: "Google Docs и Notion — это примеры какой облачной модели?", options: ["IaaS (Инфраструктура)", "PaaS (Платформа)", "SaaS (Программное обеспечение)", "Локальный сервер"], correct: 2 },
+    { q: "Какая технология позволяет мессенджерам доставлять сообщения мгновенно без постоянных запросов?", options: ["FTP", "WebSocket", "DNS", "HTML"], correct: 1 },
+    { q: "Какой протокол получает почту, оставляя её синхронизированной на всех устройствах?", options: ["POP3", "SMTP", "IMAP", "HTTP"], correct: 2 },
+    { q: "Что такое «галлюцинация» в контексте ИИ?", options: ["Сбой видеокарты", "Генерация правдоподобной, но фактически неверной информации", "Вирусная атака на сервер", "Слишком долгий ответ"], correct: 1 },
+    { q: "Какой принцип ИИ нарушен, если система найма отсеивает резюме из-за предвзятых исторических данных?", options: ["Энергоэффективность", "Прозрачность кода", "Справедливость и отсутствие Bias (предвзятости)", "Скорость обработки"], correct: 2 },
+    { q: "Сколько каналов использует классический протокол FTP?", options: ["Один универсальный", "Два: командный (21) и данных (20)", "Три: управление, данные, шифрование", "Четыре, как в TCP"], correct: 1 },
+    { q: "Какая технология позволяет организовать видеозвонок прямо в браузере без плагинов?", options: ["WebRTC", "FTP", "SMTP", "DNS"], correct: 0 }
+  ];
+
+  let taskResults = [];
+  let practiceScore = 0;
+  let answeredTasks = new Set();
+
+  function showTab(tabId, e) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    if (e && e.target) e.target.classList.add('active');
+    if (tabId === 'results') generateResults();
+  }
+
+  function renderQuiz() {
+    const container = document.getElementById('quizContainer');
+    container.innerHTML = '';
+    quizData.forEach((item, index) => {
+      const taskNum = index + 1;
+      let optionsHtml = '';
+      item.options.forEach((opt, optIndex) => {
+        optionsHtml += `<label><input type="radio" name="q${taskNum}" value="${optIndex}"> ${opt}</label>`;
+      });
+      container.innerHTML += `
+        <div class="task" id="task${taskNum}">
+          <p>${taskNum}. ${item.q}</p>
+          <div class="options">${optionsHtml}</div>
+          <button class="btn" onclick="checkTask(${taskNum})">Проверить</button>
+          <div class="feedback" id="fb${taskNum}"></div>
+        </div>
+      `;
+    });
+  }
+  renderQuiz();
+
+  function checkTask(taskNum) {
+    if (answeredTasks.has(taskNum)) return;
+    const item = quizData[taskNum - 1];
+    const options = document.getElementsByName('q' + taskNum);
+    let selected = -1, selectedText = "Нет ответа";
+
+    for (let i = 0; i < options.length; i++) {
+      if (options[i].checked) {
+        selected = parseInt(options[i].value);
+        selectedText = options[i].parentElement.textContent.trim();
+        break;
+      }
+    }
+
+    const fb = document.getElementById('fb' + taskNum);
+    if (selected === -1) {
+      fb.textContent = '⚠️ Выбери вариант ответа, бро!';
+      fb.className = 'feedback wrong';
+      return;
+    }
+
+    const isCorrect = (selected === item.correct);
+    if (isCorrect) {
+      fb.textContent = '✅ Верно! Ты шаришь в теме. 🔥';
+      fb.className = 'feedback correct';
+      practiceScore++;
+    } else {
+      fb.textContent = '❌ Мимо. Правильный ответ: ' + item.options[item.correct];
+      fb.className = 'feedback wrong';
+    }
+
+    taskResults.push({
+      taskNum,
+      question: item.q,
+      userAnswer: selectedText,
+      correctAnswer: item.options[item.correct],
+      isCorrect
+    });
+
+    answeredTasks.add(taskNum);
+    document.querySelector(`#task${taskNum} .btn`).disabled = true;
+    options.forEach(opt => opt.disabled = true);
+  }
+
+  function simulateDNS() {
+    const input = document.getElementById('dnsInput').value.trim() || 'example.com';
+    const output = document.getElementById('dnsOutput');
+    output.style.color = '';
+    output.textContent = `> Запрос к корневому серверу для ${input}...\n`;
+
+    setTimeout(() => {
+      output.textContent += `> Запрос к TLD-серверу...\n`;
+    }, 600);
+
+    setTimeout(() => {
+      const fakeIP = `${Math.floor(Math.random()*200)+10}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`;
+      output.textContent += `> Успех! Домен ${input} резолвится в IP: ${fakeIP}\n> Время отклика: ${Math.floor(Math.random()*50)+10}мс`;
+      output.style.color = '#00ff9d';
+    }, 1200);
+  }
+
+  let promptChoices = { role: '', task: '', context: '', format: '' };
+
+  function selectPrompt(btn, category) {
+    btn.parentElement.querySelectorAll('.prompt-option').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    promptChoices[category] = btn.textContent;
+  }
+
+  function generatePrompt() {
+    if (!promptChoices.role || !promptChoices.task || !promptChoices.context || !promptChoices.format) {
+      alert('Эй, выбери по одному варианту в каждой из 4 колонок! 😉');
+      return;
+    }
+
+    const responseDiv = document.getElementById('aiResponse');
+    const textP = document.getElementById('aiText');
+    responseDiv.style.display = 'block';
+    textP.textContent = 'Генерация...';
+
+    setTimeout(() => {
+      textP.innerHTML = `<i>"${promptChoices.role}. ${promptChoices.task} ${promptChoices.context}. Оформи ответ как: ${promptChoices.format}."</i><br><br>
+      <b style="color: var(--primary)">ИИ:</b> Конечно! Вот ваш запрос, обработанный с учетом всех параметров. [Здесь был бы сгенерированный текст, идеально попадающий в заданный формат и контекст, без галлюцинаций и воды, благодаря четкой структуре промпта].`;
+    }, 1000);
+  }
+
+  function generateResults() {
+    const name = document.getElementById('studentName').value.trim() || "Крутой Ученик";
+    document.getElementById('certNameDisplay').textContent = name;
+
+    const totalQuestions = quizData.length;
+    const percentage = Math.round((practiceScore / totalQuestions) * 100);
+
+    let grade = 2, gradeClass = 'grade-2', text = 'Неуд. Но не сдавайся, перечитай теорию!';
+    if (percentage >= 90) { grade = 5; gradeClass = 'grade-5'; text = 'Отлично! Ты настоящий IT-гуру! 🔥'; }
+    else if (percentage >= 70) { grade = 4; gradeClass = 'grade-4'; text = 'Хорошо! Крепкие знания, так держать! 💪'; }
+    else if (percentage >= 50) { grade = 3; gradeClass = 'grade-3'; text = 'Норм, но есть куда расти. Повтори симуляторы!'; }
+
+    const gradeEl = document.getElementById('finalGrade') || createGradeEl();
+    gradeEl.textContent = grade;
+    gradeEl.className = 'grade-display ' + gradeClass;
+
+    document.getElementById('certGradeDisplay').textContent = `Оценка: ${grade} — ${text}`;
+    document.getElementById('certDate').textContent = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    document.getElementById('finalResults').style.display = 'block';
+
+    const errorsList = document.getElementById('errorsList');
+    errorsList.innerHTML = '';
+    const wrongAnswers = taskResults.filter(r => !r.isCorrect);
+
+    if (wrongAnswers.length === 0 && taskResults.length > 0) {
+      errorsList.innerHTML = '<div class="error-item perfect">🎉 Идеально! Ни одной ошибки в квизе. Ты красавчик!</div>';
+    } else if (wrongAnswers.length > 0) {
+      wrongAnswers.forEach(err => {
+        errorsList.innerHTML += `
+          <div class="error-item">
+            <div class="error-q">❓ ${err.question}</div>
+            <div class="error-user">❌ Ты выбрал: ${err.userAnswer}</div>
+            <div class="error-correct">✅ Надо было: ${err.correctAnswer}</div>
+          </div>
+        `;
+      });
+    } else {
+      errorsList.innerHTML = '<div class="error-item perfect">⚠️ Пройди квиз, чтобы увидеть разбор!</div>';
+    }
+  }
+
+  function createGradeEl() {
+    const el = document.createElement('div');
+    el.id = 'finalGrade';
+    el.className = 'grade-display';
+    const fr = document.getElementById('finalResults');
+    fr.parentElement.insertBefore(el, fr);
+    return el;
+  }
+
+  function resetAll() {
+    practiceScore = 0;
+    answeredTasks.clear();
+    taskResults = [];
+    promptChoices = { role: '', task: '', context: '', format: '' };
+
+    renderQuiz();
+
+    document.querySelectorAll('.prompt-option').forEach(b => b.classList.remove('selected'));
+    document.getElementById('aiResponse').style.display = 'none';
+    document.getElementById('dnsOutput').textContent = 'Ожидание запроса...';
+    document.getElementById('dnsOutput').style.color = 'var(--success)';
+    document.getElementById('studentName').value = '';
+    document.getElementById('finalResults').style.display = 'none';
+
+    const gradeEl = document.getElementById('finalGrade');
+    if (gradeEl) gradeEl.remove();
+
+    showTab('theory', { target: document.querySelectorAll('.tab-btn')[0] });
+  }
+</script>
+
+</body>
+</html>

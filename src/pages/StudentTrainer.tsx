@@ -42,7 +42,8 @@ type TrainerKey =
   | "binary-search"
   | "linear-complexity"
   | "quadratic-complexity"
-  | "set-theory";
+  | "set-theory"
+  | "internet-ai";
 
 interface CategoryItem {
   key: CategoryKey;
@@ -82,6 +83,7 @@ const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "linear-complexity": "/linear-complexity.html",
   "quadratic-complexity": "/quadratic-complexity.html",
   "set-theory": "/set-theory.html",
+  "internet-ai": "/internet-ai.html",
 };
 
 const CATEGORIES: CategoryItem[] = [
@@ -116,6 +118,14 @@ const CATEGORIES: CategoryItem[] = [
 ];
 
 const TRAINERS: TrainerItem[] = [
+  {
+    key: "internet-ai",
+    category: "informatics",
+    icon: "🌐",
+    title: "Интернет и ИИ",
+    description: "Теория о сервисах интернета и ИИ, симуляторы DNS и промптов, квиз на 10 вопросов и цифровой сертификат с разбором ошибок",
+    accent: "#00f0ff",
+  },
   {
     key: "set-theory",
     category: "informatics",
