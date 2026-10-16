@@ -54,9 +54,6 @@ const QualityAnalyticsPromo = ({ id }: QualityAnalyticsPromoProps) => {
       <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
         <div className="animate-fade-in">
           <span className="text-xs font-bold uppercase tracking-widest text-coral">Для педагога</span>
-          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mt-2 leading-tight">
-            Аналитика качества обученности
-          </h2>
           <p className="text-muted-foreground mt-4 leading-relaxed max-w-md">
             Уровневая аналитика качества освоения предметных умений, автоматизированный расчёт
             качества знаний по группам и дисциплинам и учёт вовлечения студентов во внеаудиторную
@@ -72,6 +69,10 @@ const QualityAnalyticsPromo = ({ id }: QualityAnalyticsPromoProps) => {
           </ul>
         </div>
 
+        <div>
+        <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold leading-tight mb-5 animate-fade-in">
+          Аналитические справки для портфолио
+        </h2>
         <div className="grid sm:grid-cols-2 gap-4 [&>*:last-child:nth-child(odd)]:sm:col-span-2">
           {TOOLS.map((tool, i) => (
             <Link
@@ -98,6 +99,7 @@ const QualityAnalyticsPromo = ({ id }: QualityAnalyticsPromoProps) => {
               </span>
             </Link>
           ))}
+        </div>
         </div>
       </div>
     </section>
