@@ -43,6 +43,7 @@ const MORE_LINKS = [
   { label: "Внеаудиторная деятельность", to: "/vneauditornaya-deyatelnost", icon: "Users" },
   { label: "Матрица технологий обучения", to: "/matritsa-tehnologiy", icon: "Grid3x3" },
   { label: "Проектная деятельность", to: "/proektnaya-deyatelnost", icon: "FlaskConical" },
+  { label: "Коррекционная работа", to: "/korrektsionnaya-rabota", icon: "MessageCircle" },
 ];
 
 const Navbar = ({

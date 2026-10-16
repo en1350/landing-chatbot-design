@@ -44,6 +44,12 @@ const TOOLS = [
     title: "Справка по проектной и исследовательской деятельности",
     gradient: "from-[#0f766e] to-[#14b8a6]",
   },
+  {
+    to: "/korrektsionnaya-rabota",
+    icon: "🗣️",
+    title: "Справка по направлениям коррекционной работы",
+    gradient: "from-[#be185d] to-[#ec4899]",
+  },
 ];
 
 const QualityAnalyticsPromo = ({ id }: QualityAnalyticsPromoProps) => {
