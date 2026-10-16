@@ -8,6 +8,7 @@ import { useAuth, AUTH_URL } from "@/context/AuthContext";
 import { downloadTxt } from "@/lib/download";
 import PlanCards, { PLAN_FEATURES } from "@/components/PlanCards";
 import UpgradeModal from "@/components/UpgradeModal";
+import ChangePasswordForm from "@/components/ChangePasswordForm";
 
 interface ProfileSheetProps {
   open: boolean;
@@ -137,6 +138,8 @@ const ProfileSheet = ({ open, onClose, onNeedAuth }: ProfileSheetProps) => {
               </Button>
             </div>
           )}
+
+          {user && <ChangePasswordForm />}
 
           {user && isPaid && expiresAt && (
             <div

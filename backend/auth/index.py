@@ -386,6 +386,22 @@ def handler(event: dict, context) -> dict:
                 conn.commit()
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'ok': True})}
 
+        elif action == 'change_password':
+            user_id = get_user_id_by_token(cur, get_token(event))
+            if not user_id:
+                return {'statusCode': 401, 'headers': cors_headers(), 'body': json.dumps({'error': 'Войдите в аккаунт'})}
+            old_password = body_data.get('old_password') or ''
+            new_password = body_data.get('new_password') or ''
+            if len(new_password) < 6:
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Новый пароль должен быть не короче 6 символов'})}
+            cur.execute(f"SELECT password_hash FROM {SCHEMA}.users WHERE id = %s", (user_id,))
+            row = cur.fetchone()
+            if not row or row[0] != hash_password(old_password):
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Текущий пароль указан неверно'})}
+            cur.execute(f"UPDATE {SCHEMA}.users SET password_hash = %s WHERE id = %s", (hash_password(new_password), user_id))
+            conn.commit()
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'ok': True})}
+
         elif action == 'forgot_password':
             email = (body_data.get('email') or '').strip().lower()
             if not email or '@' not in email:
