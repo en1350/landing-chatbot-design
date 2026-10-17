@@ -10,6 +10,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useAuth } from "@/context/AuthContext";
+import { useChatUnread } from "@/hooks/use-chat-unread";
 
 interface NavbarProps {
   onOpenNotebook: () => void;
@@ -58,6 +59,7 @@ const Navbar = ({
   const [open, setOpen] = useState(false);
   const { user, token } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
+  const chatUnread = useChatUnread();
 
   useEffect(() => {
     if (!user || !token) {
@@ -132,9 +134,14 @@ const Navbar = ({
           {user && (
             <Link
               to="/chat"
-              className="story-link px-3 py-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+              className="story-link relative px-3 py-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
             >
               Чат
+              {chatUnread > 0 && (
+                <span className="absolute -top-0.5 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-coral px-1 text-[10px] font-bold leading-none text-coral-foreground animate-pulse-soft">
+                  {chatUnread > 99 ? "99+" : chatUnread}
+                </span>
+              )}
             </Link>
           )}
           {isAdmin && (
@@ -234,6 +241,11 @@ const Navbar = ({
                 >
                   <Icon name="MessagesSquare" size={18} />
                   Чат педагогов
+                  {chatUnread > 0 && (
+                    <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-coral px-1.5 text-xs font-bold text-coral-foreground">
+                      {chatUnread > 99 ? "99+" : chatUnread}
+                    </span>
+                  )}
                 </Link>
               )}
               {isAdmin && (

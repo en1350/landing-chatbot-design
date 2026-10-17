@@ -82,6 +82,18 @@ def handler(event: dict, context) -> dict:
             return resp(200, {'id': new_id, 'created_at': created_at})
 
         params = event.get('queryStringParameters') or {}
+        if params.get('unread_after') is not None:
+            try:
+                after_id = int(params.get('unread_after') or 0)
+            except ValueError:
+                after_id = 0
+            cur.execute(f"SELECT COALESCE(MAX(id), 0) FROM {SCHEMA}.chat_messages")
+            latest_id = cur.fetchone()[0]
+            cur.execute(
+                f"SELECT COUNT(*) FROM {SCHEMA}.chat_messages WHERE id > %s AND user_id <> %s",
+                (after_id, user_id),
+            )
+            return resp(200, {'unread': cur.fetchone()[0], 'latest_id': latest_id})
         try:
             since_id = int(params.get('since_id') or 0)
         except ValueError:

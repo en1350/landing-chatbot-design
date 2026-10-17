@@ -6,6 +6,7 @@ import ProfileSheet from "@/components/ProfileSheet";
 import AuthModal from "@/components/AuthModal";
 import Icon from "@/components/ui/icon";
 import { useAuth } from "@/context/AuthContext";
+import { markChatRead } from "@/hooks/use-chat-unread";
 
 const CHAT_URL = "https://functions.poehali.dev/f0278fe2-9ca4-49d4-8a58-cd5614b999be";
 const POLL_MS = 2500;
@@ -68,6 +69,11 @@ const MemberChat = () => {
     }, POLL_MS);
     return () => clearInterval(timer);
   }, [user, token, load]);
+
+  useEffect(() => {
+    if (!user || !messages.length) return;
+    markChatRead(user.id, messages[messages.length - 1].id);
+  }, [messages, user]);
 
   useEffect(() => {
     const el = scrollRef.current;
