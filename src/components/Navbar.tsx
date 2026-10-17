@@ -129,6 +129,14 @@ const Navbar = ({
           >
             Проверка тетради
           </button>
+          {user && (
+            <Link
+              to="/chat"
+              className="story-link px-3 py-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+            >
+              Чат
+            </Link>
+          )}
           {isAdmin && (
             <Link
               to="/admin"
@@ -218,6 +226,16 @@ const Navbar = ({
                   {m.label}
                 </Link>
               ))}
+              {user && (
+                <Link
+                  to="/chat"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 px-2 py-3 rounded-lg text-base font-semibold text-primary hover:bg-accent transition-colors"
+                >
+                  <Icon name="MessagesSquare" size={18} />
+                  Чат педагогов
+                </Link>
+              )}
               {isAdmin && (
                 <Link
                   to="/admin"
