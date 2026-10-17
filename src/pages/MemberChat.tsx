@@ -19,6 +19,14 @@ interface ChatMessage {
   created_at: string;
 }
 
+const EMOJIS = [
+  "😀","😃","😄","😁","😆","😅","😂","🤣","🙂","😉","😊","😇",
+  "🥰","😍","🤩","😘","😋","😎","🤓","🤔","🤗","🤭","😏","😌",
+  "😴","😢","😭","😡","😱","🙄","😬","🤝","👍","👎","👏","🙌",
+  "🙏","💪","👋","✌️","👌","🤞","❤️","💔","🔥","⭐","🎉","🎓",
+  "📚","✏️","📝","💡","✅","❌","❓","❗","☕","🌷","☀️","🍀",
+];
+
 const formatTime = (iso: string) =>
   new Date(iso).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
 
@@ -28,6 +36,8 @@ const MemberChat = () => {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [emojiOpen, setEmojiOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
@@ -84,6 +94,20 @@ const MemberChat = () => {
     const el = scrollRef.current;
     if (!el) return;
     stickRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+  };
+
+  const addEmoji = (emoji: string) => {
+    const el = inputRef.current;
+    const start = el?.selectionStart ?? input.length;
+    const end = el?.selectionEnd ?? input.length;
+    const next = input.slice(0, start) + emoji + input.slice(end);
+    if (next.length > 1000) return;
+    setInput(next);
+    requestAnimationFrame(() => {
+      el?.focus();
+      const pos = start + emoji.length;
+      el?.setSelectionRange(pos, pos);
+    });
   };
 
   const send = async (e: React.FormEvent) => {
@@ -206,8 +230,34 @@ const MemberChat = () => {
             </p>
           )}
 
+          {emojiOpen && (
+            <div className="grid grid-cols-6 sm:grid-cols-12 gap-1 border-t border-border bg-secondary/40 p-2.5">
+              {EMOJIS.map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => addEmoji(emoji)}
+                  className="flex h-9 items-center justify-center rounded-lg text-xl hover:bg-accent transition-colors"
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          )}
+
           <form onSubmit={send} className="flex items-center gap-2 border-t border-border p-2.5">
+            <button
+              type="button"
+              onClick={() => setEmojiOpen((v) => !v)}
+              title="Смайлики"
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${
+                emojiOpen ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground"
+              }`}
+            >
+              <Icon name="Smile" size={20} />
+            </button>
             <input
+              ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               maxLength={1000}
