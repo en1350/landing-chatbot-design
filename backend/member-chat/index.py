@@ -32,8 +32,13 @@ def get_user(cur, event):
     return cur.fetchone()
 
 
+def is_admin(email):
+    admins = [e.strip().lower() for e in os.environ.get('ADMIN_EMAILS', '').split(',') if e.strip()]
+    return (email or '').lower() in admins
+
+
 def handler(event: dict, context) -> dict:
-    """Закрытый чат для зарегистрированных пользователей: список сообщений и отправка."""
+    """Закрытый чат для зарегистрированных пользователей: список, отправка и удаление сообщений."""
     method = event.get('httpMethod', 'GET')
     if method == 'OPTIONS':
         return {'statusCode': 200, 'headers': {**cors(), 'Access-Control-Max-Age': '86400'}, 'body': ''}
@@ -48,6 +53,20 @@ def handler(event: dict, context) -> dict:
 
         if method == 'POST':
             body = json.loads(event.get('body') or '{}')
+            if body.get('action') == 'delete':
+                try:
+                    msg_id = int(body.get('id'))
+                except (TypeError, ValueError):
+                    return resp(400, {'error': 'Не указано сообщение'})
+                cur.execute(f"SELECT user_id FROM {SCHEMA}.chat_messages WHERE id = %s", (msg_id,))
+                row = cur.fetchone()
+                if not row:
+                    return resp(200, {'deleted': True})
+                if row[0] != user_id and not is_admin(email):
+                    return resp(403, {'error': 'Можно удалять только свои сообщения'})
+                cur.execute(f"DELETE FROM {SCHEMA}.chat_messages WHERE id = %s", (msg_id,))
+                conn.commit()
+                return resp(200, {'deleted': True})
             text = (body.get('message') or '').strip()
             if not text:
                 return resp(400, {'error': 'Пустое сообщение'})
@@ -86,6 +105,8 @@ def handler(event: dict, context) -> dict:
             {'id': r[0], 'user_id': r[1], 'author': r[2], 'text': r[3], 'created_at': r[4]}
             for r in rows
         ]
-        return resp(200, {'messages': messages, 'me': user_id})
+        cur.execute(f"SELECT id FROM {SCHEMA}.chat_messages ORDER BY id DESC LIMIT 100")
+        recent_ids = [r[0] for r in cur.fetchall()]
+        return resp(200, {'messages': messages, 'me': user_id, 'is_admin': is_admin(email), 'recent_ids': recent_ids})
     finally:
         conn.close()

@@ -26,6 +26,7 @@ const MemberChat = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
@@ -42,13 +43,15 @@ const MemberChat = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Не удалось загрузить чат");
       const incoming = data.messages as ChatMessage[];
-      if (incoming.length) {
-        lastIdRef.current = incoming[incoming.length - 1].id;
-        setMessages((prev) => {
-          const known = new Set(prev.map((m) => m.id));
-          return [...prev, ...incoming.filter((m) => !known.has(m.id))];
-        });
-      }
+      const recent = new Set<number>(data.recent_ids as number[]);
+      const minRecent = recent.size ? Math.min(...recent) : 0;
+      setIsAdmin(!!data.is_admin);
+      if (incoming.length) lastIdRef.current = incoming[incoming.length - 1].id;
+      setMessages((prev) => {
+        const known = new Set(prev.map((m) => m.id));
+        const merged = [...prev, ...incoming.filter((m) => !known.has(m.id))];
+        return merged.filter((m) => m.id < minRecent || recent.has(m.id));
+      });
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Нет связи с чатом");
@@ -100,6 +103,23 @@ const MemberChat = () => {
     }
   };
 
+  const remove = async (id: number) => {
+    if (!token) return;
+    if (!window.confirm("Удалить это сообщение?")) return;
+    try {
+      const res = await fetch(CHAT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Authorization": token },
+        body: JSON.stringify({ action: "delete", id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Не удалось удалить");
+      setMessages((prev) => prev.filter((m) => m.id !== id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Не удалось удалить сообщение");
+    }
+  };
+
   if (loading) return null;
   if (!user) return <Navigate to="/" replace />;
 
@@ -140,7 +160,16 @@ const MemberChat = () => {
             {messages.map((m) => {
               const mine = m.user_id === user.id;
               return (
-                <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+                <div key={m.id} className={`group flex items-center gap-1.5 ${mine ? "justify-end" : "justify-start"}`}>
+                  {mine && (
+                    <button
+                      onClick={() => remove(m.id)}
+                      title="Удалить сообщение"
+                      className="opacity-60 hover:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 text-destructive transition-opacity"
+                    >
+                      <Icon name="Trash2" size={14} />
+                    </button>
+                  )}
                   <div
                     className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed ${
                       mine ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-secondary text-secondary-foreground rounded-bl-sm"
@@ -150,6 +179,15 @@ const MemberChat = () => {
                     <p className="whitespace-pre-wrap break-words">{m.text}</p>
                     <p className="text-[10px] mt-1 opacity-70 text-right">{formatTime(m.created_at)}</p>
                   </div>
+                  {!mine && isAdmin && (
+                    <button
+                      onClick={() => remove(m.id)}
+                      title="Удалить сообщение"
+                      className="opacity-60 hover:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 text-destructive transition-opacity"
+                    >
+                      <Icon name="Trash2" size={14} />
+                    </button>
+                  )}
                 </div>
               );
             })}
