@@ -17,6 +17,7 @@ interface Item {
 const ITEMS: Item[] = [
   { icon: "BookOpen", title: "Конструктор урока", text: "Карточка урока с этапами за минуты", to: "/konstruktor-uroka" },
   { icon: "ClipboardList", title: "Конструктор заданий", text: "Задания и критерии оценивания", to: "/konstruktor-zadaniy" },
+  { icon: "FileText", title: "Рабочие листы", text: "Листы с заданиями, PDF для печати", to: "/konstruktor-rabochih-listov" },
   { icon: "Presentation", title: "Презентации", text: "Слайды по теме урока", to: "/generator-prezentaciy" },
   { icon: "Brain", title: "Тренажёры для учеников", text: "Интерактивные уроки и тесты", to: "/trenazher-dlya-uchenikov", badge: "Бесплатно" },
   { icon: "ScanText", title: "Проверка тетради", text: "ИИ проверит работу по фото", anchor: "notebook" },

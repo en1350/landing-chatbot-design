@@ -37,6 +37,7 @@ const QUICK_LINKS = [
 
 const MORE_LINKS = [
   { label: "Тренажёр для учеников", to: "/trenazher-dlya-uchenikov", icon: "Brain" },
+  { label: "Рабочие листы", to: "/konstruktor-rabochih-listov", icon: "FileText" },
   { label: "Генератор проектов", to: "/generator-proektov", icon: "FolderKanban" },
   { label: "Мастер-классы", to: "/konstruktor-masterklassov", icon: "Sparkles" },
   { label: "Задания по ПМ", to: "/generator-zadaniy-pm", icon: "Briefcase" },
@@ -112,6 +113,12 @@ const Navbar = ({
             className="story-link px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
           >
             Конструктор заданий
+          </Link>
+          <Link
+            to="/konstruktor-rabochih-listov"
+            className="story-link px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
+          >
+            Рабочие листы
           </Link>
           <Link
             to="/konstruktor-igry"

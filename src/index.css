@@ -143,4 +143,13 @@
   .lg\:grid-cols-2 {
     display: block !important;
   }
+  .worksheet-grid {
+    display: block !important;
+  }
+  #worksheet-sheet {
+    width: 100% !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
 }

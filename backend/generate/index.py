@@ -1390,6 +1390,89 @@ def normalize_project(parsed: dict) -> dict:
     }
 
 
+WORKSHEET_TYPES = {'open', 'choice', 'table'}
+
+
+def worksheet_context(f: dict) -> str:
+    plan = (f.get('planText') or '').strip()[:6000]
+    plan_line = f"\nПлан-конспект урока (опирайся на него):\n{plan}" if plan else ""
+    return f"""Тема урока: {(f.get('topic') or 'не указана').strip()}
+Дисциплина: {(f.get('discipline') or 'не указана').strip()}
+Группа / класс: {(f.get('group') or 'не указана').strip()}
+Уровень сложности: {(f.get('level') or 'средний').strip()}{plan_line}"""
+
+
+WORKSHEET_JSON_FORMAT = """{"tasks": [{"title": "короткое название задания", "type": "open | choice | table", "description": "полный текст условия для обучающегося", "options": ["вариант ответа"], "columns": ["заголовок столбца"], "rows": 3}]}"""
+
+
+def build_worksheet_prompt(f: dict) -> str:
+    try:
+        count = max(1, min(int(f.get('taskCount') or 5), 12))
+    except (TypeError, ValueError):
+        count = 5
+    types = [t for t in (f.get('types') or []) if t in WORKSHEET_TYPES] or ['open', 'choice', 'table']
+    return f"""Составь задания для рабочего листа, который обучающиеся заполнят на занятии.
+
+{worksheet_context(f)}
+
+Количество заданий: {count}
+Допустимые типы заданий: {', '.join(types)}
+Типы: open — открытый ответ на строках; choice — выбор правильного ответа (поле options содержит 3-4 варианта, пустым не оставляй); table — таблица для заполнения (поле columns содержит 2-4 заголовка, rows — число пустых строк от 2 до 6).
+Чередуй типы из допустимых, задания должны идти от простого к сложному, формулируй конкретно, на «вы». Без markdown-разметки.
+
+Верни ТОЛЬКО валидный JSON в формате:
+{WORKSHEET_JSON_FORMAT}"""
+
+
+def build_worksheet_refine_prompt(f: dict, instruction: str) -> str:
+    lines = []
+    for i, t in enumerate(f.get('tasks') or [], 1):
+        lines.append(f"{i}. [{t.get('type') or 'open'}] {(t.get('title') or '').strip()}: {(t.get('description') or '').strip()}")
+    return f"""Ты дорабатываешь задания рабочего листа по запросу преподавателя.
+
+{worksheet_context(f)}
+
+Текущие задания:
+{chr(10).join(lines) or '(нет заданий)'}
+
+Инструкция преподавателя: {instruction}
+
+Верни ВСЕ задания целиком с учётом инструкции, сохраняя те, которых она не касается. Типы: open, choice (options 3-4 варианта), table (columns 2-4 заголовка, rows 2-6). Без markdown-разметки.
+
+Верни ТОЛЬКО валидный JSON в формате:
+{WORKSHEET_JSON_FORMAT}"""
+
+
+def normalize_worksheet(parsed: dict) -> list:
+    tasks = []
+    for t in parsed.get('tasks') or []:
+        if not isinstance(t, dict):
+            continue
+        ttype = t.get('type') if t.get('type') in WORKSHEET_TYPES else 'open'
+        description = str(t.get('description') or '').strip()
+        if not description:
+            continue
+        options = [str(o).strip() for o in (t.get('options') or []) if str(o).strip()][:6]
+        columns = [str(c).strip() for c in (t.get('columns') or []) if str(c).strip()][:5]
+        try:
+            rows = max(2, min(int(t.get('rows') or 3), 8))
+        except (TypeError, ValueError):
+            rows = 3
+        if ttype == 'choice' and len(options) < 2:
+            ttype = 'open'
+        if ttype == 'table' and len(columns) < 2:
+            columns = ['Показатель', 'Ответ']
+        tasks.append({
+            'title': str(t.get('title') or 'Задание').strip(),
+            'type': ttype,
+            'description': description,
+            'options': options if ttype == 'choice' else [],
+            'columns': columns if ttype == 'table' else [],
+            'rows': rows,
+        })
+    return tasks
+
+
 def handler(event: dict, context) -> dict:
     """Генерация учебных материалов, ИИ-чат-помощник через AITunnel. Декомпозитор компетенций, проверка тетради по фото, план коррекционной работы (аналитика качества обученности) и ИИ-анализ качества знаний по дисциплинам доступны только пользователям с платной подпиской. Антиплагиат (проверка текста и извлечение из PDF/DOCX) доступен бесплатно с лимитом попыток, учёт которых ведётся в backend/auth."""
     method = event.get('httpMethod', 'GET')
@@ -1710,6 +1793,33 @@ def handler(event: dict, context) -> dict:
             if not result['tasks']:
                 return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ не вернул задания, попробуйте снова'})}
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps(result, ensure_ascii=False)}
+
+        elif action in ('worksheet', 'worksheet_refine'):
+            fields = body.get('fields') or {}
+            instruction = (body.get('instruction') or '').strip()
+            if not ((fields.get('topic') or '').strip() or (fields.get('planText') or '').strip()):
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите тему урока или загрузите план-конспект'})}
+            if action == 'worksheet_refine':
+                if not instruction:
+                    return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите, что нужно доработать'})}
+                prompt = build_worksheet_refine_prompt(fields, instruction)
+            else:
+                prompt = build_worksheet_prompt(fields)
+
+            raw = call_ai([
+                {'role': 'system', 'content': 'Ты профессиональный педагог-методист. Отвечаешь строго валидным JSON без markdown и пояснений, всегда на русском языке.'},
+                {'role': 'user', 'content': prompt},
+            ], temperature=0.7)
+
+            try:
+                parsed = parse_ai_json(raw)
+            except (json.JSONDecodeError, IndexError):
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ вернул некорректный ответ, попробуйте снова'})}
+
+            tasks = normalize_worksheet(parsed if isinstance(parsed, dict) else {})
+            if not tasks:
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ не вернул задания, попробуйте снова'})}
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'tasks': tasks}, ensure_ascii=False)}
 
         elif action == 'task_card_refine':
             fields = body.get('fields') or {}

@@ -23,6 +23,7 @@ import ProjectActivity from "./pages/ProjectActivity";
 import CorrectionWork from "./pages/CorrectionWork";
 import EventCardBuilder from "./pages/EventCardBuilder";
 import Admin from "./pages/Admin";
+import WorksheetBuilder from "./pages/WorksheetBuilder";
 import MemberChat from "./pages/MemberChat";
 import VisitTracker from "./components/VisitTracker";
 import ScrollToTop from "./components/ScrollToTop";
@@ -59,6 +60,7 @@ const App = () => (
               <Route path="/matritsa-tehnologiy" element={<TechMatrix />} />
               <Route path="/proektnaya-deyatelnost" element={<ProjectActivity />} />
               <Route path="/korrektsionnaya-rabota" element={<CorrectionWork />} />
+              <Route path="/konstruktor-rabochih-listov" element={<WorksheetBuilder />} />
               <Route path="/chat" element={<MemberChat />} />
               <Route path="/admin" element={<Admin />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
