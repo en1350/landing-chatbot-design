@@ -26,6 +26,7 @@ type TrainerKey =
   | "network-protocols"
   | "ip-diagnostics"
   | "subnet-calculator"
+  | "lan-simulator"
   | "ai-arcade"
   | "it-project-simulator"
   | "python-java-types"
@@ -69,6 +70,7 @@ interface TrainerItem {
 const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "ip-diagnostics": "/ip-diagnostics.html",
   "subnet-calculator": "/subnet-calculator.html",
+  "lan-simulator": "/lan-simulator.html",
   "ai-arcade": "/ai-arcade.html",
   "it-project-simulator": "/it-project-simulator.html",
   "python-java-types": "/python-java-types.html",
@@ -212,6 +214,14 @@ const TRAINERS: TrainerItem[] = [
     title: "Симулятор: разбиение на подсети",
     description: "Расчёт подсетей по IP и маске: таблица адресов, схема адресного пространства и пошаговое обоснование",
     accent: "#2C5282",
+  },
+  {
+    key: "lan-simulator",
+    category: "networks",
+    icon: "🏢",
+    title: "Симулятор ЛВС: офисная сеть",
+    description: "Соберите схему сети на холсте: компьютеры, сервер, принтер, коммутатор, соединения и обоснование проекта для печати",
+    accent: "#2B6CB0",
   },
   {
     key: "ai-arcade",

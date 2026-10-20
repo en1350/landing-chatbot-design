@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Симулятор ЛВС | Задание: Офисная сеть</title>
+    <style>
+        :root {
+            --bg-color: #f4f5f7;
+            --panel-bg: #ffffff;
+            --primary: #2b6cb0;
+            --border: #cbd5e0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        /* Панель инструментов */
+        .sidebar {
+            width: 220px;
+            background: var(--panel-bg);
+            border-right: 1px solid var(--border);
+            padding: 15px;
+            overflow-y: auto;
+        }
+        .tool-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #edf2f7;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: grab;
+            user-select: none;
+            transition: all 0.2s;
+        }
+        .tool-item:hover { background: #e2e8f0; }
+        .tool-item .icon { font-size: 24px; margin-right: 10px; }
+        
+        /* Холст */
+        .canvas-wrapper {
+            flex: 1;
+            position: relative;
+            background: #fff;
+            background-image: radial-gradient(#cbd5e0 1px, transparent 1px);
+            background-size: 20px 20px;
+            overflow: auto;
+        }
+        #canvas {
+            width: 1200px;
+            height: 800px;
+            position: relative;
+        }
+        /* SVG для линий */
+        #connections {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Чтобы клики по пустому месту проходили сквозь SVG */
+            z-index: 1;
+        }
+        line {
+            stroke: #4a5568;
+            stroke-width: 3; /* Сделали чуть толще для удобства попадания мышкой */
+            pointer-events: stroke; /* ВАЖНО: разрешаем клики только по самой нарисованной линии */
+            cursor: pointer;
+            transition: stroke 0.2s, stroke-width 0.2s;
+        }
+        line:hover {
+            stroke: #e53e3e; /* Красный цвет при наведении (сигнал об удалении) */
+            stroke-width: 6;
+        }
+        
+        /* Элементы на холсте */
+        .node {
+            position: absolute;
+            width: 70px;
+            text-align: center;
+            cursor: grab;
+            z-index: 2;
+            padding: 5px;
+            border-radius: 8px;
+            border: 2px solid transparent;
+        }
+        .node:hover { background: rgba(43, 108, 176, 0.1); }
+        .node.selected { border-color: var(--primary); background: rgba(43, 108, 176, 0.2); }
+        .node .icon { font-size: 32px; display: block; }
+        .node .label { font-size: 12px; margin-top: 4px; background: rgba(255,255,255,0.9); padding: 2px; border-radius: 4px; border: 1px solid #e2e8f0; }
+        
+        /* Панель отчета */
+        .report-panel {
+            width: 350px;
+            background: var(--panel-bg);
+            border-left: 1px solid var(--border);
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .report-panel h3 { margin-top: 0; color: var(--primary); }
+        .report-panel textarea {
+            width: 100%;
+            height: 150px;
+            margin-bottom: 15px;
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-family: inherit;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+        
+        /* Кнопки */
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        .btn:hover { background: #2c5282; }
+        .btn-secondary { background: #718096; }
+        .btn-secondary:hover { background: #4a5568; }
+
+        .hint {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 15px;
+            background: #fffaf0;
+            padding: 10px;
+            border-left: 3px solid #ed8936;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div>🌐 Симулятор ЛВС: Офисная сеть (10 ПК, 1 принтер, 1 сервер)</div>
+    <div>
+        <button class="btn btn-secondary" onclick="clearCanvas()">Очистить холст</button>
+        <button class="btn" onclick="window.print()">🖨️ Печать / Сохранить в PDF</button>
+    </div>
+</header>
+
+<div class="main-container">
+    <!-- Палитра -->
+    <div class="sidebar">
+        <h4>Оборудование</h4>
+        <div class="tool-item" draggable="true" data-type="pc" data-icon="💻" data-label="Компьютер">
+            <span class="icon">💻</span> Компьютер
+        </div>
+        <div class="tool-item" draggable="true" data-type="server" data-icon="🗄️" data-label="Сервер">
+            <span class="icon">🗄️</span> Сервер
+        </div>
+        <div class="tool-item" draggable="true" data-type="printer" data-icon="🖨️" data-label="Принтер">
+            <span class="icon">🖨️</span> Принтер
+        </div>
+        <div class="tool-item" draggable="true" data-type="switch" data-icon="🔀" data-label="Коммутатор">
+            <span class="icon">🔀</span> Коммутатор
+        </div>
+        <div class="tool-item" draggable="true" data-type="router" data-icon="🌐" data-label="Маршрутизатор">
+            <span class="icon">🌐</span> Маршрутизатор
+        </div>
+        <div class="tool-item" draggable="true" data-type="text" data-icon="📝" data-label="Заметка">
+            <span class="icon">📝</span> Текстовая заметка
+        </div>
+        
+        <div class="hint" style="margin-top: 30px;">
+            <b>Инструкция:</b><br>
+            1. Перетащите элементы на холст.<br>
+            2. Кликните на первый элемент, затем на второй, чтобы соединить их.<br>
+            3. <b>Кликните по линии соединения</b>, чтобы удалить её (при наведении она станет красной).<br>
+            4. Двойной клик по элементу удаляет его.<br>
+            5. Перетаскивайте элементы мышью, линии обновятся автоматически.
+        </div>
+    </div>
+
+    <!-- Холст -->
+    <div class="canvas-wrapper" id="canvasWrapper">
+        <svg id="connections"></svg>
+        <div id="canvas"></div>
+    </div>
+
+    <!-- Панель обоснования -->
+    <div class="report-panel">
+        <h3>📝 Обоснование проекта</h3>
+        
+        <label><b>1. Выбранная топология:</b></label>
+        <textarea id="topology-justify">Выбрана топология "Звезда". 
+Обоснование:
+1. Отказоустойчивость: выход из строя одного кабеля или ПК не влияет на работу остальных.
+2. Масштабируемость: легко добавить новые рабочие места.
+3. Простота диагностики: все подключения сходятся в одном центральном узле (коммутаторе).</textarea>
+        
+        <label><b>2. Выбор коммутационного оборудования:</b></label>
+        <textarea id="equipment-justify">1. Коммутатор (Switch): Управляемый гигабитный коммутатор на 24 порта (с запасом на расширение). Обеспечивает скорость 1000 Мбит/с для передачи больших файлов на сервер.
+2. Кабель: Витая пара категории 5e или 6 (UTP), поддерживающая гигабитные скорости на расстоянии до 100 м.
+3. Сервер: Выделенный файловый сервер для централизованного хранения данных и резервного копирования.
+4. Принтер: Сетевой МФУ с поддержкой Ethernet/Wi-Fi для общего доступа.</textarea>
+
+        <label><b>3. Дополнительные заметки:</b></label>
+        <textarea id="notes-justify" placeholder="Ваши комментарии..."></textarea>
+        
+        <button class="btn" onclick="alert('Данные сохранены в текстовых полях. Используйте кнопку Печать, чтобы сохранить отчет вместе со схемой.')">💾 Сохранить текст в памяти браузера</button>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('canvas');
+    const svg = document.getElementById('connections');
+    let draggedType = null;
+    let draggedIcon = null;
+    let draggedLabel = null;
+    let selectedNode = null;
+    let connections = [];
+    let nodeIdCounter = 0;
+
+    // Drag & Drop из палитры
+    document.querySelectorAll('.tool-item').forEach(item => {
+        item.addEventListener('dragstart', (e) => {
+            draggedType = item.dataset.type;
+            draggedIcon = item.dataset.icon;
+            draggedLabel = item.dataset.label;
+        });
+    });
+
+    canvas.addEventListener('dragover', (e) => e.preventDefault());
+
+    canvas.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left - 35; // Центрирование
+        const y = e.clientY - rect.top - 35;
+        createNode(x, y, draggedType, draggedIcon, draggedLabel);
+    });
+
+    function createNode(x, y, type, icon, label) {
+        const id = `node-${nodeIdCounter++}`;
+        const node = document.createElement('div');
+        node.className = 'node';
+        node.id = id;
+        node.style.left = `${x}px`;
+        node.style.top = `${y}px`;
+        node.dataset.type = type;
+        
+        let content = `<span class="icon">${icon}</span>`;
+        if (type === 'text') {
+            content += `<div class="label" contenteditable="true" style="border: 1px dashed #ccc; min-width: 60px;">Текст</div>`;
+        } else {
+            content += `<div class="label">${label}</div>`;
+        }
+        
+        node.innerHTML = content;
+        canvas.appendChild(node);
+
+        // Перетаскивание внутри холста
+        let isDragging = false;
+        let startX, startY, initialLeft, initialTop;
+
+        node.addEventListener('mousedown', (e) => {
+            if (e.target.isContentEditable) return; // Не тащить, если редактируем текст
+            
+            // Логика соединения
+            if (selectedNode && selectedNode !== node) {
+                createConnection(selectedNode.id, node.id);
+                selectedNode.classList.remove('selected');
+                selectedNode = null;
+                return;
+            }
+            
+            isDragging = true;
+            selectedNode = node;
+            node.classList.add('selected');
+            startX = e.clientX;
+            startY = e.clientY;
+            initialLeft = node.offsetLeft;
+            initialTop = node.offsetTop;
+            e.preventDefault();
+        });
+
+        node.addEventListener('dblclick', (e) => {
+            e.stopPropagation(); // Чтобы не срабатывали другие клики
+            deleteNode(id);
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            node.style.left = `${initialLeft + dx}px`;
+            node.style.top = `${initialTop + dy}px`;
+            updateConnections();
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+    }
+
+    function createConnection(id1, id2) {
+        // Проверка на существующее соединение
+        const exists = connections.some(c => 
+            (c.from === id1 && c.to === id2) || (c.from === id2 && c.to === id1)
+        );
+        if (exists) return;
+
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.dataset.from = id1;
+        line.dataset.to = id2;
+        
+        // ДОБАВЛЕНО: Обработчик клика для удаления линии
+        line.addEventListener('click', (e) => {
+            e.stopPropagation(); // Предотвращаем всплытие события, чтобы не выделялись узлы
+            deleteConnection(line);
+        });
+        
+        svg.appendChild(line);
+        connections.push({ from: id1, to: id2, element: line });
+        updateConnections();
+    }
+
+    // ДОБАВЛЕНО: Функция удаления соединения
+    function deleteConnection(lineElement) {
+        lineElement.remove(); // Удаляем из DOM
+        connections = connections.filter(conn => conn.element !== lineElement); // Удаляем из массива
+        
+        // Сбрасываем выделение, если оно было активно, чтобы избежать багов UI
+        if (selectedNode) {
+            selectedNode.classList.remove('selected');
+            selectedNode = null;
+        }
+    }
+
+    function updateConnections() {
+        connections.forEach(conn => {
+            const node1 = document.getElementById(conn.from);
+            const node2 = document.getElementById(conn.to);
+            if (!node1 || !node2) return;
+
+            const x1 = node1.offsetLeft + node1.offsetWidth / 2;
+            const y1 = node1.offsetTop + node1.offsetHeight / 2;
+            const x2 = node2.offsetLeft + node2.offsetWidth / 2;
+            const y2 = node2.offsetTop + node2.offsetHeight / 2;
+
+            conn.element.setAttribute('x1', x1);
+            conn.element.setAttribute('y1', y1);
+            conn.element.setAttribute('x2', x2);
+            conn.element.setAttribute('y2', y2);
+        });
+    }
+
+    function deleteNode(id) {
+        const node = document.getElementById(id);
+        if (node) node.remove();
+        
+        connections = connections.filter(conn => {
+            if (conn.from === id || conn.to === id) {
+                conn.element.remove();
+                return false;
+            }
+            return true;
+        });
+        if (selectedNode && selectedNode.id === id) selectedNode = null;
+    }
+
+    function clearCanvas() {
+        if(confirm('Очистить всю схему? Текстовые обоснования сохранятся.')) {
+            canvas.innerHTML = '';
+            svg.innerHTML = '';
+            connections = [];
+            nodeIdCounter = 0;
+            selectedNode = null;
+        }
+    }
+
+    // Сброс выделения при клике на пустое место
+    canvas.addEventListener('mousedown', (e) => {
+        if (e.target === canvas || e.target.id === 'canvasWrapper') {
+            if (selectedNode) {
+                selectedNode.classList.remove('selected');
+                selectedNode = null;
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
