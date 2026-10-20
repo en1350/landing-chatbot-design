@@ -92,6 +92,11 @@ const Footer = ({ onOpenProfile, onOpenRandomizer, onOpenAntiplagiat }: FooterPr
                 Политика данных
               </button>
             </li>
+            <li>
+              <Link to="/polzovatelskoe-soglashenie" className="hover:text-foreground transition-colors">
+                Пользовательское соглашение
+              </Link>
+            </li>
           </ul>
         </div>
 

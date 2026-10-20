@@ -204,6 +204,15 @@ const AuthModal = ({ open, onClose }: AuthModalProps) => {
                     >
                       политикой обработки персональных данных
                     </button>
+                    {" "}и{" "}
+                    <a
+                      href="/polzovatelskoe-soglashenie"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary underline underline-offset-2"
+                    >
+                      пользовательским соглашением
+                    </a>
                   </label>
                 </div>
               )}
