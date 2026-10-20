@@ -1551,6 +1551,19 @@ def build_rpd_prompt(part: str, f: dict) -> str:
 
 Верни ТОЛЬКО валидный JSON:
 {{"rows": [{{"topic": "Тема 1.1. Название", "total": 4, "lect": 2, "pract": 2, "lab": 0, "self": 0, "control": "тест"}}]}}"""
+    if part == 'support':
+        structure = (f.get('structure') or '').strip()
+        return f"""Составь раздел «Учебно-методическое обеспечение» рабочей программы дисциплины.
+
+{ctx}
+
+Структура дисциплины:
+{structure or 'не задана'}{wishes_line}
+
+Требования: основная литература — 2-4 источника, дополнительная — 3-5; только реальные, широко известные учебники и пособия по этой дисциплине, не старше 10-12 лет, если они существуют; оформляй по ГОСТ: «Автор И.О. Название. — Город: Издательство, Год. — Объём с.»; если не уверен в точных выходных данных (издательство, год, число страниц) — не выдумывай их, укажи только то, что знаешь точно. Электронные образовательные ресурсы — 3-5 надёжных ресурсов (портал, курс, электронная библиотека) с названием и адресом, если адрес известен точно. Программное обеспечение — 3-6 пунктов в формате «Название — назначение», с приоритетом отечественного и свободного ПО. Информационные справочные системы — 2-4 пункта. Материально-техническое обеспечение — оборудование аудиторий и лабораторий под виды занятий этой дисциплины. Каждый пункт с новой строки. Без markdown-разметки.
+
+Верни ТОЛЬКО валидный JSON:
+{{"mainLit": "источники, каждый с новой строки", "addLit": "источники, каждый с новой строки", "eResources": "ресурсы, каждый с новой строки", "software": "пункты, каждый с новой строки", "infoSystems": "пункты, каждый с новой строки", "materials": "описание оборудования"}}"""
     structure = (f.get('structure') or '').strip()
     comps = (f.get('competenciesText') or '').strip()
     return f"""Составь оценочные средства для рабочей программы дисциплины.
@@ -1605,6 +1618,8 @@ def normalize_rpd(part: str, parsed: dict) -> dict:
             total = lect + pract + lab + self_ or rpd_int(r.get('total'))
             rows.append({'topic': rpd_text(r.get('topic')), 'total': total, 'lect': lect, 'pract': pract, 'lab': lab, 'self': self_, 'control': rpd_text(r.get('control'))})
         return {'rows': rows}
+    if part == 'support':
+        return {k: rpd_text(parsed.get(k)) for k in ('mainLit', 'addLit', 'eResources', 'software', 'infoSystems', 'materials')}
     return {k: rpd_text(parsed.get(k)) for k in ('currentControl', 'intermediateControl', 'criteria', 'sampleTasks', 'evalMethods')}
 
 
@@ -1959,7 +1974,7 @@ def process(event: dict, context) -> dict:
         elif action == 'rpd':
             fields = body.get('fields') or {}
             part = body.get('part')
-            if part not in ('content', 'ktp', 'assessment'):
+            if part not in ('content', 'ktp', 'assessment', 'support'):
                 return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Неизвестная часть программы'})}
             if not is_user_paid(event):
                 return {'statusCode': 403, 'headers': cors_headers(), 'body': json.dumps({'error': 'Конструктор рабочих программ доступен по платной подписке'})}

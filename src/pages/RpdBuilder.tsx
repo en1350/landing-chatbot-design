@@ -26,7 +26,7 @@ import { RpdData, emptyCompetency, emptyKtpRow, emptyRpd, mergeRpd } from "@/com
 const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
 const DRAFT_KEY = "urokai_rpd_draft";
 
-type Part = "content" | "ktp" | "assessment";
+type Part = "content" | "ktp" | "assessment" | "support";
 
 const loadDraft = (): RpdData => {
   try {
@@ -104,6 +104,17 @@ const RpdBuilder = () => {
       } else if (part === "ktp") {
         setData((d) => ({ ...d, ktp: json.rows.map((r: object) => emptyKtpRow(r)) }));
         toast.success("Календарно-тематический план готов");
+      } else if (part === "support") {
+        setData((d) => ({
+          ...d,
+          mainLit: json.mainLit || d.mainLit,
+          addLit: json.addLit || d.addLit,
+          eResources: json.eResources || d.eResources,
+          software: json.software || d.software,
+          infoSystems: json.infoSystems || d.infoSystems,
+          materials: json.materials || d.materials,
+        }));
+        toast.success("Обеспечение составлено — проверьте источники и выходные данные");
       } else {
         setData((d) => ({
           ...d,
@@ -195,7 +206,7 @@ const RpdBuilder = () => {
             <RpdContentSection data={data} patch={patch} aiLoading={loadingPart === "content"} onGenerate={() => callAi("content")} />
             <RpdKtpSection data={data} patch={patch} aiLoading={loadingPart === "ktp"} onGenerate={() => callAi("ktp")} />
             <RpdAssessmentSection data={data} patch={patch} aiLoading={loadingPart === "assessment"} onGenerate={() => callAi("assessment")} />
-            <RpdSupportSection data={data} patch={patch} />
+            <RpdSupportSection data={data} patch={patch} aiLoading={loadingPart === "support"} onGenerate={() => callAi("support")} />
           </div>
 
           <section className="rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm">

@@ -1,11 +1,15 @@
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import Icon from "@/components/ui/icon";
 import RpdField from "./RpdField";
 import { RpdData } from "./rpdConfig";
 
 interface Props {
   data: RpdData;
   patch: (p: Partial<RpdData>) => void;
+  aiLoading: boolean;
+  onGenerate: () => void;
 }
 
 const LIT: [keyof RpdData, string, string][] = [
@@ -17,10 +21,21 @@ const LIT: [keyof RpdData, string, string][] = [
   ["materials", "Материально-техническое обеспечение", "Оборудование аудиторий, лаборатории"],
 ];
 
-const RpdSupportSection = ({ data, patch }: Props) => (
+const RpdSupportSection = ({ data, patch, aiLoading, onGenerate }: Props) => (
   <>
     <section className="rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm mb-6">
-      <h2 className="font-display text-lg font-bold mb-4">5. Учебно-методическое обеспечение</h2>
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+        <div>
+          <h2 className="font-display text-lg font-bold mb-1">5. Учебно-методическое обеспечение</h2>
+          <p className="text-xs text-muted-foreground">
+            ИИ предложит литературу, ресурсы, программное обеспечение и оборудование. Обязательно проверьте источники и выходные данные.
+          </p>
+        </div>
+        <Button className="gap-2" onClick={onGenerate} disabled={aiLoading}>
+          <Icon name={aiLoading ? "Loader2" : "Sparkles"} size={16} className={aiLoading ? "animate-spin" : ""} />
+          {aiLoading ? "ИИ работает..." : "Составить с ИИ"}
+        </Button>
+      </div>
       <div className="space-y-4">
         {LIT.map(([key, label, placeholder]) => (
           <RpdField key={key} label={label}>
