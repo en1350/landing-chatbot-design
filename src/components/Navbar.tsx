@@ -104,11 +104,11 @@ const Navbar = ({
           </span>
         </a>
 
-        <nav className="hidden xl:flex items-center gap-0.5">
-          <NavDropdown label="Генераторы для педагога" items={GENERATORS_MENU} />
-          <NavDropdown label="Аналитические справки для портфолио" items={REPORTS_MENU} />
-          <NavDropdown label="Тренажёры для учеников" items={TRAINERS_MENU} />
-          <NavDropdown label="Дополнительные сервисы" items={extraMenu} />
+        <nav className="hidden lg:flex items-center gap-0.5">
+          <NavDropdown label="Генераторы для педагога" shortLabel="Генераторы" items={GENERATORS_MENU} />
+          <NavDropdown label="Аналитические справки для портфолио" shortLabel="Справки" items={REPORTS_MENU} />
+          <NavDropdown label="Тренажёры для учеников" shortLabel="Тренажёры" items={TRAINERS_MENU} />
+          <NavDropdown label="Дополнительные сервисы" shortLabel="Сервисы" items={extraMenu} />
           {user && (
             <Link
               to="/chat"
@@ -132,7 +132,7 @@ const Navbar = ({
           )}
         </nav>
 
-        <div className="hidden xl:flex items-center gap-2">
+        <div className="hidden lg:flex items-center gap-2">
           <Button variant="ghost" size="sm" onClick={user ? onOpenProfile : onOpenAuth} className="gap-1.5">
             <Icon name={user ? "User" : "LogIn"} size={16} />
             {user ? "Кабинет" : "Войти"}
@@ -141,7 +141,7 @@ const Navbar = ({
 
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
-            <button className="xl:hidden flex h-9 w-9 items-center justify-center rounded-lg hover:bg-accent transition-colors">
+            <button className="lg:hidden flex h-9 w-9 items-center justify-center rounded-lg hover:bg-accent transition-colors">
               <Icon name="Menu" size={22} />
             </button>
           </SheetTrigger>

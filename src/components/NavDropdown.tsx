@@ -13,12 +13,13 @@ export interface NavItem {
 
 interface NavDropdownProps {
   label: string;
+  shortLabel?: string;
   items: NavItem[];
 }
 
 const itemClass = "flex cursor-pointer items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium";
 
-const NavDropdown = ({ label, items }: NavDropdownProps) => {
+const NavDropdown = ({ label, shortLabel, items }: NavDropdownProps) => {
   const [open, setOpen] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout>>();
 
@@ -39,7 +40,14 @@ const NavDropdown = ({ label, items }: NavDropdownProps) => {
             type="button"
             className="flex items-center gap-1 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-foreground/80 outline-none transition-colors hover:text-foreground data-[state=open]:text-foreground"
           >
-            {label}
+            {shortLabel ? (
+              <>
+                <span className="xl:hidden">{shortLabel}</span>
+                <span className="hidden xl:inline">{label}</span>
+              </>
+            ) : (
+              label
+            )}
             <Icon name="ChevronDown" size={14} className={`transition-transform ${open ? "rotate-180" : ""}`} />
           </button>
         </DropdownMenuTrigger>
