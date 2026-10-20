@@ -32,6 +32,8 @@ interface AuthContextValue {
   loading: boolean;
   isPaid: boolean;
   trainersUnlocked: boolean;
+  credits: number;
+  canUsePaid: boolean;
   usage: UsageState;
   freeLimit: number;
   remainingUse: (type: GeneratorType) => number;
@@ -75,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [usage, setUsage] = useState<UsageState>(defaultUsage);
   const [trainersUnlocked, setTrainersUnlocked] = useState(false);
+  const [credits, setCredits] = useState(0);
   const [freeLimit, setFreeLimit] = useState(3);
 
   const applySession = (t: string | null) => {
@@ -91,6 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setExpiresAt(null);
       setUsage(defaultUsage);
       setTrainersUnlocked(false);
+      setCredits(0);
       setLoading(false);
       return;
     }
@@ -107,6 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUsage(data.usage || defaultUsage);
       setFreeLimit(data.free_limit ?? 3);
       setTrainersUnlocked(!!data.trainers_unlocked);
+      setCredits(data.credits || 0);
       setToken(currentToken);
     } catch {
       applySession(null);
@@ -115,6 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setExpiresAt(null);
       setUsage(defaultUsage);
       setTrainersUnlocked(false);
+      setCredits(0);
     } finally {
       setLoading(false);
     }
@@ -123,6 +129,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    if (!token) return;
+    const pending = localStorage.getItem("urokai_pending_payment");
+    if (!pending) return;
+    apiRequest("check_payment", { payment_id: pending }, token)
+      .then((data) => {
+        if (data.paid) {
+          localStorage.removeItem("urokai_pending_payment");
+          const w = window as unknown as { _tmr?: unknown[] };
+          w._tmr = w._tmr || [];
+          w._tmr.push({ type: "reachGoal", id: "3784935", goal: "Конверсия" });
+          refresh();
+        }
+      })
+      .catch(() => {});
+  }, [token, refresh]);
+
+  useEffect(() => {
+    if (credits <= 0 || plan !== "free") return;
+    const timer = setInterval(() => {
+      if (!document.hidden) refresh();
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [credits, plan, refresh]);
+
 
   const register = async (email: string, password: string, name: string, privacyAccepted: boolean) => {
     const data = await apiRequest("register", {
@@ -143,6 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUsage(data.usage || defaultUsage);
     setFreeLimit(data.free_limit ?? 3);
     setTrainersUnlocked(!!data.trainers_unlocked);
+      setCredits(data.credits || 0);
   };
 
   const resendVerification = async (email: string) => {
@@ -158,6 +191,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUsage(data.usage || defaultUsage);
     setFreeLimit(data.free_limit ?? 3);
     setTrainersUnlocked(!!data.trainers_unlocked);
+      setCredits(data.credits || 0);
   };
 
   const logout = async () => {
@@ -170,6 +204,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setExpiresAt(null);
       setUsage(defaultUsage);
       setTrainersUnlocked(false);
+      setCredits(0);
     }
   };
 
@@ -184,15 +219,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(data.user);
     setPlan("free");
     setTrainersUnlocked(false);
+      setCredits(0);
   };
 
   const isPaid = plan !== "free";
+  const canUsePaid = isPaid || credits > 0;
 
   const totalUsage = (u: UsageState) => u.lesson + u.game + u.intensive + u.task + u.antiplagiat + u.quiz;
 
   // Единый лимит бесплатных генераций на все инструменты вместе (не по каждому отдельно)
   const remainingUse = (_type: GeneratorType) => Math.max(0, freeLimit - totalUsage(usage));
-  const canUseGenerator = (_type: GeneratorType) => !!user && (isPaid || remainingUse(_type) > 0);
+  const canUseGenerator = (_type: GeneratorType) => !!user && (isPaid || credits > 0 || remainingUse(_type) > 0);
 
   const registerGeneratorUse = async (type: GeneratorType): Promise<boolean> => {
     if (!token) return false;
@@ -200,6 +237,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await apiRequest("register_use", { type }, token);
       setUsage(data.usage || defaultUsage);
       setFreeLimit(data.free_limit ?? 3);
+      if (typeof data.credits === "number") setCredits(data.credits);
       return true;
     } catch {
       return false;
@@ -216,6 +254,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         isPaid,
         trainersUnlocked,
+        credits,
+        canUsePaid,
         usage,
         freeLimit,
         remainingUse,

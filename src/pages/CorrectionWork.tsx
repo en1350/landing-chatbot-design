@@ -91,7 +91,7 @@ const emptyForm = {
 };
 
 const CorrectionWork = () => {
-  const { user, isPaid, token } = useAuth();
+  const { user, canUsePaid: isPaid, token } = useAuth();
 
   const [decomposerOpen, setDecomposerOpen] = useState(false);
   const [randomizerOpen, setRandomizerOpen] = useState(false);

@@ -28,7 +28,7 @@ const buildInitialTimes = (duration: string) =>
 const emptyContents = () => Object.fromEntries(STAGES.map((s) => [s.key, ""])) as Record<string, string>;
 
 const LessonCardBuilder = () => {
-  const { user, isPaid, token } = useAuth();
+  const { user, canUsePaid: isPaid, token } = useAuth();
 
   const [decomposerOpen, setDecomposerOpen] = useState(false);
   const [randomizerOpen, setRandomizerOpen] = useState(false);

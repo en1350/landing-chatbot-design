@@ -26,7 +26,7 @@ const DRAFT_KEY = "urokai_project_draft";
 const REFINE_HINTS = ["Добавь больше рисков", "Сократи сроки", "Сделай задачи подробнее", "Добавь KPI"];
 
 const ProjectBuilder = () => {
-  const { user, isPaid, token } = useAuth();
+  const { user, canUsePaid: isPaid, token } = useAuth();
 
   const [decomposerOpen, setDecomposerOpen] = useState(false);
   const [randomizerOpen, setRandomizerOpen] = useState(false);

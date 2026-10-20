@@ -67,7 +67,7 @@ const loadRows = (): ActivityRow[] => {
 const emptyForm = { year: String(new Date().getFullYear()), category: CATEGORIES[0], title: "", level: LEVELS[0], content: "", result: "" };
 
 const ProjectActivity = () => {
-  const { user, isPaid, token } = useAuth();
+  const { user, canUsePaid: isPaid, token } = useAuth();
 
   const [decomposerOpen, setDecomposerOpen] = useState(false);
   const [randomizerOpen, setRandomizerOpen] = useState(false);

@@ -49,10 +49,15 @@ def get_token(event):
     return headers.get('X-Authorization') or headers.get('x-authorization')
 
 
+ACCESS = {'user_id': None, 'via_credit': False, 'action': None}
+CREDIT_EXCLUDED_ACTIONS = {'pm_task_refine', 'presentation_refine', 'project_refine'}
+
+
 def is_user_paid(event) -> bool:
     token = get_token(event)
     if not token:
         return False
+    conn = None
     try:
         conn = psycopg2.connect(os.environ['DATABASE_URL'])
         cur = conn.cursor()
@@ -70,11 +75,42 @@ def is_user_paid(event) -> bool:
             (user_id,)
         )
         sub = cur.fetchone()
-        cur.close()
-        conn.close()
-        return bool(sub and sub[0] != 'free')
+        if sub and sub[0] != 'free':
+            return True
+        if ACCESS['action'] in CREDIT_EXCLUDED_ACTIONS:
+            return False
+        cur.execute(
+            f"UPDATE {SCHEMA}.single_credits SET credits = credits - 1, updated_at = now() "
+            f"WHERE user_id = %s AND credits > 0 RETURNING credits",
+            (user_id,)
+        )
+        if cur.fetchone():
+            conn.commit()
+            ACCESS['user_id'] = user_id
+            ACCESS['via_credit'] = True
+            return True
+        return False
     except Exception:
         return False
+    finally:
+        if conn:
+            conn.close()
+
+
+def refund_credit():
+    if not (ACCESS['via_credit'] and ACCESS['user_id']):
+        return
+    try:
+        conn = psycopg2.connect(os.environ['DATABASE_URL'])
+        cur = conn.cursor()
+        cur.execute(
+            f"UPDATE {SCHEMA}.single_credits SET credits = credits + 1, updated_at = now() WHERE user_id = %s",
+            (ACCESS['user_id'],)
+        )
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass
 
 
 def call_ai(messages: list, temperature: float = 0.7, model: str = MODEL) -> str:
@@ -1572,7 +1608,7 @@ def normalize_rpd(part: str, parsed: dict) -> dict:
     return {k: rpd_text(parsed.get(k)) for k in ('currentControl', 'intermediateControl', 'criteria', 'sampleTasks', 'evalMethods')}
 
 
-def handler(event: dict, context) -> dict:
+def process(event: dict, context) -> dict:
     """Генерация учебных материалов, ИИ-чат-помощник через AITunnel. Декомпозитор компетенций, проверка тетради по фото, план коррекционной работы (аналитика качества обученности) и ИИ-анализ качества знаний по дисциплинам доступны только пользователям с платной подпиской. Антиплагиат (проверка текста и извлечение из PDF/DOCX) доступен бесплатно с лимитом попыток, учёт которых ведётся в backend/auth."""
     method = event.get('httpMethod', 'GET')
 
@@ -2215,3 +2251,18 @@ def handler(event: dict, context) -> dict:
         return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': f'Ошибка ИИ-сервиса: {error_body}'})}
     except Exception as e:
         return {'statusCode': 500, 'headers': cors_headers(), 'body': json.dumps({'error': str(e)})}
+
+
+def handler(event: dict, context) -> dict:
+    """Генерация учебных материалов, ИИ-чат-помощник через AITunnel. Платные сервисы доступны по подписке или за разовую оплату: одно использование списывается только после успешного результата и возвращается при ошибке."""
+    ACCESS['user_id'] = None
+    ACCESS['via_credit'] = False
+    ACCESS['action'] = None
+    try:
+        ACCESS['action'] = (json.loads(event.get('body') or '{}') or {}).get('action')
+    except Exception:
+        pass
+    result = process(event, context)
+    if ACCESS['via_credit'] and result.get('statusCode') != 200:
+        refund_credit()
+    return result

@@ -965,7 +965,7 @@ ${riskStudents.length === 0 ? "<p>Студентов группы риска н�
 /* ---------- Страница с paywall ---------- */
 
 const QualityAnalytics = () => {
-  const { user, isPaid } = useAuth();
+  const { user, canUsePaid: isPaid } = useAuth();
   const [decomposerOpen, setDecomposerOpen] = useState(false);
   const [randomizerOpen, setRandomizerOpen] = useState(false);
   const [antiplagiatOpen, setAntiplagiatOpen] = useState(false);

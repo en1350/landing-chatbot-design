@@ -41,7 +41,7 @@ async function requestDecompose(competency: string, token: string | null): Promi
 }
 
 const DecomposerModal = ({ open, onClose, onNeedAuth, onNeedUpgrade }: DecomposerModalProps) => {
-  const { user, isPaid, token } = useAuth();
+  const { user, canUsePaid: isPaid, token } = useAuth();
   const [competency, setCompetency] = useState("");
   const [levels, setLevels] = useState<Level[] | null>(null);
   const [loading, setLoading] = useState(false);

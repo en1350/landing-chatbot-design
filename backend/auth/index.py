@@ -18,6 +18,7 @@ PLANS = {
     'month': {'days': 30, 'amount': '199.00', 'label': 'Подписка УрокАИ на 1 месяц', 'db_plan': '30days'},
     'quarter': {'days': 90, 'amount': '477.00', 'label': 'Подписка УрокАИ на 3 месяца', 'db_plan': '90days'},
     'year': {'days': 365, 'amount': '1668.00', 'label': 'Подписка УрокАИ на 12 месяцев', 'db_plan': 'year'},
+    'single': {'days': 0, 'amount': '17.00', 'label': 'Разовое использование платного сервиса УрокАИ', 'db_plan': None, 'credits': 1},
 }
 
 FREE_LIMIT = 3
@@ -36,6 +37,12 @@ USAGE_COLUMNS = {
 def has_trainer_access(cur, user_id):
     cur.execute(f"SELECT 1 FROM {SCHEMA}.trainer_access WHERE user_id = %s", (user_id,))
     return cur.fetchone() is not None
+
+
+def get_credits(cur, user_id):
+    cur.execute(f"SELECT credits FROM {SCHEMA}.single_credits WHERE user_id = %s", (user_id,))
+    row = cur.fetchone()
+    return row[0] if row else 0
 
 
 def get_plan_for_user(cur, user_id):
@@ -235,6 +242,7 @@ def handler(event: dict, context) -> dict:
                     'usage': usage,
                     'free_limit': FREE_LIMIT,
                     'trainers_unlocked': has_trainer_access(cur, user_id),
+                    'credits': get_credits(cur, user_id),
                 })
             }
 
@@ -328,6 +336,7 @@ def handler(event: dict, context) -> dict:
                     'usage': usage,
                     'free_limit': FREE_LIMIT,
                     'trainers_unlocked': has_trainer_access(cur, user_id),
+                    'credits': get_credits(cur, user_id),
                 })
             }
 
@@ -384,6 +393,7 @@ def handler(event: dict, context) -> dict:
                     'usage': usage,
                     'free_limit': FREE_LIMIT,
                     'trainers_unlocked': has_trainer_access(cur, user_id),
+                    'credits': get_credits(cur, user_id),
                 })
             }
 
@@ -505,11 +515,17 @@ def handler(event: dict, context) -> dict:
 
             # Единый лимит на все инструменты вместе (не по каждому отдельно)
             if not is_paid and total_usage(usage) >= FREE_LIMIT:
-                return {
-                    'statusCode': 403,
-                    'headers': cors_headers(),
-                    'body': json.dumps({'error': 'Бесплатный лимит исчерпан', 'usage': usage, 'free_limit': FREE_LIMIT})
-                }
+                cur.execute(
+                    f"UPDATE {SCHEMA}.single_credits SET credits = credits - 1, updated_at = now() "
+                    f"WHERE user_id = %s AND credits > 0 RETURNING credits",
+                    (user_id,)
+                )
+                if not cur.fetchone():
+                    return {
+                        'statusCode': 403,
+                        'headers': cors_headers(),
+                        'body': json.dumps({'error': 'Бесплатный лимит исчерпан', 'usage': usage, 'free_limit': FREE_LIMIT})
+                    }
 
             cur.execute(
                 f"UPDATE {SCHEMA}.usage_counts SET {column} = {column} + 1, updated_at = now() WHERE user_id = %s",
@@ -522,7 +538,7 @@ def handler(event: dict, context) -> dict:
             return {
                 'statusCode': 200,
                 'headers': cors_headers(),
-                'body': json.dumps({'ok': True, 'usage': usage, 'free_limit': FREE_LIMIT})
+                'body': json.dumps({'ok': True, 'usage': usage, 'free_limit': FREE_LIMIT, 'credits': get_credits(cur, user_id)})
             }
 
         elif action == 'save_material':
@@ -702,6 +718,25 @@ def handler(event: dict, context) -> dict:
                 metadata = result.get('metadata') or {}
                 plan_key = metadata.get('plan')
                 plan = PLANS.get(plan_key)
+                if plan and plan.get('credits'):
+                    if str(metadata.get('user_id')) != str(user_id):
+                        return {'statusCode': 403, 'headers': cors_headers(), 'body': json.dumps({'error': 'Платёж принадлежит другому пользователю'})}
+                    cur.execute(
+                        f"INSERT INTO {SCHEMA}.processed_payments (payment_id, user_id) VALUES (%s, %s) ON CONFLICT (payment_id) DO NOTHING RETURNING payment_id",
+                        (str(payment_id), user_id)
+                    )
+                    if cur.fetchone():
+                        cur.execute(
+                            f"INSERT INTO {SCHEMA}.single_credits (user_id, credits) VALUES (%s, %s) "
+                            f"ON CONFLICT (user_id) DO UPDATE SET credits = {SCHEMA}.single_credits.credits + EXCLUDED.credits, updated_at = now()",
+                            (user_id, plan['credits'])
+                        )
+                    conn.commit()
+                    return {
+                        'statusCode': 200,
+                        'headers': cors_headers(),
+                        'body': json.dumps({'status': status, 'paid': True, 'plan': 'single', 'credits': get_credits(cur, user_id)})
+                    }
                 if plan:
                     expires_at = datetime.now(timezone.utc) + timedelta(days=plan['days'])
                     cur.execute(

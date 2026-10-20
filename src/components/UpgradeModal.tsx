@@ -16,9 +16,10 @@ interface UpgradeModalProps {
   onNeedAuth: () => void;
 }
 
-type PlanKey = "month" | "quarter" | "year";
+type PlanKey = "single" | "month" | "quarter" | "year";
 
 const PLAN_OPTIONS: { key: PlanKey; price: string; period: string; perMonth?: string; badge?: string }[] = [
+  { key: "single", price: "17 ₽", period: "1 использование", perMonth: "разовая оплата" },
   { key: "month", price: "199 ₽", period: "1 месяц" },
   { key: "quarter", price: "477 ₽", period: "3 месяца", perMonth: "159 ₽ / мес" },
   { key: "year", price: "1668 ₽", period: "12 месяцев", perMonth: "139 ₽ / мес", badge: "Выгоднее на 30%" },
@@ -102,13 +103,13 @@ const UpgradeModal = ({ open, onClose, onNeedAuth }: UpgradeModalProps) => {
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-coral/15 text-3xl mb-2">
             🔓
           </div>
-          <DialogTitle className="font-display text-xl">Бесплатный лимит исчерпан</DialogTitle>
+          <DialogTitle className="font-display text-xl">Доступно по оплате</DialogTitle>
           <DialogDescription>
-            Оформите подписку — оплата банковской картой через ЮКассу.
+            Оплатите одно использование за 17 ₽ или оформите подписку — оплата банковской картой через ЮКассу.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-3 gap-2.5 mt-2" role="radiogroup" aria-label="Выбор тарифа">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-2" role="radiogroup" aria-label="Выбор тарифа">
           {PLAN_OPTIONS.map((p) => {
             const active = selectedPlan === p.key;
             return (

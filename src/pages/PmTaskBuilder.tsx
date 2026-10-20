@@ -32,7 +32,7 @@ const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008
 const REFINE_HINTS = ["Сделай задания сложнее", "Добавь практический пример", "Уточни критерии оценки", "Сократи формулировки"];
 
 const PmTaskBuilder = () => {
-  const { user, isPaid, token } = useAuth();
+  const { user, canUsePaid: isPaid, token } = useAuth();
 
   const [decomposerOpen, setDecomposerOpen] = useState(false);
   const [randomizerOpen, setRandomizerOpen] = useState(false);

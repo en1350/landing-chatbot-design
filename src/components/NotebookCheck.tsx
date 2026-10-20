@@ -57,7 +57,7 @@ async function requestNotebookCheck(imageBase64: string, subject: string, token:
 }
 
 const NotebookCheck = ({ id, onNeedAuth, onNeedUpgrade }: NotebookCheckProps) => {
-  const { user, isPaid, token } = useAuth();
+  const { user, canUsePaid: isPaid, token } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
   const [subject, setSubject] = useState<string>(SUBJECTS[0]);
   const [preview, setPreview] = useState<string | null>(null);

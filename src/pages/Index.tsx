@@ -17,10 +17,8 @@ import WisdomModal from "@/components/WisdomModal";
 import ProfileSheet from "@/components/ProfileSheet";
 import AuthModal from "@/components/AuthModal";
 import UpgradeModal from "@/components/UpgradeModal";
-import { useAuth, AUTH_URL } from "@/context/AuthContext";
 
 const Index = () => {
-  const { token, refresh } = useAuth();
   const [decomposerOpen, setDecomposerOpen] = useState(false);
   const [randomizerOpen, setRandomizerOpen] = useState(false);
   const [antiplagiatOpen, setAntiplagiatOpen] = useState(false);
@@ -50,30 +48,6 @@ const Index = () => {
     setAntiplagiatOpen(false);
     setUpgradeOpen(true);
   };
-
-  // Проверяем платёж при возврате с ЮКассы
-  useEffect(() => {
-    const pendingPayment = localStorage.getItem("urokai_pending_payment");
-    if (!pendingPayment || !token) return;
-
-    fetch(AUTH_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Authorization": token },
-      body: JSON.stringify({ action: "check_payment", payment_id: pendingPayment }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.paid) {
-          localStorage.removeItem("urokai_pending_payment");
-          const w = window as unknown as { _tmr?: unknown[] };
-          w._tmr = w._tmr || [];
-          w._tmr.push({ type: "reachGoal", id: "3784935", goal: "Конверсия" });
-          refresh();
-        }
-      })
-      .catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
 
   return (
     <div className="min-h-screen flex flex-col">

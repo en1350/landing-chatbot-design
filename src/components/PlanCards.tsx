@@ -27,6 +27,7 @@ interface PlanItem {
 }
 
 const PLANS: PlanItem[] = [
+  { name: "Разово", price: "17 ₽", period: "/ 1 использование" },
   { name: "Месяц", price: "199 ₽", period: "/ месяц" },
   { name: "3 месяца", price: "477 ₽", period: "/ 3 месяца", perMonth: "≈ 159 ₽ в месяц", badge: "Выгоднее на 20%" },
   { name: "12 месяцев", price: "1668 ₽", period: "/ год", perMonth: "≈ 139 ₽ в месяц", badge: "Выгоднее на 30%", highlight: true },
@@ -36,7 +37,7 @@ const PlanCards = ({ onSelect, compact = false }: PlanCardsProps) => {
   const { isPaid } = useAuth();
 
   return (
-    <div className={compact ? "space-y-3" : "grid sm:grid-cols-3 gap-4 sm:gap-6 max-w-4xl mx-auto"}>
+    <div className={compact ? "space-y-3" : "grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-5xl mx-auto"}>
       {PLANS.map((p) => (
         <div
           key={p.name}
@@ -76,7 +77,7 @@ const PlanCards = ({ onSelect, compact = false }: PlanCardsProps) => {
             disabled={isPaid}
           >
             <Icon name="Sparkles" size={16} />
-            {isPaid ? "Уже подключено" : "Выбрать"}
+            {isPaid ? "Уже подключено" : p.name === "Разово" ? "Оплатить 17 ₽" : "Выбрать"}
           </Button>
         </div>
       ))}

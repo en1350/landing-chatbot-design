@@ -15,7 +15,7 @@ import { useAuth } from "@/context/AuthContext";
 /* ---------- Страница с paywall ---------- */
 
 const QualityAnalysisTool = () => {
-  const { user, isPaid } = useAuth();
+  const { user, canUsePaid: isPaid } = useAuth();
   const [decomposerOpen, setDecomposerOpen] = useState(false);
   const [randomizerOpen, setRandomizerOpen] = useState(false);
   const [antiplagiatOpen, setAntiplagiatOpen] = useState(false);

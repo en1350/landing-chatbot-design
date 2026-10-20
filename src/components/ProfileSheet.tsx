@@ -42,7 +42,7 @@ const PLAN_LABELS: Record<string, string> = {
 
 const ProfileSheet = ({ open, onClose, onNeedAuth }: ProfileSheetProps) => {
   const { servicesCount } = useUsage();
-  const { user, token, plan, isPaid, logout, usage, freeLimit, expiresAt } = useAuth();
+  const { user, token, plan, isPaid, credits, logout, usage, freeLimit, expiresAt } = useAuth();
   const totalUsage = usage.lesson + usage.game + usage.intensive + usage.task + usage.antiplagiat + usage.quiz;
 
   const daysLeft = expiresAt
@@ -176,6 +176,13 @@ const ProfileSheet = ({ open, onClose, onNeedAuth }: ProfileSheetProps) => {
                 <p className="text-xs text-muted-foreground mb-1">Всего услуг оказано платформой</p>
                 <p className="font-display text-2xl font-bold">{servicesCount.toLocaleString("ru-RU")}</p>
               </div>
+
+              {credits > 0 && !isPaid && (
+                <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-sm">
+                  <p className="font-semibold text-primary mb-0.5">Оплачено использований: {credits}</p>
+                  <p className="text-muted-foreground text-xs">Каждое использование платного сервиса списывается только после успешного результата.</p>
+                </div>
+              )}
 
               <div>
                 <div className="flex justify-between text-sm mb-1">
