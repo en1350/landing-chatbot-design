@@ -2,17 +2,6 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import Icon from "@/components/ui/icon";
 import DecomposerModal from "@/components/DecomposerModal";
 import RandomizerModal from "@/components/RandomizerModal";
@@ -21,30 +10,16 @@ import ProfileSheet from "@/components/ProfileSheet";
 import AuthModal from "@/components/AuthModal";
 import UpgradeModal from "@/components/UpgradeModal";
 import { useAuth, AUTH_URL } from "@/context/AuthContext";
-import { downloadDocx, downloadTxt } from "@/lib/download";
-import {
-  downloadMatrixCsv,
-  downloadMatrixExcel,
-  filledRows,
-  matrixProf,
-  matrixToText,
-} from "@/lib/techMatrixExport";
-import {
-  FGOS_LEVELS,
-  MatrixData,
-  PROF_OPTIONS,
-  PROF_OTHER,
-  TECH_REFERENCE,
-  TechRow,
-  emptyMatrix,
-} from "@/components/tech-matrix/techMatrixConfig";
+import { filledRows, matrixProf, matrixToText } from "@/lib/techMatrixExport";
+import { DOC_TITLE, MatrixData, TechRow, emptyMatrix } from "@/components/tech-matrix/techMatrixConfig";
 import { toast } from "sonner";
-import SaveMaterialButton from "@/components/SaveMaterialButton";
+import TechMatrixPassport from "@/components/tech-matrix/TechMatrixPassport";
+import TechMatrixTable from "@/components/tech-matrix/TechMatrixTable";
+import TechMatrixReport from "@/components/tech-matrix/TechMatrixReport";
+import TechMatrixReference from "@/components/tech-matrix/TechMatrixReference";
 
 const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
 const DRAFT_KEY = "urokai_tech_matrix_draft";
-const DOC_TITLE = "Матрица используемых технологий обучения";
-const REPORT_TITLE = "Аналитическая справка по используемым технологиям обучения";
 
 const loadDraft = (): MatrixData => {
   try {
@@ -264,7 +239,6 @@ const TechMatrix = () => {
     return true;
   };
 
-  const profSelectValue = PROF_OPTIONS.includes(data.prof) || data.prof === PROF_OTHER ? data.prof : data.prof ? PROF_OTHER : "";
   const filledCount = filledRows(data.rows).length;
 
   return (
@@ -301,373 +275,31 @@ const TechMatrix = () => {
             </p>
           </div>
 
-          <section className="rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm mb-6 no-print">
-            <h2 className="font-display text-lg font-bold mb-1">1. Паспорт разработки</h2>
-            <p className="text-xs text-muted-foreground mb-4">
-              Эти данные попадают в файл и помогают ИИ точнее подобрать технологии.
-            </p>
-            <div className="grid gap-4 md:grid-cols-6">
-              <div className="md:col-span-3">
-                <label className="text-sm font-medium mb-1.5 block">Название документа</label>
-                <Input
-                  value={data.docTitle}
-                  onChange={(e) => patch({ docTitle: e.target.value })}
-                  placeholder="Матрица технологий обучения по дисциплине …"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="text-sm font-medium mb-1.5 block">Преподаватель (ФИО)</label>
-                <Input
-                  value={data.author}
-                  onChange={(e) => patch({ author: e.target.value })}
-                  placeholder="Иванова Елена Петровна"
-                />
-              </div>
-              <div className="md:col-span-1">
-                <label className="text-sm font-medium mb-1.5 block">Дата</label>
-                <Input type="date" value={data.date} onChange={(e) => patch({ date: e.target.value })} />
-              </div>
+          <TechMatrixPassport data={data} patch={patch} patchFgos={patchFgos} />
 
-              <div className="md:col-span-3">
-                <label className="text-sm font-medium mb-1.5 block">Образовательная организация</label>
-                <Input
-                  value={data.org}
-                  onChange={(e) => patch({ org: e.target.value })}
-                  placeholder="ГБПОУ «…», специальность / профессия"
-                />
-              </div>
-              <div className="md:col-span-3">
-                <label className="text-sm font-medium mb-1.5 block">Дисциплина, МДК или модуль</label>
-                <Input
-                  value={data.subject}
-                  onChange={(e) => patch({ subject: e.target.value })}
-                  placeholder="Например: МДК 02.01. Технология приготовления пищи"
-                />
-              </div>
+          <TechMatrixTable
+            data={data}
+            isPaid={isPaid}
+            aiCount={aiCount}
+            setAiCount={setAiCount}
+            aiLoading={aiLoading}
+            saving={saving}
+            saved={saved}
+            reportLoading={reportLoading}
+            filledCount={filledCount}
+            suggest={suggest}
+            fillNames={fillNames}
+            updateRow={updateRow}
+            removeRow={removeRow}
+            addRow={addRow}
+            save={save}
+            ensureRows={ensureRows}
+            generateReport={generateReport}
+          />
 
-              <div className="md:col-span-3">
-                <label className="text-sm font-medium mb-1.5 block">Профессиональная направленность</label>
-                <Select
-                  value={profSelectValue}
-                  onValueChange={(v) => patch({ prof: v === PROF_OTHER ? PROF_OTHER : v, profOther: "" })}
-                >
-                  <SelectTrigger aria-label="Профессиональная направленность">
-                    <SelectValue placeholder="Выберите направленность" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[...PROF_OPTIONS, PROF_OTHER].map((p) => (
-                      <SelectItem key={p} value={p}>
-                        {p}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {profSelectValue === PROF_OTHER && (
-                <div className="md:col-span-3">
-                  <label className="text-sm font-medium mb-1.5 block">Укажите направленность</label>
-                  <Input
-                    value={data.profOther}
-                    onChange={(e) => patch({ profOther: e.target.value })}
-                    placeholder="Своя формулировка"
-                  />
-                </div>
-              )}
-              <div className="md:col-span-3">
-                <label className="text-sm font-medium mb-1.5 block">Курс / группа</label>
-                <Input
-                  value={data.course}
-                  onChange={(e) => patch({ course: e.target.value })}
-                  placeholder="2 курс, гр. ТС-21"
-                />
-              </div>
+          {report && <TechMatrixReport report={report} subject={data.subject} onNeedAuth={() => setAuthOpen(true)} />}
 
-              <div className="md:col-span-6">
-                <label className="flex items-start gap-3 rounded-xl border border-border bg-muted/40 p-4 cursor-pointer">
-                  <Checkbox
-                    checked={data.fgos.on}
-                    onCheckedChange={(v) => patchFgos({ on: v === true })}
-                    className="mt-0.5"
-                  />
-                  <span>
-                    <span className="text-sm font-semibold block">Учитывать требования ФГОС СПО</span>
-                    <span className="text-xs text-muted-foreground">
-                      Откроются поля для кода специальности и компетенций. ИИ сошлётся на них в обосновании.
-                    </span>
-                  </span>
-                </label>
-              </div>
-
-              {data.fgos.on && (
-                <>
-                  <div className="md:col-span-3">
-                    <label className="text-sm font-medium mb-1.5 block">Код и наименование профессии / специальности</label>
-                    <Input
-                      value={data.fgos.code}
-                      onChange={(e) => patchFgos({ code: e.target.value })}
-                      placeholder="43.02.11 Гостиничный сервис"
-                    />
-                  </div>
-                  <div className="md:col-span-3">
-                    <label className="text-sm font-medium mb-1.5 block">Уровень СПО</label>
-                    <Select value={data.fgos.level} onValueChange={(v) => patchFgos({ level: v })}>
-                      <SelectTrigger aria-label="Уровень СПО">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {FGOS_LEVELS.map((l) => (
-                          <SelectItem key={l} value={l}>
-                            {l}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="md:col-span-3">
-                    <label className="text-sm font-medium mb-1.5 block">Реквизиты ФГОС (приказ)</label>
-                    <Input
-                      value={data.fgos.order}
-                      onChange={(e) => patchFgos({ order: e.target.value })}
-                      placeholder="Приказ Минпросвещения РФ от … № …"
-                    />
-                  </div>
-                  <div className="md:col-span-3">
-                    <label className="text-sm font-medium mb-1.5 block">Формируемые компетенции (ОК / ПК)</label>
-                    <Input
-                      value={data.fgos.komps}
-                      onChange={(e) => patchFgos({ komps: e.target.value })}
-                      placeholder="ОК 01–09; ПК 2.1, ПК 2.4"
-                    />
-                  </div>
-                  <div className="md:col-span-6">
-                    <label className="text-sm font-medium mb-1.5 block">Учтённые требования ФГОС СПО</label>
-                    <Textarea
-                      value={data.fgos.req}
-                      onChange={(e) => patchFgos({ req: e.target.value })}
-                      rows={2}
-                      placeholder="Практико-ориентированность, модульная организация, демонстрационный экзамен, ВОСР"
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-          </section>
-
-          <section className="rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm mb-6">
-            <h2 className="font-display text-lg font-bold mb-1 no-print">2. Матрица технологий</h2>
-            <p className="text-xs text-muted-foreground mb-4 no-print">
-              Одна строка — одна технология. Пустые места «___» впишите своими цифрами результатов.
-            </p>
-
-            <div className="flex flex-wrap items-center gap-2 mb-5 no-print">
-              <Select value={aiCount} onValueChange={setAiCount}>
-                <SelectTrigger className="w-full sm:w-40" aria-label="Сколько технологий подобрать">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {["3", "5", "7", "10"].map((n) => (
-                    <SelectItem key={n} value={n}>
-                      Подобрать {n}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button className="gap-2" onClick={suggest} disabled={aiLoading}>
-                {aiLoading ? (
-                  <Icon name="Loader2" size={16} className="animate-spin" />
-                ) : (
-                  <Icon name="Sparkles" size={16} />
-                )}
-                {aiLoading ? "ИИ работает..." : "Подобрать технологии с ИИ"}
-              </Button>
-              <Button variant="outline" className="gap-2" onClick={fillNames} disabled={aiLoading}>
-                <Icon name="WandSparkles" size={16} />
-                Заполнить по моим названиям
-              </Button>
-              {!isPaid && (
-                <span className="text-xs text-muted-foreground">ИИ доступен по платной подписке</span>
-              )}
-            </div>
-
-            <div className="hidden md:grid grid-cols-[2.5rem_1fr_1.5fr_1.5fr_2.5rem] gap-3 rounded-t-lg bg-primary px-3 py-2.5 text-xs font-semibold text-primary-foreground">
-              <span className="text-center">№</span>
-              <span>Технология</span>
-              <span>Обоснование выбора технологии</span>
-              <span>Методическая и практическая результативность</span>
-              <span />
-            </div>
-
-            <div className="divide-y divide-border border border-border md:border-t-0 rounded-b-lg">
-              {data.rows.map((row, i) => (
-                <div
-                  key={i}
-                  className="grid md:grid-cols-[2.5rem_1fr_1.5fr_1.5fr_2.5rem] gap-3 p-3 items-start"
-                >
-                  <span className="hidden md:block text-center text-sm font-semibold text-muted-foreground pt-2">
-                    {i + 1}
-                  </span>
-                  <Textarea
-                    value={row.t}
-                    onChange={(e) => updateRow(i, { t: e.target.value })}
-                    rows={3}
-                    placeholder="Название технологии"
-                    aria-label="Технология"
-                  />
-                  <Textarea
-                    value={row.o}
-                    onChange={(e) => updateRow(i, { o: e.target.value })}
-                    rows={5}
-                    placeholder="Почему выбрана: связь с ФГОС СПО, спецификой профессии, уровнем группы"
-                    aria-label="Обоснование выбора технологии"
-                  />
-                  <Textarea
-                    value={row.r}
-                    onChange={(e) => updateRow(i, { r: e.target.value })}
-                    rows={5}
-                    placeholder="Измеримый результат: качество знаний, средний балл, сформированность ПК/ОК"
-                    aria-label="Результативность"
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="no-print text-destructive"
-                    onClick={() => removeRow(i)}
-                    aria-label="Удалить строку"
-                    disabled={data.rows.length === 1 && !row.t && !row.o && !row.r}
-                  >
-                    <Icon name="X" size={15} />
-                  </Button>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3 mt-4 no-print">
-              <Button variant="outline" size="sm" className="gap-1.5" onClick={() => addRow()}>
-                <Icon name="Plus" size={15} />
-                Добавить строку
-              </Button>
-              <span className="text-xs text-muted-foreground">Заполнено строк: {filledCount} из {data.rows.length}</span>
-            </div>
-
-            <div className="flex flex-wrap gap-2 mt-6 pt-5 border-t border-border no-print">
-              <Button className="gap-1.5" onClick={save} disabled={saving || saved}>
-                {saving ? (
-                  <Icon name="Loader2" size={15} className="animate-spin" />
-                ) : (
-                  <Icon name={saved ? "Check" : "Save"} size={15} />
-                )}
-                {saved ? "Сохранено" : "Сохранить в кабинет"}
-              </Button>
-              <Button
-                variant="outline"
-                className="gap-1.5"
-                onClick={() => ensureRows() && downloadMatrixExcel(data)}
-              >
-                <Icon name="Table" size={15} />
-                Скачать Excel
-              </Button>
-              <Button
-                variant="outline"
-                className="gap-1.5"
-                onClick={() => ensureRows() && downloadMatrixCsv(data)}
-              >
-                <Icon name="Download" size={15} />
-                CSV
-              </Button>
-              <Button
-                variant="outline"
-                className="gap-1.5"
-                onClick={() => ensureRows() && downloadDocx(data.docTitle || DOC_TITLE, data.docTitle || DOC_TITLE, matrixToText(data))}
-              >
-                <Icon name="FileText" size={15} />
-                Скачать Word
-              </Button>
-              <Button variant="outline" className="gap-1.5" onClick={() => window.print()}>
-                <Icon name="Printer" size={15} />
-                Печать / PDF
-              </Button>
-              <Button className="gap-1.5" onClick={generateReport} disabled={reportLoading}>
-                {reportLoading ? (
-                  <>
-                    <Icon name="Loader2" size={15} className="animate-spin" />
-                    ИИ составляет справку...
-                  </>
-                ) : (
-                  <>
-                    <Icon name="Sparkles" size={15} />
-                    Сформировать аналитическую справку
-                  </>
-                )}
-              </Button>
-            </div>
-            {!isPaid && (
-              <p className="mt-3 text-xs text-muted-foreground no-print">
-                Аналитическая справка от ИИ доступна по подписке.
-              </p>
-            )}
-          </section>
-
-          {report && (
-            <section id="tech-report" className="rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm mb-6">
-              <div className="flex flex-wrap gap-2 mb-4 no-print">
-                <Button variant="outline" className="gap-1.5" onClick={() => window.print()}>
-                  <Icon name="Printer" size={15} />
-                  Печать
-                </Button>
-                <Button variant="outline" className="gap-1.5" onClick={() => downloadDocx(REPORT_TITLE, REPORT_TITLE, report)}>
-                  <Icon name="FileText" size={15} />
-                  Word
-                </Button>
-                <Button variant="outline" className="gap-1.5" onClick={() => downloadTxt(REPORT_TITLE, [REPORT_TITLE, "", report])}>
-                  <Icon name="Download" size={15} />
-                  TXT
-                </Button>
-                <SaveMaterialButton type="tech_matrix_report" title={`${REPORT_TITLE}${data.subject ? `: ${data.subject}` : ""}`} content={report} onNeedAuth={() => setAuthOpen(true)} />
-              </div>
-              <div className="rounded-xl border border-border bg-muted/30 p-5 md:p-7">
-                <h2 className="font-display text-lg font-bold text-primary text-center mb-4">{REPORT_TITLE}</h2>
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{report}</p>
-              </div>
-            </section>
-          )}
-
-          <section className="rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm no-print">
-            <button
-              type="button"
-              className="flex w-full items-center justify-between text-left"
-              onClick={() => setShowRef((v) => !v)}
-            >
-              <span className="font-display text-lg font-bold">3. Справочник готовых формулировок</span>
-              <Icon name={showRef ? "ChevronUp" : "ChevronDown"} size={18} />
-            </button>
-            {showRef && (
-              <div className="mt-4 space-y-3">
-                {TECH_REFERENCE.map((ref) => (
-                  <div key={ref.t} className="rounded-xl border border-border p-4">
-                    <p className="font-semibold text-primary">{ref.t}</p>
-                    <p className="text-sm mt-2">
-                      <span className="font-semibold">Обоснование:</span> {ref.o}
-                    </p>
-                    <p className="text-sm mt-1.5">
-                      <span className="font-semibold">Результативность:</span> {ref.r}
-                    </p>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="mt-3 gap-1.5"
-                      onClick={() => {
-                        addRow(ref);
-                        toast.success("Строка добавлена в матрицу");
-                      }}
-                    >
-                      <Icon name="Plus" size={14} />
-                      Вставить в матрицу
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
+          <TechMatrixReference showRef={showRef} onToggle={() => setShowRef((v) => !v)} addRow={addRow} />
         </div>
       </main>
 
