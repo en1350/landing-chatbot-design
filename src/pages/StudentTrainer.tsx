@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -328,7 +328,14 @@ const TRAINERS: TrainerItem[] = [
 
 const StudentTrainer = () => {
   const { user, isPaid } = useAuth();
+  const [searchParams] = useSearchParams();
   const [category, setCategory] = useState<CategoryKey | null>(null);
+  const catParam = searchParams.get("cat");
+  useEffect(() => {
+    const found = CATEGORIES.find((c) => c.key === catParam);
+    setCategory(found ? found.key : null);
+    setActive(null);
+  }, [catParam]);
   const [active, setActive] = useState<TrainerKey | null>(null);
   const activeTrainer = TRAINERS.find((t) => t.key === active);
   const [decomposerOpen, setDecomposerOpen] = useState(false);

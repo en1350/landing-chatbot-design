@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/sheet";
 import { useAuth } from "@/context/AuthContext";
 import { useChatUnread } from "@/hooks/use-chat-unread";
+import NavDropdown, { NavItem } from "@/components/NavDropdown";
 
 interface NavbarProps {
   onOpenNotebook: () => void;
@@ -22,31 +23,33 @@ interface NavbarProps {
   onOpenPricing: () => void;
 }
 
-const NAV_LINKS = [
-  { label: "Декомпозитор компетенций", key: "decomposer", icon: "Network" },
-  { label: "Рандомайзер", key: "randomizer", icon: "Shuffle" },
-  { label: "Антиплагиат", key: "antiplagiat", icon: "ShieldCheck" },
-];
-
-const QUICK_LINKS = [
+const GENERATORS_MENU: NavItem[] = [
+  { label: "Конструктор рабочих программ", to: "/konstruktor-rabochih-programm", icon: "BookMarked" },
   { label: "Конструктор урока", to: "/konstruktor-uroka", icon: "BookOpen" },
   { label: "Конструктор заданий", to: "/konstruktor-zadaniy", icon: "ClipboardList" },
+  { label: "Рабочие листы", to: "/konstruktor-rabochih-listov", icon: "FileText" },
   { label: "Презентации", to: "/generator-prezentaciy", icon: "Presentation" },
   { label: "Конструктор игры", to: "/konstruktor-igry", icon: "Gamepad2" },
-];
-
-const MORE_LINKS = [
-  { label: "Тренажёр для учеников", to: "/trenazher-dlya-uchenikov", icon: "Brain" },
-  { label: "Рабочие листы", to: "/konstruktor-rabochih-listov", icon: "FileText" },
-  { label: "Рабочие программы", to: "/konstruktor-rabochih-programm", icon: "BookMarked" },
-  { label: "Генератор проектов", to: "/generator-proektov", icon: "FolderKanban" },
   { label: "Мастер-классы", to: "/konstruktor-masterklassov", icon: "Sparkles" },
   { label: "Задания по ПМ", to: "/generator-zadaniy-pm", icon: "Briefcase" },
-  { label: "Аналитика качества", to: "/analitika-kachestva", icon: "BarChart3" },
+  { label: "Генератор проектов", to: "/generator-proektov", icon: "FolderKanban" },
+];
+
+const REPORTS_MENU: NavItem[] = [
+  { label: "Качество обученности", to: "/analitika-kachestva", icon: "BarChart3" },
+  { label: "Качественный анализ по предметам", to: "/kachestvo-znaniy", icon: "TrendingUp" },
   { label: "Внеаудиторная деятельность", to: "/vneauditornaya-deyatelnost", icon: "Users" },
   { label: "Матрица технологий обучения", to: "/matritsa-tehnologiy", icon: "Grid3x3" },
   { label: "Проектная деятельность", to: "/proektnaya-deyatelnost", icon: "FlaskConical" },
   { label: "Коррекционная работа", to: "/korrektsionnaya-rabota", icon: "MessageCircle" },
+];
+
+const TRAINERS_MENU: NavItem[] = [
+  { label: "Все тренажёры", to: "/trenazher-dlya-uchenikov", icon: "Brain" },
+  { label: "Информатика", to: "/trenazher-dlya-uchenikov?cat=informatics", icon: "BookOpen" },
+  { label: "Компьютерные сети", to: "/trenazher-dlya-uchenikov?cat=networks", icon: "Network" },
+  { label: "Программирование", to: "/trenazher-dlya-uchenikov?cat=programming", icon: "Code" },
+  { label: "Операционные системы", to: "/trenazher-dlya-uchenikov?cat=os", icon: "Monitor" },
 ];
 
 const Navbar = ({
@@ -81,6 +84,14 @@ const Navbar = ({
     if (key === "pricing") onOpenPricing();
   };
 
+  const extraMenu: NavItem[] = [
+    { label: "Декомпозитор компетенций", icon: "Network", onClick: () => handleClick("decomposer") },
+    { label: "Рандомайзер", icon: "Shuffle", onClick: () => handleClick("randomizer") },
+    { label: "Антиплагиат", icon: "ShieldCheck", onClick: () => handleClick("antiplagiat") },
+    { label: "Проверка тетради", icon: "NotebookPen", onClick: () => { setOpen(false); onOpenNotebook(); } },
+    { label: "Игра «Педагогический ряд»", icon: "Gamepad2", href: "/pedagogical-row.html" },
+  ];
+
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/85 backdrop-blur-md">
       <div className="container flex h-16 items-center justify-between">
@@ -93,46 +104,11 @@ const Navbar = ({
           </span>
         </a>
 
-        <nav className="hidden md:flex items-center gap-1">
-          {NAV_LINKS.map((l) => (
-            <button
-              key={l.key}
-              onClick={() => handleClick(l.key)}
-              className="story-link px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
-            >
-              {l.label}
-            </button>
-          ))}
-          <Link
-            to="/konstruktor-uroka"
-            className="story-link px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
-          >
-            Конструктор урока
-          </Link>
-          <Link
-            to="/konstruktor-zadaniy"
-            className="story-link px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
-          >
-            Конструктор заданий
-          </Link>
-          <Link
-            to="/konstruktor-igry"
-            className="story-link px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
-          >
-            Конструктор игры
-          </Link>
-          <Link
-            to="/trenazher-dlya-uchenikov"
-            className="story-link px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
-          >
-            Тренажёр для учеников
-          </Link>
-          <button
-            onClick={onOpenNotebook}
-            className="story-link px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
-          >
-            Проверка тетради
-          </button>
+        <nav className="hidden xl:flex items-center gap-0.5">
+          <NavDropdown label="Генераторы для педагога" items={GENERATORS_MENU} />
+          <NavDropdown label="Аналитические справки для портфолио" items={REPORTS_MENU} />
+          <NavDropdown label="Тренажёры для учеников" items={TRAINERS_MENU} />
+          <NavDropdown label="Дополнительные сервисы" items={extraMenu} />
           {user && (
             <Link
               to="/chat"
@@ -156,7 +132,7 @@ const Navbar = ({
           )}
         </nav>
 
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden xl:flex items-center gap-2">
           <Button variant="ghost" size="sm" onClick={user ? onOpenProfile : onOpenAuth} className="gap-1.5">
             <Icon name={user ? "User" : "LogIn"} size={16} />
             {user ? "Кабинет" : "Войти"}
@@ -165,7 +141,7 @@ const Navbar = ({
 
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
-            <button className="md:hidden flex h-9 w-9 items-center justify-center rounded-lg hover:bg-accent transition-colors">
+            <button className="xl:hidden flex h-9 w-9 items-center justify-center rounded-lg hover:bg-accent transition-colors">
               <Icon name="Menu" size={22} />
             </button>
           </SheetTrigger>
@@ -183,58 +159,46 @@ const Navbar = ({
               {user ? "Личный кабинет" : "Войти"}
             </button>
 
-            <p className="mt-6 mb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">Популярное</p>
-            <div className="grid grid-cols-2 gap-2">
-              {QUICK_LINKS.map((q) => (
-                <Link
-                  key={q.to}
-                  to={q.to}
-                  onClick={() => setOpen(false)}
-                  className="flex min-h-[88px] flex-col items-start justify-between rounded-xl border border-border bg-card p-3 hover:bg-accent transition-colors"
-                >
-                  <Icon name={q.icon} size={22} className="text-primary" />
-                  <span className="text-sm font-semibold leading-tight">{q.label}</span>
-                </Link>
-              ))}
-            </div>
+            {[
+              { title: "Генераторы для педагога", items: GENERATORS_MENU },
+              { title: "Аналитические справки для портфолио", items: REPORTS_MENU },
+              { title: "Тренажёры для учеников", items: TRAINERS_MENU },
+              { title: "Дополнительные сервисы", items: extraMenu },
+            ].map((group) => (
+              <div key={group.title}>
+                <p className="mt-6 mb-1 text-xs font-bold uppercase tracking-widest text-muted-foreground">{group.title}</p>
+                <div className="flex flex-col">
+                  {group.items.map((item) => {
+                    const cls = "flex items-center gap-3 px-2 py-3 rounded-lg text-left text-base font-medium hover:bg-accent transition-colors";
+                    const body = (
+                      <>
+                        <Icon name={item.icon} size={18} className="text-muted-foreground" />
+                        {item.label}
+                      </>
+                    );
+                    if (item.to)
+                      return (
+                        <Link key={item.label} to={item.to} onClick={() => setOpen(false)} className={cls}>
+                          {body}
+                        </Link>
+                      );
+                    if (item.href)
+                      return (
+                        <a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer" onClick={() => setOpen(false)} className={cls}>
+                          {body}
+                        </a>
+                      );
+                    return (
+                      <button key={item.label} onClick={item.onClick} className={cls}>
+                        {body}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
 
-            <p className="mt-6 mb-1 text-xs font-bold uppercase tracking-widest text-muted-foreground">Инструменты</p>
-            <div className="flex flex-col">
-              {NAV_LINKS.map((l) => (
-                <button
-                  key={l.key}
-                  onClick={() => handleClick(l.key)}
-                  className="flex items-center gap-3 px-2 py-3 rounded-lg text-left text-base font-medium hover:bg-accent transition-colors"
-                >
-                  <Icon name={l.icon} size={18} className="text-muted-foreground" />
-                  {l.label}
-                </button>
-              ))}
-              <button
-                onClick={() => {
-                  setOpen(false);
-                  onOpenNotebook();
-                }}
-                className="flex items-center gap-3 px-2 py-3 rounded-lg text-left text-base font-medium hover:bg-accent transition-colors"
-              >
-                <Icon name="NotebookPen" size={18} className="text-muted-foreground" />
-                Проверка тетради
-              </button>
-            </div>
-
-            <p className="mt-6 mb-1 text-xs font-bold uppercase tracking-widest text-muted-foreground">Ещё</p>
-            <div className="flex flex-col">
-              {MORE_LINKS.map((m) => (
-                <Link
-                  key={m.to}
-                  to={m.to}
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 px-2 py-3 rounded-lg text-base font-medium hover:bg-accent transition-colors"
-                >
-                  <Icon name={m.icon} size={18} className="text-muted-foreground" />
-                  {m.label}
-                </Link>
-              ))}
+            <div className="mt-6 flex flex-col">
               {user && (
                 <Link
                   to="/chat"
