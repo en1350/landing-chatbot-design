@@ -1,3 +1,4 @@
+import PaywallLock from "@/components/PaywallLock";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -356,6 +357,13 @@ const ExtracurricularAnalytics = () => {
             </p>
           </div>
 
+          {!isPaid ? (
+            <PaywallLock
+              description="Учёт мероприятий, таблица, статистика и аналитическая справка — премиум-инструмент. Оформите подписку, чтобы открыть раздел без ограничений."
+              loggedIn={!!user}
+              onAction={() => (user ? setUpgradeOpen(true) : setAuthOpen(true))}
+            />
+          ) : (
           <Tabs defaultValue="input">
             <TabsList className="grid grid-cols-2 sm:grid-cols-4 h-auto gap-1 w-full max-w-2xl no-print">
               <TabsTrigger value="input" className="text-sm py-2">Ввод</TabsTrigger>
@@ -670,6 +678,7 @@ const ExtracurricularAnalytics = () => {
               </div>
             </TabsContent>
           </Tabs>
+          )}
         </div>
       </main>
 

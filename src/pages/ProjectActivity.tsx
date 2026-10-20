@@ -1,3 +1,4 @@
+import PaywallLock from "@/components/PaywallLock";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -204,6 +205,13 @@ const ProjectActivity = () => {
             </p>
           </div>
 
+          {!isPaid ? (
+            <PaywallLock
+              description="Учёт проектной деятельности и аналитическая справка — премиум-инструмент. Оформите подписку, чтобы открыть раздел без ограничений."
+              loggedIn={!!user}
+              onAction={() => (user ? setUpgradeOpen(true) : setAuthOpen(true))}
+            />
+          ) : (
           <Tabs value={tab} onValueChange={setTab}>
             <TabsList className="grid grid-cols-2 h-auto gap-1 w-full max-w-md no-print">
               <TabsTrigger value="table" className="text-sm py-2">Таблица</TabsTrigger>
@@ -385,6 +393,7 @@ const ProjectActivity = () => {
               </div>
             </TabsContent>
           </Tabs>
+          )}
         </div>
       </main>
 
