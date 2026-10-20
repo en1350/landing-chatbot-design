@@ -1,3 +1,4 @@
+import { usePersistedState } from "@/hooks/use-persisted-state";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -38,21 +39,21 @@ const GameCardBuilder = () => {
   const [authOpen, setAuthOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
-  const [topic, setTopic] = useState("");
-  const [gameType, setGameType] = useState<string>(GAME_TYPES[0]);
-  const [time, setTime] = useState<string>(GAME_TIMES[1]);
-  const [people, setPeople] = useState<string>(GAME_PEOPLE[2]);
-  const [goal, setGoal] = useState<string>(GAME_GOALS[2]);
-  const [scenario, setScenario] = useState("");
+  const [topic, setTopic] = usePersistedState("game_topic", "");
+  const [gameType, setGameType] = usePersistedState<string>("game_gameType", GAME_TYPES[0]);
+  const [time, setTime] = usePersistedState<string>("game_time", GAME_TIMES[1]);
+  const [people, setPeople] = usePersistedState<string>("game_people", GAME_PEOPLE[2]);
+  const [goal, setGoal] = usePersistedState<string>("game_goal", GAME_GOALS[2]);
+  const [scenario, setScenario] = usePersistedState("game_scenario", "");
 
-  const [aiGoal, setAiGoal] = useState("");
-  const [stages, setStages] = useState<GameStage[]>([]);
-  const [rules, setRules] = useState("");
-  const [materials, setMaterials] = useState<string[]>([]);
-  const [tips, setTips] = useState<string[]>([]);
-  const [criteria, setCriteria] = useState("");
+  const [aiGoal, setAiGoal] = usePersistedState("game_aiGoal", "");
+  const [stages, setStages] = usePersistedState<GameStage[]>("game_stages", []);
+  const [rules, setRules] = usePersistedState("game_rules", "");
+  const [materials, setMaterials] = usePersistedState<string[]>("game_materials", []);
+  const [tips, setTips] = usePersistedState<string[]>("game_tips", []);
+  const [criteria, setCriteria] = usePersistedState("game_criteria", "");
   const [loading, setLoading] = useState(false);
-  const [ovz, setOvz] = useState<string[]>([]);
+  const [ovz, setOvz] = usePersistedState<string[]>("game_ovz", []);
   const [prefilled, setPrefilled] = useState(false);
 
   useEffect(() => {

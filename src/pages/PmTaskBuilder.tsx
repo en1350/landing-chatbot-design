@@ -1,3 +1,4 @@
+import { usePersistedState } from "@/hooks/use-persisted-state";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -41,26 +42,26 @@ const PmTaskBuilder = () => {
   const [authOpen, setAuthOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
-  const [pmName, setPmName] = useState("");
-  const [pmCode, setPmCode] = useState("");
-  const [mdkCode, setMdkCode] = useState("");
-  const [mdkTopic, setMdkTopic] = useState("");
-  const [vd, setVd] = useState("");
-  const [pk, setPk] = useState("");
-  const [ok, setOk] = useState("");
-  const [taskType, setTaskType] = useState("practical");
-  const [taskCount, setTaskCount] = useState("5");
-  const [level, setLevel] = useState("medium");
-  const [duration, setDuration] = useState("90");
-  const [controlForm, setControlForm] = useState(PM_CONTROL_FORMS[0]);
-  const [spec, setSpec] = useState("");
-  const [ovz, setOvz] = useState<string[]>([]);
+  const [pmName, setPmName] = usePersistedState("pm_pmName", "");
+  const [pmCode, setPmCode] = usePersistedState("pm_pmCode", "");
+  const [mdkCode, setMdkCode] = usePersistedState("pm_mdkCode", "");
+  const [mdkTopic, setMdkTopic] = usePersistedState("pm_mdkTopic", "");
+  const [vd, setVd] = usePersistedState("pm_vd", "");
+  const [pk, setPk] = usePersistedState("pm_pk", "");
+  const [ok, setOk] = usePersistedState("pm_ok", "");
+  const [taskType, setTaskType] = usePersistedState("pm_taskType", "practical");
+  const [taskCount, setTaskCount] = usePersistedState("pm_taskCount", "5");
+  const [level, setLevel] = usePersistedState("pm_level", "medium");
+  const [duration, setDuration] = usePersistedState("pm_duration", "90");
+  const [controlForm, setControlForm] = usePersistedState("pm_controlForm", PM_CONTROL_FORMS[0]);
+  const [spec, setSpec] = usePersistedState("pm_spec", "");
+  const [ovz, setOvz] = usePersistedState<string[]>("pm_ovz", []);
 
-  const [instructionText, setInstructionText] = useState("");
-  const [tasks, setTasks] = useState<PmTaskItem[]>([]);
-  const [criteria, setCriteria] = useState<PmCriterion[]>([]);
-  const [equipment, setEquipment] = useState("");
-  const [answerKey, setAnswerKey] = useState("");
+  const [instructionText, setInstructionText] = usePersistedState("pm_instructionText", "");
+  const [tasks, setTasks] = usePersistedState<PmTaskItem[]>("pm_tasks", []);
+  const [criteria, setCriteria] = usePersistedState<PmCriterion[]>("pm_criteria", []);
+  const [equipment, setEquipment] = usePersistedState("pm_equipment", "");
+  const [answerKey, setAnswerKey] = usePersistedState("pm_answerKey", "");
   const [showAnswerKey, setShowAnswerKey] = useState(false);
 
   const [loading, setLoading] = useState(false);

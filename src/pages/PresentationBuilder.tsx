@@ -1,3 +1,4 @@
+import { usePersistedState } from "@/hooks/use-persisted-state";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -62,15 +63,15 @@ const PresentationBuilder = () => {
   const [authOpen, setAuthOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
-  const [topic, setTopic] = useState("");
-  const [style, setStyle] = useState<StyleKey>("modern");
-  const [slidesCount, setSlidesCount] = useState<number>(10);
-  const [sourceText, setSourceText] = useState("");
-  const [fileName, setFileName] = useState("");
+  const [topic, setTopic] = usePersistedState("presentation_topic", "");
+  const [style, setStyle] = usePersistedState<StyleKey>("presentation_style", "modern");
+  const [slidesCount, setSlidesCount] = usePersistedState<number>("presentation_slidesCount", 10);
+  const [sourceText, setSourceText] = usePersistedState("presentation_sourceText", "");
+  const [fileName, setFileName] = usePersistedState("presentation_fileName", "");
   const [reading, setReading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [ovz, setOvz] = useState<string[]>([]);
-  const [withImages, setWithImages] = useState(true);
+  const [withImages, setWithImages] = usePersistedState("presentation_withImages", true);
   const [imgBusy, setImgBusy] = useState<number[]>([]);
   const [refineOpen, setRefineOpen] = useState(false);
   const [refineText, setRefineText] = useState("");

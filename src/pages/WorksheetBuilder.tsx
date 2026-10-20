@@ -1,3 +1,4 @@
+import { usePersistedState } from "@/hooks/use-persisted-state";
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -56,16 +57,16 @@ const WorksheetBuilder = () => {
   const [authOpen, setAuthOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
-  const [topic, setTopic] = useState("");
-  const [discipline, setDiscipline] = useState("");
-  const [group, setGroup] = useState("");
-  const [teacher, setTeacher] = useState("");
-  const [planText, setPlanText] = useState("");
-  const [fileName, setFileName] = useState("");
+  const [topic, setTopic] = usePersistedState("worksheet_topic", "");
+  const [discipline, setDiscipline] = usePersistedState("worksheet_discipline", "");
+  const [group, setGroup] = usePersistedState("worksheet_group", "");
+  const [teacher, setTeacher] = usePersistedState("worksheet_teacher", "");
+  const [planText, setPlanText] = usePersistedState("worksheet_planText", "");
+  const [fileName, setFileName] = usePersistedState("worksheet_fileName", "");
   const [reading, setReading] = useState(false);
-  const [level, setLevel] = useState(LEVELS[1]);
-  const [taskCount, setTaskCount] = useState("5");
-  const [tasks, setTasks] = useState<WorksheetTask[]>([createTask()]);
+  const [level, setLevel] = usePersistedState("worksheet_level", LEVELS[1]);
+  const [taskCount, setTaskCount] = usePersistedState("worksheet_taskCount", "5");
+  const [tasks, setTasks] = usePersistedState<WorksheetTask[]>("worksheet_tasks", [createTask()]);
 
   const [loading, setLoading] = useState(false);
   const [refineOpen, setRefineOpen] = useState(false);

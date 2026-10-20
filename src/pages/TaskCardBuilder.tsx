@@ -1,3 +1,4 @@
+import { usePersistedState } from "@/hooks/use-persisted-state";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -32,19 +33,19 @@ const TaskCardBuilder = () => {
   const [authOpen, setAuthOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
-  const [discipline, setDiscipline] = useState("");
-  const [group, setGroup] = useState("");
-  const [topic, setTopic] = useState("");
-  const [goal, setGoal] = useState("");
-  const [task, setTask] = useState("");
-  const [criteria, setCriteria] = useState("");
-  const [time, setTime] = useState<string>(TIME_OPTIONS[0]);
-  const [taskType, setTaskType] = useState<string>(TASK_TYPES[0]);
-  const [selfAssessment, setSelfAssessment] = useState("Да");
-  const [competencies, setCompetencies] = useState<string[]>([]);
-  const [extraCompetencies, setExtraCompetencies] = useState<string[]>([]);
+  const [discipline, setDiscipline] = usePersistedState("task_discipline", "");
+  const [group, setGroup] = usePersistedState("task_group", "");
+  const [topic, setTopic] = usePersistedState("task_topic", "");
+  const [goal, setGoal] = usePersistedState("task_goal", "");
+  const [task, setTask] = usePersistedState("task_task", "");
+  const [criteria, setCriteria] = usePersistedState("task_criteria", "");
+  const [time, setTime] = usePersistedState<string>("task_time", TIME_OPTIONS[0]);
+  const [taskType, setTaskType] = usePersistedState<string>("task_taskType", TASK_TYPES[0]);
+  const [selfAssessment, setSelfAssessment] = usePersistedState("task_selfAssessment", "Да");
+  const [competencies, setCompetencies] = usePersistedState<string[]>("task_competencies", []);
+  const [extraCompetencies, setExtraCompetencies] = usePersistedState<string[]>("task_extraCompetencies", []);
   const [loading, setLoading] = useState(false);
-  const [ovz, setOvz] = useState<string[]>([]);
+  const [ovz, setOvz] = usePersistedState<string[]>("task_ovz", []);
   const [prefilled, setPrefilled] = useState(false);
 
   const [refineOpen, setRefineOpen] = useState(false);

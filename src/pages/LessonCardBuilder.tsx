@@ -1,3 +1,4 @@
+import { usePersistedState } from "@/hooks/use-persisted-state";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -37,19 +38,19 @@ const LessonCardBuilder = () => {
   const [authOpen, setAuthOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
-  const [discipline, setDiscipline] = useState("");
-  const [group, setGroup] = useState("");
-  const [topic, setTopic] = useState("");
-  const [goal, setGoal] = useState("");
-  const [duration, setDuration] = useState("45");
-  const [lessonType, setLessonType] = useState<LessonType>("Теоретическое занятие");
-  const [competencies, setCompetencies] = useState<string[]>([]);
-  const [technologies, setTechnologies] = useState<string[]>([]);
-  const [times, setTimes] = useState<Record<string, number>>(() => buildInitialTimes("45"));
-  const [contents, setContents] = useState<Record<string, string>>(emptyContents);
-  const [extraCompetencies, setExtraCompetencies] = useState<string[]>([]);
+  const [discipline, setDiscipline] = usePersistedState("lesson_discipline", "");
+  const [group, setGroup] = usePersistedState("lesson_group", "");
+  const [topic, setTopic] = usePersistedState("lesson_topic", "");
+  const [goal, setGoal] = usePersistedState("lesson_goal", "");
+  const [duration, setDuration] = usePersistedState("lesson_duration", "45");
+  const [lessonType, setLessonType] = usePersistedState<LessonType>("lesson_lessonType", "Теоретическое занятие");
+  const [competencies, setCompetencies] = usePersistedState<string[]>("lesson_competencies", []);
+  const [technologies, setTechnologies] = usePersistedState<string[]>("lesson_technologies", []);
+  const [times, setTimes] = usePersistedState<Record<string, number>>("lesson_times", () => buildInitialTimes("45"));
+  const [contents, setContents] = usePersistedState<Record<string, string>>("lesson_contents", emptyContents);
+  const [extraCompetencies, setExtraCompetencies] = usePersistedState<string[]>("lesson_extraCompetencies", []);
   const [loading, setLoading] = useState(false);
-  const [ovz, setOvz] = useState<string[]>([]);
+  const [ovz, setOvz] = usePersistedState<string[]>("lesson_ovz", []);
   const [prefilled, setPrefilled] = useState(false);
 
   const [refineOpen, setRefineOpen] = useState(false);
