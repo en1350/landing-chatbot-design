@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Icon from "@/components/ui/icon";
 import { useAuth } from "@/context/AuthContext";
+import UpgradeModal from "@/components/UpgradeModal";
 
 type Status = "loading" | "success" | "error";
 
@@ -13,6 +14,7 @@ const VerifyEmail = () => {
   const token = searchParams.get("token") || "";
   const [status, setStatus] = useState<Status>("loading");
   const [error, setError] = useState<string | null>(null);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
   const started = useRef(false);
 
   useEffect(() => {
@@ -26,7 +28,7 @@ const VerifyEmail = () => {
     verifyEmail(token)
       .then(() => {
         setStatus("success");
-        setTimeout(() => navigate("/"), 1500);
+        setUpgradeOpen(true);
       })
       .catch((err) => {
         setStatus("error");
@@ -54,7 +56,18 @@ const VerifyEmail = () => {
         {status === "success" && (
           <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-sm flex gap-2.5">
             <Icon name="CheckCircle2" size={18} className="text-primary shrink-0 mt-0.5" />
-            <span>Email подтверждён! Переносим вас на главную страницу...</span>
+            <span>Email подтверждён! Вы вошли в личный кабинет.</span>
+          </div>
+        )}
+
+        {status === "success" && (
+          <div className="mt-4 space-y-2">
+            <Button className="w-full" onClick={() => setUpgradeOpen(true)}>
+              Выбрать тариф
+            </Button>
+            <Button variant="outline" className="w-full" onClick={() => navigate("/")}>
+              Перейти на главную
+            </Button>
           </div>
         )}
 
@@ -70,6 +83,14 @@ const VerifyEmail = () => {
           </div>
         )}
       </div>
+      <UpgradeModal
+        open={upgradeOpen}
+        onClose={() => {
+          setUpgradeOpen(false);
+          navigate("/");
+        }}
+        onNeedAuth={() => navigate("/")}
+      />
     </div>
   );
 };
