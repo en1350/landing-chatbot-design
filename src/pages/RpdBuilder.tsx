@@ -19,6 +19,7 @@ import RpdContentSection from "@/components/rpd/RpdContentSection";
 import RpdKtpSection from "@/components/rpd/RpdKtpSection";
 import RpdAssessmentSection from "@/components/rpd/RpdAssessmentSection";
 import RpdSupportSection from "@/components/rpd/RpdSupportSection";
+import RpdInstruction from "@/components/rpd/RpdInstruction";
 import RpdPreview from "@/components/rpd/RpdPreview";
 import { RPD_TITLE, rpdToText } from "@/components/rpd/rpdText";
 import { RpdData, emptyCompetency, emptyKtpRow, emptyRpd, mergeRpd } from "@/components/rpd/rpdConfig";
@@ -202,6 +203,7 @@ const RpdBuilder = () => {
           </div>
 
           <div className="no-print">
+            <RpdInstruction />
             <RpdGeneralSection data={data} patch={patch} />
             <RpdContentSection data={data} patch={patch} aiLoading={loadingPart === "content"} onGenerate={() => callAi("content")} />
             <RpdKtpSection data={data} patch={patch} aiLoading={loadingPart === "ktp"} onGenerate={() => callAi("ktp")} />
