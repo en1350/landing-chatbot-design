@@ -114,6 +114,14 @@ const ProjectActivity = () => {
   const removeRow = (id: string) => setRows((prev) => prev.filter((r) => r.id !== id));
 
   const loadDemo = () => {
+    if (!user) {
+      setAuthOpen(true);
+      return;
+    }
+    if (!isPaid) {
+      setUpgradeOpen(true);
+      return;
+    }
     setRows((prev) => [...prev, { id: newId(), ...DEMO_ROW }]);
     toast.success("Добавлен пример заполнения");
   };

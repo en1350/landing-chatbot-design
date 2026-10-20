@@ -130,6 +130,14 @@ const ExtracurricularAnalytics = () => {
   const removeRow = (id: string) => setRows((prev) => prev.filter((r) => r.id !== id));
 
   const loadDemo = () => {
+    if (!user) {
+      setAuthOpen(true);
+      return;
+    }
+    if (!isPaid) {
+      setUpgradeOpen(true);
+      return;
+    }
     setRows(DEMO_ROWS.map((r) => ({ ...r, id: newId() })));
     toast.success("Загружен пример на 9 мероприятий");
   };

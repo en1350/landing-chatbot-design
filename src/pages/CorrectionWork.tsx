@@ -157,6 +157,14 @@ const CorrectionWork = () => {
   const removeRow = (id: string) => setRows((prev) => prev.filter((r) => r.id !== id));
 
   const loadDemo = () => {
+    if (!user) {
+      setAuthOpen(true);
+      return;
+    }
+    if (!isPaid) {
+      setUpgradeOpen(true);
+      return;
+    }
     setRows((prev) => [...prev, ...DEMO_ROWS.map((r) => ({ id: newId(), ...r }))]);
     toast.success("Добавлен пример заполнения");
   };
