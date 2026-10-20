@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎯 Тренажёр: Делимость и пары чисел</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Comic Sans MS', 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); min-height: 100vh; padding: 20px; color: #333; }
+.container { max-width: 1100px; margin: 0 auto; background: #fff; border-radius: 25px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); overflow: hidden; }
+.header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; text-align: center; position: relative; }
+.header h1 { font-size: 1.8em; margin-bottom: 8px; }
+.header p { opacity: 0.95; font-size: 1.05em; }
+.solved-badge { display: inline-block; margin-top: 12px; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.5); padding: 6px 16px; border-radius: 20px; font-weight: 700; }
+.solved-badge b { font-size: 1.2em; background: #fff; color: #667eea; padding: 1px 10px; border-radius: 12px; margin-left: 4px; }
+.content { padding: 25px; }
+.nav { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; background: #f5f7fb; padding: 10px; border-radius: 15px; }
+.nav-btn { flex: 1; min-width: 120px; padding: 12px 14px; background: white; border: 2px solid transparent; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 14px; color: #666; transition: all 0.3s; font-family: inherit; }
+.nav-btn:hover { color: #667eea; transform: translateY(-2px); }
+.nav-btn.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); }
+.screen { display: none; animation: fadeIn 0.4s; }
+.screen.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.theory-block { background: linear-gradient(135deg, #fff9e6 0%, #fff 100%); padding: 20px; border-radius: 15px; margin-bottom: 18px; border-left: 5px solid #ffa500; box-shadow: 0 3px 10px rgba(0,0,0,0.05); }
+.theory-block h3 { color: #d2691e; margin-bottom: 12px; font-size: 1.2em; }
+.theory-block p, .theory-block li { line-height: 1.7; margin-bottom: 8px; font-size: 1.02em; }
+.theory-block ul { margin-left: 25px; }
+.theory-block .emoji { font-size: 1.3em; margin-right: 5px; }
+.highlight { background: #fff3cd; padding: 2px 8px; border-radius: 6px; font-weight: 700; color: #856404; }
+.code-inline { background: #e8f0fe; padding: 2px 8px; border-radius: 6px; font-family: 'Consolas', monospace; color: #1e3c72; font-weight: 700; }
+.example-box { background: #e8f5e9; border: 2px dashed #4caf50; border-radius: 12px; padding: 15px; margin: 15px 0; }
+.example-box h4 { color: #2e7d32; margin-bottom: 10px; }
+.numbers-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.num-cell { min-width: 50px; padding: 10px 8px; background: white; border: 2px solid #1976d2; border-radius: 8px; text-align: center; font-weight: 700; font-size: 1.1em; color: #1976d2; transition: all 0.3s; }
+.num-cell.min21 { background: #ff6b6b; color: white; border-color: #c92a2a; transform: scale(1.05); }
+.step-box { background: white; border: 2px solid #667eea; border-radius: 12px; padding: 15px; margin-bottom: 12px; position: relative; }
+.step-number { position: absolute; top: -15px; left: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 700; font-size: 0.9em; }
+.step-box h4 { color: #667eea; margin: 10px 0 8px; font-size: 1.1em; }
+.trainer-box { background: #f0f4ff; padding: 20px; border-radius: 15px; margin-bottom: 20px; }
+.input-group { margin-bottom: 15px; }
+.input-group label { display: block; font-weight: 700; margin-bottom: 6px; color: #333; }
+.input-group input, .input-group select, .input-group textarea { width: 100%; padding: 10px 14px; border: 2px solid #c5cae9; border-radius: 10px; font-size: 15px; font-family: inherit; transition: border-color 0.3s; }
+.input-group input:focus, .input-group textarea:focus, .input-group select:focus { outline: none; border-color: #667eea; }
+.input-group textarea { min-height: 80px; resize: vertical; font-family: 'Consolas', monospace; }
+.btn { padding: 12px 24px; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.3s; margin: 5px 5px 5px 0; font-family: inherit; }
+.btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4); }
+.btn-success { background: #4caf50; color: white; }
+.btn-success:hover { background: #43a047; }
+.btn-warning { background: #ff9800; color: white; }
+.btn-warning:hover { background: #f57c00; }
+.btn-info { background: #03a9f4; color: white; }
+.btn-info:hover { background: #039be5; }
+.difficulty-btns { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+.diff-btn { flex: 1; min-width: 100px; padding: 10px; background: white; border: 2px solid #c5cae9; border-radius: 10px; cursor: pointer; font-weight: 700; transition: all 0.3s; font-family: inherit; }
+.diff-btn:hover { transform: translateY(-2px); }
+.diff-btn.easy { border-color: #4caf50; color: #2e7d32; }
+.diff-btn.easy.active, .diff-btn.easy:hover { background: #4caf50; color: white; }
+.diff-btn.medium { border-color: #ff9800; color: #e65100; }
+.diff-btn.medium.active, .diff-btn.medium:hover { background: #ff9800; color: white; }
+.diff-btn.hard { border-color: #f44336; color: #c62828; }
+.diff-btn.hard.active, .diff-btn.hard:hover { background: #f44336; color: white; }
+.visualization { background: white; padding: 20px; border-radius: 15px; margin: 15px 0; border: 2px solid #e0e0e0; }
+.vis-title { font-weight: 700; color: #667eea; margin-bottom: 10px; font-size: 1.1em; }
+.pair-highlight { display: inline-flex; gap: 4px; padding: 5px; background: #fff3cd; border-radius: 8px; margin: 3px; border: 2px solid #ffc107; }
+.pair-highlight.found { background: #d4edda; border-color: #28a745; }
+.result-box { padding: 20px; border-radius: 15px; margin-top: 15px; font-size: 1.05em; }
+.result-box.success { background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); border: 3px solid #28a745; color: #155724; }
+.result-box.error { background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); border: 3px solid #dc3545; color: #721c24; }
+.result-box.info { background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%); border: 3px solid #17a2b8; color: #0c5460; }
+.solution-steps { background: #f8f9fa; padding: 15px; border-radius: 12px; margin-top: 15px; }
+.solution-step { background: white; padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #667eea; }
+.solution-step h5 { color: #667eea; margin-bottom: 5px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 15px 0; }
+.stat-card { background: white; padding: 15px; border-radius: 12px; text-align: center; border: 2px solid #e0e0e0; }
+.stat-value { font-size: 2em; font-weight: 700; color: #667eea; }
+.stat-label { font-size: 0.9em; color: #666; margin-top: 5px; }
+@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+.bounce { animation: bounce 0.6s; }
+.pop { animation: bounce 0.6s; }
+@media (max-width: 768px) {
+    .header h1 { font-size: 1.4em; }
+    .num-cell { min-width: 40px; padding: 8px 5px; font-size: 0.95em; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🎯 Тренажёр: Делимость и пары чисел</h1>
+        <p>Учимся решать задачу про последовательности шаг за шагом!</p>
+        <div class="solved-badge">✅ Выполнено заданий: <b id="solvedCounter">0</b></div>
+    </div>
+
+    <div class="content">
+        <div class="nav">
+            <button class="nav-btn active" onclick="showScreen('theoryScreen', this)">📖 Теория</button>
+            <button class="nav-btn" onclick="showScreen('exampleScreen', this)">🔍 Пример</button>
+            <button class="nav-btn" onclick="showScreen('algorithmScreen', this)">🧠 Алгоритм</button>
+            <button class="nav-btn" onclick="showScreen('trainerScreen', this)">🎮 Тренажёр</button>
+            <button class="nav-btn" onclick="showScreen('statsScreen', this)">📊 Статистика</button>
+        </div>
+
+        <div id="theoryScreen" class="screen active">
+            <h2 style="color:#667eea; margin-bottom:15px;">📖 Что нужно знать?</h2>
+
+            <div class="theory-block">
+                <h3><span class="emoji">🔢</span> Что такое последовательность?</h3>
+                <p><strong>Последовательность</strong> — это просто набор чисел, записанных в ряд. Например: <span class="code-inline">42, 7, 63, 21, 100</span></p>
+                <p>Каждое число в последовательности имеет свой <strong>номер</strong> (позицию): первое, второе, третье и т.д.</p>
+            </div>
+
+            <div class="theory-block">
+                <h3><span class="emoji">👫</span> Что такое пара?</h3>
+                <p><strong>Пара</strong> — это два числа, которые стоят <strong>рядом</strong> (подряд) в последовательности.</p>
+                <p>В последовательности <span class="code-inline">42, 7, 63, 21, 100</span> есть такие пары:</p>
+                <ul>
+                    <li>(42, 7) — первое и второе числа</li>
+                    <li>(7, 63) — второе и третье числа</li>
+                    <li>(63, 21) — третье и четвёртое числа</li>
+                    <li>(21, 100) — четвёртое и пятое числа</li>
+                </ul>
+                <p>👉 Если в последовательности <strong>N</strong> чисел, то пар будет <strong>N−1</strong>.</p>
+            </div>
+
+            <div class="theory-block">
+                <h3><span class="emoji">➗</span> Что значит «делится на»?</h3>
+                <p>Число <strong>A делится на число B</strong>, если при делении A на B получается <strong>целое число без остатка</strong>.</p>
+                <p>Примеры:</p>
+                <ul>
+                    <li>✅ 42 делится на 21, потому что 42 ÷ 21 = 2 (целое!)</li>
+                    <li>✅ 63 делится на 21, потому что 63 ÷ 21 = 3</li>
+                    <li>❌ 100 не делится на 21, потому что 100 ÷ 21 = 4.76... (не целое)</li>
+                </ul>
+                <p>🎯 На языке программирования: <span class="code-inline">A % B == 0</span> (остаток от деления равен нулю).</p>
+            </div>
+
+            <div class="theory-block">
+                <h3><span class="emoji">🎯</span> Что такое «кратное 21»?</h3>
+                <p>Число <strong>кратно 21</strong>, если оно <strong>делится на 21 без остатка</strong>.</p>
+                <p>Примеры чисел, кратных 21: <span class="highlight">21, 42, 63, 84, 105, 126, ...</span></p>
+                <p>Проверка: число кратно 21, если <span class="code-inline">число % 21 == 0</span></p>
+            </div>
+
+            <div class="theory-block">
+                <h3><span class="emoji">📝</span> Условие задачи простыми словами</h3>
+                <p>Дана последовательность чисел. Нужно:</p>
+                <ol style="margin-left: 25px;">
+                    <li>Найти среди всех чисел <strong>самое маленькое</strong>, которое <strong>делится на 21</strong>.</li>
+                    <li>Посмотреть на все <strong>пары соседних чисел</strong>.</li>
+                    <li>Для каждой пары проверить: <strong>делится ли хотя бы одно из двух чисел</strong> на найденное число из пункта 1.</li>
+                    <li>Посчитать, сколько таких пар нашлось.</li>
+                    <li>Найти <strong>максимальную сумму</strong> среди этих пар.</li>
+                </ol>
+            </div>
+        </div>
+
+        <div id="exampleScreen" class="screen">
+            <h2 style="color:#667eea; margin-bottom:15px;">🔍 Разбираем пример вместе</h2>
+
+            <div class="example-box">
+                <h4>📌 Пример последовательности:</h4>
+                <div class="numbers-row" id="exampleNumbers"></div>
+            </div>
+
+            <div class="step-box">
+                <span class="step-number">Шаг 1</span>
+                <h4>Ищем минимальное число, кратное 21</h4>
+                <p>Перебираем все числа и проверяем, делится ли каждое на 21:</p>
+                <div id="step1Result" style="margin-top:10px;"></div>
+            </div>
+
+            <div class="step-box">
+                <span class="step-number">Шаг 2</span>
+                <h4>Находим все пары и проверяем делимость</h4>
+                <p>Наш делитель: <span class="highlight" id="divisorDisplay">—</span></p>
+                <div id="step2Result" style="margin-top:10px;"></div>
+            </div>
+
+            <div class="step-box">
+                <span class="step-number">Шаг 3</span>
+                <h4>Считаем подходящие пары и находим максимум</h4>
+                <div id="step3Result" style="margin-top:10px;"></div>
+            </div>
+
+            <div style="text-align:center; margin-top:20px;">
+                <button class="btn btn-success" onclick="showScreen('trainerScreen', document.querySelectorAll('.nav-btn')[3])">🎮 Перейти к тренажёру</button>
+            </div>
+        </div>
+
+        <div id="algorithmScreen" class="screen">
+            <h2 style="color:#667eea; margin-bottom:15px;">🧠 Алгоритм решения</h2>
+
+            <div class="step-box">
+                <span class="step-number">Шаг 1</span>
+                <h4>Прочитать все числа</h4>
+                <p>Загружаем последовательность чисел в память (например, в список или массив).</p>
+            </div>
+
+            <div class="step-box">
+                <span class="step-number">Шаг 2</span>
+                <h4>Найти минимальное число, кратное 21</h4>
+                <p>Заводим переменную <span class="code-inline">min21 = очень большое число</span>. Проходим по всем числам:</p>
+                <ul style="margin-left:20px;">
+                    <li>Если число делится на 21 (<span class="code-inline">число % 21 == 0</span>) и оно меньше <span class="code-inline">min21</span>, то запоминаем его как <span class="code-inline">min21</span>.</li>
+                </ul>
+                <p>В конце <span class="code-inline">min21</span> будет содержать искомое число.</p>
+            </div>
+
+            <div class="step-box">
+                <span class="step-number">Шаг 3</span>
+                <h4>Пройти по всем парам подряд идущих чисел</h4>
+                <p>Цикл от первого до предпоследнего элемента. На каждом шаге берём пару: текущее число и следующее.</p>
+            </div>
+
+            <div class="step-box">
+                <span class="step-number">Шаг 4</span>
+                <h4>Проверить пару</h4>
+                <p>Для пары (a, b) проверяем условие:</p>
+                <p style="background:#e8f0fe; padding:10px; border-radius:8px; margin-top:8px; font-family:'Consolas',monospace;">
+                    a % min21 == 0 <strong>ИЛИ</strong> b % min21 == 0
+                </p>
+                <p style="margin-top:8px;">Если условие выполнено — пара нам подходит!</p>
+            </div>
+
+            <div class="step-box">
+                <span class="step-number">Шаг 5</span>
+                <h4>Считать и запомнить</h4>
+                <ul style="margin-left:20px;">
+                    <li>Увеличиваем счётчик подходящих пар на 1.</li>
+                    <li>Считаем сумму элементов пары: <span class="code-inline">sum = a + b</span>.</li>
+                    <li>Если сумма больше текущего максимума — запоминаем её.</li>
+                </ul>
+            </div>
+
+            <div class="step-box">
+                <span class="step-number">Шаг 6</span>
+                <h4>Вывести результат</h4>
+                <p>После проверки всех пар выводим:</p>
+                <ul style="margin-left:20px;">
+                    <li>Количество подходящих пар</li>
+                    <li>Максимальную сумму среди них</li>
+                </ul>
+            </div>
+
+            <div class="theory-block" style="margin-top:20px;">
+                <h3>💻 Пример кода на Python</h3>
+                <pre style="background:#1e1e1e; color:#d4d4d4; padding:15px; border-radius:10px; overflow-x:auto; font-family:'Consolas',monospace; font-size:14px; line-height:1.6;">
+<span style="color:#569cd6;"># Читаем числа</span>
+a = [<span style="color:#b5cea8;">42</span>, <span style="color:#b5cea8;">7</span>, <span style="color:#b5cea8;">63</span>, <span style="color:#b5cea8;">21</span>, <span style="color:#b5cea8;">100</span>]
+
+<span style="color:#569cd6;"># Шаг 1: ищем min21</span>
+min21 = <span style="color:#b5cea8;">100001</span>
+<span style="color:#569cd6;">for</span> x <span style="color:#569cd6;">in</span> a:
+    <span style="color:#569cd6;">if</span> x % <span style="color:#b5cea8;">21</span> == <span style="color:#b5cea8;">0</span> <span style="color:#569cd6;">and</span> x &lt; min21:
+        min21 = x
+
+<span style="color:#569cd6;"># Шаг 2: проходим по парам</span>
+count = <span style="color:#b5cea8;">0</span>
+max_sum = <span style="color:#b5cea8;">0</span>
+<span style="color:#569cd6;">for</span> i <span style="color:#569cd6;">in</span> <span style="color:#dcdcaa;">range</span>(<span style="color:#dcdcaa;">len</span>(a) - <span style="color:#b5cea8;">1</span>):
+    <span style="color:#569cd6;">if</span> a[i] % min21 == <span style="color:#b5cea8;">0</span> <span style="color:#569cd6;">or</span> a[i+<span style="color:#b5cea8;">1</span>] % min21 == <span style="color:#b5cea8;">0</span>:
+        count += <span style="color:#b5cea8;">1</span>
+        s = a[i] + a[i+<span style="color:#b5cea8;">1</span>]
+        <span style="color:#569cd6;">if</span> s &gt; max_sum:
+            max_sum = s
+
+<span style="color:#dcdcaa;">print</span>(count, max_sum)
+                </pre>
+            </div>
+        </div>
+
+        <div id="trainerScreen" class="screen">
+            <h2 style="color:#667eea; margin-bottom:15px;">🎮 Тренажёр</h2>
+
+            <div class="trainer-box">
+                <h3 style="color:#d2691e; margin-bottom:10px;">⚙️ Настройки задачи</h3>
+
+                <div class="input-group">
+                    <label>🎚️ Выбери сложность:</label>
+                    <div class="difficulty-btns">
+                        <button class="diff-btn easy active" onclick="setDifficulty('easy', this)">🟢 Лёгкая (5-7 чисел)</button>
+                        <button class="diff-btn medium" onclick="setDifficulty('medium', this)">🟡 Средняя (10-15 чисел)</button>
+                        <button class="diff-btn hard" onclick="setDifficulty('hard', this)">🔴 Сложная (20-30 чисел)</button>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>📝 Или введи свою последовательность (через пробел или запятую):</label>
+                    <textarea id="customSequence" placeholder="Например: 42 7 63 21 100 84 35"></textarea>
+                </div>
+
+                <div style="margin-top:10px;">
+                    <button class="btn btn-primary" onclick="generateTask()">🎲 Сгенерировать задачу</button>
+                    <button class="btn btn-success" onclick="useCustomSequence()">✅ Использовать свою</button>
+                </div>
+            </div>
+
+            <div id="taskArea" style="display:none;">
+                <div class="visualization">
+                    <div class="vis-title">📊 Твоя последовательность:</div>
+                    <div class="numbers-row" id="taskNumbers"></div>
+                    <p style="margin-top:10px; color:#666; font-size:14px;">
+                        💡 <strong>Подсказка:</strong> сначала найди минимальное число, кратное 21 (подсвечено красным).
+                    </p>
+                </div>
+
+                <div class="trainer-box">
+                    <h3 style="color:#d2691e; margin-bottom:10px;">✍️ Твой ответ</h3>
+                    <div class="input-group">
+                        <label>Количество подходящих пар:</label>
+                        <input type="number" id="answerCount" min="0" placeholder="Введи число">
+                    </div>
+                    <div class="input-group">
+                        <label>Максимальная сумма среди этих пар:</label>
+                        <input type="number" id="answerMaxSum" min="0" placeholder="Введи число">
+                    </div>
+                    <button class="btn btn-success" onclick="checkAnswer()">✅ Проверить ответ</button>
+                    <button class="btn btn-info" onclick="showHint()">💡 Подсказка</button>
+                    <button class="btn btn-warning" onclick="showSolution()">🔍 Показать решение</button>
+                </div>
+
+                <div id="resultArea"></div>
+            </div>
+        </div>
+
+        <div id="statsScreen" class="screen">
+            <h2 style="color:#667eea; margin-bottom:15px;">📊 Твоя статистика</h2>
+
+            <div class="stats">
+                <div class="stat-card"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Всего задач</div></div>
+                <div class="stat-card"><div class="stat-value" id="statCorrect">0</div><div class="stat-label">Правильных ответов</div></div>
+                <div class="stat-card"><div class="stat-value" id="statWrong">0</div><div class="stat-label">Ошибок</div></div>
+                <div class="stat-card"><div class="stat-value" id="statPercent">0%</div><div class="stat-label">Точность</div></div>
+                <div class="stat-card"><div class="stat-value" id="statStreak">0</div><div class="stat-label">🔥 Серия правильных</div></div>
+            </div>
+
+            <div class="theory-block" style="margin-top:20px;">
+                <h3>🏆 Достижения</h3>
+                <div id="achievements"></div>
+            </div>
+
+            <div style="text-align:center; margin-top:20px;">
+                <button class="btn btn-warning" onclick="resetStats()">🔄 Сбросить статистику</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentSequence = [];
+let currentMin21 = null;
+let currentAnswer = { count: 0, maxSum: 0 };
+let difficulty = 'easy';
+let solvedCurrent = false;
+let stats = { total: 0, correct: 0, wrong: 0, streak: 0, maxStreak: 0 };
+
+try {
+    const saved = localStorage.getItem('divisibility_stats');
+    if (saved) stats = JSON.parse(saved);
+} catch(e) {}
+
+function showScreen(id, btn) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if (btn) btn.classList.add('active');
+    if (id === 'statsScreen') updateStats();
+    window.scrollTo(0, 0);
+}
+
+function setDifficulty(diff, btn) {
+    difficulty = diff;
+    document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+}
+
+function updateSolvedCounter(animate) {
+    const el = document.getElementById('solvedCounter');
+    el.textContent = stats.correct;
+    if (animate) {
+        el.classList.remove('pop');
+        void el.offsetWidth;
+        el.classList.add('pop');
+    }
+}
+
+function resetAnswerFields() {
+    document.getElementById('taskArea').style.display = 'block';
+    document.getElementById('resultArea').innerHTML = '';
+    document.getElementById('answerCount').value = '';
+    document.getElementById('answerMaxSum').value = '';
+    solvedCurrent = false;
+}
+
+function generateTask() {
+    const ranges = { easy: { min: 5, max: 7 }, medium: { min: 10, max: 15 }, hard: { min: 20, max: 30 } };
+    const { min, max } = ranges[difficulty];
+    const n = Math.floor(Math.random() * (max - min + 1)) + min;
+
+    currentSequence = [];
+    const multiplesOf21 = [21, 42, 63, 84, 105, 126, 147, 168, 189, 210];
+    currentSequence.push(multiplesOf21[Math.floor(Math.random() * multiplesOf21.length)]);
+
+    for (let i = 1; i < n; i++) {
+        currentSequence.push(Math.floor(Math.random() * 200) + 1);
+    }
+    for (let i = currentSequence.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [currentSequence[i], currentSequence[j]] = [currentSequence[j], currentSequence[i]];
+    }
+
+    solveTask();
+    renderTask();
+    resetAnswerFields();
+}
+
+function useCustomSequence() {
+    const input = document.getElementById('customSequence').value.trim();
+    if (!input) { alert('Введи последовательность чисел!'); return; }
+    const nums = input.split(/[\s,]+/).map(s => parseInt(s)).filter(n => !isNaN(n) && n >= 1 && n <= 100000);
+    if (nums.length < 2) { alert('Нужно хотя бы 2 числа!'); return; }
+    if (!nums.some(n => n % 21 === 0)) { alert('В последовательности должно быть хотя бы одно число, кратное 21!'); return; }
+    currentSequence = nums;
+    solveTask();
+    renderTask();
+    resetAnswerFields();
+}
+
+function solveTask() {
+    currentMin21 = Infinity;
+    for (const x of currentSequence) {
+        if (x % 21 === 0 && x < currentMin21) currentMin21 = x;
+    }
+    let count = 0, maxSum = 0;
+    for (let i = 0; i < currentSequence.length - 1; i++) {
+        const a = currentSequence[i], b = currentSequence[i + 1];
+        if (a % currentMin21 === 0 || b % currentMin21 === 0) {
+            count++;
+            const s = a + b;
+            if (s > maxSum) maxSum = s;
+        }
+    }
+    currentAnswer = { count, maxSum };
+}
+
+function renderTask() {
+    const container = document.getElementById('taskNumbers');
+    container.innerHTML = '';
+    currentSequence.forEach((num, i) => {
+        const cell = document.createElement('div');
+        cell.className = 'num-cell';
+        if (num === currentMin21) cell.classList.add('min21');
+        cell.textContent = num;
+        cell.title = `Позиция ${i + 1}`;
+        container.appendChild(cell);
+    });
+}
+
+function renderExample() {
+    const example = [42, 7, 63, 21, 100, 84, 35];
+    const container = document.getElementById('exampleNumbers');
+    container.innerHTML = '';
+    example.forEach(num => {
+        const cell = document.createElement('div');
+        cell.className = 'num-cell';
+        if (num % 21 === 0) cell.classList.add('min21');
+        cell.textContent = num;
+        container.appendChild(cell);
+    });
+
+    const min21 = Math.min(...example.filter(n => n % 21 === 0));
+    document.getElementById('step1Result').innerHTML = `
+        <p>Числа, кратные 21: <strong>42, 63, 21, 84</strong></p>
+        <p>Минимальное из них: <span class="highlight">${min21}</span></p>`;
+    document.getElementById('divisorDisplay').textContent = min21;
+
+    let pairsHtml = '<div style="display:flex; flex-wrap:wrap; gap:6px;">';
+    let count = 0, maxSum = 0;
+    for (let i = 0; i < example.length - 1; i++) {
+        const a = example[i], b = example[i + 1];
+        const ok = a % min21 === 0 || b % min21 === 0;
+        const sum = a + b;
+        if (ok) {
+            count++;
+            if (sum > maxSum) maxSum = sum;
+            pairsHtml += `<div class="pair-highlight found">(${a}, ${b}) ✓ сумма=${sum}</div>`;
+        } else {
+            pairsHtml += `<div class="pair-highlight">(${a}, ${b}) ✗</div>`;
+        }
+    }
+    pairsHtml += '</div>';
+    document.getElementById('step2Result').innerHTML = pairsHtml;
+
+    document.getElementById('step3Result').innerHTML = `
+        <p>📊 Количество подходящих пар: <span class="highlight">${count}</span></p>
+        <p>🏆 Максимальная сумма: <span class="highlight">${maxSum}</span></p>
+        <p style="margin-top:10px;"><strong>Ответ:</strong> ${count} ${maxSum}</p>`;
+}
+
+function checkAnswer() {
+    const userCount = parseInt(document.getElementById('answerCount').value);
+    const userMaxSum = parseInt(document.getElementById('answerMaxSum').value);
+
+    if (isNaN(userCount) || isNaN(userMaxSum)) { alert('Введи оба числа!'); return; }
+
+    const correctCount = userCount === currentAnswer.count;
+    const correctSum = userMaxSum === currentAnswer.maxSum;
+    const allCorrect = correctCount && correctSum;
+
+    if (solvedCurrent) {
+        alert('Это задание уже засчитано. Сгенерируй новое!');
+        return;
+    }
+
+    stats.total++;
+    if (allCorrect) {
+        stats.correct++;
+        stats.streak++;
+        if (stats.streak > stats.maxStreak) stats.maxStreak = stats.streak;
+        solvedCurrent = true;
+    } else {
+        stats.wrong++;
+        stats.streak = 0;
+    }
+    saveStats();
+    updateSolvedCounter(allCorrect);
+
+    const resultArea = document.getElementById('resultArea');
+    if (allCorrect) {
+        resultArea.innerHTML = `
+            <div class="result-box success bounce">
+                <h3 style="margin-bottom:10px;">🎉 Правильно! Задание засчитано!</h3>
+                <p>Количество пар: <strong>${currentAnswer.count}</strong></p>
+                <p>Максимальная сумма: <strong>${currentAnswer.maxSum}</strong></p>
+                <p style="margin-top:10px;">✅ Выполнено заданий: ${stats.correct}</p>
+                <p>🔥 Серия правильных ответов: ${stats.streak}</p>
+            </div>`;
+    } else {
+        let errorMsg = '<div class="result-box error bounce"><h3 style="margin-bottom:10px;">😔 Не совсем верно...</h3>';
+        if (!correctCount) errorMsg += `<p>Количество пар: ты написал <strong>${userCount}</strong>, а правильно <strong>${currentAnswer.count}</strong></p>`;
+        else errorMsg += `<p>✅ Количество пар верно!</p>`;
+        if (!correctSum) errorMsg += `<p>Максимальная сумма: ты написал <strong>${userMaxSum}</strong>, а правильно <strong>${currentAnswer.maxSum}</strong></p>`;
+        else errorMsg += `<p>✅ Максимальная сумма верна!</p>`;
+        errorMsg += `<p style="margin-top:10px;">💪 Попробуй ещё раз или посмотри решение!</p></div>`;
+        resultArea.innerHTML = errorMsg;
+    }
+    resultArea.innerHTML += renderSolution();
+}
+
+function showHint() {
+    document.getElementById('resultArea').innerHTML = `
+        <div class="result-box info">
+            <h3>💡 Подсказка</h3>
+            <p>1️⃣ Сначала найди все числа, которые делятся на 21 без остатка.</p>
+            <p>2️⃣ Среди них выбери самое маленькое — это твой делитель.</p>
+            <p>3️⃣ Теперь посмотри на все пары соседних чисел.</p>
+            <p>4️⃣ В каждой паре проверь: делится ли хотя бы одно число на твой делитель?</p>
+            <p>5️⃣ Считай подходящие пары и запоминай их суммы.</p>
+        </div>`;
+}
+
+function showSolution() {
+    document.getElementById('resultArea').innerHTML = renderSolution();
+}
+
+function renderSolution() {
+    let html = '<div class="solution-steps"><h3 style="color:#667eea; margin-bottom:15px;">🔍 Разбор решения</h3>';
+    const multiples = currentSequence.filter(n => n % 21 === 0);
+    html += `
+        <div class="solution-step">
+            <h5>Шаг 1: Ищем числа, кратные 21</h5>
+            <p>Перебираем все числа и проверяем делимость на 21:</p>
+            <p>Найденные числа: <strong>${multiples.join(', ')}</strong></p>
+            <p>Минимальное из них: <span class="highlight">${currentMin21}</span></p>
+        </div>`;
+
+    html += `<div class="solution-step"><h5>Шаг 2: Проверяем все пары</h5><p>Делитель: <strong>${currentMin21}</strong></p><div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;">`;
+    let count = 0, maxSum = 0;
+    for (let i = 0; i < currentSequence.length - 1; i++) {
+        const a = currentSequence[i], b = currentSequence[i + 1];
+        const aDiv = a % currentMin21 === 0;
+        const bDiv = b % currentMin21 === 0;
+        const sum = a + b;
+        if (aDiv || bDiv) {
+            count++;
+            if (sum > maxSum) maxSum = sum;
+            html += `<div class="pair-highlight found" title="${aDiv ? 'первое делится' : ''} ${bDiv ? 'второе делится' : ''}">(${a}, ${b}) ✓ сумма=${sum}</div>`;
+        } else {
+            html += `<div class="pair-highlight">(${a}, ${b}) ✗</div>`;
+        }
+    }
+    html += `</div></div>`;
+
+    html += `
+        <div class="solution-step">
+            <h5>Шаг 3: Результат</h5>
+            <p>📊 Количество подходящих пар: <strong>${count}</strong></p>
+            <p>🏆 Максимальная сумма: <strong>${maxSum}</strong></p>
+            <p style="margin-top:10px;"><strong>Правильный ответ:</strong> ${count} ${maxSum}</p>
+        </div>`;
+    html += '</div>';
+    return html;
+}
+
+function updateStats() {
+    document.getElementById('statTotal').textContent = stats.total;
+    document.getElementById('statCorrect').textContent = stats.correct;
+    document.getElementById('statWrong').textContent = stats.wrong;
+    const percent = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
+    document.getElementById('statPercent').textContent = percent + '%';
+    document.getElementById('statStreak').textContent = stats.streak;
+    updateSolvedCounter(false);
+    renderAchievements();
+}
+
+function renderAchievements() {
+    const achievements = [
+        { icon: '🌟', title: 'Первый шаг', desc: 'Реши первую задачу', unlocked: stats.total >= 1 },
+        { icon: '🎯', title: 'Снайпер', desc: '5 правильных ответов', unlocked: stats.correct >= 5 },
+        { icon: '🔥', title: 'На огне', desc: 'Серия из 3 правильных', unlocked: stats.maxStreak >= 3 },
+        { icon: '💎', title: 'Бриллиант', desc: '10 правильных ответов', unlocked: stats.correct >= 10 },
+        { icon: '🏆', title: 'Чемпион', desc: 'Серия из 5 правильных', unlocked: stats.maxStreak >= 5 },
+        { icon: '👑', title: 'Мастер', desc: '20 правильных ответов', unlocked: stats.correct >= 20 },
+        { icon: '🚀', title: 'Ракета', desc: 'Серия из 10 правильных', unlocked: stats.maxStreak >= 10 }
+    ];
+    document.getElementById('achievements').innerHTML = achievements.map(a => `
+        <div style="display:flex; align-items:center; gap:12px; padding:10px; background:${a.unlocked ? '#d4edda' : '#f0f0f0'}; border-radius:10px; margin-bottom:8px; opacity:${a.unlocked ? '1' : '0.5'};">
+            <div style="font-size:2em;">${a.icon}</div>
+            <div>
+                <div style="font-weight:700;">${a.title}</div>
+                <div style="font-size:0.9em; color:#666;">${a.desc}</div>
+            </div>
+            ${a.unlocked ? '<div style="margin-left:auto; color:#28a745; font-weight:700;">✓</div>' : '<div style="margin-left:auto; color:#999;">🔒</div>'}
+        </div>`).join('');
+}
+
+function saveStats() {
+    try {
+        localStorage.setItem('divisibility_stats', JSON.stringify(stats));
+        localStorage.setItem('ege_divisibility_solved', String(stats.correct));
+    } catch(e) {}
+}
+
+function resetStats() {
+    if (!confirm('Точно сбросить всю статистику?')) return;
+    stats = { total: 0, correct: 0, wrong: 0, streak: 0, maxStreak: 0 };
+    saveStats();
+    updateStats();
+}
+
+window.addEventListener('load', () => {
+    renderExample();
+    updateStats();
+});
+</script>
+</body>
+</html>

@@ -18,7 +18,7 @@ import TrainerFullscreen from "@/components/student-trainer/TrainerFullscreen";
 
 /* ---------- Список тренажёров ---------- */
 
-type CategoryKey = "informatics" | "networks" | "programming" | "os";
+type CategoryKey = "informatics" | "networks" | "programming" | "os" | "ege";
 
 type TrainerKey =
   | "algorithms"
@@ -48,7 +48,8 @@ type TrainerKey =
   | "quadratic-complexity"
   | "set-theory"
   | "internet-ai"
-  | "modeling-luntik";
+  | "modeling-luntik"
+  | "ege-divisibility";
 
 interface CategoryItem {
   key: CategoryKey;
@@ -94,6 +95,7 @@ const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "set-theory": "/set-theory.html",
   "internet-ai": "/internet-ai.html",
   "modeling-luntik": "/modeling-luntik.html",
+  "ege-divisibility": "/ege-divisibility.html",
 };
 
 const CATEGORIES: CategoryItem[] = [
@@ -124,6 +126,13 @@ const CATEGORIES: CategoryItem[] = [
     title: "Операционные системы и среды",
     description: "Устройство и компоненты операционных систем",
     accent: "#8B5CF6",
+  },
+  {
+    key: "ege",
+    icon: "🎓",
+    title: "ЕГЭ по информатике",
+    description: "Разбор типовых заданий ЕГЭ с генерацией задач, проверкой ответа и счётчиком выполненных заданий",
+    accent: "#F59E0B",
   },
 ];
 
@@ -363,7 +372,24 @@ const TRAINERS: TrainerItem[] = [
     description: "Теория, 8 практических заданий, тест на 10 вопросов, аркадная игра и именной сертификат с разбором ошибок",
     accent: "#2a5298",
   },
+  {
+    key: "ege-divisibility",
+    category: "ege",
+    icon: "🎯",
+    title: "Делимость и пары чисел",
+    description: "Задача на последовательности: минимальное кратное 21, подходящие пары и максимальная сумма. Теория, пример, алгоритм и тренажёр",
+    accent: "#F59E0B",
+  },
 ];
+
+const getSolvedCount = (key: TrainerKey): number | null => {
+  if (key !== "ege-divisibility") return null;
+  try {
+    return Number(localStorage.getItem("ege_divisibility_solved") || 0);
+  } catch {
+    return 0;
+  }
+};
 
 /* ---------- Страница ---------- */
 
@@ -515,6 +541,12 @@ const StudentTrainer = () => {
                       <p className="text-sm text-muted-foreground leading-relaxed mb-4">
                         {t.description}
                       </p>
+                      {getSolvedCount(t.key) !== null && (
+                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold rounded-full bg-green-100 text-green-800 px-2.5 py-1 mb-3">
+                          <Icon name="CheckCircle2" size={13} />
+                          Выполнено заданий: {getSolvedCount(t.key)}
+                        </span>
+                      )}
                       {locked ? (
                         <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
                           <Icon name="Sparkles" size={15} />
