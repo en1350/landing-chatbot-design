@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интерактивный симулятор: Разбиение на подсети (VLSM/FLSM)</title>
+    <style>
+        :root {
+            --primary: #2b6cb0;
+            --primary-dark: #2c5282;
+            --bg: #f7fafc;
+            --card-bg: #ffffff;
+            --text: #2d3748;
+            --border: #e2e8f0;
+            --success: #38a169;
+            --warning: #dd6b20;
+            --error: #e53e3e;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h1 { color: var(--primary); margin-bottom: 10px; }
+        
+        /* Форма ввода */
+        .input-panel {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            align-items: end;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            color: #4a5568;
+        }
+        .form-group input {
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(43, 108, 176, 0.1);
+        }
+        .error-msg {
+            color: var(--error);
+            font-size: 0.85em;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .controls {
+            text-align: center;
+            margin-bottom: 30px;
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-weight: 600;
+        }
+        .btn:hover { background: var(--primary-dark); }
+        .btn-secondary { background: #718096; }
+        .btn-secondary:hover { background: #4a5568; }
+
+        /* Визуализация */
+        .visualization {
+            display: none;
+            margin-bottom: 30px;
+            animation: fadeIn 0.5s ease-in;
+        }
+        .subnet-bar-container {
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+        .subnet-bar {
+            display: flex;
+            height: 70px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            min-width: max-content;
+        }
+        .subnet-segment {
+            flex: 1;
+            min-width: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            border-right: 2px solid rgba(255,255,255,0.3);
+            padding: 5px;
+            text-align: center;
+        }
+        .subnet-segment:last-child { border-right: none; }
+        .segment-label { font-size: 12px; opacity: 0.9; margin-top: 4px; font-weight: normal; }
+
+        /* Таблица результатов */
+        .results {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            font-size: 0.95em;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+        }
+        th {
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background: #f7fafc; }
+        
+        .ip-network { color: var(--primary); font-weight: bold; }
+        .ip-first { color: var(--success); font-weight: bold; }
+        .ip-last { color: var(--error); font-weight: bold; }
+        .ip-broadcast { color: var(--warning); font-weight: bold; }
+
+        /* Пошаговое объяснение */
+        .explanation {
+            display: none;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            animation: fadeIn 0.5s ease-in;
+        }
+        .explanation h3 { color: var(--primary); margin-top: 0; }
+        .math-step {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--warning);
+            font-family: 'Courier New', monospace;
+            font-size: 1em;
+            line-height: 1.5;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media print {
+            .input-panel, .controls { display: none !important; }
+            .visualization, .results, .explanation { display: block !important; }
+            body { background: white; padding: 0; }
+            .container { max-width: 100%; }
+            table { box-shadow: none; border: 1px solid #ccc; }
+            th { background: #ddd !important; color: black !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .math-step { border: 1px solid #ccc; background: white; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🌐 Интерактивный симулятор разбиения на подсети</h1>
+        <p>Введите параметры сети для автоматического расчета, визуализации и генерации отчета</p>
+    </header>
+
+    <div class="input-panel">
+        <div class="form-group">
+            <label for="ipInput">IP-адрес сети:</label>
+            <input type="text" id="ipInput" value="192.168.10.0" placeholder="192.168.1.0">
+            <div class="error-msg" id="ipError">Неверный формат IP-адреса</div>
+        </div>
+        <div class="form-group">
+            <label for="cidrInput">Исходная маска (CIDR):</label>
+            <input type="number" id="cidrInput" value="24" min="0" max="30" placeholder="24">
+            <div class="error-msg" id="cidrError">Значение от 0 до 30</div>
+        </div>
+        <div class="form-group">
+            <label for="subnetsInput">Требуется подсетей:</label>
+            <input type="number" id="subnetsInput" value="4" min="2" max="256" placeholder="4">
+            <div class="error-msg" id="subnetsError">Минимум 2 подсети</div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="calculate()">🚀 Рассчитать</button>
+            <button class="btn btn-secondary" onclick="resetForm()">🔄 Сбросить</button>
+            <button class="btn btn-secondary" onclick="window.print()">🖨️ Печать / PDF</button>
+        </div>
+    </div>
+
+    <!-- Визуализация -->
+    <div class="visualization" id="visualization">
+        <h3>📊 Визуальное представление адресного пространства</h3>
+        <p id="vizDescription"></p>
+        <div class="subnet-bar-container">
+            <div class="subnet-bar" id="subnetBar"></div>
+        </div>
+    </div>
+
+    <!-- Таблица результатов -->
+    <div class="results" id="results">
+        <h3>📋 Итоговая таблица параметров подсетей</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th>Адрес сети</th>
+                    <th>Маска подсети</th>
+                    <th>Диапазон доступных IP (First - Last)</th>
+                    <th>Broadcast</th>
+                    <th>Хостов</th>
+                </tr>
+            </thead>
+            <tbody id="resultsBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Пошаговое объяснение -->
+    <div class="explanation" id="explanation">
+        <h3>🧮 Пошаговое обоснование расчета</h3>
+        <div id="explanationSteps"></div>
+    </div>
+</div>
+
+<script>
+    // Цвета для визуализации (циклически повторяются)
+    const colors = ['#3182ce', '#38a169', '#d69e2e', '#e53e3e', '#805ad5', '#d53f8c', '#319795', '#dd6b20'];
+
+    function calculate() {
+        // 1. Считывание и валидация
+        const ipStr = document.getElementById('ipInput').value.trim();
+        const baseCidr = parseInt(document.getElementById('cidrInput').value);
+        const subnetsNeeded = parseInt(document.getElementById('subnetsInput').value);
+
+        hideErrors();
+        
+        if (!isValidIP(ipStr)) {
+            showError('ipError');
+            return;
+        }
+        if (isNaN(baseCidr) || baseCidr < 0 || baseCidr > 30) {
+            showError('cidrError');
+            return;
+        }
+        if (isNaN(subnetsNeeded) || subnetsNeeded < 2) {
+            showError('subnetsError');
+            return;
+        }
+
+        // 2. Математические расчеты
+        const bitsBorrowed = Math.ceil(Math.log2(subnetsNeeded));
+        const newCidr = baseCidr + bitsBorrowed;
+        
+        if (newCidr > 32) {
+            alert(`Ошибка: Невозможно создать ${subnetsNeeded} подсетей из сети /${baseCidr}. Требуемая маска /${newCidr} выходит за пределы IPv4 (/32).`);
+            return;
+        }
+
+        const actualSubnets = Math.pow(2, bitsBorrowed);
+        const hostBits = 32 - newCidr;
+        const blockSize = Math.pow(2, hostBits);
+        const usableHosts = Math.max(0, blockSize - 2);
+
+        // Расчет маски
+        const maskInt = getMaskInt(newCidr);
+        const subnetMask = intToIp(maskInt);
+
+        // Нормализация IP (если пользователь ввел 192.168.10.55, приведем к 192.168.10.0)
+        const baseMaskInt = getMaskInt(baseCidr);
+        const trueNetworkInt = (ipToInt(ipStr) & baseMaskInt) >>> 0;
+
+        // 3. Генерация данных подсетей
+        const tbody = document.getElementById('resultsBody');
+        tbody.innerHTML = '';
+        
+        const barContainer = document.getElementById('subnetBar');
+        barContainer.innerHTML = '';
+
+        let explanationHTML = '';
+
+        for (let i = 0; i < actualSubnets; i++) {
+            const networkInt = (trueNetworkInt + (i * blockSize)) >>> 0;
+            const broadcastInt = (networkInt + blockSize - 1) >>> 0;
+            const firstUsableInt = (networkInt + 1) >>> 0;
+            const lastUsableInt = (broadcastInt - 1) >>> 0;
+
+            const networkIp = intToIp(networkInt);
+            const broadcastIp = intToIp(broadcastInt);
+            const firstUsable = blockSize > 1 ? intToIp(firstUsableInt) : 'N/A';
+            const lastUsable = blockSize > 1 ? intToIp(lastUsableInt) : 'N/A';
+
+            // Заполнение таблицы
+            const row = `
+                <tr>
+                    <td><strong>${i + 1}</strong><br><span style="color:#718096; font-size:0.85em">/${newCidr}</span></td>
+                    <td class="ip-network">${networkIp}</td>
+                    <td>${subnetMask}</td>
+                    <td><span class="ip-first">${firstUsable}</span> – <span class="ip-last">${lastUsable}</span></td>
+                    <td class="ip-broadcast">${broadcastIp}</td>
+                    <td>${usableHosts}</td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+
+            // Заполнение визуализации (ограничим 8 сегментами для читаемости, если их больше)
+            if (actualSubnets <= 8 || i < 4 || i >= actualSubnets - 2) {
+                if (actualSubnets > 8 && i === 4) {
+                    barContainer.innerHTML += `<div class="subnet-segment" style="background:#cbd5e0; color:#4a5568;">...<br><span class="segment-label">еще ${actualSubnets - 8} подсетей</span></div>`;
+                    i = actualSubnets - 3; // Перепрыгнуть к предпоследним
+                    continue;
+                }
+                
+                const color = colors[i % colors.length];
+                const lastOctetStart = networkInt & 255;
+                const lastOctetEnd = broadcastInt & 255;
+                
+                barContainer.innerHTML += `
+                    <div class="subnet-segment" style="background: ${color};">
+                        Подсеть ${i + 1}
+                        <span class="segment-label">.${lastOctetStart} – .${lastOctetEnd}</span>
+                    </div>
+                `;
+            }
+        }
+
+        // 4. Генерация пошагового объяснения
+        explanationHTML += createStep(1, 
+            `<strong>Определение количества заимствованных битов:</strong><br>` +
+            `Требуется создать не менее ${subnetsNeeded} подсетей. Формула: 2<sup>n</sup> ≥ ${subnetsNeeded}.<br>` +
+            `Следовательно, необходимо заимствовать <strong>n = ${bitsBorrowed} бита(ов)</strong> из хостовой части. ` +
+            `(Это фактически создаст ${actualSubnets} подсети).`
+        );
+
+        explanationHTML += createStep(2, 
+            `<strong>Расчет новой маски подсети:</strong><br>` +
+            `Исходная маска: /${baseCidr}<br>` +
+            `Новая маска: /${baseCidr} + ${bitsBorrowed} = <strong>/${newCidr}</strong><br>` +
+            `В десятичном формате: <strong>${subnetMask}</strong>`
+        );
+
+        explanationHTML += createStep(3, 
+            `<strong>Расчет размера каждой подсети (блока):</strong><br>` +
+            `Для хостов осталось битов: 32 - ${newCidr} = <strong>${hostBits}</strong>.<br>` +
+            `Всего адресов в подсети: 2<sup>${hostBits}</sup> = <strong>${blockSize}</strong>.<br>` +
+            `Доступных хостов для назначения: ${blockSize} - 2 = <strong>${usableHosts}</strong> (минус адрес сети и broadcast).`
+        );
+
+        explanationHTML += createStep(4, 
+            `<strong>Определение границ подсетей:</strong><br>` +
+            `Шаг приращения (размер блока) = ${blockSize}.<br>` +
+            `Базовый адрес сети: ${intToIp(trueNetworkInt)}.<br>` +
+            `Подсети формируются путем добавления ${blockSize} к последнему октету на каждом шаге.`
+        );
+
+        // 5. Отображение результатов
+        document.getElementById('vizDescription').textContent = 
+            `Исходная сеть /${baseCidr} делится на ${actualSubnets} равные части по ${blockSize} адресов:`;
+        
+        document.getElementById('explanationSteps').innerHTML = explanationHTML;
+
+        document.getElementById('visualization').style.display = 'block';
+        document.getElementById('results').style.display = 'block';
+        document.getElementById('explanation').style.display = 'block';
+        
+        document.getElementById('visualization').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // --- Вспомогательные функции ---
+
+    function createStep(num, text) {
+        return `<div class="math-step"><strong>Шаг ${num}:</strong><br>${text}</div>`;
+    }
+
+    function isValidIP(ip) {
+        const regex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+        return regex.test(ip);
+    }
+
+    function getMaskInt(cidr) {
+        if (cidr === 0) return 0;
+        return (~((1 << (32 - cidr)) - 1)) >>> 0;
+    }
+
+    function ipToInt(ip) {
+        return ip.split('.').reduce((acc, octet) => {
+            return ((acc << 8) + parseInt(octet, 10)) >>> 0;
+        }, 0);
+    }
+
+    function intToIp(int) {
+        return [
+            (int >>> 24) & 255,
+            (int >>> 16) & 255,
+            (int >>> 8) & 255,
+            int & 255
+        ].join('.');
+    }
+
+    function showError(id) {
+        document.getElementById(id).style.display = 'block';
+    }
+
+    function hideErrors() {
+        document.querySelectorAll('.error-msg').forEach(el => el.style.display = 'none');
+    }
+
+    function resetForm() {
+        document.getElementById('ipInput').value = '192.168.10.0';
+        document.getElementById('cidrInput').value = '24';
+        document.getElementById('subnetsInput').value = '4';
+        document.getElementById('visualization').style.display = 'none';
+        document.getElementById('results').style.display = 'none';
+        document.getElementById('explanation').style.display = 'none';
+        hideErrors();
+    }
+</script>
+
+</body>
+</html>
