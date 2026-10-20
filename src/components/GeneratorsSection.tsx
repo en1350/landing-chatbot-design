@@ -4,7 +4,6 @@ import GeneratorCard from "@/components/GeneratorCard";
 import GeneratorModal from "@/components/GeneratorModal";
 import UpgradeModal from "@/components/UpgradeModal";
 import { GeneratorType } from "@/context/AuthContext";
-import { useUsage } from "@/context/UsageContext";
 import Icon from "@/components/ui/icon";
 
 const GENERATORS: { type: GeneratorType; icon: string; title: string; accent: string }[] = [
@@ -45,13 +44,12 @@ interface GeneratorsSectionProps {
 }
 
 const GeneratorsSection = ({ onNeedAuth }: GeneratorsSectionProps) => {
-  const { servicesCount } = useUsage();
   const [activeType, setActiveType] = useState<GeneratorType | null>(null);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   return (
     <section id="generators" className="container pt-6 pb-16 md:pt-8 md:pb-24">
-      <div className="text-center max-w-2xl mx-auto mb-4">
+      <div className="text-center max-w-2xl mx-auto mb-10">
         <span className="text-xs font-bold uppercase tracking-widest text-coral">Инструменты</span>
         <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mt-2">
           Генераторы для педагога
@@ -59,14 +57,6 @@ const GeneratorsSection = ({ onNeedAuth }: GeneratorsSectionProps) => {
         <p className="text-muted-foreground mt-3 leading-relaxed">
           Выберите нужный инструмент — заполните тему и класс, получите готовый результат за секунды.
         </p>
-      </div>
-
-      <div className="flex items-center justify-center gap-2 mb-10 text-sm text-muted-foreground">
-        <Icon name="TrendingUp" size={15} className="text-primary" />
-        Уже оказано услуг:{" "}
-        <span className="font-display font-bold text-foreground tabular-nums">
-          {servicesCount.toLocaleString("ru-RU")}
-        </span>
       </div>
 
       <div>
