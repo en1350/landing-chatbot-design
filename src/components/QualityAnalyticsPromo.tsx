@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import Icon from "@/components/ui/icon";
 import { useAuth } from "@/context/AuthContext";
 
 interface QualityAnalyticsPromoProps {
@@ -49,7 +48,7 @@ const QualityAnalyticsPromo = ({ id }: QualityAnalyticsPromoProps) => {
   const { isPaid } = useAuth();
 
   return (
-    <section id={id} className="container py-10 sm:py-16 md:py-24">
+    <section id={id} className="container pb-10 sm:pb-16 md:pb-24">
       <div>
         <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold leading-tight mb-8 text-center animate-fade-in">
           Аналитические справки для портфолио
@@ -71,13 +70,9 @@ const QualityAnalyticsPromo = ({ id }: QualityAnalyticsPromoProps) => {
                 {tool.icon}
               </div>
               <h3 className="font-display text-base font-bold leading-snug mb-1.5">{tool.title}</h3>
-              <p className="text-xs text-white/80 mb-4">
+              <p className="text-xs text-white/80">
                 {isPaid ? "Доступно по вашему тарифу" : "Премиум-инструмент по подписке"}
               </p>
-              <span className="inline-flex items-center gap-1.5 text-sm font-semibold transition-transform group-hover:translate-x-1 mt-auto">
-                Открыть
-                <Icon name="ArrowRight" size={16} />
-              </span>
             </Link>
           ))}
         </div>

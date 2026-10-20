@@ -118,8 +118,8 @@ const Index = () => {
         <PopularSections onScrollTo={scrollTo} />
         <Hero />
         <GeneratorsSection onNeedAuth={openAuth} />
-        <NotebookCheck id="notebook" onNeedAuth={openAuth} onNeedUpgrade={openUpgrade} />
         <QualityAnalyticsPromo id="quality-analytics" />
+        <NotebookCheck id="notebook" onNeedAuth={openAuth} onNeedUpgrade={openUpgrade} />
         <FeedbackSection />
       </main>
 
