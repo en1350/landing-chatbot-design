@@ -27,6 +27,7 @@ type TrainerKey =
   | "ip-diagnostics"
   | "subnet-calculator"
   | "lan-simulator"
+  | "branching-programs"
   | "ai-arcade"
   | "it-project-simulator"
   | "python-java-types"
@@ -71,6 +72,7 @@ const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "ip-diagnostics": "/ip-diagnostics.html",
   "subnet-calculator": "/subnet-calculator.html",
   "lan-simulator": "/lan-simulator.html",
+  "branching-programs": "/branching-programs.html",
   "ai-arcade": "/ai-arcade.html",
   "it-project-simulator": "/it-project-simulator.html",
   "python-java-types": "/python-java-types.html",
@@ -324,6 +326,15 @@ const TRAINERS: TrainerItem[] = [
     title: "Практическая работа: программы линейной структуры",
     description: "Теория, 6 заданий по уровням Блума, тест на 10 вопросов, самооценка и именной сертификат",
     accent: "#764ba2",
+    paid: true,
+  },
+  {
+    key: "branching-programs",
+    category: "programming",
+    icon: "🔀",
+    title: "Практическая работа: программы разветвляющей структуры",
+    description: "Теория, 10 заданий на Python и JavaScript, тест на 15 вопросов с разбором ошибок и именной сертификат",
+    accent: "#667EEA",
     paid: true,
   },
   {

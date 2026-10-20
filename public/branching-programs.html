@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Интерактивный урок: Программы разветвляющей структуры</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+    color: #333;
+}
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.3);
+    overflow: hidden;
+}
+.header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    text-align: center;
+}
+.header h1 { font-size: 1.8em; margin-bottom: 8px; }
+.header p { opacity: 0.9; font-size: 1.05em; }
+.content { padding: 30px; }
+
+/* Навигация */
+.nav {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    background: #f5f7fb;
+    padding: 10px;
+    border-radius: 12px;
+}
+.nav-btn {
+    flex: 1;
+    min-width: 140px;
+    padding: 12px 16px;
+    background: white;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    color: #666;
+    transition: all 0.3s;
+}
+.nav-btn:hover { color: #667eea; }
+.nav-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+.nav-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Экраны */
+.screen { display: none; }
+.screen.active { display: block; animation: fadeIn 0.4s; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Поле ввода имени */
+.welcome-box {
+    text-align: center;
+    padding: 40px 20px;
+}
+.welcome-box h2 { color: #667eea; margin-bottom: 15px; font-size: 1.8em; }
+.welcome-box p { margin-bottom: 25px; color: #555; font-size: 1.05em; line-height: 1.6; }
+.name-input {
+    padding: 14px 20px;
+    font-size: 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 20px;
+    transition: border-color 0.3s;
+}
+.name-input:focus { outline: none; border-color: #667eea; }
+
+/* Кнопки */
+.btn {
+    padding: 12px 28px;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin: 5px;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4); }
+.btn-success { background: #28a745; color: white; }
+.btn-success:hover { background: #218838; }
+.btn-secondary { background: #6c757d; color: white; }
+.btn-secondary:hover { background: #5a6268; }
+
+/* Теория */
+.theory-block {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border-left: 4px solid #667eea;
+}
+.theory-block h3 { color: #667eea; margin-bottom: 12px; }
+.theory-block p, .theory-block li { line-height: 1.7; margin-bottom: 8px; }
+.theory-block ul, .theory-block ol { margin-left: 25px; margin-bottom: 12px; }
+.code-block {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    padding: 15px;
+    border-radius: 8px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 14px;
+    margin: 12px 0;
+    overflow-x: auto;
+    line-height: 1.5;
+}
+.code-block .keyword { color: #569cd6; }
+.code-block .string { color: #ce9178; }
+.code-block .comment { color: #6a9955; font-style: italic; }
+.code-block .number { color: #b5cea8; }
+.code-block .function { color: #dcdcaa; }
+
+.lang-tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 15px;
+}
+.lang-tab {
+    padding: 8px 18px;
+    background: #e0e0e0;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+}
+.lang-tab.active { background: #667eea; color: white; }
+.lang-content { display: none; }
+.lang-content.active { display: block; }
+
+/* Практика */
+.task-card {
+    background: #fff;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    transition: all 0.3s;
+}
+.task-card:hover { border-color: #667eea; box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.task-title { font-weight: 700; color: #333; font-size: 1.1em; }
+.task-level {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.level-easy { background: #d4edda; color: #155724; }
+.level-medium { background: #fff3cd; color: #856404; }
+.level-hard { background: #f8d7da; color: #721c24; }
+.task-desc { margin-bottom: 15px; line-height: 1.6; color: #555; }
+.task-desc code {
+    background: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Consolas', monospace;
+    color: #d63384;
+}
+.code-editor {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 14px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    resize: vertical;
+    background: #fafafa;
+}
+.code-editor:focus { outline: none; border-color: #667eea; background: white; }
+.task-actions { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+.task-result {
+    margin-top: 12px;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    display: none;
+}
+.task-result.success { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
+.task-result.error { background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
+.task-result.info { background: #d1ecf1; color: #0c5460; border-left: 4px solid #17a2b8; }
+
+/* Тест */
+.question {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    border-left: 4px solid #667eea;
+}
+.question-text { font-weight: 600; margin-bottom: 12px; font-size: 1.05em; }
+.question-code {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    padding: 10px;
+    border-radius: 6px;
+    font-family: 'Consolas', monospace;
+    font-size: 13px;
+    margin: 10px 0;
+    white-space: pre-wrap;
+}
+.options { display: flex; flex-direction: column; gap: 8px; }
+.option {
+    padding: 10px 14px;
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.option:hover { border-color: #667eea; background: #f0f4ff; }
+.option.selected { border-color: #667eea; background: #e8eeff; }
+.option input { cursor: pointer; }
+
+/* Сертификат */
+.certificate {
+    background: linear-gradient(135deg, #fff9e6 0%, #fff 50%, #e6f0ff 100%);
+    border: 8px double #b8860b;
+    border-radius: 15px;
+    padding: 40px 30px;
+    text-align: center;
+    position: relative;
+    margin-bottom: 25px;
+}
+.certificate::before {
+    content: '🏆';
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 50px;
+    background: white;
+    padding: 0 15px;
+    border-radius: 50%;
+}
+.cert-title {
+    font-size: 2em;
+    color: #b8860b;
+    margin-bottom: 10px;
+    font-family: 'Georgia', serif;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+.cert-subtitle {
+    font-size: 1.1em;
+    color: #555;
+    margin-bottom: 20px;
+}
+.cert-name {
+    font-size: 2.2em;
+    color: #667eea;
+    margin: 20px 0;
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    border-bottom: 2px solid #b8860b;
+    display: inline-block;
+    padding: 0 20px 5px;
+}
+.cert-course {
+    font-size: 1.2em;
+    color: #333;
+    margin-bottom: 15px;
+}
+.cert-grade {
+    font-size: 3em;
+    font-weight: bold;
+    margin: 20px 0;
+    padding: 15px 30px;
+    display: inline-block;
+    border-radius: 15px;
+    color: white;
+}
+.grade-5 { background: linear-gradient(135deg, #28a745, #20c997); }
+.grade-4 { background: linear-gradient(135deg, #17a2b8, #667eea); }
+.grade-3 { background: linear-gradient(135deg, #ffc107, #fd7e14); }
+.grade-2 { background: linear-gradient(135deg, #dc3545, #c82333); }
+.cert-date { color: #666; margin-top: 15px; font-size: 0.95em; }
+
+/* Разбор ошибок */
+.error-review {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 20px;
+}
+.error-review h3 { color: #667eea; margin-bottom: 15px; }
+.error-item {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border-left: 4px solid #dc3545;
+}
+.error-item.correct { border-left-color: #28a745; }
+.error-item .q-text { font-weight: 600; margin-bottom: 8px; }
+.error-item .user-answer { color: #dc3545; }
+.error-item .correct-answer { color: #28a745; font-weight: 600; }
+.error-item .explanation { margin-top: 8px; color: #555; font-size: 14px; font-style: italic; }
+
+/* Прогресс */
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 15px 0;
+}
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    transition: width 0.5s;
+    width: 0%;
+}
+
+@media print {
+    body { background: white; padding: 0; }
+    .container { box-shadow: none; }
+    .nav, .btn, .header { display: none !important; }
+    .screen { display: none !important; }
+    #certScreen { display: block !important; }
+    .certificate { border: 8px double #b8860b !important; }
+}
+@media (max-width: 768px) {
+    .header h1 { font-size: 1.4em; }
+    .cert-name { font-size: 1.6em; }
+    .cert-grade { font-size: 2.2em; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>💻 Программы разветвляющей структуры</h1>
+        <p>Интерактивный урок по алгоритмизации и программированию</p>
+    </div>
+
+    <div class="content">
+        <!-- Навигация -->
+        <div class="nav" id="mainNav" style="display:none;">
+            <button class="nav-btn active" onclick="showScreen('theoryScreen', this)">📖 Теория</button>
+            <button class="nav-btn" onclick="showScreen('practiceScreen', this)">🛠️ Практика</button>
+            <button class="nav-btn" onclick="showScreen('testScreen', this)">📝 Тест</button>
+            <button class="nav-btn" onclick="showScreen('certScreen', this)">🏆 Результат</button>
+        </div>
+
+        <!-- Экран приветствия -->
+        <div id="welcomeScreen" class="screen active">
+            <div class="welcome-box">
+                <h2>👋 Добро пожаловать!</h2>
+                <p>
+                    Перед вами интерактивный урок по теме <strong>«Составление программ разветвляющей структуры»</strong>.<br>
+                    Вы изучите теорию, выполните практические задания на Python и JavaScript, а затем пройдёте тест из 15 вопросов.<br>
+                    По итогам вы получите <strong>именной сертификат</strong> с оценкой по 5-балльной системе и разбором ошибок.
+                </p>
+                <input type="text" id="studentName" class="name-input" placeholder="Введите ваше имя и фамилию" maxlength="50">
+                <br>
+                <button class="btn btn-primary" onclick="startLesson()">🚀 Начать урок</button>
+            </div>
+        </div>
+
+        <!-- ТЕОРИЯ -->
+        <div id="theoryScreen" class="screen">
+            <h2 style="color:#667eea; margin-bottom:20px;">📖 Теоретический материал</h2>
+
+            <div class="theory-block">
+                <h3>1. Что такое разветвляющая структура?</h3>
+                <p><strong>Разветвляющий алгоритм</strong> — это алгоритм, в котором выбор направления выполнения зависит от результата проверки условия. В программировании такие структуры реализуются с помощью <strong>условных операторов</strong>.</p>
+                <p>Основные формы записи:</p>
+                <ul>
+                    <li><strong>Полная форма:</strong> если условие истинно — выполняется одна группа действий, иначе — другая.</li>
+                    <li><strong>Краткая форма:</strong> действия выполняются только при истинности условия.</li>
+                    <li><strong>Вложенные условия:</strong> одно условие находится внутри другого.</li>
+                    <li><strong>Множественный выбор:</strong> несколько альтернативных веток (elif / else if).</li>
+                </ul>
+            </div>
+
+            <div class="theory-block">
+                <h3>2. Операторы сравнения и логические операторы</h3>
+                <p><strong>Операторы сравнения:</strong> <code>==</code> (равно), <code>!=</code> (не равно), <code>&gt;</code>, <code>&lt;</code>, <code>&gt;=</code>, <code>&lt;=</code></p>
+                <p><strong>Логические операторы:</strong></p>
+                <ul>
+                    <li><code>and</code> (Python) / <code>&&</code> (JS) — логическое И</li>
+                    <li><code>or</code> (Python) / <code>||</code> (JS) — логическое ИЛИ</li>
+                    <li><code>not</code> (Python) / <code>!</code> (JS) — логическое НЕ</li>
+                </ul>
+            </div>
+
+            <div class="theory-block">
+                <h3>3. Синтаксис условных операторов</h3>
+                <div class="lang-tabs">
+                    <button class="lang-tab active" onclick="switchLang(event,'py1')">Python</button>
+                    <button class="lang-tab" onclick="switchLang(event,'js1')">JavaScript</button>
+                </div>
+                <div id="py1" class="lang-content active">
+                    <div class="code-block">
+<span class="comment"># Полная форма</span>
+<span class="keyword">if</span> условие:
+    действия
+<span class="keyword">else</span>:
+    другие_действия
+
+<span class="comment"># Множественный выбор</span>
+<span class="keyword">if</span> x > <span class="number">0</span>:
+    <span class="function">print</span>(<span class="string">"Положительное"</span>)
+<span class="keyword">elif</span> x < <span class="number">0</span>:
+    <span class="function">print</span>(<span class="string">"Отрицательное"</span>)
+<span class="keyword">else</span>:
+    <span class="function">print</span>(<span class="string">"Ноль"</span>)
+                    </div>
+                </div>
+                <div id="js1" class="lang-content">
+                    <div class="code-block">
+<span class="comment">// Полная форма</span>
+<span class="keyword">if</span> (условие) {
+    действия;
+} <span class="keyword">else</span> {
+    другие_действия;
+}
+
+<span class="comment">// Множественный выбор</span>
+<span class="keyword">if</span> (x > <span class="number">0</span>) {
+    <span class="function">console.log</span>(<span class="string">"Положительное"</span>);
+} <span class="keyword">else if</span> (x < <span class="number">0</span>) {
+    <span class="function">console.log</span>(<span class="string">"Отрицательное"</span>);
+} <span class="keyword">else</span> {
+    <span class="function">console.log</span>(<span class="string">"Ноль"</span>);
+}
+                    </div>
+                </div>
+            </div>
+
+            <div class="theory-block">
+                <h3>4. Тернарный оператор (сокращённая запись)</h3>
+                <div class="lang-tabs">
+                    <button class="lang-tab active" onclick="switchLang(event,'py2')">Python</button>
+                    <button class="lang-tab" onclick="switchLang(event,'js2')">JavaScript</button>
+                </div>
+                <div id="py2" class="lang-content active">
+                    <div class="code-block">
+результат = значение1 <span class="keyword">if</span> условие <span class="keyword">else</span> значение2
+
+<span class="comment"># Пример:</span>
+status = <span class="string">"совершеннолетний"</span> <span class="keyword">if</span> age >= <span class="number">18</span> <span class="keyword">else</span> <span class="string">"несовершеннолетний"</span>
+                    </div>
+                </div>
+                <div id="js2" class="lang-content">
+                    <div class="code-block">
+результат = условие ? значение1 : значение2;
+
+<span class="comment">// Пример:</span>
+<span class="keyword">let</span> status = age >= <span class="number">18</span> ? <span class="string">"совершеннолетний"</span> : <span class="string">"несовершеннолетний"</span>;
+                    </div>
+                </div>
+            </div>
+
+            <div class="theory-block">
+                <h3>5. Типичные ошибки</h3>
+                <ul>
+                    <li>В Python — использование <code>=</code> вместо <code>==</code> для сравнения.</li>
+                    <li>В Python — отсутствие двоеточия <code>:</code> после условия.</li>
+                    <li>В JavaScript — сравнение <code>==</code> вместо строгого <code>===</code>.</li>
+                    <li>Неправильное использование логических операторов (забывание скобок вокруг сложных условий).</li>
+                    <li>Путаница между <code>and</code>/<code>or</code> (Python) и <code>&&</code>/<code>||</code> (JS).</li>
+                </ul>
+            </div>
+
+            <div style="text-align:center; margin-top:25px;">
+                <button class="btn btn-primary" onclick="showScreen('practiceScreen', document.querySelectorAll('.nav-btn')[1])">Перейти к практике →</button>
+            </div>
+        </div>
+
+        <!-- ПРАКТИКА -->
+        <div id="practiceScreen" class="screen">
+            <h2 style="color:#667eea; margin-bottom:10px;">🛠️ Практические задания</h2>
+            <p style="color:#666; margin-bottom:20px;">Выполните задания. Для JavaScript код выполняется в браузере. Для Python проверяется корректность структуры кода.</p>
+
+            <h3 style="color:#3776ab; margin:20px 0 10px;">🐍 Python (5 заданий)</h3>
+            <div id="pythonTasks"></div>
+
+            <h3 style="color:#f7df1e; margin:30px 0 10px;">⚡ JavaScript (5 заданий)</h3>
+            <div id="jsTasks"></div>
+
+            <div style="text-align:center; margin-top:25px;">
+                <button class="btn btn-primary" onclick="showScreen('testScreen', document.querySelectorAll('.nav-btn')[2])">Перейти к тесту →</button>
+            </div>
+        </div>
+
+        <!-- ТЕСТ -->
+        <div id="testScreen" class="screen">
+            <h2 style="color:#667eea; margin-bottom:10px;">📝 Тестовые задания</h2>
+            <p style="color:#666; margin-bottom:15px;">15 вопросов. Выберите один правильный ответ в каждом.</p>
+            <div class="progress-bar"><div class="progress-fill" id="testProgress"></div></div>
+            <div id="questionsContainer"></div>
+            <div style="text-align:center; margin-top:25px;">
+                <button class="btn btn-success" onclick="finishTest()">✅ Завершить тест и получить сертификат</button>
+            </div>
+        </div>
+
+        <!-- СЕРТИФИКАТ -->
+        <div id="certScreen" class="screen">
+            <div id="certContent"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============ ДАННЫЕ ============
+let studentName = '';
+let practiceScore = 0;
+let testAnswers = {};
+let testResults = {};
+
+// Практика Python
+const pythonTasks = [
+    {
+        title: 'Задание 1 (Лёгкое)',
+        level: 'easy',
+        desc: 'Напишите программу, которая считывает число <code>x</code> и выводит <code>"Положительное"</code>, если x > 0, иначе <code>"Неположительное"</code>.',
+        hint: 'Используйте if/else и input()/print()',
+        check: (code) => {
+            const c = code.replace(/\s+/g,' ').toLowerCase();
+            return c.includes('if') && c.includes('>') && c.includes('0') && c.includes('else') && c.includes('print');
+        }
+    },
+    {
+        title: 'Задание 2 (Лёгкое)',
+        level: 'easy',
+        desc: 'Напишите программу, которая определяет, является ли число <code>n</code> чётным. Выведите <code>"Чётное"</code> или <code>"Нечётное"</code>.',
+        hint: 'Используйте оператор % (остаток от деления)',
+        check: (code) => {
+            const c = code.replace(/\s+/g,' ').toLowerCase();
+            return c.includes('%') && (c.includes('== 0') || c.includes('==0')) && c.includes('if') && c.includes('else');
+        }
+    },
+    {
+        title: 'Задание 3 (Среднее)',
+        level: 'medium',
+        desc: 'Напишите программу, которая по введённому возрасту <code>age</code> определяет категорию: до 13 — <code>"ребёнок"</code>, 14-17 — <code>"подросток"</code>, 18-59 — <code>"взрослый"</code>, 60+ — <code>"пожилой"</code>.',
+        hint: 'Используйте if/elif/else',
+        check: (code) => {
+            const c = code.replace(/\s+/g,' ').toLowerCase();
+            return c.includes('if') && c.includes('elif') && c.includes('else') && c.includes('13') && c.includes('18');
+        }
+    },
+    {
+        title: 'Задание 4 (Среднее)',
+        level: 'medium',
+        desc: 'Напишите программу, которая определяет, существует ли треугольник со сторонами <code>a</code>, <code>b</code>, <code>c</code>. Треугольник существует, если каждая сторона меньше суммы двух других.',
+        hint: 'Условие: a+b>c и a+c>b и b+c>a',
+        check: (code) => {
+            const c = code.replace(/\s+/g,' ').toLowerCase();
+            return c.includes('if') && c.includes('and') && c.includes('+') && c.includes('>');
+        }
+    },
+    {
+        title: 'Задание 5 (Сложное)',
+        level: 'hard',
+        desc: 'Напишите программу решения квадратного уравнения <code>ax² + bx + c = 0</code>. Выведите количество корней и их значения (используйте дискриминант).',
+        hint: 'D = b² - 4ac. Если D>0 — 2 корня, D=0 — 1 корень, D<0 — нет вещественных корней',
+        check: (code) => {
+            const c = code.replace(/\s+/g,' ').toLowerCase();
+            return c.includes('if') && c.includes('elif') && c.includes('else') && c.includes('**') && c.includes('4');
+        }
+    }
+];
+
+// Практика JavaScript
+const jsTasks = [
+    {
+        title: 'Задание 1 (Лёгкое)',
+        level: 'easy',
+        desc: 'Напишите функцию <code>checkSign(x)</code>, которая возвращает <code>"positive"</code>, <code>"negative"</code> или <code>"zero"</code> в зависимости от знака числа.',
+        hint: 'Используйте if/else if/else и return',
+        check: (code) => {
+            const c = code.replace(/\s+/g,' ').toLowerCase();
+            return c.includes('function') && c.includes('if') && c.includes('else') && c.includes('return') && c.includes('> 0') && c.includes('< 0');
+        }
+    },
+    {
+        title: 'Задание 2 (Лёгкое)',
+        level: 'easy',
+        desc: 'Напишите функцию <code>maxOfTwo(a, b)</code>, которая возвращает наибольшее из двух чисел, используя тернарный оператор.',
+        hint: 'Используйте конструкцию условие ? значение1 : значение2',
+        check: (code) => {
+            const c = code.replace(/\s+/g,' ').toLowerCase();
+            return c.includes('function') && c.includes('?') && c.includes(':') && c.includes('return');
+        }
+    },
+    {
+        title: 'Задание 3 (Среднее)',
+        level: 'medium',
+        desc: 'Напишите функцию <code>getDayType(day)</code>, которая принимает номер дня недели (1-7) и возвращает <code>"будний"</code> или <code>"выходной"</code>. Дни 6 и 7 — выходные.',
+        hint: 'Используйте if/else или switch',
+        check: (code) => {
+            const c = code.replace(/\s+/g,' ').toLowerCase();
+            return (c.includes('if') || c.includes('switch')) && c.includes('function') && (c.includes('6') || c.includes('7'));
+        }
+    },
+    {
+        title: 'Задание 4 (Среднее)',
+        level: 'medium',
+        desc: 'Напишите функцию <code>isLeapYear(year)</code>, которая определяет, является ли год високосным. Год високосный, если он кратен 4, но не кратен 100, либо кратен 400.',
+        hint: 'Используйте логические операторы && и ||',
+        check: (code) => {
+            const c = code.replace(/\s+/g,' ').toLowerCase();
+            return c.includes('function') && c.includes('%') && (c.includes('&&') || c.includes('and')) && (c.includes('400') || c.includes('100'));
+        }
+    },
+    {
+        title: 'Задание 5 (Сложное)',
+        level: 'hard',
+        desc: 'Напишите функцию <code>grade(score)</code>, которая по баллам (0-100) возвращает оценку: 90-100 — "5", 75-89 — "4", 60-74 — "3", менее 60 — "2". Для некорректных значений возвращайте "Ошибка".',
+        hint: 'Используйте вложенные if или if/else if',
+        check: (code) => {
+            const c = code.replace(/\s+/g,' ').toLowerCase();
+            return c.includes('function') && c.includes('if') && c.includes('else') && c.includes('90') && c.includes('75') && c.includes('60');
+        }
+    }
+];
+
+// Тестовые вопросы
+const questions = [
+    {
+        q: 'Какой оператор используется для полной формы ветвления в Python?',
+        options: ['if...else', 'switch...case', 'for...in', 'while...do'],
+        correct: 0,
+        explanation: 'В Python используется конструкция if...else для полной формы ветвления.'
+    },
+    {
+        q: 'Что выведет код?<div class="question-code">x = 5\nif x > 3:\n    print("A")\nelse:\n    print("B")</div>',
+        options: ['A', 'B', 'AB', 'Ошибка'],
+        correct: 0,
+        explanation: 'Так как 5 > 3 — условие истинно, выводится "A".'
+    },
+    {
+        q: 'Какой результат выполнения?<div class="question-code">let x = 10;\nif (x > 5 && x < 15) {\n    console.log("Да");\n} else {\n    console.log("Нет");\n}</div>',
+        options: ['Да', 'Нет', 'Ошибка', 'Ничего'],
+        correct: 0,
+        explanation: 'Оба условия (10>5 и 10<15) истинны, поэтому оператор && возвращает true.'
+    },
+    {
+        q: 'Какой оператор в Python используется для множественного выбора?',
+        options: ['else if', 'elif', 'elseif', 'elsif'],
+        correct: 1,
+        explanation: 'В Python для множественного выбора используется ключевое слово elif.'
+    },
+    {
+        q: 'Что выведет код?<div class="question-code">a = 7\nb = 3\nif a > b:\n    print(a)\nelse:\n    print(b)</div>',
+        options: ['3', '7', '10', 'Ошибка'],
+        correct: 1,
+        explanation: 'Так как 7 > 3, выводится значение a, то есть 7.'
+    },
+    {
+        q: 'Какой результат выполнения?<div class="question-code">let x = 5;\nlet result = x > 3 ? "больше" : "меньше";\nconsole.log(result);</div>',
+        options: ['больше', 'меньше', 'true', 'Ошибка'],
+        correct: 0,
+        explanation: 'Тернарный оператор: если x>3 истинно, то result="больше".'
+    },
+    {
+        q: 'Какой оператор сравнения в Python проверяет равенство?',
+        options: ['=', '==', '===', ':='],
+        correct: 1,
+        explanation: 'В Python для проверки равенства используется ==. Одинарное = — это присваивание.'
+    },
+    {
+        q: 'Что выведет код?<div class="question-code">x = 0\nif x:\n    print("Да")\nelse:\n    print("Нет")</div>',
+        options: ['Да', 'Нет', '0', 'Ошибка'],
+        correct: 1,
+        explanation: 'В Python 0 считается ложным значением (False), поэтому выполняется ветка else.'
+    },
+    {
+        q: 'Какое значение вернёт выражение: not (5 > 3)?',
+        options: ['True', 'False', 'None', 'Ошибка'],
+        correct: 1,
+        explanation: '5 > 3 — это True, а not True даёт False.'
+    },
+    {
+        q: 'Что выведет JavaScript код?<div class="question-code">let x = "5";\nif (x === 5) {\n    console.log("A");\n} else {\n    console.log("B");\n}</div>',
+        options: ['A', 'B', '5', 'Ошибка'],
+        correct: 1,
+        explanation: 'Оператор === проверяет и значение, и тип. "5" (строка) !== 5 (число), поэтому выводится "B".'
+    },
+    {
+        q: 'Какая конструкция в JavaScript соответствует Python-овскому elif?',
+        options: ['else if', 'elseif', 'elsif', 'elif'],
+        correct: 0,
+        explanation: 'В JavaScript используется конструкция else if (два отдельных слова).'
+    },
+    {
+        q: 'Что выведет код?<div class="question-code">x = 15\nif x > 10:\n    if x > 20:\n        print("A")\n    else:\n        print("B")\nelse:\n    print("C")</div>',
+        options: ['A', 'B', 'C', 'Ошибка'],
+        correct: 1,
+        explanation: 'x>10 — True, переходим внутрь. x>20 — False (15 не больше 20), поэтому выводится "B".'
+    },
+    {
+        q: 'Какой логический оператор в JavaScript соответствует Python-овскому or?',
+        options: ['&&', '||', '!', 'or'],
+        correct: 1,
+        explanation: 'В JavaScript логическое ИЛИ записывается как ||, а в Python — как or.'
+    },
+    {
+        q: 'Что выведет код?<div class="question-code">a = 10\nb = 20\nprint("max =", a if a > b else b)</div>',
+        options: ['max = 10', 'max = 20', 'max = True', 'Ошибка'],
+        correct: 1,
+        explanation: 'Тернарный оператор: a>b (10>20) — False, поэтому выбирается значение b=20.'
+    },
+    {
+        q: 'Сколько ветвей может иметь полная форма условного оператора if...elif...else?',
+        options: ['Только 2', 'Ровно 3', 'Любое количество', 'Не более 5'],
+        correct: 2,
+        explanation: 'С помощью elif можно создавать неограниченное количество ветвей для проверки различных условий.'
+    }
+];
+
+// ============ ИНИЦИАЛИЗАЦИЯ ============
+function startLesson() {
+    const name = document.getElementById('studentName').value.trim();
+    if (name.length < 2) {
+        alert('Пожалуйста, введите ваше имя (минимум 2 символа)');
+        return;
+    }
+    studentName = name;
+    document.getElementById('welcomeScreen').classList.remove('active');
+    document.getElementById('mainNav').style.display = 'flex';
+    document.getElementById('theoryScreen').classList.add('active');
+    renderPractice();
+    renderTest();
+}
+
+function showScreen(id, btn) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if (btn) btn.classList.add('active');
+    window.scrollTo(0, 0);
+}
+
+function switchLang(e, id) {
+    const parent = e.target.parentElement;
+    parent.querySelectorAll('.lang-tab').forEach(t => t.classList.remove('active'));
+    e.target.classList.add('active');
+    const container = parent.parentElement;
+    container.querySelectorAll('.lang-content').forEach(c => c.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+// ============ ПРАКТИКА ============
+function renderPractice() {
+    const pyContainer = document.getElementById('pythonTasks');
+    pythonTasks.forEach((task, i) => {
+        pyContainer.appendChild(createTaskCard(task, 'python', i));
+    });
+    const jsContainer = document.getElementById('jsTasks');
+    jsTasks.forEach((task, i) => {
+        jsContainer.appendChild(createTaskCard(task, 'js', i));
+    });
+}
+
+function createTaskCard(task, lang, index) {
+    const card = document.createElement('div');
+    card.className = 'task-card';
+    card.innerHTML = `
+        <div class="task-header">
+            <div class="task-title">${task.title}</div>
+            <div class="task-level level-${task.level}">${
+                task.level === 'easy' ? '🟢 Лёгкое' : task.level === 'medium' ? '🟡 Среднее' : '🔴 Сложное'
+            }</div>
+        </div>
+        <div class="task-desc">${task.desc}</div>
+        <div style="color:#667eea; font-size:13px; margin-bottom:10px;">💡 Подсказка: ${task.hint}</div>
+        <textarea class="code-editor" id="${lang}_code_${index}" placeholder="${lang === 'python' ? '# Ваш код на Python...' : '// Ваш код на JavaScript...'}"></textarea>
+        <div class="task-actions">
+            <button class="btn btn-success" onclick="checkTask('${lang}', ${index})">▶ Проверить</button>
+            ${lang === 'js' ? `<button class="btn btn-secondary" onclick="runJsCode(${index})">🔍 Выполнить</button>` : ''}
+            <button class="btn btn-secondary" onclick="showSolution('${lang}', ${index})">💡 Показать решение</button>
+        </div>
+        <div class="task-result" id="${lang}_result_${index}"></div>
+    `;
+    return card;
+}
+
+function checkTask(lang, index) {
+    const tasks = lang === 'python' ? pythonTasks : jsTasks;
+    const code = document.getElementById(`${lang}_code_${index}`).value;
+    const result = document.getElementById(`${lang}_result_${index}`);
+    result.style.display = 'block';
+
+    if (!code.trim()) {
+        result.className = 'task-result error';
+        result.innerHTML = '❌ Пожалуйста, напишите код';
+        return;
+    }
+
+    const isValid = tasks[index].check(code);
+    if (isValid) {
+        result.className = 'task-result success';
+        result.innerHTML = '✅ Отлично! Код соответствует условию задания.';
+    } else {
+        result.className = 'task-result error';
+        result.innerHTML = '❌ Код не соответствует условию. Проверьте структуру и ключевые конструкции.';
+    }
+}
+
+function runJsCode(index) {
+    const code = document.getElementById(`js_code_${index}`).value;
+    const result = document.getElementById(`js_result_${index}`);
+    result.style.display = 'block';
+    result.className = 'task-result info';
+
+    try {
+        let output = [];
+        const mockConsole = { log: (...args) => output.push(args.join(' ')) };
+        const fn = new Function('console', code + '\nreturn typeof fn !== "undefined" ? fn : null;');
+        const returned = fn(mockConsole);
+        let html = '📤 Результат выполнения:<br>';
+        if (output.length) {
+            html += output.map(o => `<code>${escapeHtml(o)}</code>`).join('<br>');
+        } else {
+            html += '<i>(нет вывода в консоль)</i>';
+        }
+        if (returned !== null && returned !== undefined) {
+            html += `<br>↩ Возвращено: <code>${escapeHtml(String(returned))}</code>`;
+        }
+        result.innerHTML = html;
+    } catch (e) {
+        result.className = 'task-result error';
+        result.innerHTML = `⚠️ Ошибка выполнения: ${escapeHtml(e.message)}`;
+    }
+}
+
+function showSolution(lang, index) {
+    const solutions = {
+        python: [
+            'x = int(input())\nif x > 0:\n    print("Положительное")\nelse:\n    print("Неположительное")',
+            'n = int(input())\nif n % 2 == 0:\n    print("Чётное")\nelse:\n    print("Нечётное")',
+            'age = int(input())\nif age <= 13:\n    print("ребёнок")\nelif age <= 17:\n    print("подросток")\nelif age <= 59:\n    print("взрослый")\nelse:\n    print("пожилой")',
+            'a, b, c = map(int, input().split())\nif a + b > c and a + c > b and b + c > a:\n    print("Треугольник существует")\nelse:\n    print("Треугольник не существует")',
+            'a, b, c = map(float, input().split())\nD = b**2 - 4*a*c\nif D > 0:\n    x1 = (-b + D**0.5) / (2*a)\n    x2 = (-b - D**0.5) / (2*a)\n    print("2 корня:", x1, x2)\nelif D == 0:\n    x = -b / (2*a)\n    print("1 корень:", x)\nelse:\n    print("Нет вещественных корней")'
+        ],
+        js: [
+            'function checkSign(x) {\n    if (x > 0) return "positive";\n    else if (x < 0) return "negative";\n    else return "zero";\n}',
+            'function maxOfTwo(a, b) {\n    return a > b ? a : b;\n}',
+            'function getDayType(day) {\n    if (day === 6 || day === 7) {\n        return "выходной";\n    } else if (day >= 1 && day <= 5) {\n        return "будний";\n    }\n    return "Ошибка";\n}',
+            'function isLeapYear(year) {\n    return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);\n}',
+            'function grade(score) {\n    if (score < 0 || score > 100) return "Ошибка";\n    if (score >= 90) return "5";\n    if (score >= 75) return "4";\n    if (score >= 60) return "3";\n    return "2";\n}'
+        ]
+    };
+    const result = document.getElementById(`${lang}_result_${index}`);
+    result.style.display = 'block';
+    result.className = 'task-result info';
+    result.innerHTML = `<strong>💡 Пример решения:</strong><pre style="background:#1e1e1e; color:#d4d4d4; padding:10px; border-radius:6px; margin-top:8px; overflow-x:auto;">${escapeHtml(solutions[lang][index])}</pre>`;
+}
+
+function escapeHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// ============ ТЕСТ ============
+function renderTest() {
+    const container = document.getElementById('questionsContainer');
+    questions.forEach((q, i) => {
+        const div = document.createElement('div');
+        div.className = 'question';
+        div.innerHTML = `
+            <div class="question-text">${i + 1}. ${q.q}</div>
+            <div class="options">
+                ${q.options.map((opt, j) => `
+                    <label class="option" onclick="selectOption(${i}, ${j}, this)">
+                        <input type="radio" name="q${i}" value="${j}">
+                        <span>${opt}</span>
+                    </label>
+                `).join('')}
+            </div>
+        `;
+        container.appendChild(div);
+    });
+
+    // Обновление прогресса
+    document.addEventListener('change', e => {
+        if (e.target.type === 'radio') updateProgress();
+    });
+}
+
+function selectOption(qIndex, optIndex, el) {
+    testAnswers[qIndex] = optIndex;
+    const parent = el.parentElement;
+    parent.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    updateProgress();
+}
+
+function updateProgress() {
+    const answered = Object.keys(testAnswers).length;
+    const percent = (answered / questions.length) * 100;
+    document.getElementById('testProgress').style.width = percent + '%';
+}
+
+// ============ ЗАВЕРШЕНИЕ ============
+function finishTest() {
+    if (Object.keys(testAnswers).length < questions.length) {
+        if (!confirm(`Вы ответили только на ${Object.keys(testAnswers).length} из ${questions.length} вопросов. Завершить тест?`)) return;
+    }
+
+    // Подсчёт результатов теста
+    let correctCount = 0;
+    testResults = {};
+    questions.forEach((q, i) => {
+        const userAnswer = testAnswers[i];
+        const isCorrect = userAnswer === q.correct;
+        if (isCorrect) correctCount++;
+        testResults[i] = {
+            question: q.q,
+            userAnswer: userAnswer !== undefined ? q.options[userAnswer] : '— нет ответа —',
+            correctAnswer: q.options[q.correct],
+            isCorrect: isCorrect,
+            explanation: q.explanation
+        };
+    });
+
+    // Оценка
+    let grade;
+    if (correctCount >= 14) grade = 5;
+    else if (correctCount >= 11) grade = 4;
+    else if (correctCount >= 7) grade = 3;
+    else grade = 2;
+
+    renderCertificate(correctCount, grade);
+    showScreen('certScreen', document.querySelectorAll('.nav-btn')[3]);
+}
+
+function renderCertificate(correctCount, grade) {
+    const today = new Date();
+    const dateStr = today.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+    const wrongAnswers = Object.values(testResults).filter(r => !r.isCorrect);
+
+    let errorsHtml = '';
+    if (wrongAnswers.length > 0) {
+        errorsHtml = `
+            <div class="error-review">
+                <h3>🔍 Разбор ошибок (${wrongAnswers.length} из ${questions.length})</h3>
+                ${Object.entries(testResults).map(([idx, r]) => `
+                    <div class="error-item ${r.isCorrect ? 'correct' : ''}">
+                        <div class="q-text">Вопрос ${+idx + 1}: ${r.question}</div>
+                        <div>Ваш ответ: <span class="${r.isCorrect ? 'correct-answer' : 'user-answer'}">${r.userAnswer}</span> ${r.isCorrect ? '✅' : '❌'}</div>
+                        ${!r.isCorrect ? `<div>Правильный ответ: <span class="correct-answer">${r.correctAnswer}</span></div>` : ''}
+                        <div class="explanation">💡 ${r.explanation}</div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    } else {
+        errorsHtml = `
+            <div class="error-review">
+                <h3>🎉 Превосходно!</h3>
+                <p style="font-size:1.1em; line-height:1.6;">Вы ответили на все вопросы правильно! Отличное знание темы «Программы разветвляющей структуры».</p>
+            </div>
+        `;
+    }
+
+    document.getElementById('certContent').innerHTML = `
+        <div class="certificate">
+            <div class="cert-title">Сертификат</div>
+            <div class="cert-subtitle">об успешном прохождении интерактивного урока</div>
+            <div class="cert-name">${escapeHtml(studentName)}</div>
+            <div class="cert-course">
+                по теме <strong>«Составление программ разветвляющей структуры»</strong><br>
+                <span style="font-size:0.9em; color:#666;">Алгоритмизация и программирование</span>
+            </div>
+            <div style="margin:20px 0;">
+                <div style="color:#666; font-size:0.95em;">Правильных ответов:</div>
+                <div style="font-size:1.5em; font-weight:bold; color:#333;">${correctCount} из ${questions.length}</div>
+            </div>
+            <div style="color:#666; font-size:0.95em;">Итоговая оценка</div>
+            <div class="cert-grade grade-${grade}">${grade}</div>
+            <div class="cert-date">📅 Дата: ${dateStr}</div>
+            <div style="margin-top:20px; font-size:0.9em; color:#888;">
+                ${grade === 5 ? '🏆 Превосходный результат!' : grade === 4 ? '👍 Хороший результат!' : grade === 3 ? '📘 Удовлетворительный результат. Рекомендуется повторить материал.' : '📖 Необходимо изучить тему заново.'}
+            </div>
+        </div>
+
+        <div style="text-align:center; margin-bottom:20px;">
+            <button class="btn btn-primary" onclick="window.print()">🖨️ Распечатать сертификат</button>
+            <button class="btn btn-secondary" onclick="showScreen('testScreen', document.querySelectorAll('.nav-btn')[2])">🔙 Вернуться к тесту</button>
+            <button class="btn btn-success" onclick="restartLesson()">🔄 Пройти заново</button>
+        </div>
+
+        ${errorsHtml}
+    `;
+}
+
+function restartLesson() {
+    if (!confirm('Начать урок заново? Все результаты будут сброшены.')) return;
+    testAnswers = {};
+    testResults = {};
+    practiceScore = 0;
+    document.getElementById('questionsContainer').innerHTML = '';
+    document.getElementById('pythonTasks').innerHTML = '';
+    document.getElementById('jsTasks').innerHTML = '';
+    document.getElementById('mainNav').style.display = 'none';
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('welcomeScreen').classList.add('active');
+    document.getElementById('studentName').value = '';
+    document.getElementById('testProgress').style.width = '0%';
+}
+</script>
+</body>
+</html>
