@@ -115,12 +115,6 @@ const Navbar = ({
             Конструктор заданий
           </Link>
           <Link
-            to="/konstruktor-rabochih-listov"
-            className="story-link px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
-          >
-            Рабочие листы
-          </Link>
-          <Link
             to="/konstruktor-igry"
             className="story-link px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
           >
