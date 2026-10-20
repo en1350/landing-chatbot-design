@@ -146,6 +146,19 @@
         "error": "string"
       },
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "Logout others without auth returns 401",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "logout_others"
+      },
+      "expectedStatus": 401,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
     }
   ]
 }

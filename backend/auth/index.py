@@ -404,6 +404,19 @@ def handler(event: dict, context) -> dict:
                 conn.commit()
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'ok': True})}
 
+        elif action == 'logout_others':
+            token = get_token(event)
+            user_id = get_user_id_by_token(cur, token)
+            if not user_id:
+                return {'statusCode': 401, 'headers': cors_headers(), 'body': json.dumps({'error': 'Войдите в аккаунт'})}
+            cur.execute(
+                f"DELETE FROM {SCHEMA}.sessions WHERE user_id = %s AND token <> %s",
+                (user_id, token)
+            )
+            closed = cur.rowcount
+            conn.commit()
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'ok': True, 'closed': closed})}
+
         elif action == 'change_password':
             user_id = get_user_id_by_token(cur, get_token(event))
             if not user_id:

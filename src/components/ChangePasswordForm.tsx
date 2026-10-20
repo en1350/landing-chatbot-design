@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Icon from "@/components/ui/icon";
 import { AUTH_URL, useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 
 const ChangePasswordForm = () => {
   const { token } = useAuth();
@@ -13,6 +14,31 @@ const ChangePasswordForm = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
+
+  const [closing, setClosing] = useState(false);
+
+  const logoutOthers = async () => {
+    if (!window.confirm("Выйти из аккаунта на всех других устройствах? На этом устройстве вы останетесь в системе.")) return;
+    setClosing(true);
+    try {
+      const res = await fetch(AUTH_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Authorization": token || "" },
+        body: JSON.stringify({ action: "logout_others" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Не удалось выйти из других устройств");
+      toast.success(
+        data.closed > 0
+          ? "Вы вышли из аккаунта на других устройствах"
+          : "Других активных устройств не найдено"
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Не удалось выйти из других устройств");
+    } finally {
+      setClosing(false);
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,6 +92,18 @@ const ChangePasswordForm = () => {
           </Button>
         </form>
       )}
+      <button
+        type="button"
+        onClick={logoutOthers}
+        disabled={closing}
+        className="mt-3 flex w-full items-center justify-between border-t border-border pt-3 text-sm font-semibold disabled:opacity-60"
+      >
+        <span className="flex items-center gap-2">
+          <Icon name="MonitorSmartphone" size={16} />
+          Выйти из других устройств
+        </span>
+        <Icon name={closing ? "Loader2" : "LogOut"} size={16} className={closing ? "animate-spin" : ""} />
+      </button>
     </div>
   );
 };
