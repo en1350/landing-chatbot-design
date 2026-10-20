@@ -33,6 +33,11 @@ USAGE_COLUMNS = {
 }
 
 
+def has_trainer_access(cur, user_id):
+    cur.execute(f"SELECT 1 FROM {SCHEMA}.trainer_access WHERE user_id = %s", (user_id,))
+    return cur.fetchone() is not None
+
+
 def get_plan_for_user(cur, user_id):
     cur.execute(
         f"SELECT plan, is_active, expires_at FROM {SCHEMA}.subscriptions "
@@ -229,6 +234,7 @@ def handler(event: dict, context) -> dict:
                     'expires_at': expires_at,
                     'usage': usage,
                     'free_limit': FREE_LIMIT,
+                    'trainers_unlocked': has_trainer_access(cur, user_id),
                 })
             }
 
@@ -321,6 +327,7 @@ def handler(event: dict, context) -> dict:
                     'plan': plan,
                     'usage': usage,
                     'free_limit': FREE_LIMIT,
+                    'trainers_unlocked': has_trainer_access(cur, user_id),
                 })
             }
 
@@ -376,6 +383,7 @@ def handler(event: dict, context) -> dict:
                     'plan': plan,
                     'usage': usage,
                     'free_limit': FREE_LIMIT,
+                    'trainers_unlocked': has_trainer_access(cur, user_id),
                 })
             }
 

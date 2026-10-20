@@ -327,7 +327,8 @@ const TRAINERS: TrainerItem[] = [
 /* ---------- Страница ---------- */
 
 const StudentTrainer = () => {
-  const { user, isPaid } = useAuth();
+  const { user, isPaid: planPaid, trainersUnlocked } = useAuth();
+  const isPaid = planPaid || trainersUnlocked;
   const [searchParams] = useSearchParams();
   const [category, setCategory] = useState<CategoryKey | null>(null);
   const catParam = searchParams.get("cat");

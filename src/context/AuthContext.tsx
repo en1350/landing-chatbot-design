@@ -31,6 +31,7 @@ interface AuthContextValue {
   expiresAt: string | null;
   loading: boolean;
   isPaid: boolean;
+  trainersUnlocked: boolean;
   usage: UsageState;
   freeLimit: number;
   remainingUse: (type: GeneratorType) => number;
@@ -73,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [usage, setUsage] = useState<UsageState>(defaultUsage);
+  const [trainersUnlocked, setTrainersUnlocked] = useState(false);
   const [freeLimit, setFreeLimit] = useState(3);
 
   const applySession = (t: string | null) => {
@@ -88,6 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setPlan("free");
       setExpiresAt(null);
       setUsage(defaultUsage);
+      setTrainersUnlocked(false);
       setLoading(false);
       return;
     }
@@ -103,6 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setExpiresAt(data.expires_at || null);
       setUsage(data.usage || defaultUsage);
       setFreeLimit(data.free_limit ?? 3);
+      setTrainersUnlocked(!!data.trainers_unlocked);
       setToken(currentToken);
     } catch {
       applySession(null);
@@ -110,6 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setPlan("free");
       setExpiresAt(null);
       setUsage(defaultUsage);
+      setTrainersUnlocked(false);
     } finally {
       setLoading(false);
     }
@@ -137,6 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPlan(data.plan || "free");
     setUsage(data.usage || defaultUsage);
     setFreeLimit(data.free_limit ?? 3);
+    setTrainersUnlocked(!!data.trainers_unlocked);
   };
 
   const resendVerification = async (email: string) => {
@@ -151,6 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPlan(data.plan || "free");
     setUsage(data.usage || defaultUsage);
     setFreeLimit(data.free_limit ?? 3);
+    setTrainersUnlocked(!!data.trainers_unlocked);
   };
 
   const logout = async () => {
@@ -162,6 +169,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setPlan("free");
       setExpiresAt(null);
       setUsage(defaultUsage);
+      setTrainersUnlocked(false);
     }
   };
 
@@ -175,6 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     applySession(data.token);
     setUser(data.user);
     setPlan("free");
+    setTrainersUnlocked(false);
   };
 
   const isPaid = plan !== "free";
@@ -206,6 +215,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         expiresAt,
         loading,
         isPaid,
+        trainersUnlocked,
         usage,
         freeLimit,
         remainingUse,
