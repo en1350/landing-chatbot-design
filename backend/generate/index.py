@@ -1473,6 +1473,105 @@ def normalize_worksheet(parsed: dict) -> list:
     return tasks
 
 
+def rpd_context(f: dict) -> str:
+    def v(key, default='не указано'):
+        return str(f.get(key) or '').strip() or default
+    hours = f"лекции {v('hoursLecture', '0')}, практические {v('hoursPractice', '0')}, лабораторные {v('hoursLab', '0')}, СРС {v('hoursSelf', '0')}, контроль {v('hoursControl', '0')}"
+    return f"""Дисциплина: {v('disciplineName')}
+Код дисциплины: {v('disciplineCode')}
+ФГОС: {v('fgos')}
+Направление подготовки / специальность: {v('direction')}
+Образовательная программа: {v('programName')}
+Профиль: {v('profile')}
+Курс: {v('course')}, семестр: {v('semester')}
+Общая трудоёмкость: {v('totalHours')} ч., {v('credits')} ЗЕ
+Форма промежуточной аттестации: {v('attestationType')}
+Объём по видам работы (часы): {hours}"""
+
+
+def build_rpd_prompt(part: str, f: dict) -> str:
+    ctx = rpd_context(f)
+    wishes = (f.get('wishes') or '').strip()
+    wishes_line = f"\nПожелания преподавателя: {wishes}" if wishes else ""
+    if part == 'content':
+        return f"""Составь основу рабочей программы дисциплины (РПД) для вуза или колледжа.
+
+{ctx}{wishes_line}
+
+Требования: цель — одно-два предложения; 4-7 задач; 3-6 компетенций с кодами в логике ФГОС (если ФГОС указан — используй его реальные коды, иначе универсальные УК/ОПК/ПК) и подходящим оценочным средством для каждой; пререквизиты и постреквизиты через запятую; структура — 3-6 разделов по 2-4 темы в формате «Раздел 1. Название» и «Тема 1.1. Название», каждая строка отдельно. Без markdown-разметки.
+
+Верни ТОЛЬКО валидный JSON:
+{{"goal": "цель", "tasks": ["задача"], "competencies": [{{"code": "УК-1", "text": "формулировка компетенции", "tool": "оценочное средство"}}], "prereq": "текст", "postreq": "текст", "structure": "разделы и темы, каждая с новой строки"}}"""
+    if part == 'ktp':
+        structure = (f.get('structure') or '').strip() or 'структура не задана — придумай её сам по названию дисциплины'
+        return f"""Составь календарно-тематический план (КТП) для рабочей программы дисциплины.
+
+{ctx}
+
+Структура дисциплины:
+{structure}
+
+Требования: по одной строке на тему (разделы можно давать отдельной строкой без часов); в каждой строке часы: total = lect + pract + lab + self; суммы по столбцам должны точно совпадать с заданным объёмом по видам работы (лекции, практические, лабораторные, СРС); если для вида работы указан 0 — ставь 0. Поле control — вид контроля по теме (тест, контрольная работа, коллоквиум, отчёт и т.п., можно пустое). Без markdown-разметки.
+
+Верни ТОЛЬКО валидный JSON:
+{{"rows": [{{"topic": "Тема 1.1. Название", "total": 4, "lect": 2, "pract": 2, "lab": 0, "self": 0, "control": "тест"}}]}}"""
+    structure = (f.get('structure') or '').strip()
+    comps = (f.get('competenciesText') or '').strip()
+    return f"""Составь оценочные средства для рабочей программы дисциплины.
+
+{ctx}
+
+Структура дисциплины:
+{structure or 'не задана'}
+
+Компетенции:
+{comps or 'не заданы'}{wishes_line}
+
+Требования: текущий контроль и промежуточная аттестация (с учётом формы аттестации) — конкретные формы и когда проводятся; критерии оценивания по шкале «отлично / хорошо / удовлетворительно / неудовлетворительно» (для зачёта — «зачтено / не зачтено»); 6-10 типовых контрольных заданий или вопросов по темам; процедура оценивания (как проходит аттестация, сколько времени, какие материалы разрешены). Каждое поле — связный текст, строки разделяй переносами. Без markdown-разметки.
+
+Верни ТОЛЬКО валидный JSON:
+{{"currentControl": "текст", "intermediateControl": "текст", "criteria": "текст", "sampleTasks": "текст", "evalMethods": "текст"}}"""
+
+
+def rpd_text(value) -> str:
+    if isinstance(value, list):
+        return '\n'.join(str(x).strip() for x in value if str(x).strip())
+    return str(value or '').strip()
+
+
+def rpd_int(value) -> int:
+    try:
+        return max(0, int(float(value)))
+    except (TypeError, ValueError):
+        return 0
+
+
+def normalize_rpd(part: str, parsed: dict) -> dict:
+    if part == 'content':
+        comps = []
+        for c in parsed.get('competencies') or []:
+            if isinstance(c, dict) and (c.get('code') or c.get('text')):
+                comps.append({'code': rpd_text(c.get('code')), 'text': rpd_text(c.get('text')), 'tool': rpd_text(c.get('tool'))})
+        return {
+            'goal': rpd_text(parsed.get('goal')),
+            'tasks': rpd_text(parsed.get('tasks')),
+            'competencies': comps,
+            'prereq': rpd_text(parsed.get('prereq')),
+            'postreq': rpd_text(parsed.get('postreq')),
+            'structure': rpd_text(parsed.get('structure')),
+        }
+    if part == 'ktp':
+        rows = []
+        for r in parsed.get('rows') or []:
+            if not isinstance(r, dict) or not rpd_text(r.get('topic')):
+                continue
+            lect, pract, lab, self_ = rpd_int(r.get('lect')), rpd_int(r.get('pract')), rpd_int(r.get('lab')), rpd_int(r.get('self'))
+            total = lect + pract + lab + self_ or rpd_int(r.get('total'))
+            rows.append({'topic': rpd_text(r.get('topic')), 'total': total, 'lect': lect, 'pract': pract, 'lab': lab, 'self': self_, 'control': rpd_text(r.get('control'))})
+        return {'rows': rows}
+    return {k: rpd_text(parsed.get(k)) for k in ('currentControl', 'intermediateControl', 'criteria', 'sampleTasks', 'evalMethods')}
+
+
 def handler(event: dict, context) -> dict:
     """Генерация учебных материалов, ИИ-чат-помощник через AITunnel. Декомпозитор компетенций, проверка тетради по фото, план коррекционной работы (аналитика качества обученности) и ИИ-анализ качества знаний по дисциплинам доступны только пользователям с платной подпиской. Антиплагиат (проверка текста и извлечение из PDF/DOCX) доступен бесплатно с лимитом попыток, учёт которых ведётся в backend/auth."""
     method = event.get('httpMethod', 'GET')
@@ -1820,6 +1919,31 @@ def handler(event: dict, context) -> dict:
             if not tasks:
                 return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ не вернул задания, попробуйте снова'})}
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'tasks': tasks}, ensure_ascii=False)}
+
+        elif action == 'rpd':
+            fields = body.get('fields') or {}
+            part = body.get('part')
+            if part not in ('content', 'ktp', 'assessment'):
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Неизвестная часть программы'})}
+            if not is_user_paid(event):
+                return {'statusCode': 403, 'headers': cors_headers(), 'body': json.dumps({'error': 'Конструктор рабочих программ доступен по платной подписке'})}
+            if not (fields.get('disciplineName') or '').strip():
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите название дисциплины'})}
+
+            raw = call_ai([
+                {'role': 'system', 'content': 'Ты опытный методист образовательной организации, разрабатываешь рабочие программы дисциплин по ФГОС. Отвечаешь строго валидным JSON без markdown и пояснений, всегда на русском языке.'},
+                {'role': 'user', 'content': build_rpd_prompt(part, fields)},
+            ], temperature=0.6)
+
+            try:
+                parsed = parse_ai_json(raw)
+            except (json.JSONDecodeError, IndexError):
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ вернул некорректный ответ, попробуйте снова'})}
+
+            result = normalize_rpd(part, parsed if isinstance(parsed, dict) else {})
+            if part == 'ktp' and not result['rows']:
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ не вернул план, попробуйте снова'})}
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps(result, ensure_ascii=False)}
 
         elif action == 'task_card_refine':
             fields = body.get('fields') or {}

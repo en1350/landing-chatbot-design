@@ -136,7 +136,8 @@
   #task-card-print,
   #pm-task-print,
   #game-card-print,
-  #event-card-print {
+  #event-card-print,
+  #rpd-print {
     border: none !important;
     padding: 0 !important;
   }

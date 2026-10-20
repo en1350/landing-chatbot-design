@@ -25,6 +25,7 @@ import EventCardBuilder from "./pages/EventCardBuilder";
 import Admin from "./pages/Admin";
 import WorksheetBuilder from "./pages/WorksheetBuilder";
 import UserAgreement from "./pages/UserAgreement";
+import RpdBuilder from "./pages/RpdBuilder";
 import MemberChat from "./pages/MemberChat";
 import VisitTracker from "./components/VisitTracker";
 import ScrollToTop from "./components/ScrollToTop";
@@ -63,6 +64,7 @@ const App = () => (
               <Route path="/korrektsionnaya-rabota" element={<CorrectionWork />} />
               <Route path="/konstruktor-rabochih-listov" element={<WorksheetBuilder />} />
               <Route path="/polzovatelskoe-soglashenie" element={<UserAgreement />} />
+              <Route path="/konstruktor-rabochih-programm" element={<RpdBuilder />} />
               <Route path="/chat" element={<MemberChat />} />
               <Route path="/admin" element={<Admin />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

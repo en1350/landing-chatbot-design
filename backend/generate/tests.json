@@ -432,6 +432,23 @@
         "error": "string"
       },
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "RPD without paid subscription returns 403",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "rpd",
+        "part": "content",
+        "fields": {
+          "disciplineName": "Математика"
+        }
+      },
+      "expectedStatus": 403,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
     }
   ]
 }

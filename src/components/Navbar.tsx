@@ -38,6 +38,7 @@ const QUICK_LINKS = [
 const MORE_LINKS = [
   { label: "Тренажёр для учеников", to: "/trenazher-dlya-uchenikov", icon: "Brain" },
   { label: "Рабочие листы", to: "/konstruktor-rabochih-listov", icon: "FileText" },
+  { label: "Рабочие программы", to: "/konstruktor-rabochih-programm", icon: "BookMarked" },
   { label: "Генератор проектов", to: "/generator-proektov", icon: "FolderKanban" },
   { label: "Мастер-классы", to: "/konstruktor-masterklassov", icon: "Sparkles" },
   { label: "Задания по ПМ", to: "/generator-zadaniy-pm", icon: "Briefcase" },
