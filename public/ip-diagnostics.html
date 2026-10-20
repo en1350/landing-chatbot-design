@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Симулятор: Настройка и диагностика IP в ОС</title>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --panel-bg: #ffffff;
+            --terminal-bg: #0c0c0c;
+            --terminal-text: #cccccc;
+            --terminal-prompt: #ffffff;
+            --accent: #2b6cb0;
+            --success: #38a169;
+            --warning: #dd6b20;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            height: 100vh;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            flex: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        /* Панель задания */
+        .task-panel {
+            width: 350px;
+            background: var(--panel-bg);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+        .task-panel h2 {
+            margin-top: 0;
+            color: var(--accent);
+            font-size: 1.2em;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 10px;
+        }
+        .task-list {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+            flex: 1;
+        }
+        .task-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 6px;
+            border-left: 4px solid #cbd5e0;
+            transition: all 0.3s;
+        }
+        .task-item.completed {
+            border-left-color: var(--success);
+            background: #f0fff4;
+        }
+        .task-item.completed .task-text {
+            text-decoration: line-through;
+            color: #718096;
+        }
+        .checkbox {
+            margin-right: 10px;
+            margin-top: 3px;
+            color: #cbd5e0;
+            font-size: 1.2em;
+        }
+        .task-item.completed .checkbox {
+            color: var(--success);
+        }
+        .hint-box {
+            background: #fffaf0;
+            border-left: 4px solid var(--warning);
+            padding: 12px;
+            font-size: 0.9em;
+            color: #744210;
+            border-radius: 4px;
+        }
+        .hint-box code {
+            background: #feebc8;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+        /* Терминал */
+        .terminal-wrapper {
+            flex: 1;
+            background: var(--terminal-bg);
+            border-radius: 8px;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #2d3748;
+        }
+        .terminal-header {
+            background: #1a202c;
+            color: #a0aec0;
+            padding: 8px 15px;
+            font-size: 0.85em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #2d3748;
+        }
+        .terminal-controls span {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 6px;
+        }
+        .ctrl-close { background: #fc8181; }
+        .ctrl-min { background: #f6e05e; }
+        .ctrl-max { background: #68d391; }
+
+        .terminal-body {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--terminal-text);
+            cursor: text;
+        }
+        .terminal-body:focus {
+            outline: none;
+        }
+        .output-line {
+            margin-bottom: 4px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .prompt-line {
+            display: flex;
+            align-items: center;
+        }
+        .prompt {
+            color: var(--terminal-prompt);
+            margin-right: 8px;
+            white-space: nowrap;
+        }
+        #cmd-input {
+            background: transparent;
+            border: none;
+            color: var(--terminal-text);
+            font-family: inherit;
+            font-size: inherit;
+            flex: 1;
+            outline: none;
+            caret-color: var(--terminal-text);
+        }
+        .success-text { color: #68d391; }
+        .error-text { color: #fc8181; }
+        .info-text { color: #63b3ed; }
+
+        @media (max-width: 900px) {
+            .container { flex-direction: column; }
+            .task-panel { width: 100%; box-sizing: border-box; }
+            body { height: auto; min-height: 100vh; }
+            .terminal-wrapper { height: 500px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Панель задания -->
+    <div class="task-panel">
+        <h2>📋 Практическое задание</h2>
+        <p><strong>Тема:</strong> Настройка протоколов IP в операционных системах.</p>
+        <p><strong>Цель:</strong> Выполнить диагностику сетевого подключения с помощью командной строки.</p>
+        
+        <ul class="task-list">
+            <li class="task-item" id="task-ip">
+                <span class="checkbox">◻</span>
+                <span class="task-text">Определить собственный IP-адрес и MAC-адрес (физический адрес).</span>
+            </li>
+            <li class="task-item" id="task-ping">
+                <span class="checkbox">◻</span>
+                <span class="task-text">Проверить доступность внешнего ресурса (yandex.ru) с помощью ping.</span>
+            </li>
+            <li class="task-item" id="task-tracert">
+                <span class="checkbox">◻</span>
+                <span class="task-text">Построить маршрут следования пакетов с помощью tracert.</span>
+            </li>
+        </ul>
+
+        <div class="hint-box">
+            <strong>💡 Подсказки:</strong><br>
+            1. Для просмотра настроек сети введите: <code>ipconfig</code><br>
+            2. Для проверки доступности: <code>ping yandex.ru</code><br>
+            3. Для трассировки маршрута: <code>tracert yandex.ru</code><br>
+            4. Очистить экран: <code>cls</code> или <code>clear</code><br>
+            5. Используйте стрелки <strong>↑</strong> и <strong>↓</strong> для истории команд.
+        </div>
+        
+        <button onclick="resetSimulation()" style="margin-top: auto; padding: 10px; background: #e53e3e; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">🔄 Сбросить прогресс</button>
+    </div>
+
+    <!-- Терминал -->
+    <div class="terminal-wrapper" onclick="document.getElementById('cmd-input').focus()">
+        <div class="terminal-header">
+            <span>Администратор: Командная строка</span>
+            <div class="terminal-controls">
+                <span class="ctrl-min"></span>
+                <span class="ctrl-max"></span>
+                <span class="ctrl-close"></span>
+            </div>
+        </div>
+        <div class="terminal-body" id="terminal-body">
+            <div class="output-line">Microsoft Windows [Version 10.0.19045.3693]</div>
+            <div class="output-line">(c) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.</div>
+            <div class="output-line"><br></div>
+            <div class="prompt-line">
+                <span class="prompt">C:\Users\Student></span>
+                <input type="text" id="cmd-input" autocomplete="off" spellcheck="false" autofocus>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const terminalBody = document.getElementById('terminal-body');
+    const cmdInput = document.getElementById('cmd-input');
+    const promptText = "C:\\Users\\Student>";
+    
+    let commandHistory = [];
+    let historyIndex = -1;
+    let isProcessing = false;
+
+    // Фокус на ввод при клике в любом месте терминала
+    terminalBody.addEventListener('click', () => {
+        cmdInput.focus();
+    });
+
+    // Обработка нажатий клавиш
+    cmdInput.addEventListener('keydown', async function(e) {
+        if (isProcessing) {
+            e.preventDefault();
+            return;
+        }
+
+        if (e.key === 'Enter') {
+            const command = this.value.trim();
+            if (command) {
+                commandHistory.push(command);
+                historyIndex = commandHistory.length;
+                
+                // Добавляем введенную команду в историю вывода
+                addOutputLine(`${promptText} ${command}`);
+                this.value = '';
+                
+                await processCommand(command);
+            } else {
+                addOutputLine(`${promptText}`);
+            }
+            scrollToBottom();
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (historyIndex > 0) {
+                historyIndex--;
+                this.value = commandHistory[historyIndex];
+            }
+        } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (historyIndex < commandHistory.length - 1) {
+                historyIndex++;
+                this.value = commandHistory[historyIndex];
+            } else {
+                historyIndex = commandHistory.length;
+                this.value = '';
+            }
+        }
+    });
+
+    function addOutputLine(text, className = '') {
+        const div = document.createElement('div');
+        div.className = `output-line ${className}`;
+        div.textContent = text;
+        // Вставляем перед последней строкой (строкой ввода)
+        const promptLine = terminalBody.querySelector('.prompt-line');
+        terminalBody.insertBefore(div, promptLine);
+    }
+
+    function scrollToBottom() {
+        terminalBody.scrollTop = terminalBody.scrollHeight;
+    }
+
+    function markTaskComplete(taskId) {
+        const task = document.getElementById(taskId);
+        if (!task.classList.contains('completed')) {
+            task.classList.add('completed');
+            task.querySelector('.checkbox').textContent = '◼';
+            addOutputLine(`\n[СИСТЕМА]: Задание "${taskId.replace('task-', '')}" успешно выполнено и отмечено в журнале!`, 'success-text');
+            scrollToBottom();
+        }
+    }
+
+    async function processCommand(cmd) {
+        isProcessing = true;
+        const lowerCmd = cmd.toLowerCase();
+        const args = lowerCmd.split(' ');
+
+        if (args[0] === 'help' || args[0] === '?') {
+            addOutputLine('Доступные команды:');
+            addOutputLine('  ipconfig      - Показать настройки сетевого адаптера (IP, MAC)');
+            addOutputLine('  ping [адрес]  - Проверить доступность узла');
+            addOutputLine('  tracert [адрес]- Трассировка маршрута к узлу');
+            addOutputLine('  cls, clear    - Очистить экран терминала');
+            addOutputLine('  help          - Показать эту справку');
+        } 
+        else if (args[0] === 'cls' || args[0] === 'clear') {
+            // Удаляем все строки, кроме последней (prompt)
+            while (terminalBody.children.length > 1) {
+                terminalBody.removeChild(terminalBody.firstChild);
+            }
+        } 
+        else if (args[0] === 'ipconfig') {
+            markTaskComplete('task-ip');
+            await simulateDelay(300);
+            addOutputLine('\nНастройка протокола IP для Windows');
+            addOutputLine('===========================================================================');
+            addOutputLine('\nАдаптер Ethernet Ethernet0:');
+            addOutputLine('   DNS-суффикс подключения . . . . . :');
+            addOutputLine('   Локальный IPv6-адрес канала . . . : fe80::1a2b:3c4d:5e6f:7a8b%12');
+            addOutputLine('   IPv4-адрес. . . . . . . . . . . . : 192.168.1.42');
+            addOutputLine('   Маска подсети . . . . . . . . . . : 255.255.255.0');
+            addOutputLine('   Основной шлюз . . . . . . . . . . : 192.168.1.1');
+            addOutputLine('   Физический адрес. . . . . . . . . : 00-15-5D-0A-2B-3C');
+            addOutputLine('');
+        } 
+        else if (args[0] === 'ping') {
+            if (args.length < 2) {
+                addOutputLine('Ошибка: Не указано имя узла. Используйте: ping yandex.ru', 'error-text');
+            } else {
+                const target = args[1];
+                if (target === 'yandex.ru' || target === 'ya.ru') {
+                    markTaskComplete('task-ping');
+                    await simulateDelay(500);
+                    addOutputLine(`\nОбмен пакетами с yandex.ru [5.255.255.77] с 32 байтами данных:`);
+                    
+                    const times = [12, 14, 11, 13];
+                    for (let i = 0; i < 4; i++) {
+                        await simulateDelay(600);
+                        addOutputLine(`Ответ от 5.255.255.77: число байт=32 время=${times[i]}мс TTL=55`);
+                    }
+                    addOutputLine('\nСтатистика Ping для 5.255.255.77:');
+                    addOutputLine('    Пакетов: отправлено = 4, получено = 4, потеряно = 0');
+                    addOutputLine('    (0% потерь)');
+                    addOutputLine('Приблизительное время приема-передачи в мс:');
+                    addOutputLine('    Минимальное = 11мсек, Максимальное = 14мсек, Среднее = 12мсек');
+                } else {
+                    await simulateDelay(1000);
+                    addOutputLine(`\nПревышен интервал ожидания для запроса.`, 'error-text');
+                    addOutputLine(`\nСтатистика Ping для ${target}:`);
+                    addOutputLine('    Пакетов: отправлено = 4, получено = 0, потеряно = 4');
+                    addOutputLine('    (100% потерь)');
+                }
+            }
+        } 
+        else if (args[0] === 'tracert') {
+            if (args.length < 2) {
+                addOutputLine('Ошибка: Не указано имя узла. Используйте: tracert yandex.ru', 'error-text');
+            } else {
+                const target = args[1];
+                if (target === 'yandex.ru' || target === 'ya.ru') {
+                    markTaskComplete('task-tracert');
+                    await simulateDelay(500);
+                    addOutputLine(`\nТрассировка маршрута к yandex.ru [5.255.255.77]`);
+                    addOutputLine(`с максимальным числом прыжков 30:`);
+                    addOutputLine('');
+                    
+                    const hops = [
+                        { num: 1, ip: '192.168.1.1', name: 'router.local', times: ['1', '1', '1'] },
+                        { num: 2, ip: '10.45.12.1', name: 'core.isp.net', times: ['4', '5', '4'] },
+                        { num: 3, ip: '85.113.32.5', name: 'mgm.isp.net', times: ['8', '9', '8'] },
+                        { num: 4, ip: '5.255.255.77', name: 'yandex.ru', times: ['12', '11', '13'] }
+                    ];
+
+                    for (let hop of hops) {
+                        await simulateDelay(800);
+                        const timeStr = `${hop.times[0]} мс    ${hop.times[1]} мс    ${hop.times[2]} мс`;
+                        addOutputLine(`  ${hop.num}    ${timeStr}    ${hop.name} [${hop.ip}]`);
+                    }
+                    addOutputLine('\nТрассировка завершена.');
+                } else {
+                    await simulateDelay(1000);
+                    addOutputLine(`\nПревышен интервал ожидания для запроса.`, 'error-text');
+                    addOutputLine('Трассировка завершена.');
+                }
+            }
+        } 
+        else {
+            addOutputLine(`"${args[0]}" не является внутренней или внешней командой, исполняемой программой или пакетным файлом.`, 'error-text');
+            addOutputLine('Введите "help" для списка доступных команд.', 'info-text');
+        }
+        
+        isProcessing = false;
+        scrollToBottom();
+    }
+
+    function simulateDelay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function resetSimulation() {
+        if(confirm('Сбросить выполнение задания и очистить терминал?')) {
+            document.querySelectorAll('.task-item').forEach(item => {
+                item.classList.remove('completed');
+                item.querySelector('.checkbox').textContent = '◻';
+            });
+            while (terminalBody.children.length > 1) {
+                terminalBody.removeChild(terminalBody.firstChild);
+            }
+            addOutputLine('Microsoft Windows [Version 10.0.19045.3693]');
+            addOutputLine('(c) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.\n');
+            cmdInput.value = '';
+            cmdInput.focus();
+        }
+    }
+
+    // Инициализация фокуса
+    cmdInput.focus();
+</script>
+
+</body>
+</html>

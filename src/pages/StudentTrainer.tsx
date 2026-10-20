@@ -24,6 +24,7 @@ type TrainerKey =
   | "algorithms"
   | "backwards"
   | "network-protocols"
+  | "ip-diagnostics"
   | "ai-arcade"
   | "it-project-simulator"
   | "python-java-types"
@@ -65,6 +66,7 @@ interface TrainerItem {
 }
 
 const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
+  "ip-diagnostics": "/ip-diagnostics.html",
   "ai-arcade": "/ai-arcade.html",
   "it-project-simulator": "/it-project-simulator.html",
   "python-java-types": "/python-java-types.html",
@@ -192,6 +194,14 @@ const TRAINERS: TrainerItem[] = [
     title: "Сетевые протоколы",
     description: "Теория по модели OSI и TCP/IP, тест и именной сертификат по итогам",
     accent: "#0891B2",
+  },
+  {
+    key: "ip-diagnostics",
+    category: "networks",
+    icon: "🖧",
+    title: "Симулятор: диагностика IP в ОС",
+    description: "Командная строка Windows: ipconfig, ping и tracert, три практических задания с отметкой выполнения",
+    accent: "#2B6CB0",
   },
   {
     key: "ai-arcade",
