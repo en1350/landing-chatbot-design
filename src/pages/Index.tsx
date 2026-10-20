@@ -8,7 +8,6 @@ import Icon from "@/components/ui/icon";
 import GeneratorsSection from "@/components/GeneratorsSection";
 import NotebookCheck from "@/components/NotebookCheck";
 import QualityAnalyticsPromo from "@/components/QualityAnalyticsPromo";
-import PopularSections from "@/components/PopularSections";
 import FeedbackSection from "@/components/FeedbackSection";
 import Footer from "@/components/Footer";
 import DecomposerModal from "@/components/DecomposerModal";
@@ -115,7 +114,6 @@ const Index = () => {
             Мудрая минутка
           </Button>
         </div>
-        <PopularSections onScrollTo={scrollTo} />
         <Hero />
         <GeneratorsSection onNeedAuth={openAuth} />
         <QualityAnalyticsPromo id="quality-analytics" />
