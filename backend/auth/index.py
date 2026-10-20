@@ -201,6 +201,59 @@ def issue_verification(cur, conn, event, body_data, user_id, email):
         print(f"[send_verify_email] FAILED to send to {email}: {type(e).__name__}: {e}")
 
 
+def apply_succeeded_payment(cur, payment_id, result):
+    """Выдаёт доступ за оплаченный платёж ровно один раз. Возвращает словарь результата или None, если платёж не наш."""
+    metadata = result.get('metadata') or {}
+    plan_key = metadata.get('plan')
+    plan = PLANS.get(plan_key)
+    try:
+        owner_id = int(metadata.get('user_id'))
+    except (TypeError, ValueError):
+        return None
+    if not plan:
+        return None
+
+    cur.execute(
+        f"INSERT INTO {SCHEMA}.processed_payments (payment_id, user_id) VALUES (%s, %s) "
+        f"ON CONFLICT (payment_id) DO NOTHING RETURNING payment_id",
+        (str(payment_id), owner_id)
+    )
+    first_time = cur.fetchone() is not None
+
+    if plan.get('credits'):
+        if first_time:
+            cur.execute(
+                f"INSERT INTO {SCHEMA}.single_credits (user_id, credits) VALUES (%s, %s) "
+                f"ON CONFLICT (user_id) DO UPDATE SET credits = {SCHEMA}.single_credits.credits + EXCLUDED.credits, updated_at = now()",
+                (owner_id, plan['credits'])
+            )
+        return {'plan': 'single', 'credits': get_credits(cur, owner_id), 'user_id': owner_id}
+
+    expires_at = None
+    if first_time:
+        expires_at = datetime.now(timezone.utc) + timedelta(days=plan['days'])
+        cur.execute(
+            f"UPDATE {SCHEMA}.subscriptions SET is_active = false WHERE user_id = %s AND is_active = true",
+            (owner_id,)
+        )
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.subscriptions (user_id, plan, expires_at, is_active) VALUES (%s, %s, %s, true)",
+            (owner_id, plan['db_plan'], expires_at)
+        )
+    current_plan, current_expires = get_plan_for_user(cur, owner_id)
+    return {'plan': current_plan, 'expires_at': expires_at.isoformat() if expires_at else current_expires, 'user_id': owner_id}
+
+
+def fetch_yookassa_payment(payment_id):
+    req = urllib.request.Request(
+        f'https://api.yookassa.ru/v3/payments/{payment_id}',
+        method='GET',
+        headers={'Authorization': yookassa_auth_header()}
+    )
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        return json.loads(resp.read().decode())
+
+
 def handler(event: dict, context) -> dict:
     """Личный кабинет УрокАИ: регистрация/вход/выход, восстановление доступа по email, серверный учёт бесплатных генераций и проверок антиплагиата (лимит 3), сохранение материалов и оплата подписки через ЮКассу."""
     method = event.get('httpMethod', 'GET')
@@ -248,6 +301,19 @@ def handler(event: dict, context) -> dict:
 
         body_data = json.loads(event.get('body') or '{}')
         action = body_data.get('action')
+
+        if not action and body_data.get('event') == 'payment.succeeded':
+            hook_payment_id = (body_data.get('object') or {}).get('id')
+            if not hook_payment_id:
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Нет id платежа'})}
+            try:
+                verified = fetch_yookassa_payment(hook_payment_id)
+            except urllib.error.HTTPError:
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'Не удалось проверить платёж'})}
+            if verified.get('status') == 'succeeded' and verified.get('paid'):
+                apply_succeeded_payment(cur, hook_payment_id, verified)
+                conn.commit()
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'ok': True})}
 
         if action == 'register':
             email = (body_data.get('email') or '').strip().lower()
@@ -712,14 +778,8 @@ def handler(event: dict, context) -> dict:
             if not payment_id:
                 return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Не передан payment_id'})}
 
-            req = urllib.request.Request(
-                f'https://api.yookassa.ru/v3/payments/{payment_id}',
-                method='GET',
-                headers={'Authorization': yookassa_auth_header()}
-            )
             try:
-                with urllib.request.urlopen(req, timeout=15) as resp:
-                    result = json.loads(resp.read().decode())
+                result = fetch_yookassa_payment(payment_id)
             except urllib.error.HTTPError as e:
                 error_body = e.read().decode()
                 return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': f'ЮКасса: {error_body}'})}
@@ -729,44 +789,13 @@ def handler(event: dict, context) -> dict:
 
             if status == 'succeeded' and paid:
                 metadata = result.get('metadata') or {}
-                plan_key = metadata.get('plan')
-                plan = PLANS.get(plan_key)
-                if plan and plan.get('credits'):
-                    if str(metadata.get('user_id')) != str(user_id):
-                        return {'statusCode': 403, 'headers': cors_headers(), 'body': json.dumps({'error': 'Платёж принадлежит другому пользователю'})}
-                    cur.execute(
-                        f"INSERT INTO {SCHEMA}.processed_payments (payment_id, user_id) VALUES (%s, %s) ON CONFLICT (payment_id) DO NOTHING RETURNING payment_id",
-                        (str(payment_id), user_id)
-                    )
-                    if cur.fetchone():
-                        cur.execute(
-                            f"INSERT INTO {SCHEMA}.single_credits (user_id, credits) VALUES (%s, %s) "
-                            f"ON CONFLICT (user_id) DO UPDATE SET credits = {SCHEMA}.single_credits.credits + EXCLUDED.credits, updated_at = now()",
-                            (user_id, plan['credits'])
-                        )
-                    conn.commit()
-                    return {
-                        'statusCode': 200,
-                        'headers': cors_headers(),
-                        'body': json.dumps({'status': status, 'paid': True, 'plan': 'single', 'credits': get_credits(cur, user_id)})
-                    }
-                if plan:
-                    expires_at = datetime.now(timezone.utc) + timedelta(days=plan['days'])
-                    cur.execute(
-                        f"UPDATE {SCHEMA}.subscriptions SET is_active = false WHERE user_id = %s AND is_active = true",
-                        (user_id,)
-                    )
-                    plan_label = plan['db_plan']
-                    cur.execute(
-                        f"INSERT INTO {SCHEMA}.subscriptions (user_id, plan, expires_at, is_active) VALUES (%s, %s, %s, true)",
-                        (user_id, plan_label, expires_at)
-                    )
-                    conn.commit()
-                    return {
-                        'statusCode': 200,
-                        'headers': cors_headers(),
-                        'body': json.dumps({'status': status, 'paid': True, 'plan': plan_label, 'expires_at': expires_at.isoformat()})
-                    }
+                if str(metadata.get('user_id')) != str(user_id):
+                    return {'statusCode': 403, 'headers': cors_headers(), 'body': json.dumps({'error': 'Платёж принадлежит другому пользователю'})}
+                applied = apply_succeeded_payment(cur, payment_id, result)
+                conn.commit()
+                if applied:
+                    applied.pop('user_id', None)
+                    return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'status': status, 'paid': True, **applied})}
 
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'status': status, 'paid': paid})}
 
