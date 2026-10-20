@@ -50,6 +50,7 @@ const TRAINERS_MENU: NavItem[] = [
   { label: "Компьютерные сети", to: "/trenazher-dlya-uchenikov?cat=networks", icon: "Network" },
   { label: "Программирование", to: "/trenazher-dlya-uchenikov?cat=programming", icon: "Code" },
   { label: "Операционные системы", to: "/trenazher-dlya-uchenikov?cat=os", icon: "Monitor" },
+  { label: "ЕГЭ по информатике", to: "/trenazher-dlya-uchenikov?cat=ege", icon: "GraduationCap" },
 ];
 
 const Navbar = ({
