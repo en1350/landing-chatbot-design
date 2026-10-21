@@ -42,8 +42,8 @@ const NavDropdown = ({ label, shortLabel, items }: NavDropdownProps) => {
           >
             {shortLabel ? (
               <>
-                <span className="xl:hidden">{shortLabel}</span>
-                <span className="hidden xl:inline">{label}</span>
+                <span className="2xl:hidden">{shortLabel}</span>
+                <span className="hidden 2xl:inline">{label}</span>
               </>
             ) : (
               label
