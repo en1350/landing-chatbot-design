@@ -51,7 +51,11 @@ const TRAINERS_MENU: NavItem[] = [
   { label: "Программирование", to: "/trenazher-dlya-uchenikov?cat=programming", icon: "Code" },
   { label: "Операционные системы", to: "/trenazher-dlya-uchenikov?cat=os", icon: "Monitor" },
   { label: "ЕГЭ по информатике", to: "/trenazher-dlya-uchenikov?cat=ege", icon: "GraduationCap" },
-  { label: "IT Тренажеры для ОВЗ", href: "/algorithm-conveyor.html", icon: "Accessibility" },
+];
+
+const OVZ_MENU: NavItem[] = [
+  { label: "Алгоритмический конвейер", href: "/algorithm-conveyor.html", icon: "Workflow" },
+  { label: "IT-лаборатория", href: "/it-lab-ovz.html", icon: "FlaskConical" },
 ];
 
 const Navbar = ({
@@ -111,14 +115,7 @@ const Navbar = ({
           <NavDropdown label="Аналитические справки для портфолио" shortLabel="Справки" items={REPORTS_MENU} />
           <NavDropdown label="Тренажёры для учеников" shortLabel="Тренажёры" items={TRAINERS_MENU} />
           <NavDropdown label="Дополнительные сервисы" shortLabel="Сервисы" items={extraMenu} />
-          <a
-            href="/algorithm-conveyor.html"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="story-link px-3 py-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
-          >
-            IT Тренажеры для ОВЗ
-          </a>
+          <NavDropdown label="IT Тренажеры для ОВЗ" shortLabel="ОВЗ" items={OVZ_MENU} />
           {user && (
             <Link
               to="/chat"
@@ -173,6 +170,7 @@ const Navbar = ({
               { title: "Генераторы для педагога", items: GENERATORS_MENU },
               { title: "Аналитические справки для портфолио", items: REPORTS_MENU },
               { title: "Тренажёры для учеников", items: TRAINERS_MENU },
+              { title: "IT Тренажеры для ОВЗ", items: OVZ_MENU },
               { title: "Дополнительные сервисы", items: extraMenu },
             ].map((group) => (
               <div key={group.title}>

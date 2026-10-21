@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IT-лаборатория — доступные тренажёры для студентов с ОВЗ</title>
+<style>
+  :root{
+    --bg:#f2f5f9; --surface:#ffffff; --text:#16202c; --muted:#465466;
+    --accent:#0b5cad; --on-accent:#ffffff;
+    --ok:#12633a; --bad:#a02020; --warn:#7a4b00;
+    --border:#586575; --focus:#0b5cad;
+  }
+  body[data-theme="hc-dark"]{
+    --bg:#000000; --surface:#0b0b0b; --text:#ffffff; --muted:#e8e8e8;
+    --accent:#ffe600; --on-accent:#000000;
+    --ok:#8cff9b; --bad:#ff9c9c; --warn:#ffd166;
+    --border:#ffffff; --focus:#ffe600;
+  }
+  body[data-theme="hc-light"]{
+    --bg:#ffffff; --surface:#ffffff; --text:#000000; --muted:#1a1a1a;
+    --accent:#003a70; --on-accent:#ffffff;
+    --ok:#005a2b; --bad:#8b0000; --warn:#6b4000;
+    --border:#000000; --focus:#003a70;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:1rem; line-height:1.6;
+  }
+  .wrap{max-width:1100px; margin:0 auto; padding:1rem}
+  h1{font-size:1.9rem; line-height:1.25; margin:.5rem 0}
+  h2{font-size:1.5rem; margin:.2rem 0 .8rem}
+  h3{font-size:1.15rem; margin:1rem 0 .5rem}
+  p{margin:.6rem 0}
+  a{color:var(--accent); text-underline-offset:3px}
+  a:hover{text-decoration-thickness:3px}
+  :focus-visible{outline:3px solid var(--focus); outline-offset:3px}
+  .skip{
+    position:absolute; left:-9999px; top:0; z-index:100;
+    background:var(--accent); color:var(--on-accent); padding:.75rem 1rem;
+  }
+  .skip:focus{left:1rem; top:1rem}
+  .sr-only{
+    position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+    overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+  }
+  button,select,input[type="text"]{
+    min-height:44px; font-size:1rem; font-family:inherit;
+    border:2px solid var(--border); border-radius:6px;
+    background:var(--surface); color:var(--text); padding:.5rem .8rem;
+  }
+  button{
+    background:var(--accent); color:var(--on-accent);
+    font-weight:700; cursor:pointer;
+  }
+  button.secondary{background:var(--surface); color:var(--text)}
+  button:hover:not(:disabled){text-decoration:underline}
+  button:disabled{opacity:.55; cursor:not-allowed}
+  select{max-width:100%}
+  input[type="text"]{width:100%}
+  .check{
+    display:flex; align-items:center; gap:.7rem;
+    min-height:44px; cursor:pointer;
+  }
+  .check input{width:1.5rem; height:1.5rem; accent-color:var(--accent); flex:none}
+  fieldset{border:2px solid var(--border); border-radius:8px; padding:1rem; margin:1rem 0}
+  legend{font-weight:700; padding:0 .4rem}
+  header{background:var(--surface); border-bottom:4px solid var(--accent); padding:1rem 0}
+  .panel,.module{
+    background:var(--surface); border:2px solid var(--border);
+    border-radius:10px; padding:1.25rem; margin-bottom:1.5rem;
+  }
+  section{scroll-margin-top:1rem}
+  .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:1rem}
+  .grid label.field{display:block; font-weight:700; margin-bottom:.35rem}
+  .grid select{width:100%}
+  .nav-list{list-style:none; display:flex; flex-wrap:wrap; gap:.6rem; padding:0; margin:1rem 0}
+  .nav-list a{
+    display:inline-flex; align-items:center; min-height:44px;
+    border:2px solid var(--border); border-radius:6px;
+    padding:.4rem .8rem; text-decoration:none; font-weight:600;
+  }
+  .nav-list a:hover{background:var(--surface)}
+  .module-head{display:flex; flex-wrap:wrap; gap:.7rem; align-items:baseline; justify-content:space-between}
+  .module-status{font-weight:700; border:2px solid var(--border); border-radius:6px; padding:.15rem .6rem; font-size:.9rem}
+  .feedback{
+    border-left:6px solid var(--accent); background:var(--bg);
+    padding:.8rem 1rem; margin:1rem 0; border-radius:4px;
+  }
+  .status-ok{color:var(--ok); font-weight:700}
+  .status-bad{color:var(--bad); font-weight:700}
+  .term-output{
+    border:2px solid var(--border); border-radius:6px;
+    padding:1rem; min-height:12rem; max-height:22rem; overflow:auto;
+    font-family:ui-monospace,Consolas,monospace; font-size:1rem;
+    white-space:pre-wrap; overflow-wrap:anywhere; background:var(--bg);
+  }
+  .term-line{margin:0 0 .25rem}
+  .term-cmd{font-weight:800}
+  .term-error{color:var(--bad); font-weight:700}
+  .quick-cmds{display:flex; flex-wrap:wrap; gap:.5rem; margin:.75rem 0}
+  .quick-cmds button{font-weight:500; font-family:ui-monospace,monospace}
+  table{border-collapse:collapse; width:100%; margin:.75rem 0}
+  caption{text-align:left; font-weight:700; padding:.5rem 0}
+  th,td{border:2px solid var(--border); padding:.6rem; text-align:left; vertical-align:top}
+  thead th{background:var(--bg)}
+  .table-scroll{overflow-x:auto}
+  .mail-card{border:2px solid var(--border); border-radius:8px; padding:1rem; background:var(--bg)}
+  .mail-card dt{font-weight:700}
+  .mail-card dd{margin:0 0 .7rem; overflow-wrap:anywhere}
+  blockquote{margin:.5rem 0; padding:.75rem; border-left:4px solid var(--border); background:var(--surface)}
+  pre{
+    background:var(--bg); border:2px solid var(--border); border-radius:6px;
+    padding:1rem; overflow-x:auto; white-space:pre-wrap; overflow-wrap:anywhere;
+    font-size:1rem;
+  }
+  details{border:2px solid var(--border); border-radius:8px; padding:.75rem 1rem; margin:1rem 0}
+  summary{font-weight:700; cursor:pointer; min-height:44px; display:flex; align-items:center}
+  .tasks{list-style:none; padding:0}
+  .tasks li{padding:.25rem 0}
+  footer{padding:1rem 0 2rem; color:var(--muted)}
+  [hidden]{display:none !important}
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none !important; transition:none !important; scroll-behavior:auto !important}
+  }
+  body.reduce-motion *{animation:none !important; transition:none !important; scroll-behavior:auto !important}
+</style>
+</head>
+
+<body data-theme="default">
+
+<a class="skip" href="#main">Перейти к содержимому</a>
+
+<header>
+  <div class="wrap">
+    <h1>🏫 IT-лаборатория</h1>
+    <p>Четыре доступных тренажёра по информатике. Без таймера, без drag-and-drop, только клавиатура — если нужно.</p>
+    <p><strong id="progress">Пройдено модулей: 0 из 4.</strong></p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section class="panel" aria-labelledby="settingsTitle">
+    <h2 id="settingsTitle">⚙ Настройки под себя</h2>
+    <div class="grid">
+      <div>
+        <label class="field" for="theme">Цветовая схема</label>
+        <select id="theme">
+          <option value="default">Обычная</option>
+          <option value="hc-dark">Высококонтрастная тёмная</option>
+          <option value="hc-light">Высококонтрастная светлая</option>
+        </select>
+      </div>
+      <div>
+        <label class="field" for="fontSize">Размер текста</label>
+        <select id="fontSize">
+          <option value="100">100%</option>
+          <option value="125">125%</option>
+          <option value="150">150%</option>
+          <option value="200">200%</option>
+        </select>
+      </div>
+      <div>
+        <label class="check"><input type="checkbox" id="speech"> Озвучивать действия</label>
+        <label class="check"><input type="checkbox" id="motion"> Уменьшить движение</label>
+      </div>
+    </div>
+    <p><small>
+      Озвучивание — альтернатива для тех, кто не использует экранный диктор.
+      Если вы работаете с NVDA или VoiceOver, выключите его, чтобы не было двойного чтения.
+    </small></p>
+  </section>
+
+  <nav aria-label="Модули лаборатории">
+    <ul class="nav-list">
+      <li><a href="#terminal">1 · Терминал</a></li>
+      <li><a href="#network">2 · Сеть</a></li>
+      <li><a href="#security">3 · Киберщит</a></li>
+      <li><a href="#sql">4 · Базы данных</a></li>
+    </ul>
+  </nav>
+
+  <main id="main" tabindex="-1">
+
+    <section class="module" id="terminal" aria-labelledby="termTitle">
+      <div class="module-head">
+        <h2 id="termTitle">1 🖥 Терминал «Первые шаги»</h2>
+        <span class="module-status" data-status="terminal">Не пройден</span>
+      </div>
+
+      <p>Вы — студент <code>student</code>. Ваша домашняя папка: <code>/home/student</code>.</p>
+
+      <div class="feedback">
+        <strong>Задание:</strong> выполните три действия.
+        <ul class="tasks">
+          <li id="taskPwd">☐ Узнать, где вы находитесь — команда <code>pwd</code></li>
+          <li id="taskLs">☐ Посмотреть список файлов — команда <code>ls</code></li>
+          <li id="taskCat">☐ Найти и прочитать файл <code>plan.txt</code> — команда <code>cat</code></li>
+        </ul>
+      </div>
+
+      <div class="term-output" id="termOutput" role="log" aria-label="Вывод терминала"
+           aria-live="polite" aria-relevant="additions"></div>
+
+      <form id="termForm">
+        <label for="termInput">Введите команду</label>
+        <input type="text" id="termInput" autocomplete="off" autocapitalize="off"
+               spellcheck="false" aria-describedby="termHelp">
+        <div style="margin-top:.6rem">
+          <button type="submit">Выполнить команду</button>
+        </div>
+      </form>
+      <p id="termHelp"><small>Нажмите Enter или кнопку «Выполнить». Регистр важен: <code>LS</code> не сработает.</small></p>
+
+      <h3>Быстрые команды — нажатие сразу выполняет</h3>
+      <div class="quick-cmds">
+        <button type="button" data-cmd="help">help</button>
+        <button type="button" data-cmd="pwd">pwd</button>
+        <button type="button" data-cmd="ls">ls</button>
+        <button type="button" data-cmd="cd docs">cd docs</button>
+        <button type="button" data-cmd="cd ..">cd ..</button>
+        <button type="button" data-cmd="cat plan.txt">cat plan.txt</button>
+      </div>
+
+      <details>
+        <summary>Подсказка: как добраться до plan.txt</summary>
+        <p>Файл лежит в папке <code>docs</code>. Два пути:</p>
+        <ol>
+          <li><code>cd docs</code>, затем <code>cat plan.txt</code></li>
+          <li>Сразу: <code>cat docs/plan.txt</code></li>
+        </ol>
+      </details>
+    </section>
+
+    <section class="module" id="network" aria-labelledby="netTitle">
+      <div class="module-head">
+        <h2 id="netTitle">2 🌐 Сеть «Общежитие»</h2>
+        <span class="module-status" data-status="network">Не пройден</span>
+      </div>
+
+      <p>Нужно провести интернет в три комнаты. Выберите способ подключения для каждой.
+         <strong>Все сведения продублированы текстом — цвета ничего не решают.</strong></p>
+
+      <label class="check">
+        <input type="checkbox" id="power"> Питание маршрутизатора включено
+      </label>
+
+      <div class="table-scroll">
+        <table>
+          <caption>План подключения комнат к маршрутизатору</caption>
+          <thead>
+            <tr>
+              <th scope="col">Комната</th>
+              <th scope="col">Расстояние</th>
+              <th scope="col">Способ подключения</th>
+              <th scope="col">Результат проверки</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">101</th><td>15 метров</td>
+              <td>
+                <label class="sr-only" for="link-r1">Способ подключения комнаты 101</label>
+                <select id="link-r1">
+                  <option value="none">Не подключено</option>
+                  <option value="utp">Витая пара Cat 6 — до 100 м</option>
+                  <option value="fiber">Оптоволокно — до 2000 м</option>
+                  <option value="wifi">Wi-Fi репитер — до 50 м</option>
+                </select>
+              </td>
+              <td id="res-r1">Не проверено</td>
+            </tr>
+            <tr>
+              <th scope="row">205</th><td>60 метров</td>
+              <td>
+                <label class="sr-only" for="link-r2">Способ подключения комнаты 205</label>
+                <select id="link-r2">
+                  <option value="none">Не подключено</option>
+                  <option value="utp">Витая пара Cat 6 — до 100 м</option>
+                  <option value="fiber">Оптоволокно — до 2000 м</option>
+                  <option value="wifi">Wi-Fi репитер — до 50 м</option>
+                </select>
+              </td>
+              <td id="res-r2">Не проверено</td>
+            </tr>
+            <tr>
+              <th scope="row">310</th><td>180 метров</td>
+              <td>
+                <label class="sr-only" for="link-r3">Способ подключения комнаты 310</label>
+                <select id="link-r3">
+                  <option value="none">Не подключено</option>
+                  <option value="utp">Витая пара Cat 6 — до 100 м</option>
+                  <option value="fiber">Оптоволокно — до 2000 м</option>
+                  <option value="wifi">Wi-Fi репитер — до 50 м</option>
+                </select>
+              </td>
+              <td id="res-r3">Не проверено</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <button id="netCheckBtn">Проверить сеть</button>
+      <div class="feedback" id="netFeedback">Нажмите «Проверить сеть», чтобы увидеть результат.</div>
+
+      <details>
+        <summary>Подсказка: ограничение среды передачи</summary>
+        <p>У витой пары Cat 6 ограничение — <strong>100 метров</strong>. Дальше сигнал затухает.
+           Для комнаты 310 (180 м) нужен другой носитель.
+           И не забудьте включить питание маршрутизатора.</p>
+      </details>
+    </section>
+
+    <section class="module" id="security" aria-labelledby="secTitle">
+      <div class="module-head">
+        <h2 id="secTitle">3 🛡 Киберщит: распознай фишинг</h2>
+        <span class="module-status" data-status="security">Не пройден</span>
+      </div>
+
+      <p>Прочитайте письмо и решите: оно безопасное или мошенническое?
+         <strong>Времени столько, сколько нужно. Ошибка — это повод разобраться, а не наказание.</strong></p>
+
+      <div id="mailExercise">
+        <p id="mailProgress"></p>
+        <div class="mail-card">
+          <dl>
+            <dt>От кого:</dt><dd id="mailFrom"></dd>
+            <dt>Тема:</dt><dd id="mailSubject"></dd>
+            <dt>Текст письма:</dt>
+            <dd><blockquote id="mailBody"></blockquote></dd>
+          </dl>
+        </div>
+
+        <fieldset>
+          <legend>Ваше решение</legend>
+          <label class="check"><input type="radio" name="verdict" value="safe"> Безопасное письмо</label>
+          <label class="check"><input type="radio" name="verdict" value="phish"> Мошенническое (фишинг)</label>
+        </fieldset>
+
+        <div style="display:flex; flex-wrap:wrap; gap:.6rem">
+          <button id="mailCheckBtn">Проверить решение</button>
+          <button id="mailNextBtn" class="secondary" disabled>Следующее письмо</button>
+        </div>
+
+        <div class="feedback" id="mailFeedback">Выберите один из двух вариантов.</div>
+        <ul id="mailClues"></ul>
+      </div>
+
+      <div id="mailResult" hidden>
+        <h3>Тренировка завершена</h3>
+        <p id="mailScore"></p>
+        <p>Главное правило: <strong>сначала проверь отправителя и домен, потом действуй.</strong>
+           Пароль и реквизиты никто из техподдержки не запрашивает.</p>
+        <button id="mailRestart" class="secondary">Пройти ещё раз</button>
+      </div>
+    </section>
+
+    <section class="module" id="sql" aria-labelledby="sqlTitle">
+      <div class="module-head">
+        <h2 id="sqlTitle">4 🗄 Базы данных: конструктор запросов</h2>
+        <span class="module-status" data-status="sql">Не пройден</span>
+      </div>
+
+      <p>Соберите запрос из выпадающих списков — без необходимости запоминать синтаксис.
+         Каждый запрос сразу показывается как настоящий SQL.</p>
+
+      <div class="feedback">
+        <strong>Задание:</strong> найдите всех студентов факультета <strong>ИТ</strong>
+        с рейтингом <strong>80 и выше</strong>.
+      </div>
+
+      <div class="grid">
+        <div>
+          <label class="field" for="sqlColumns">Какие столбцы показать</label>
+          <select id="sqlColumns">
+            <option value="name">Только имя</option>
+            <option value="name-faculty">Имя и факультет</option>
+            <option value="name-rating">Имя и рейтинг</option>
+            <option value="all">Все столбцы</option>
+          </select>
+        </div>
+        <div>
+          <label class="field" for="sqlFaculty">Фильтр по факультету</label>
+          <select id="sqlFaculty">
+            <option value="all">Без фильтра</option>
+            <option value="ИТ">ИТ</option>
+            <option value="Педагогика">Педагогика</option>
+          </select>
+        </div>
+        <div>
+          <label class="field" for="sqlYear">Фильтр по курсу</label>
+          <select id="sqlYear">
+            <option value="all">Любой курс</option>
+            <option value="1">1 курс</option>
+            <option value="2">2 курс</option>
+            <option value="3">3 курс</option>
+          </select>
+        </div>
+        <div>
+          <label class="field" for="sqlRating">Фильтр по рейтингу</label>
+          <select id="sqlRating">
+            <option value="all">Без условия</option>
+            <option value="ge80">Рейтинг 80 и выше</option>
+            <option value="lt80">Рейтинг ниже 80</option>
+          </select>
+        </div>
+        <div>
+          <label class="field" for="sqlOrder">Сортировка</label>
+          <select id="sqlOrder">
+            <option value="none">Без сортировки</option>
+            <option value="rating-asc">Рейтинг: по возрастанию</option>
+            <option value="rating-desc">Рейтинг: по убыванию</option>
+            <option value="name">Имя: по алфавиту</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-wrap:wrap; gap:.6rem; margin:1rem 0">
+        <button id="sqlShowBtn">Показать SQL-запрос</button>
+        <button id="sqlRunBtn">Выполнить запрос</button>
+      </div>
+
+      <h3>Ваш запрос</h3>
+      <pre><code id="sqlQuery">Выберите параметры и нажмите «Показать SQL-запрос».</code></pre>
+
+      <div class="feedback" id="sqlFeedback">Результат появится ниже в виде обычной таблицы — её читает экранный диктор.</div>
+      <div id="sqlResult"></div>
+
+      <details>
+        <summary>Словарь SQL: что означает каждая часть</summary>
+        <ul>
+          <li><code>SELECT</code> — какие столбцы выбрать.</li>
+          <li><code>FROM</code> — из какой таблицы брать данные.</li>
+          <li><code>WHERE</code> — условие отбора строк.</li>
+          <li><code>AND</code> — «и»: должны выполняться оба условия.</li>
+          <li><code>ORDER BY</code> — как сортировать результат. <code>ASC</code> — по возрастанию, <code>DESC</code> — по убыванию.</li>
+        </ul>
+      </details>
+    </section>
+
+  </main>
+
+  <section class="panel" aria-labelledby="a11yTitle">
+    <h2 id="a11yTitle">♿ Паспорт доступности</h2>
+    <div class="table-scroll">
+      <table>
+        <caption>Что реализовано и зачем</caption>
+        <thead>
+          <tr><th scope="col">Приём</th><th scope="col">Кому помогает</th><th scope="col">Критерий WCAG 2.2</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Все действия доступны с Tab / Enter / стрелок</td><td>Нарушения моторики, отсутствие мыши</td><td>2.1.1 Клавиатура</td></tr>
+          <tr><td>Цели указателя не меньше 44 px</td><td>Тремор, ДЦП, рассеянный склероз</td><td>2.5.8 Размер цели</td></tr>
+          <tr><td>Никакого drag-and-drop — только списки и кнопки</td><td>Нарушения моторики и координации</td><td>2.5.7 Перетаскивание</td></tr>
+          <tr><td>Высококонтрастные схемы и текст до 200%</td><td>Нарушения зрения</td><td>1.4.3 / 1.4.4 / 1.4.11</td></tr>
+          <tr><td>Статусы продублированы словами и символами ✓ / ✗</td><td>Дальтонизм</td><td>1.4.1 Использование цвета</td></tr>
+          <tr><td>Живые области, подписанные поля, настоящие таблицы</td><td>Пользователи экранного диктора</td><td>4.1.2 Имя, роль, значение</td></tr>
+          <tr><td>Нет таймера, нет штрафов, есть подсказки</td><td>РАС, СДВГ, тревожность, НАР</td><td>2.2.1 Без ограничения времени</td></tr>
+          <tr><td>Нет мигания и обязательной анимации</td><td>Эпилепсия, вестибулярные нарушения</td><td>2.3.1 / 2.3.3</td></tr>
+          <tr><td>Пошаговая обратная связь с объяснением ошибки</td><td>Нарушения интеллекта, дислексия</td><td>3.3.1 / 3.3.3</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <details>
+      <summary>Как проверяю я: клавиатурный и скринридерный прогон</summary>
+      <ol>
+        <li>Отключите мышь. Пройдите все четыре модуля только с клавиатуры.</li>
+        <li>Включите NVDA (Windows + Chrome) или VoiceOver (macOS + Safari).</li>
+        <li>Увеличьте масштаб браузера до 200% — вертикальная прокрутка допустима, горизонтальная для основного контента — нет.</li>
+        <li>Проверьте каждую схему контраст-тестером.</li>
+        <li>Спросите реального студента: что оказалось неудобно? Это самый важный тест.</li>
+      </ol>
+    </details>
+  </section>
+
+  <footer>
+    <p><strong>Важно:</strong> это учебный тренажёр, а не замена профессиональной аттестации доступности.
+       Виртуальный терминал и конструктор SQL намеренно упрощены.
+       Реальную совместимость с ассистивными технологиями нужно проверять на живых пользователях.</p>
+  </footer>
+
+</div>
+
+<div class="sr-only" id="announcer" role="status" aria-live="polite" aria-atomic="true"></div>
+
+<script>
+'use strict';
+
+const $ = (s, root = document) => root.querySelector(s);
+const $$ = (s, root = document) => Array.from(root.querySelectorAll(s));
+
+const announcer = $('#announcer');
+let announceTimer;
+
+function announce(text) {
+  clearTimeout(announceTimer);
+  announcer.textContent = '';
+  announceTimer = setTimeout(() => { announcer.textContent = text; }, 40);
+}
+
+function speak(text) {
+  if (!$('#speech').checked || !('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'ru-RU';
+  u.rate = 0.92;
+  speechSynthesis.speak(u);
+}
+
+function report(text) { announce(text); speak(text); }
+
+const completed = new Set();
+function markDone(id, title) {
+  if (completed.has(id)) return;
+  completed.add(id);
+  const badge = $(`[data-status="${id}"]`);
+  if (badge) {
+    badge.textContent = '✓ Пройден';
+    badge.classList.add('status-ok');
+  }
+  $('#progress').textContent = `Пройдено модулей: ${completed.size} из 4.`;
+  report(`Отлично! Модуль «${title}» пройден. Всего пройдено ${completed.size} из 4.`);
+}
+
+$('#theme').addEventListener('change', e => {
+  document.body.dataset.theme = e.target.value;
+  report('Цветовая схема изменена: ' + e.target.selectedOptions[0].textContent);
+});
+
+$('#fontSize').addEventListener('change', e => {
+  document.documentElement.style.fontSize = e.target.value + '%';
+  report('Размер текста: ' + e.target.value + ' процентов');
+});
+
+function applyMotion() {
+  document.body.classList.toggle('reduce-motion', $('#motion').checked);
+}
+$('#motion').addEventListener('change', () => {
+  applyMotion();
+  report($('#motion').checked ? 'Движение уменьшено' : 'Движение включено');
+});
+
+if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  $('#motion').checked = true;
+  applyMotion();
+}
+
+$('#speech').addEventListener('change', e => {
+  if (e.target.checked) speak('Озвучивание включено. Это лаборатория доступных тренажёров.');
+  else if ('speechSynthesis' in window) speechSynthesis.cancel();
+});
+
+const tree = {
+  '/': ['home', 'etc'],
+  '/home': ['student'],
+  '/home/student': ['docs', 'projects', 'readme.txt'],
+  '/home/student/docs': ['plan.txt', 'exam.txt'],
+  '/home/student/projects': ['bot.py', 'site.html'],
+  '/etc': ['hosts']
+};
+
+const files = {
+  '/home/student/readme.txt': 'Добро пожаловать в лабораторию!\nНачните с команд pwd и ls.',
+  '/home/student/docs/plan.txt': 'ПЛАН НА СЕМЕСТР\n1. Изучить файловую систему Linux.\n2. Освоить основы Python.\n3. Сделать доступный сайт.',
+  '/home/student/docs/exam.txt': 'Экзамен по информатике: 12 ноября, кабинет 214.',
+  '/home/student/projects/bot.py': 'print("Привет, студсовет!")',
+  '/home/student/projects/site.html': '<h1>Мой первый сайт</h1>',
+  '/etc/hosts': '127.0.0.1 localhost'
+};
+
+let cwd = '/home/student';
+const termTasks = { pwd: false, ls: false, cat: false };
+
+function print(text, cls = '') {
+  const line = document.createElement('div');
+  line.className = 'term-line ' + cls;
+  line.textContent = text;
+  const out = $('#termOutput');
+  out.appendChild(line);
+  out.scrollTop = out.scrollHeight;
+}
+
+function resolvePath(arg) {
+  if (!arg) return '/home/student';
+  const raw = arg.startsWith('/') ? arg : (cwd === '/' ? '/' : cwd + '/') + arg;
+  const parts = [];
+  for (const part of raw.split('/')) {
+    if (!part || part === '.') continue;
+    if (part === '..') parts.pop();
+    else parts.push(part);
+  }
+  return '/' + parts.join('/');
+}
+
+function isDir(path) { return path === '/' || Object.prototype.hasOwnProperty.call(tree, path); }
+
+function checkTerminalTasks() {
+  $('#taskPwd').textContent = (termTasks.pwd ? '☑' : '☐') + ' Узнать текущую папку — pwd';
+  $('#taskLs').textContent  = (termTasks.ls  ? '☑' : '☐') + ' Посмотреть список файлов — ls';
+  $('#taskCat').textContent = (termTasks.cat ? '☑' : '☐') + ' Прочитать plan.txt — cat';
+  if (termTasks.pwd && termTasks.ls && termTasks.cat) markDone('terminal', 'Терминал');
+}
+
+function runCommand(raw) {
+  const input = raw.trim();
+  if (!input) return;
+
+  print('$ ' + input, 'term-cmd');
+  const parts = input.split(/\s+/);
+  const cmd = parts[0];
+  const arg = parts.slice(1).join(' ');
+
+  switch (cmd) {
+    case 'help':
+      print('Доступные команды:\n' +
+            '  ls          — список файлов и папок\n' +
+            '  pwd         — текущая папка\n' +
+            '  cd <папка>  — перейти в папку (cd .. — на уровень вверх)\n' +
+            '  cat <файл>  — прочитать файл\n' +
+            '  mkdir <имя> — создать папку\n' +
+            '  whoami      — кто я\n' +
+            '  clear       — очистить экран');
+      break;
+
+    case 'pwd':
+      print(cwd);
+      termTasks.pwd = true;
+      break;
+
+    case 'ls': {
+      const target = arg ? resolvePath(arg) : cwd;
+      if (!isDir(target)) { print('Ошибка: это не папка или папка не существует.', 'term-error'); break; }
+      const items = tree[target] || [];
+      if (!items.length) print('(пусто)');
+      else items.forEach(name => {
+        const full = (target === '/' ? '/' : target + '/') + name;
+        print((isDir(full) ? '[папка] ' : '[файл]  ') + name);
+      });
+      termTasks.ls = true;
+      break;
+    }
+
+    case 'cd': {
+      const target = resolvePath(arg);
+      if (isDir(target)) {
+        cwd = target;
+        print('Переход в: ' + cwd);
+      } else {
+        print('Ошибка: папка «' + (arg || '') + '» не найдена. Проверьте имя через ls.', 'term-error');
+      }
+      break;
+    }
+
+    case 'cat': {
+      if (!arg) { print('Укажите файл. Например: cat plan.txt', 'term-error'); break; }
+      const target = resolvePath(arg);
+      if (Object.prototype.hasOwnProperty.call(files, target)) {
+        print(files[target]);
+        if (target === '/home/student/docs/plan.txt') termTasks.cat = true;
+      } else if (isDir(target)) {
+        print('Это папка, а не файл. Используйте ls для просмотра её содержимого.', 'term-error');
+      } else {
+        print('Ошибка: файл «' + arg + '» не найден. Подсказка: посмотрите в папке docs.', 'term-error');
+      }
+      break;
+    }
+
+    case 'mkdir': {
+      if (!arg) { print('Укажите имя новой папки: mkdir name', 'term-error'); break; }
+      if (/[\s/\\.]/.test(arg)) { print('Имя должно быть коротким, без пробелов и слэшей.', 'term-error'); break; }
+      const target = resolvePath(arg);
+      if (isDir(target)) { print('Такая папка уже существует.', 'term-error'); break; }
+      (tree[cwd] = tree[cwd] || []).push(arg);
+      tree[target] = [];
+      print('Папка создана: ' + target);
+      break;
+    }
+
+    case 'whoami':
+      print('student');
+      break;
+
+    case 'clear':
+      $('#termOutput').innerHTML = '';
+      break;
+
+    default:
+      print('Команда «' + cmd + '» не найдена. Введите help — список команд.', 'term-error');
+  }
+
+  checkTerminalTasks();
+}
+
+$('#termForm').addEventListener('submit', e => {
+  e.preventDefault();
+  runCommand($('#termInput').value);
+  $('#termInput').value = '';
+  $('#termInput').focus();
+});
+
+$$('.quick-cmds button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    runCommand(btn.dataset.cmd);
+    $('#termInput').focus();
+  });
+});
+
+print('Добро пожаловать! Введите help, чтобы увидеть список команд.');
+
+const rooms = [
+  { id: 'r1', name: '101', distance: 15 },
+  { id: 'r2', name: '205', distance: 60 },
+  { id: 'r3', name: '310', distance: 180 }
+];
+const linkTypes = {
+  none:  { name: 'Нет подключения', limit: 0 },
+  utp:   { name: 'Витая пара Cat 6', limit: 100 },
+  fiber: { name: 'Оптоволокно', limit: 2000 },
+  wifi:  { name: 'Wi-Fi репитер', limit: 50 }
+};
+
+$('#netCheckBtn').addEventListener('click', () => {
+  const powered = $('#power').checked;
+  let okCount = 0;
+  const messages = [];
+
+  rooms.forEach(room => {
+    const key = $('#link-' + room.id).value;
+    const link = linkTypes[key];
+    let ok, reason;
+
+    if (!powered) {
+      ok = false; reason = 'маршрутизатор выключен — включите питание';
+    } else if (key === 'none') {
+      ok = false; reason = 'кабель не подключён';
+    } else if (room.distance > link.limit) {
+      ok = false; reason = `${link.name}: предел ${link.limit} м, а нужно ${room.distance} м`;
+    } else {
+      ok = true; reason = `${link.name}: ${room.distance} м в пределах ${link.limit} м`;
+    }
+
+    const cell = $('#res-' + room.id);
+    cell.textContent = (ok ? '✓ Есть связь. ' : '✗ Нет связи. ') + reason;
+    cell.className = ok ? 'status-ok' : 'status-bad';
+    if (ok) okCount++;
+    messages.push(`Комната ${room.name}: ${ok ? 'есть связь' : 'нет связи'}. ${reason}.`);
+  });
+
+  const summary = `Связь есть в ${okCount} из 3 комнат.`;
+  $('#netFeedback').textContent = summary + (okCount === 3
+    ? ' Отличная работа: все жильцы в сети!'
+    : ' Проверьте питание и выберите среду передачи с достаточной дальностью.');
+
+  report(summary + ' ' + messages.join(' '));
+  if (okCount === 3) markDone('network', 'Сеть «Общежитие»');
+});
+
+const letters = [
+  {
+    from: 'support@university-akkaunt.ru',
+    subject: 'Срочное подтверждение аккаунта',
+    body: 'Здравствуйте! Ваш аккаунт будет заблокирован сегодня в 23:59. Для сохранения доступа немедленно перейдите по ссылке и введите пароль от студенческого портала.',
+    safe: false,
+    clues: [
+      'Домен university-akkaunt.ru не совпадает с официальным university.ru.',
+      'Давление на срок: «сегодня в 23:59» — классический приём фишинга.',
+      'Просят пароль. Настоящая техподдержка никогда его не запрашивает.'
+    ]
+  },
+  {
+    from: 'library@university.ru',
+    subject: 'Напоминание о сроке возврата книг',
+    body: 'Здравствуйте! Две книги в вашем библиотечном аккаунте нужно вернуть до 10 ноября. Продлить срок можно в личном кабинете на portal.university.ru. Пароль для этого не требуется.',
+    safe: true,
+    clues: [
+      'Домен совпадает с официальным доменом вуза.',
+      'Нет угрозы блокировки и искусственной спешки.',
+      'Указан официальный поддомен portal.university.ru; пароль не запрашивается.'
+    ]
+  },
+  {
+    from: 'stipendia@grant-vyplata.online',
+    subject: 'Ваша повышенная стипендия ждёт!',
+    body: 'Поздравляем! Вы вошли в список получателей повышенной стипендии. Скачайте вложение «Оформление.doc.exe» и заполните реквизиты банковской карты.',
+    safe: false,
+    clues: [
+      'Незнакомый домен .online, не связанный с университетом.',
+      'Файл .doc.exe — это исполняемая программа, замаскированная под документ.',
+      'Просят реквизиты карты под предлогом выплаты денег.'
+    ]
+  },
+  {
+    from: 'dekanat@university.ru',
+    subject: 'Изменение кабинета консультации',
+    body: 'Уважаемые студенты! Консультация по информатике в четверг состоится в кабинете 312 вместо 214. Никаких действий не требуется. С уважением, деканат.',
+    safe: true,
+    clues: [
+      'Официальный домен деканата.',
+      'Сообщение содержит только организационную информацию.',
+      'Нет ссылок, вложений, запросов данных и угроз.'
+    ]
+  }
+];
+
+let mailIndex = 0, mailChecked = false, mailScore = 0;
+
+function renderMail() {
+  const letter = letters[mailIndex];
+  mailChecked = false;
+
+  $('#mailFrom').textContent = letter.from;
+  $('#mailSubject').textContent = letter.subject;
+  $('#mailBody').textContent = letter.body;
+  $('#mailProgress').textContent = `Письмо ${mailIndex + 1} из ${letters.length}.`;
+  $('#mailFeedback').textContent = 'Прочитайте письмо и выберите один из двух вариантов.';
+  $('#mailClues').innerHTML = '';
+  $$('input[name="verdict"]').forEach(r => { r.checked = false; });
+
+  $('#mailCheckBtn').disabled = false;
+  $('#mailNextBtn').disabled = true;
+  $('#mailNextBtn').textContent =
+    mailIndex === letters.length - 1 ? 'Завершить тренировку' : 'Следующее письмо';
+
+  report(`Письмо ${mailIndex + 1} из ${letters.length}. Тема: ${letter.subject}. От кого: ${letter.from}`);
+}
+
+$('#mailCheckBtn').addEventListener('click', () => {
+  const chosen = $('input[name="verdict"]:checked');
+  if (!chosen) {
+    $('#mailFeedback').textContent = 'Сначала выберите вариант: безопасное или мошенническое письмо.';
+    report('Сначала выберите один из двух вариантов.');
+    $('input[name="verdict"]').focus();
+    return;
+  }
+  if (mailChecked) return;
+
+  const letter = letters[mailIndex];
+  const correct = (chosen.value === 'safe') === letter.safe;
+  mailChecked = true;
+  if (correct) mailScore++;
+
+  $('#mailFeedback').textContent = correct
+    ? '✓ Верно! Вы правильно оценили это письмо.'
+    : '✗ Не совпало. Это не ошибка способностей — давайте разберём признаки вместе.';
+
+  $('#mailClues').innerHTML = '';
+  const heading = document.createElement('li');
+  heading.textContent = `На самом деле письмо ${letter.safe ? 'безопасное' : 'мошенническое'}. Признаки:`;
+  heading.style.fontWeight = '700';
+  $('#mailClues').appendChild(heading);
+  letter.clues.forEach(clue => {
+    const li = document.createElement('li');
+    li.textContent = clue;
+    $('#mailClues').appendChild(li);
+  });
+
+  $('#mailCheckBtn').disabled = true;
+  $('#mailNextBtn').disabled = false;
+
+  report($('#mailFeedback').textContent + ' ' + letter.clues.join(' '));
+  $('#mailNextBtn').focus();
+});
+
+$('#mailNextBtn').addEventListener('click', () => {
+  if (!mailChecked) return;
+  if (mailIndex < letters.length - 1) {
+    mailIndex++;
+    renderMail();
+    $('#mailFrom').setAttribute('tabindex', '-1');
+    $('#mailFrom').focus();
+  } else {
+    $('#mailExercise').hidden = true;
+    $('#mailResult').hidden = false;
+    const text = `Правильных ответов: ${mailScore} из ${letters.length}.`;
+    $('#mailScore').textContent = text;
+    report(text + (mailScore >= 3 ? ' Тренировка пройдена.' : ' Рекомендуем пройти ещё раз и обратить внимание на домены.'));
+    if (mailScore >= 3) markDone('security', 'Киберщит');
+    $('#mailRestart').focus();
+  }
+});
+
+$('#mailRestart').addEventListener('click', () => {
+  mailIndex = 0; mailScore = 0; mailChecked = false;
+  $('#mailResult').hidden = true;
+  $('#mailExercise').hidden = false;
+  renderMail();
+  $('input[name="verdict"]').focus();
+});
+
+renderMail();
+
+const students = [
+  { id: 1, name: 'Анна',   faculty: 'ИТ',        year: 1, rating: 85 },
+  { id: 2, name: 'Борис',  faculty: 'ИТ',        year: 2, rating: 72 },
+  { id: 3, name: 'Вика',   faculty: 'Педагогика', year: 1, rating: 91 },
+  { id: 4, name: 'Глеб',   faculty: 'ИТ',        year: 3, rating: 68 },
+  { id: 5, name: 'Дарья',  faculty: 'Педагогика', year: 2, rating: 88 },
+  { id: 6, name: 'Ева',    faculty: 'ИТ',        year: 2, rating: 90 }
+];
+
+const columnSets = {
+  'name':          { keys: ['name'],                 labels: ['Имя'] },
+  'name-faculty':  { keys: ['name', 'faculty'],      labels: ['Имя', 'Факультет'] },
+  'name-rating':   { keys: ['name', 'rating'],       labels: ['Имя', 'Рейтинг'] },
+  'all':           { keys: ['id', 'name', 'faculty', 'year', 'rating'],
+                     labels: ['ID', 'Имя', 'Факультет', 'Курс', 'Рейтинг'] }
+};
+
+function buildQuery() {
+  const cols = $('#sqlColumns').value;
+  const fac = $('#sqlFaculty').value;
+  const year = $('#sqlYear').value;
+  const rate = $('#sqlRating').value;
+  const order = $('#sqlOrder').value;
+
+  const selectPart = cols === 'all' ? '*' : columnSets[cols].keys.join(', ');
+  let sql = 'SELECT ' + selectPart + '\nFROM students';
+
+  const where = [];
+  if (fac !== 'all') where.push("faculty = '" + fac + "'");
+  if (year !== 'all') where.push('year = ' + year);
+  if (rate === 'ge80') where.push('rating >= 80');
+  if (rate === 'lt80') where.push('rating < 80');
+  if (where.length) sql += '\nWHERE ' + where.join(' AND ');
+
+  const orders = {
+    'rating-asc': 'rating ASC',
+    'rating-desc': 'rating DESC',
+    'name': 'name ASC'
+  };
+  if (orders[order]) sql += '\nORDER BY ' + orders[order];
+
+  return sql + ';';
+}
+
+function getRows() {
+  const fac = $('#sqlFaculty').value;
+  const year = $('#sqlYear').value;
+  const rate = $('#sqlRating').value;
+  const order = $('#sqlOrder').value;
+
+  let rows = students.filter(s => {
+    if (fac !== 'all' && s.faculty !== fac) return false;
+    if (year !== 'all' && s.year !== Number(year)) return false;
+    if (rate === 'ge80' && s.rating < 80) return false;
+    if (rate === 'lt80' && s.rating >= 80) return false;
+    return true;
+  });
+
+  if (order === 'rating-asc') rows.sort((a, b) => a.rating - b.rating);
+  if (order === 'rating-desc') rows.sort((a, b) => b.rating - a.rating);
+  if (order === 'name') rows.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+
+  return rows;
+}
+
+$('#sqlShowBtn').addEventListener('click', () => {
+  const sql = buildQuery();
+  $('#sqlQuery').textContent = sql;
+
+  const fac = $('#sqlFaculty').value;
+  const rate = $('#sqlRating').value;
+  const summary = 'Запрос сформирован. ' +
+    (fac !== 'all' ? 'Отбирает факультет ' + fac + '. ' : 'Отбирает все факультеты. ') +
+    (rate === 'ge80' ? 'Условие: рейтинг 80 и выше.' :
+     rate === 'lt80' ? 'Условие: рейтинг ниже 80.' : 'Ограничения по рейтингу нет.');
+
+  $('#sqlFeedback').textContent = 'SQL-запрос показан выше. Нажмите «Выполнить запрос», чтобы увидеть таблицу.';
+  report(summary);
+});
+
+$('#sqlRunBtn').addEventListener('click', () => {
+  const set = columnSets[$('#sqlColumns').value];
+  const rows = getRows();
+
+  const table = document.createElement('table');
+  const caption = document.createElement('caption');
+  caption.textContent = `Результат запроса: найдено ${rows.length} студент(ов).`;
+  table.appendChild(caption);
+
+  const thead = document.createElement('thead');
+  const headRow = document.createElement('tr');
+  set.labels.forEach(label => {
+    const th = document.createElement('th');
+    th.scope = 'col';
+    th.textContent = label;
+    headRow.appendChild(th);
+  });
+  thead.appendChild(headRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  rows.forEach(student => {
+    const tr = document.createElement('tr');
+    set.keys.forEach((key, index) => {
+      const cell = document.createElement(index === 0 ? 'th' : 'td');
+      if (index === 0) cell.scope = 'row';
+      cell.textContent = String(student[key]);
+      tr.appendChild(cell);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+
+  const container = $('#sqlResult');
+  container.innerHTML = '';
+  container.appendChild(table);
+
+  const names = rows.map(r => r.name);
+  const summary = `Найдено ${rows.length} студент(ов): ` + (names.length ? names.join(', ') : 'совпадений нет') + '.';
+  $('#sqlFeedback').textContent = summary;
+  report(summary);
+
+  const solved = names.length === 2 && names.includes('Анна') && names.includes('Ева');
+  if (solved) markDone('sql', 'Базы данных');
+});
+</script>
+
+</body>
+</html>
