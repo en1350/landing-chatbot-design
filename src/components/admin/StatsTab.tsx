@@ -14,6 +14,7 @@ interface Stats {
   users_total: number;
   users_week: number;
   paid_users: number;
+  single_payments: { total: number; amount: number; week: number; month: number; buyers: number };
 }
 
 const Metric = ({ label, value, hint }: { label: string; value: number; hint?: string }) => (
@@ -45,6 +46,13 @@ const StatsTab = ({ token }: { token: string }) => {
         <Metric label="Посетителей за 30 дней" value={s.month.visitors} hint={`Просмотров: ${s.month.views}`} />
         <Metric label="Зарегистрировано" value={s.users_total} hint={`За неделю: +${s.users_week}`} />
         <Metric label="Платных подписчиков" value={s.paid_users} />
+        <Metric
+          label="Разовых платежей"
+          value={s.single_payments.total}
+          hint={`Покупателей: ${s.single_payments.buyers} · на сумму ${s.single_payments.amount} ₽`}
+        />
+        <Metric label="Разовых за 7 дней" value={s.single_payments.week} />
+        <Metric label="Разовых за 30 дней" value={s.single_payments.month} />
       </div>
 
       <Card className="p-4">

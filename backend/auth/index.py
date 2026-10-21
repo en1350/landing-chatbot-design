@@ -214,9 +214,9 @@ def apply_succeeded_payment(cur, payment_id, result):
         return None
 
     cur.execute(
-        f"INSERT INTO {SCHEMA}.processed_payments (payment_id, user_id) VALUES (%s, %s) "
+        f"INSERT INTO {SCHEMA}.processed_payments (payment_id, user_id, plan, amount) VALUES (%s, %s, %s, %s) "
         f"ON CONFLICT (payment_id) DO NOTHING RETURNING payment_id",
-        (str(payment_id), owner_id)
+        (str(payment_id), owner_id, plan_key, plan.get('amount'))
     )
     first_time = cur.fetchone() is not None
 

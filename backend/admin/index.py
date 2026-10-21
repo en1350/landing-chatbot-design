@@ -122,7 +122,19 @@ def handler(event: dict, context) -> dict:
                     f"SELECT count(DISTINCT user_id) FROM {SCHEMA}.subscriptions WHERE is_active = true AND plan <> 'free' AND (expires_at IS NULL OR expires_at > now())"
                 )
                 paid = cur.fetchone()[0]
+                cur.execute(
+                    f"SELECT count(*), coalesce(sum(amount), 0), "
+                    f"count(*) FILTER (WHERE created_at > now() - interval '7 days'), "
+                    f"count(*) FILTER (WHERE created_at > now() - interval '30 days'), "
+                    f"count(DISTINCT user_id) "
+                    f"FROM {SCHEMA}.processed_payments WHERE plan = 'single'"
+                )
+                sp = cur.fetchone()
                 return resp(200, {
+                    'single_payments': {
+                        'total': sp[0], 'amount': float(sp[1]),
+                        'week': sp[2], 'month': sp[3], 'buyers': sp[4],
+                    },
                     'today': {'views': today_views, 'visitors': today_visitors},
                     'week': {'views': week_views, 'visitors': week_visitors},
                     'month': {'views': month_views, 'visitors': month_visitors},
