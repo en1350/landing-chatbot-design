@@ -1,0 +1,1638 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Практическая работа: Обработка информации в текстовых процессорах</title>
+    <style>
+        :root {
+            --primary-blue: #005b9f;
+            --light-bg: #f4f7f6;
+            --fixie-orange: #ff8c00;
+            --fixie-blue: #00bfff;
+            --fixie-green: #32cd32;
+            --fixie-yellow: #ffd700;
+            --fixie-red: #ff4500;
+            --fixie-purple: #9370db;
+            --fixie-pink: #ff69b4;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #eef2f5 0%, #d6e4f0 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: "⚙️";
+            position: fixed;
+            font-size: 300px;
+            opacity: 0.03;
+            top: 10%;
+            right: -50px;
+            animation: rotate 30s linear infinite;
+            z-index: 0;
+            pointer-events: none;
+        }
+        body::after {
+            content: "⚙️";
+            position: fixed;
+            font-size: 200px;
+            opacity: 0.03;
+            bottom: 5%;
+            left: -30px;
+            animation: rotate 25s linear infinite reverse;
+            z-index: 0;
+            pointer-events: none;
+        }
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-blue), #003f6f, var(--fixie-blue));
+            background-size: 200% 200%;
+            animation: gradientShift 8s ease infinite;
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.4em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: slideDown 1s ease;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-greeting {
+            margin-top: 15px;
+            font-size: 1.2em;
+            font-style: italic;
+            color: #fffacd;
+            animation: fadeIn 1.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .date-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.25);
+            padding: 8px 20px;
+            border-radius: 25px;
+            margin-top: 15px;
+            font-size: 1em;
+            backdrop-filter: blur(5px);
+        }
+
+        .progress-container {
+            background: white;
+            padding: 15px 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .progress-bar {
+            height: 12px;
+            background: #eee;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--fixie-green), var(--fixie-blue), var(--fixie-purple));
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+        .progress-text {
+            font-size: 0.9em;
+            color: #666;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 0;
+            background: white;
+            padding: 10px 10px 0 10px;
+            border-radius: 15px 15px 0 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+        .tab-btn {
+            padding: 12px 20px;
+            cursor: pointer;
+            border: none;
+            background: #f0f0f0;
+            border-radius: 10px 10px 0 0;
+            font-weight: bold;
+            font-size: 0.95em;
+            color: #555;
+            transition: 0.3s;
+            position: relative;
+            flex: 1;
+            min-width: 140px;
+        }
+        .tab-btn:hover { background: #e0e8f0; color: var(--primary-blue); }
+        .tab-btn.active {
+            background: var(--primary-blue);
+            color: white;
+            box-shadow: 0 -3px 0 var(--fixie-yellow);
+        }
+        .tab-btn .tab-icon { font-size: 1.3em; display: block; margin-bottom: 3px; }
+
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            animation: tabFade 0.5s ease;
+            min-height: 400px;
+        }
+        .tab-content.active { display: block; }
+        @keyframes tabFade {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            color: var(--primary-blue);
+            border-bottom: 3px solid var(--fixie-yellow);
+            padding-bottom: 10px;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        h3 { color: #444; }
+
+        .accordion-item {
+            background: #f9f9f9;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            overflow: hidden;
+            border-left: 4px solid var(--fixie-blue);
+            transition: 0.3s;
+        }
+        .accordion-item:hover { box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+        .accordion-header {
+            padding: 15px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(90deg, #f0f7ff, #fff);
+        }
+        .accordion-header::after {
+            content: "▼";
+            transition: transform 0.3s;
+            color: var(--primary-blue);
+        }
+        .accordion-item.open .accordion-header::after { transform: rotate(180deg); }
+        .accordion-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.3s;
+            padding: 0 20px;
+        }
+        .accordion-item.open .accordion-body {
+            max-height: 1000px;
+            padding: 15px 20px;
+        }
+
+        .sim-container {
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .sim-toolbar {
+            background: linear-gradient(180deg, #f5f5f5, #e0e0e0);
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .sim-toolbar button {
+            padding: 6px 14px;
+            cursor: pointer;
+            border: 1px solid #bbb;
+            background: white;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .sim-toolbar button:hover {
+            background: var(--fixie-yellow);
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .sim-editor {
+            min-height: 150px;
+            padding: 15px;
+            outline: none;
+            font-size: 1.1em;
+            background: white;
+        }
+        .sim-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .sim-input-group input, .sim-input-group textarea, .sim-input-group select {
+            padding: 10px;
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            flex: 1;
+            min-width: 150px;
+            font-size: 1em;
+            transition: 0.3s;
+        }
+        .sim-input-group input:focus, .sim-input-group textarea:focus {
+            border-color: var(--fixie-blue);
+            outline: none;
+            box-shadow: 0 0 8px rgba(0,191,255,0.3);
+        }
+
+        .task-card {
+            background: linear-gradient(135deg, #fff, #f9fbfd);
+            border: 2px solid #e0e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .task-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: var(--primary-blue);
+        }
+        .task-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0,91,159,0.15);
+        }
+        .task-number {
+            display: inline-block;
+            background: var(--primary-blue);
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 35px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .task-title {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: var(--primary-blue);
+            display: inline-block;
+        }
+        .hint-btn {
+            background: var(--fixie-yellow);
+            color: #333;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+        .hint-btn:hover { background: #ffc700; transform: scale(1.05); }
+        .hint-content {
+            display: none;
+            background: #fff9e6;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border-left: 4px solid var(--fixie-yellow);
+            animation: slideDown 0.4s ease;
+        }
+        .hint-content.show { display: block; }
+        .solution-btn {
+            background: var(--fixie-green);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            margin-left: 8px;
+            transition: 0.3s;
+        }
+        .solution-btn:hover { background: #28a828; transform: scale(1.05); }
+        .solution-content {
+            display: none;
+            background: #e6ffe6;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border-left: 4px solid var(--fixie-green);
+            animation: slideDown 0.4s ease;
+        }
+        .solution-content.show { display: block; }
+
+        .drag-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        .drag-source, .drag-target {
+            flex: 1;
+            min-width: 250px;
+        }
+        .drag-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 15px;
+            background: #f0f7ff;
+            border-radius: 10px;
+            min-height: 80px;
+        }
+        .drag-item {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            cursor: grab;
+            border: 2px solid var(--fixie-blue);
+            font-weight: 500;
+            transition: 0.2s;
+            user-select: none;
+        }
+        .drag-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+        }
+        .drag-item.dragging { opacity: 0.5; cursor: grabbing; }
+        .drop-zone {
+            background: #fff9e6;
+            border: 2px dashed var(--fixie-orange);
+            border-radius: 10px;
+            padding: 15px;
+            min-height: 80px;
+            margin-bottom: 10px;
+            transition: 0.3s;
+        }
+        .drop-zone.drag-over {
+            background: #ffe6cc;
+            border-color: var(--fixie-red);
+            transform: scale(1.02);
+        }
+        .drop-zone h4 {
+            margin: 0 0 10px 0;
+            color: var(--fixie-orange);
+        }
+        .check-drag-btn {
+            background: var(--fixie-purple);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            margin-top: 15px;
+            transition: 0.3s;
+        }
+        .check-drag-btn:hover { background: #7a5bc7; transform: scale(1.05); }
+        .drag-feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .game-question {
+            background: linear-gradient(135deg, #f9f9f9, #fff);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--primary-blue);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: 0.3s;
+        }
+        .game-question.correct {
+            border-left-color: var(--fixie-green);
+            background: linear-gradient(135deg, #e6ffe6, #f0fff0);
+        }
+        .game-question.incorrect {
+            border-left-color: var(--fixie-red);
+            background: linear-gradient(135deg, #ffe6e6, #fff0f0);
+        }
+        .game-options label {
+            display: block;
+            padding: 10px 15px;
+            margin: 6px 0;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .game-options label:hover {
+            background: #eef5ff;
+            border-color: var(--fixie-blue);
+            transform: translateX(5px);
+        }
+        .game-options input { margin-right: 10px; }
+        .game-options input:checked + span { font-weight: bold; color: var(--primary-blue); }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-blue), #003f6f);
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            font-size: 1.1em;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,91,159,0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,91,159,0.4);
+        }
+
+        #game-result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 12px;
+            display: none;
+            font-size: 1.2em;
+            text-align: center;
+            font-weight: bold;
+            animation: popIn 0.5s ease;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .fixie-section {
+            background: linear-gradient(135deg, #fff9e6 0%, #e6f7ff 50%, #ffe6f0 100%);
+            border: 4px dashed var(--fixie-orange);
+            position: relative;
+            overflow: hidden;
+        }
+        .fixie-section::before {
+            content: "⚙️";
+            position: absolute;
+            font-size: 200px;
+            opacity: 0.08;
+            top: -30px;
+            right: -30px;
+            transform: rotate(15deg);
+            animation: rotate 20s linear infinite;
+        }
+        .fixie-section h2 {
+            color: var(--fixie-orange);
+            border-bottom-color: var(--fixie-blue);
+        }
+        .fixie-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 15px;
+            margin: 25px 0;
+        }
+        .fixie-card {
+            background: white;
+            border-radius: 20px;
+            padding: 18px 12px;
+            text-align: center;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        .fixie-card::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, transparent 70%);
+            opacity: 0;
+            transition: 0.5s;
+        }
+        .fixie-card:hover {
+            transform: translateY(-8px) rotate(-2deg);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        .fixie-card:hover::after { opacity: 1; }
+        .fixie-card.selected {
+            border-color: var(--fixie-yellow);
+            box-shadow: 0 0 25px var(--fixie-yellow), 0 10px 25px rgba(0,0,0,0.2);
+            transform: translateY(-5px) scale(1.03);
+        }
+
+        .fixie-icon {
+            font-size: 3.5em;
+            margin-bottom: 10px;
+            display: block;
+            animation: bounce 2s ease infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .fixie-name {
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+        .fixie-card[data-color="blue"] .fixie-name { color: var(--fixie-blue); }
+        .fixie-card[data-color="orange"] .fixie-name { color: var(--fixie-orange); }
+        .fixie-card[data-color="green"] .fixie-name { color: var(--fixie-green); }
+        .fixie-card[data-color="red"] .fixie-name { color: var(--fixie-red); }
+        .fixie-card[data-color="yellow"] .fixie-name { color: #d4af37; }
+        .fixie-card[data-color="purple"] .fixie-name { color: var(--fixie-purple); }
+        .fixie-card[data-color="pink"] .fixie-name { color: var(--fixie-pink); }
+
+        .btn-tydysh {
+            background: linear-gradient(45deg, var(--fixie-red), var(--fixie-orange), var(--fixie-yellow));
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease infinite;
+            color: white;
+            font-size: 1.6em;
+            font-weight: bold;
+            padding: 18px 50px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(255,69,0,0.4);
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-tydysh::before {
+            content: "⚡";
+            position: absolute;
+            left: 15px;
+            animation: flash 1s ease infinite;
+        }
+        .btn-tydysh::after {
+            content: "⚡";
+            position: absolute;
+            right: 15px;
+            animation: flash 1s ease infinite 0.5s;
+        }
+        @keyframes flash {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+        .btn-tydysh:hover {
+            transform: scale(1.08);
+            box-shadow: 0 8px 30px rgba(255,69,0,0.6);
+        }
+        .btn-tydysh:active { transform: scale(0.95); }
+
+        #fixie-message {
+            margin-top: 25px;
+            padding: 25px;
+            border-radius: 20px;
+            background: white;
+            border: 4px solid var(--fixie-green);
+            display: none;
+            font-size: 1.2em;
+            text-align: center;
+            animation: popIn 0.5s ease;
+            box-shadow: 0 5px 25px rgba(50,205,50,0.3);
+        }
+
+        .confetti {
+            position: fixed;
+            width: 12px;
+            height: 12px;
+            pointer-events: none;
+            z-index: 9999;
+            animation: fall 3s linear forwards;
+        }
+        @keyframes fall {
+            to { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        .task-icon {
+            font-size: 1.5em;
+            margin-right: 8px;
+        }
+
+        .level-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .level-tab {
+            padding: 12px 25px;
+            cursor: pointer;
+            border-radius: 25px;
+            font-weight: bold;
+            color: white;
+            border: none;
+            font-size: 1em;
+            transition: 0.3s;
+            flex: 1;
+            min-width: 150px;
+        }
+        .level-tab:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .level-1 { background: linear-gradient(135deg, #32cd32, #28a828); }
+        .level-2 { background: linear-gradient(135deg, #ff8c00, #e67e00); }
+        .level-3 { background: linear-gradient(135deg, #ff4500, #cc3700); }
+        .level-tab.active {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+
+        .level-content {
+            display: none;
+            animation: tabFade 0.5s ease;
+        }
+        .level-content.active { display: block; }
+
+        footer {
+            text-align: center;
+            padding: 30px 20px;
+            color: #666;
+            font-size: 0.95em;
+            background: rgba(255,255,255,0.5);
+            margin-top: 30px;
+        }
+
+        @media (max-width: 768px) {
+            header h1 { font-size: 1.5em; }
+            .tab-btn { font-size: 0.8em; padding: 10px; min-width: 100px; }
+            .tab-btn .tab-icon { font-size: 1.1em; }
+            .drag-container { flex-direction: column; }
+            .tab-content { padding: 18px; }
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid var(--fixie-blue);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .warning-box {
+            background: #fff4e5;
+            border-left: 4px solid var(--fixie-orange);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>⚙️ Обработка информации в текстовых процессорах ⚙️</h1>
+    <div class="user-greeting">Добро пожаловать на урок! 🌟</div>
+    <div class="date-badge" id="current-date">📅 Загрузка даты...</div>
+</header>
+
+<div class="progress-container">
+    <div class="progress-text">
+        <span>📊 Ваш прогресс:</span>
+        <span id="progress-percent">0%</span>
+    </div>
+    <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('theory', this)">
+            <span class="tab-icon">📖</span>Теория
+        </button>
+        <button class="tab-btn" onclick="showTab('practice', this)">
+            <span class="tab-icon">🎯</span>Практика (8)
+        </button>
+        <button class="tab-btn" onclick="showTab('detection', this)">
+            <span class="tab-icon">🔍</span>Текст. информация (8)
+        </button>
+        <button class="tab-btn" onclick="showTab('simulations', this)">
+            <span class="tab-icon">💻</span>Симуляции
+        </button>
+        <button class="tab-btn" onclick="showTab('game', this)">
+            <span class="tab-icon">🎮</span>Игра
+        </button>
+        <button class="tab-btn" onclick="showTab('reflection', this)">
+            <span class="tab-icon">🔧</span>Рефлексия
+        </button>
+    </div>
+
+    <div id="theory" class="tab-content active">
+        <h2>📖 Теоретический блок</h2>
+        <p>Нажмите на любой блок, чтобы раскрыть подробную информацию:</p>
+
+        <div class="accordion-item" onclick="toggleAccordion(this)">
+            <div class="accordion-header">🖥️ Что такое текстовый процессор?</div>
+            <div class="accordion-body">
+                <p><strong>Текстовый процессор</strong> — это прикладное программное обеспечение для создания, редактирования, форматирования и вывода на печать текстовой информации.</p>
+                <p><strong>Примеры:</strong> MS Word, LibreOffice Writer, Google Docs, Apple Pages, WordPad.</p>
+                <div class="info-box">💡 <strong>Важно:</strong> Текстовый процессор — это не то же самое, что текстовый редактор (Блокнот). Процессор имеет гораздо больше возможностей для форматирования.</div>
+            </div>
+        </div>
+
+        <div class="accordion-item" onclick="toggleAccordion(this)">
+            <div class="accordion-header">✏️ Ввод и редактирование текста</div>
+            <div class="accordion-body">
+                <ul>
+                    <li><strong>Набор текста</strong> — ввод символов с клавиатуры</li>
+                    <li><strong>Исправление ошибок</strong> — удаление, вставка, замена символов</li>
+                    <li><strong>Копирование</strong> — Ctrl+C → Ctrl+V</li>
+                    <li><strong>Вырезание</strong> — Ctrl+X → Ctrl+V</li>
+                    <li><strong>Отмена действия</strong> — Ctrl+Z</li>
+                    <li><strong>Повтор действия</strong> — Ctrl+Y</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="accordion-item" onclick="toggleAccordion(this)">
+            <div class="accordion-header">🎨 Форматирование символов и абзацев</div>
+            <div class="accordion-body">
+                <p><strong>Форматирование символов:</strong></p>
+                <ul>
+                    <li>Шрифт (гарнитура): Times New Roman, Arial, Calibri и др.</li>
+                    <li>Размер (кегль): измеряется в пунктах (pt)</li>
+                    <li>Начертание: жирный (Ctrl+B), курсив (Ctrl+I), подчёркнутый (Ctrl+U)</li>
+                    <li>Цвет, регистр, межсимвольный интервал</li>
+                </ul>
+                <p><strong>Форматирование абзацев:</strong></p>
+                <ul>
+                    <li>Выравнивание: по левому/правому краю, по центру, по ширине</li>
+                    <li>Межстрочный интервал: 1.0; 1.5; 2.0 и др.</li>
+                    <li>Отступы: первой строки, слева, справа</li>
+                    <li>Межабзацные интервалы</li>
+                    <li>Маркированные и нумерованные списки</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="accordion-item" onclick="toggleAccordion(this)">
+            <div class="accordion-header">📑 Стили и оглавление</div>
+            <div class="accordion-body">
+                <p><strong>Стиль</strong> — это набор параметров форматирования, сохранённый под определённым именем.</p>
+                <p><strong>Преимущества использования стилей:</strong></p>
+                <ul>
+                    <li>Единообразие оформления всего документа</li>
+                    <li>Быстрое изменение оформления (изменил стиль — изменились все элементы)</li>
+                    <li>Автоматическое создание оглавления</li>
+                    <li>Навигация по документу через область навигации</li>
+                </ul>
+                <div class="warning-box">⚠️ <strong>Внимание:</strong> Для автоматического оглавления нужно использовать именно встроенные стили «Заголовок 1», «Заголовок 2» и т.д.</div>
+            </div>
+        </div>
+
+        <div class="accordion-item" onclick="toggleAccordion(this)">
+            <div class="accordion-header">🖼️ Вставка объектов в документ</div>
+            <div class="accordion-body">
+                <ul>
+                    <li><strong>Таблицы</strong> — структурированное представление данных</li>
+                    <li><strong>Рисунки и фигуры</strong> — с возможностью обтекания текстом</li>
+                    <li><strong>Диаграммы</strong> — визуализация числовых данных</li>
+                    <li><strong>Гиперссылки</strong> — ссылки на веб-страницы, файлы, якоря</li>
+                    <li><strong>Колонтитулы</strong> — повторяющиеся элементы в верхней/нижней части страницы</li>
+                    <li><strong>Сноски</strong> — пояснения внизу страницы или конца документа</li>
+                    <li><strong>Символы и формулы</strong> — специальные вставки</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="accordion-item" onclick="toggleAccordion(this)">
+            <div class="accordion-header">🔧 Инструменты автоматизации</div>
+            <div class="accordion-body">
+                <ul>
+                    <li><strong>Проверка орфографии</strong> — F7, подчёркивание красной волнистой линией</li>
+                    <li><strong>Поиск и замена</strong> — Ctrl+H, в т.ч. с использованием масок и спецсимволов</li>
+                    <li><strong>Слияние (Mail Merge)</strong> — массовая рассылка персональных документов</li>
+                    <li><strong>Макросы</strong> — запись и воспроизведение последовательностей действий</li>
+                    <li><strong>Рецензирование</strong> — комментарии, исправления, отслеживание изменений</li>
+                    <li><strong>Автозамена</strong> — автоматическое исправление опечаток и сокращений</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="accordion-item" onclick="toggleAccordion(this)">
+            <div class="accordion-header">💾 Форматы файлов</div>
+            <div class="accordion-body">
+                <table style="width:100%; border-collapse: collapse;">
+                    <tr style="background: var(--primary-blue); color: white;">
+                        <th style="padding: 10px; border: 1px solid #ccc;">Расширение</th>
+                        <th style="padding: 10px; border: 1px solid #ccc;">Описание</th>
+                    </tr>
+                    <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>.docx</b></td><td style="padding: 8px; border: 1px solid #ddd;">Современный формат MS Word (с 2007 г.)</td></tr>
+                    <tr style="background: #f9f9f9;"><td style="padding: 8px; border: 1px solid #ddd;"><b>.doc</b></td><td style="padding: 8px; border: 1px solid #ddd;">Старый формат MS Word (до 2007 г.)</td></tr>
+                    <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>.odt</b></td><td style="padding: 8px; border: 1px solid #ddd;">Формат LibreOffice / OpenOffice</td></tr>
+                    <tr style="background: #f9f9f9;"><td style="padding: 8px; border: 1px solid #ddd;"><b>.pdf</b></td><td style="padding: 8px; border: 1px solid #ddd;">Формат для сохранения вёрстки (Portable Document Format)</td></tr>
+                    <tr><td style="padding: 8px; border: 1px solid #ddd;"><b>.txt</b></td><td style="padding: 8px; border: 1px solid #ddd;">Простой текст без форматирования</td></tr>
+                    <tr style="background: #f9f9f9;"><td style="padding: 8px; border: 1px solid #ddd;"><b>.rtf</b></td><td style="padding: 8px; border: 1px solid #ddd;">Rich Text Format — межплатформенный формат</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="practice" class="tab-content">
+        <h2>🎯 Практический разбор задач (8 задач, 3 уровня)</h2>
+        <p>Нажимайте на кнопки <b>«💡 Подсказка»</b> и <b>«✅ Решение»</b>, чтобы раскрыть материалы.</p>
+
+        <div class="level-tabs">
+            <button class="level-tab level-1 active" onclick="showLevel(1, this)">🟢 Новичок (3)</button>
+            <button class="level-tab level-2" onclick="showLevel(2, this)">🟠 Продвинутый (3)</button>
+            <button class="level-tab level-3" onclick="showLevel(3, this)">🔴 Мастер (2)</button>
+        </div>
+
+        <div id="level-1" class="level-content active">
+            <div class="task-card">
+                <span class="task-number">1</span><span class="task-title">📜 Оформление стихотворения</span>
+                <p><strong>Условие:</strong> Дан текст стихотворения. Установить шрифт Times New Roman, размер 14; выровнять по центру; межстрочный интервал 1.5; первую строфу — жирным курсивом.</p>
+                <button class="hint-btn" onclick="toggleHint(this)">💡 Подсказка</button>
+                <div class="hint-content">Начните с выделения всего текста (Ctrl+A) — это сэкономит время. Затем перейдите к абзацу и только потом работайте с отдельными строфами.</div>
+                <button class="solution-btn" onclick="toggleSolution(this)">✅ Решение</button>
+                <div class="solution-content">
+                    <ol>
+                        <li>Ctrl+A → задать шрифт Times New Roman, размер 14.</li>
+                        <li>Вкладка «Главная» → блок «Абзац» → выравнивание по центру, межстрочный интервал 1.5.</li>
+                        <li>Выделить первую строфу мышью → Ctrl+I (курсив), затем Ctrl+B (жирный).</li>
+                        <li>Ctrl+S — сохранить документ.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="task-card">
+                <span class="task-number">2</span><span class="task-title">🔤 Замена слов в тексте</span>
+                <p><strong>Условие:</strong> В тексте заменить все вхождения слова «компьютер» на «ЭВМ», учитывая разный регистр.</p>
+                <button class="hint-btn" onclick="toggleHint(this)">💡 Подсказка</button>
+                <div class="hint-content">Для массовой замены используйте специальный инструмент, а не ручной поиск. Не забудьте про настройку учёта регистра!</div>
+                <button class="solution-btn" onclick="toggleSolution(this)">✅ Решение</button>
+                <div class="solution-content">
+                    <ol>
+                        <li>Ctrl+H — открыть окно «Найти и заменить».</li>
+                        <li>В поле «Найти»: <b>компьютер</b>. В поле «Заменить на»: <b>ЭВМ</b>.</li>
+                        <li>Нажать «Больше >>» → установить флажок «Различать регистр» (если нужно учитывать регистр) или снять его (если заменять все).</li>
+                        <li>Нажать «Заменить все».</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="task-card">
+                <span class="task-number">3</span><span class="task-title">📝 Создание маркированного списка</span>
+                <p><strong>Условие:</strong> Преобразовать список пунктов в маркированный список с маркером в виде ромба.</p>
+                <button class="hint-btn" onclick="toggleHint(this)">💡 Подсказка</button>
+                <div class="hint-content">Маркированный список создаётся одной кнопкой на панели «Абзац». Но для выбора конкретного маркера нужно открыть дополнительное меню.</div>
+                <button class="solution-btn" onclick="toggleSolution(this)">✅ Решение</button>
+                <div class="solution-content">
+                    <ol>
+                        <li>Выделить все пункты списка.</li>
+                        <li>На вкладке «Главная» в блоке «Абзац» нажать на стрелку рядом с кнопкой «Маркеры».</li>
+                        <li>В библиотеке маркеров выбрать ромб (◆).</li>
+                        <li>При необходимости настроить уровень вложенности кнопками «Увеличить/Уменьшить отступ».</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <div id="level-2" class="level-content">
+            <div class="task-card">
+                <span class="task-number">4</span><span class="task-title">📊 Создание таблицы со стилями</span>
+                <p><strong>Условие:</strong> Вставить таблицу 5×6. Заголовки оформить пользовательским стилем «Заголовок таблицы» (синий фон, белый текст, центрирование). Добавить нижний колонтитул с номером страницы.</p>
+                <button class="hint-btn" onclick="toggleHint(this)">💡 Подсказка</button>
+                <div class="hint-content">Сначала создайте сам стиль, а потом применяйте его. Колонтитулы находятся в отдельном меню «Вставка».</div>
+                <button class="solution-btn" onclick="toggleSolution(this)">✅ Решение</button>
+                <div class="solution-content">
+                    <ol>
+                        <li>Вставка → Таблица → выбрать 5 строк × 6 столбцов.</li>
+                        <li>Главная → Стили → Создать стиль. Настроить: шрифт — белый, фон — синий, выравнивание — по центру. Сохранить как «Заголовок таблицы».</li>
+                        <li>Выделить первую строку таблицы → применить созданный стиль.</li>
+                        <li>Вставка → Колонтитул → Нижний колонтитул → Номер страницы → В конце раздела.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="task-card">
+                <span class="task-number">5</span><span class="task-title">🖼️ Вставка рисунка с обтеканием</span>
+                <p><strong>Условие:</strong> Вставить рисунок в документ и настроить обтекание текстом «Сверху и снизу».</p>
+                <button class="hint-btn" onclick="toggleHint(this)">💡 Подсказка</button>
+                <div class="hint-content">По умолчанию рисунок вставляется «В тексте» — он ведёт себя как большой символ. Для обтекания нужно изменить параметр привязки.</div>
+                <button class="solution-btn" onclick="toggleSolution(this)">✅ Решение</button>
+                <div class="solution-content">
+                    <ol>
+                        <li>Вставка → Рисунки → выбрать файл с изображением.</li>
+                        <li>Щёлкнуть по рисунку правой кнопкой мыши → «Обтекание текстом».</li>
+                        <li>Выбрать вариант «Сверху и снизу».</li>
+                        <li>Переместить рисунок в нужное место — текст автоматически обтекёт его.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="task-card">
+                <span class="task-number">6</span><span class="task-title">🔗 Создание гиперссылки</span>
+                <p><strong>Условие:</strong> Создать гиперссылку со словом «Источник» на сайт www.example.com, открывающуюся в новой вкладке (в веб-документе).</p>
+                <button class="hint-btn" onclick="toggleHint(this)">💡 Подсказка</button>
+                <div class="hint-content">Гиперссылку можно создать через контекстное меню или специальной кнопкой. Не забудьте про протокол http://.</div>
+                <button class="solution-btn" onclick="toggleSolution(this)">✅ Решение</button>
+                <div class="solution-content">
+                    <ol>
+                        <li>Написать слово «Источник» и выделить его.</li>
+                        <li>Ctrl+K (или Вставка → Гиперссылка).</li>
+                        <li>В поле «Адрес» ввести: <b>http://www.example.com</b>.</li>
+                        <li>Нажать ОК. Слово станет синим и подчёркнутым.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <div id="level-3" class="level-content">
+            <div class="task-card">
+                <span class="task-number">7</span><span class="task-title">📑 Автоматическое оглавление</span>
+                <p><strong>Условие:</strong> В большом отчёте сгенерировать автоматическое оглавление. Заголовки разделов уже оформлены стилями «Заголовок 1» и «Заголовок 2».</p>
+                <button class="hint-btn" onclick="toggleHint(this)">💡 Подсказка</button>
+                <div class="hint-content">Оглавление строится на основе стилей заголовков. Его можно вставить в любое место документа, обычно — в начало.</div>
+                <button class="solution-btn" onclick="toggleSolution(this)">✅ Решение</button>
+                <div class="solution-content">
+                    <ol>
+                        <li>Поставить курсор в место, где должно быть оглавление (обычно — после титульного листа).</li>
+                        <li>Вкладка «Ссылки» → «Оглавление» → выбрать «Автособираемое оглавление 1».</li>
+                        <li>Оглавление сгенерируется автоматически на основе стилей заголовков.</li>
+                        <li>При изменении текста: правый клик по оглавлению → «Обновить поле» → «Обновить целиком».</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="task-card">
+                <span class="task-number">8</span><span class="task-title">✉️ Слияние данных (Mail Merge)</span>
+                <p><strong>Условие:</strong> Подготовить персональные приглашения для 50 адресатов, используя шаблон письма и базу данных (Excel-файл с именами и адресами).</p>
+                <button class="hint-btn" onclick="toggleHint(this)">💡 Подсказка</button>
+                <div class="hint-content">Слияние — это процесс объединения шаблона документа с источником данных. В шаблон вставляются специальные «поля слияния».</div>
+                <button class="solution-btn" onclick="toggleSolution(this)">✅ Решение</button>
+                <div class="solution-content">
+                    <ol>
+                        <li>Рассылки → Начать слияния → Письма.</li>
+                        <li>Выбрать получателей → Использовать существующий список → выбрать Excel-файл.</li>
+                        <li>Указать нужный лист и диапазон данных.</li>
+                        <li>Вставить поля слияния: «Вставить поле объединения» → Имя, Адрес и т.д.</li>
+                        <li>«Просмотреть результаты» — проверить корректность.</li>
+                        <li>«Закончить и объединить» → «Печатать документы» или «Изменить отдельные документы».</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="detection" class="tab-content">
+        <h2>🔍 Задачи на определение текстовой информации (8)</h2>
+        <p><strong>Задание 1-4:</strong> Перетащите объекты в нужную категорию — что является текстовой информацией, а что нет.</p>
+
+        <div class="task-card">
+            <span class="task-number">1</span><span class="task-title">🎯 Сортировка: текстовая информация</span>
+            <p>Перетащите элементы в соответствующие категории:</p>
+            <div class="drag-container">
+                <div class="drag-source">
+                    <h4>📦 Элементы:</h4>
+                    <div class="drag-items" id="source-items">
+                        <div class="drag-item" draggable="true" data-type="text">Стихотворение Пушкина</div>
+                        <div class="drag-item" draggable="true" data-type="notext">Фотография кота</div>
+                        <div class="drag-item" draggable="true" data-type="text">Инструкция к телефону</div>
+                        <div class="drag-item" draggable="true" data-type="notext">Музыкальный файл MP3</div>
+                        <div class="drag-item" draggable="true" data-type="text">Научная статья</div>
+                        <div class="drag-item" draggable="true" data-type="notext">Видеоурок</div>
+                    </div>
+                </div>
+                <div class="drag-target">
+                    <div class="drop-zone" data-accept="text">
+                        <h4>✅ Текстовая информация</h4>
+                    </div>
+                    <div class="drop-zone" data-accept="notext">
+                        <h4>❌ Не текстовая информация</h4>
+                    </div>
+                </div>
+            </div>
+            <button class="check-drag-btn" onclick="checkDragTask1()">🔍 Проверить</button>
+            <div class="drag-feedback" id="feedback-1"></div>
+        </div>
+
+        <p style="margin-top: 30px;"><strong>Задание 5-8:</strong> Определите стиль текста.</p>
+
+        <div class="task-card">
+            <span class="task-number">5</span><span class="task-title">📚 «В лесу родилась ёлочка, в лесу она росла...»</span>
+            <p>Определите стиль текста:</p>
+            <div class="game-options">
+                <label><input type="radio" name="style1" value="a"> <span>Научный</span></label>
+                <label><input type="radio" name="style1" value="b"> <span>Художественный</span></label>
+                <label><input type="radio" name="style1" value="c"> <span>Официально-деловой</span></label>
+                <label><input type="radio" name="style1" value="d"> <span>Публицистический</span></label>
+            </div>
+            <button class="check-drag-btn" onclick="checkStyleTask(1, 'b')">Проверить</button>
+            <div class="drag-feedback" id="feedback-style-1"></div>
+        </div>
+
+        <div class="task-card">
+            <span class="task-number">6</span><span class="task-title">📋 «Граждане обязаны соблюдать правила пожарной безопасности...»</span>
+            <p>Определите стиль текста:</p>
+            <div class="game-options">
+                <label><input type="radio" name="style2" value="a"> <span>Разговорный</span></label>
+                <label><input type="radio" name="style2" value="b"> <span>Художественный</span></label>
+                <label><input type="radio" name="style2" value="c"> <span>Официально-деловой</span></label>
+                <label><input type="radio" name="style2" value="d"> <span>Научный</span></label>
+            </div>
+            <button class="check-drag-btn" onclick="checkStyleTask(2, 'c')">Проверить</button>
+            <div class="drag-feedback" id="feedback-style-2"></div>
+        </div>
+
+        <div class="task-card">
+            <span class="task-number">7</span><span class="task-title">🔬«Фотосинтез — процесс образования органических веществ из неорганических...»</span>
+            <p>Определите стиль текста:</p>
+            <div class="game-options">
+                <label><input type="radio" name="style3" value="a"> <span>Научный</span></label>
+                <label><input type="radio" name="style3" value="b"> <span>Художественный</span></label>
+                <label><input type="radio" name="style3" value="c"> <span>Разговорный</span></label>
+                <label><input type="radio" name="style3" value="d"> <span>Публицистический</span></label>
+            </div>
+            <button class="check-drag-btn" onclick="checkStyleTask(3, 'a')">Проверить</button>
+            <div class="drag-feedback" id="feedback-style-3"></div>
+        </div>
+
+        <div class="task-card">
+            <span class="task-number">8</span><span class="task-title">📰«Сегодня в нашем городе открылась новая школа — событие, которое ждут все жители!»</span>
+            <p>Определите стиль текста:</p>
+            <div class="game-options">
+                <label><input type="radio" name="style4" value="a"> <span>Научный</span></label>
+                <label><input type="radio" name="style4" value="b"> <span>Официально-деловой</span></label>
+                <label><input type="radio" name="style4" value="c"> <span>Публицистический</span></label>
+                <label><input type="radio" name="style4" value="d"> <span>Разговорный</span></label>
+            </div>
+            <button class="check-drag-btn" onclick="checkStyleTask(4, 'c')">Проверить</button>
+            <div class="drag-feedback" id="feedback-style-4"></div>
+        </div>
+    </div>
+
+    <div id="simulations" class="tab-content">
+        <h2>💻 Интерактивные симуляции</h2>
+
+        <h3>🎨 Симуляция 1: Мини-редактор форматирования</h3>
+        <p>Выделите текст в поле ниже и нажмите на кнопки панели инструментов.</p>
+        <div class="sim-container">
+            <div class="sim-toolbar">
+                <button onclick="formatText('bold')"><b>Ж</b></button>
+                <button onclick="formatText('italic')"><i>К</i></button>
+                <button onclick="formatText('underline')"><u>Ч</u></button>
+                <button onclick="formatText('strikeThrough')"><s>З</s></button>
+                <button onclick="formatText('justifyLeft')">⬅</button>
+                <button onclick="formatText('justifyCenter')">⬌</button>
+                <button onclick="formatText('justifyRight')">➡</button>
+                <button onclick="formatText('justifyFull')">☰</button>
+                <button onclick="changeColor()">🎨 Цвет</button>
+                <button onclick="changeFontSize(1)">A+</button>
+                <button onclick="changeFontSize(-1)">A-</button>
+            </div>
+            <div id="sim1-editor" class="sim-editor" contenteditable="true">
+                Текстовый процессор позволяет обрабатывать информацию, делая её удобной для чтения и восприятия. Попробуйте выделить этот текст и изменить его!
+            </div>
+        </div>
+
+        <h3>🔁 Симуляция 2: Инструмент «Найти и заменить»</h3>
+        <p>Введите текст, укажите слово для поиска и слово для замены.</p>
+        <div class="sim-input-group">
+            <textarea id="sim2-input" rows="3">Компьютер — это умная машина. Машина помогает людям работать. Эта машина очень быстрая.</textarea>
+        </div>
+        <div class="sim-input-group">
+            <input type="text" id="sim2-find" placeholder="Найти..." value="машина">
+            <input type="text" id="sim2-replace" placeholder="Заменить на..." value="ЭВМ">
+            <label style="display:flex;align-items:center;"><input type="checkbox" id="sim2-case"> Учитывать регистр</label>
+            <button class="btn-primary" onclick="replaceText()">Заменить всё</button>
+        </div>
+        <div class="sim-container" style="margin-top:15px;">
+            <div class="sim-editor" id="sim2-output" style="background: #f9f9f9; color: #005b9f;">
+                Компьютер — это умная машина. Машина помогает людям работать. Эта машина очень быстрая.
+            </div>
+        </div>
+        <p id="sim2-stats" style="color: var(--fixie-green); font-weight: bold;"></p>
+
+        <h3>📊 Симуляция 3: Подсчёт символов и слов</h3>
+        <p>Введите или вставьте текст — симулятор подсчитает количество символов, слов, предложений и абзацев.</p>
+        <div class="sim-input-group">
+            <textarea id="sim3-input" rows="4" placeholder="Введите текст для анализа...">Текстовые процессоры — мощные инструменты для работы с информацией. Они позволяют создавать, редактировать и форматировать документы любой сложности.</textarea>
+        </div>
+        <button class="btn-primary" onclick="analyzeText()">🔬 Анализировать</button>
+        <div id="sim3-result" style="margin-top: 15px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;"></div>
+    </div>
+
+    <div id="game" class="tab-content">
+        <h2>🎮 Командная игра «Знатоки Word»</h2>
+        <p>Обсудите в команде и выберите правильный вариант ответа. После выбора всех ответов нажмите кнопку проверки!</p>
+
+        <form id="game-form">
+            <div class="game-question">
+                <p><strong>1. Какое сочетание клавиш позволяет быстро применить формат «Жирный»?</strong></p>
+                <div class="game-options">
+                    <label><input type="radio" name="q1" value="a"> <span>Ctrl + I</span></label>
+                    <label><input type="radio" name="q1" value="b"> <span>Ctrl + B</span></label>
+                    <label><input type="radio" name="q1" value="c"> <span>Ctrl + U</span></label>
+                    <label><input type="radio" name="q1" value="d"> <span>Alt + B</span></label>
+                </div>
+            </div>
+
+            <div class="game-question">
+                <p><strong>2. Для чего в текстовом процессоре используются «Стили»?</strong></p>
+                <div class="game-options">
+                    <label><input type="radio" name="q2" value="a"> <span>Для проверки орфографии</span></label>
+                    <label><input type="radio" name="q2" value="b"> <span>Для единообразного форматирования и создания оглавления</span></label>
+                    <label><input type="radio" name="q2" value="c"> <span>Для вставки картинок</span></label>
+                    <label><input type="radio" name="q2" value="d"> <span>Для шифрования документа</span></label>
+                </div>
+            </div>
+
+            <div class="game-question">
+                <p><strong>3. Где в документе обычно размещается «Колонтитул»?</strong></p>
+                <div class="game-options">
+                    <label><input type="radio" name="q3" value="a"> <span>В самом конце документа</span></label>
+                    <label><input type="radio" name="q3" value="b"> <span>В верхней и/или нижней части каждой страницы</span></label>
+                    <label><input type="radio" name="q3" value="c"> <span>Только на титульном листе</span></label>
+                    <label><input type="radio" name="q3" value="d"> <span>Внутри таблицы</span></label>
+                </div>
+            </div>
+
+            <div class="game-question">
+                <p><strong>4. Функция «Слияние» (Mail Merge) нужна для:</strong></p>
+                <div class="game-options">
+                    <label><input type="radio" name="q4" value="a"> <span>Объединения двух файлов в один</span></label>
+                    <label><input type="radio" name="q4" value="b"> <span>Массовой рассылки персональных документов</span></label>
+                    <label><input type="radio" name="q4" value="c"> <span>Сжатия размера файла</span></label>
+                    <label><input type="radio" name="q4" value="d"> <span>Перевода текста на другой язык</span></label>
+                </div>
+            </div>
+
+            <div class="game-question">
+                <p><strong>5. Какой формат файла является стандартным для MS Word (с 2007 г.)?</strong></p>
+                <div class="game-options">
+                    <label><input type="radio" name="q5" value="a"> <span>.txt</span></label>
+                    <label><input type="radio" name="q5" value="b"> <span>.doc</span></label>
+                    <label><input type="radio" name="q5" value="c"> <span>.docx</span></label>
+                    <label><input type="radio" name="q5" value="d"> <span>.pdf</span></label>
+                </div>
+            </div>
+
+            <div class="game-question">
+                <p><strong>6. Как отменить последнее действие в текстовом процессоре?</strong></p>
+                <div class="game-options">
+                    <label><input type="radio" name="q6" value="a"> <span>Ctrl + Y</span></label>
+                    <label><input type="radio" name="q6" value="b"> <span>Ctrl + Z</span></label>
+                    <label><input type="radio" name="q6" value="c"> <span>Ctrl + X</span></label>
+                    <label><input type="radio" name="q6" value="d"> <span>Ctrl + C</span></label>
+                </div>
+            </div>
+
+            <div class="game-question">
+                <p><strong>7. Что такое «кегль» шрифта?</strong></p>
+                <div class="game-options">
+                    <label><input type="radio" name="q7" value="a"> <span>Цвет шрифта</span></label>
+                    <label><input type="radio" name="q7" value="b"> <span>Название шрифта</span></label>
+                    <label><input type="radio" name="q7" value="c"> <span>Размер шрифта в пунктах</span></label>
+                    <label><input type="radio" name="q7" value="d"> <span>Межстрочный интервал</span></label>
+                </div>
+            </div>
+
+            <button type="button" class="btn-primary" onclick="checkGame()">🏆 Проверить ответы и узнать счёт!</button>
+        </form>
+
+        <div id="game-result"></div>
+    </div>
+
+    <div id="reflection" class="tab-content fixie-section">
+        <h2>🔧 Групповая рефлексия: «Починка знаний»</h2>
+        <p>Фиксики уже внутри компьютера и проверяют, как хорошо вы разобрались в текстовых процессорах! Выберите того фиксика, который лучше всего описывает настроение вашей команды:</p>
+
+        <div class="fixie-grid">
+            <div class="fixie-card" data-color="blue" onclick="selectFixie(this, 'Симка')">
+                <span class="fixie-icon">👧🏻</span>
+                <div class="fixie-name">Симка</div>
+                <div>«Мы всё поняли и готовы чинить дальше!»</div>
+            </div>
+            <div class="fixie-card" data-color="orange" onclick="selectFixie(this, 'Нолик')">
+                <span class="fixie-icon">👦🏻</span>
+                <div class="fixie-name">Нолик</div>
+                <div>«Было сложно, но мы справились вместе!»</div>
+            </div>
+            <div class="fixie-card" data-color="green" onclick="selectFixie(this, 'Дедус')">
+                <span class="fixie-icon">👴🏻</span>
+                <div class="fixie-name">Дедус</div>
+                <div>«Мудрое было решение, знания по полочкам.»</div>
+            </div>
+            <div class="fixie-card" data-color="red" onclick="selectFixie(this, 'Файер')">
+                <span class="fixie-icon">👦🏻</span>
+                <div class="fixie-name">Файер</div>
+                <div>«Горячая тема! Нам очень понравилось!»</div>
+            </div>
+            <div class="fixie-card" data-color="yellow" onclick="selectFixie(this, 'Икс')">
+                <span class="fixie-icon">👦🏻</span>
+                <div class="fixie-name">Икс</div>
+                <div>«Задача решена — сплошные победы!»</div>
+            </div>
+            <div class="fixie-card" data-color="purple" onclick="selectFixie(this, 'Мася')">
+                <span class="fixie-icon">👩🏻</span>
+                <div class="fixie-name">Мася</div>
+                <div>«Нужно ещё практики, но мы молодцы!»</div>
+            </div>
+            <div class="fixie-card" data-color="pink" onclick="selectFixie(this, 'Файя')">
+                <span class="fixie-icon">👧🏻</span>
+                <div class="fixie-name">Файя</div>
+                <div>«Я горю желанием учиться дальше!»</div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 25px;">
+            <button class="btn-tydysh" onclick="tydysh()">ТЫДЫЩ!</button>
+        </div>
+
+        <div id="fixie-message"></div>
+    </div>
+
+</div>
+
+<footer>
+    <p>© 2026 | Практическая работа по Информатике ⚙️</p>
+</footer>
+
+<script>
+    function setCurrentDate() {
+        const dateElement = document.getElementById('current-date');
+        if (dateElement) {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            let dateString = now.toLocaleDateString('ru-RU', options);
+            dateString = dateString.charAt(0).toUpperCase() + dateString.slice(1);
+            dateElement.textContent = '📅 ' + dateString;
+        }
+    }
+
+    const progressData = {
+        theory: false,
+        practice: false,
+        detection: false,
+        simulations: false,
+        game: false,
+        reflection: false
+    };
+    function updateProgress() {
+        const completed = Object.values(progressData).filter(v => v).length;
+        const total = Object.keys(progressData).length;
+        const percent = Math.round((completed / total) * 100);
+        document.getElementById('progress-fill').style.width = percent + '%';
+        document.getElementById('progress-percent').textContent = percent + '%';
+    }
+
+    function showTab(tabId, btn) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        btn.classList.add('active');
+        progressData[tabId] = true;
+        updateProgress();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function toggleAccordion(item) {
+        item.classList.toggle('open');
+    }
+
+    function showLevel(level, btn) {
+        document.querySelectorAll('.level-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.level-tab').forEach(el => el.classList.remove('active'));
+        document.getElementById('level-' + level).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    function toggleHint(btn) {
+        const hint = btn.nextElementSibling;
+        hint.classList.toggle('show');
+    }
+    function toggleSolution(btn) {
+        const sol = btn.nextElementSibling;
+        sol.classList.toggle('show');
+    }
+
+    function formatText(command) {
+        document.execCommand(command, false, null);
+    }
+    function changeColor() {
+        const color = "#" + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+        document.execCommand('foreColor', false, color);
+    }
+    function changeFontSize(delta) {
+        const sel = window.getSelection();
+        if (sel.rangeCount > 0 && sel.toString().length > 0) {
+            const range = sel.getRangeAt(0);
+            const span = document.createElement('span');
+            const currentSize = parseFloat(window.getComputedStyle(range.startContainer.parentNode).fontSize);
+            span.style.fontSize = (currentSize + delta * 2) + 'px';
+            range.surroundContents(span);
+        }
+    }
+
+    function escapeRegExp(s) {
+        return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+    function replaceText() {
+        const text = document.getElementById('sim2-input').value;
+        const find = document.getElementById('sim2-find').value;
+        const replace = document.getElementById('sim2-replace').value;
+        const caseSensitive = document.getElementById('sim2-case').checked;
+
+        if (find === "") {
+            document.getElementById('sim2-output').innerText = text;
+            document.getElementById('sim2-stats').textContent = '';
+            return;
+        }
+
+        const flags = caseSensitive ? 'g' : 'gi';
+        const regex = new RegExp(escapeRegExp(find), flags);
+        const matches = text.match(regex);
+        const count = matches ? matches.length : 0;
+        const result = text.replace(regex, () => replace);
+        document.getElementById('sim2-output').innerText = result;
+        document.getElementById('sim2-stats').textContent = `🔍 Найдено и заменено: ${count} совпадений`;
+    }
+
+    function analyzeText() {
+        const text = document.getElementById('sim3-input').value;
+        const chars = text.length;
+        const charsNoSpaces = text.replace(/\s/g, '').length;
+        const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+        const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0).length;
+        const paragraphs = text.split(/\n\n+/).filter(p => p.trim().length > 0).length;
+
+        const stats = [
+            { label: '🔤 Символов', value: chars, color: 'var(--fixie-blue)' },
+            { label: '🔤 Без пробелов', value: charsNoSpaces, color: 'var(--fixie-green)' },
+            { label: '📝 Слов', value: words, color: 'var(--fixie-orange)' },
+            { label: '📜 Предложений', value: sentences, color: 'var(--fixie-purple)' },
+            { label: '📄 Абзацев', value: paragraphs, color: 'var(--fixie-red)' }
+        ];
+
+        const container = document.getElementById('sim3-result');
+        container.innerHTML = '';
+        stats.forEach((stat, i) => {
+            const card = document.createElement('div');
+            card.style.cssText = `background: ${stat.color}; color: white; padding: 15px; border-radius: 10px; text-align: center; animation: popIn 0.5s ease ${i * 0.1}s both;`;
+            card.innerHTML = `<div style="font-size: 0.9em;">${stat.label}</div><div style="font-size: 2em; font-weight: bold;">${stat.value}</div>`;
+            container.appendChild(card);
+        });
+    }
+
+    let draggedItem = null;
+
+    document.addEventListener('dragstart', (e) => {
+        if (e.target.classList && e.target.classList.contains('drag-item')) {
+            draggedItem = e.target;
+            setTimeout(() => e.target.classList.add('dragging'), 0);
+        }
+    });
+    document.addEventListener('dragend', (e) => {
+        if (e.target.classList && e.target.classList.contains('drag-item')) {
+            e.target.classList.remove('dragging');
+        }
+    });
+    document.addEventListener('dragover', (e) => {
+        e.preventDefault();
+    });
+    document.addEventListener('dragenter', (e) => {
+        if (e.target.classList && e.target.classList.contains('drop-zone')) {
+            e.target.classList.add('drag-over');
+        }
+    });
+    document.addEventListener('dragleave', (e) => {
+        if (e.target.classList && e.target.classList.contains('drop-zone')) {
+            e.target.classList.remove('drag-over');
+        }
+    });
+    document.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const zone = e.target.closest ? e.target.closest('.drop-zone') : null;
+        if (zone && draggedItem) {
+            zone.classList.remove('drag-over');
+            zone.appendChild(draggedItem);
+        } else if (e.target.id === 'source-items' && draggedItem) {
+            e.target.appendChild(draggedItem);
+        }
+    });
+
+    function checkDragTask1() {
+        const zones = document.querySelectorAll('.drop-zone');
+        let correct = 0;
+        let total = 0;
+        zones.forEach(zone => {
+            const accept = zone.dataset.accept;
+            const items = zone.querySelectorAll('.drag-item');
+            items.forEach(item => {
+                total++;
+                if (item.dataset.type === accept) correct++;
+            });
+        });
+        const feedback = document.getElementById('feedback-1');
+        feedback.style.display = 'block';
+        if (total === 0) {
+            feedback.style.background = '#fff3cd';
+            feedback.style.color = '#856404';
+            feedback.innerHTML = '⚠️ Перетащите элементы в категории!';
+        } else if (correct === total && total === 6) {
+            feedback.style.background = '#d4edda';
+            feedback.style.color = '#155724';
+            feedback.innerHTML = `🏆 Отлично! Все ${total} элементов распределены верно!`;
+        } else {
+            feedback.style.background = '#f8d7da';
+            feedback.style.color = '#721c24';
+            feedback.innerHTML = `❌ Верно: ${correct} из 6. Попробуйте ещё раз!`;
+        }
+    }
+
+    function checkStyleTask(num, correctAnswer) {
+        const selected = document.querySelector(`input[name="style${num}"]:checked`);
+        const feedback = document.getElementById(`feedback-style-${num}`);
+        feedback.style.display = 'block';
+        if (!selected) {
+            feedback.style.background = '#fff3cd';
+            feedback.style.color = '#856404';
+            feedback.innerHTML = '⚠️ Выберите вариант ответа!';
+            return;
+        }
+        if (selected.value === correctAnswer) {
+            feedback.style.background = '#d4edda';
+            feedback.style.color = '#155724';
+            feedback.innerHTML = '✅ Правильно! Отличная работа!';
+        } else {
+            feedback.style.background = '#f8d7da';
+            feedback.style.color = '#721c24';
+            feedback.innerHTML = '❌ Неверно. Подумайте ещё раз!';
+        }
+    }
+
+    function checkGame() {
+        const answers = { q1: 'b', q2: 'b', q3: 'b', q4: 'b', q5: 'c', q6: 'b', q7: 'c' };
+        let score = 0;
+        const total = Object.keys(answers).length;
+        let allAnswered = true;
+
+        document.querySelectorAll('.game-question').forEach(q => {
+            q.classList.remove('correct', 'incorrect');
+        });
+
+        for (let q in answers) {
+            const selected = document.querySelector(`input[name="${q}"]:checked`);
+            const question = selected?.closest('.game-question');
+            if (!selected) {
+                allAnswered = false;
+                continue;
+            }
+            if (selected.value === answers[q]) {
+                score++;
+                if (question) question.classList.add('correct');
+            } else {
+                if (question) question.classList.add('incorrect');
+            }
+        }
+
+        const resultDiv = document.getElementById('game-result');
+        resultDiv.style.display = 'block';
+
+        if (!allAnswered) {
+            resultDiv.style.background = '#fff3cd';
+            resultDiv.style.color = '#856404';
+            resultDiv.innerHTML = '⚠️ Команда, вы ответили не на все вопросы! Проверьте ещё раз.';
+            return;
+        }
+
+        if (score === total) {
+            resultDiv.style.background = '#d4edda';
+            resultDiv.style.color = '#155724';
+            resultDiv.innerHTML = `🏆 БРАВО! ${score} из ${total}! Вы настоящие Мастера текстовых процессоров!`;
+            createConfetti();
+        } else if (score >= 5) {
+            resultDiv.style.background = '#cce5ff';
+            resultDiv.style.color = '#004085';
+            resultDiv.innerHTML = `👍 Хороший результат! ${score} из ${total}. Вы уверенные пользователи!`;
+        } else {
+            resultDiv.style.background = '#f8d7da';
+            resultDiv.style.color = '#721c24';
+            resultDiv.innerHTML = `📚 ${score} из ${total}. Фиксики помогут вам подтянуть теорию. Попробуйте ещё раз!`;
+        }
+    }
+
+    let selectedFixie = null;
+
+    function selectFixie(element, name) {
+        document.querySelectorAll('.fixie-card').forEach(card => card.classList.remove('selected'));
+        element.classList.add('selected');
+        selectedFixie = name;
+    }
+
+    function tydysh() {
+        const msgDiv = document.getElementById('fixie-message');
+
+        if (!selectedFixie) {
+            msgDiv.style.display = 'block';
+            msgDiv.style.borderColor = 'var(--fixie-red)';
+            msgDiv.innerHTML = '⚠️ <strong>Эй, команда!</strong> Сначала выберите фиксика!';
+            return;
+        }
+
+        createConfetti();
+
+        msgDiv.style.display = 'block';
+        msgDiv.style.borderColor = 'var(--fixie-green)';
+
+        const messages = {
+            'Симка': "🔵 <strong>Симка говорит:</strong> «Ваш механизм знаний работает как часы!»",
+            'Нолик': "🟠 <strong>Нолик говорит:</strong> «Ура! Мы починили все баги в знаниях!»",
+            'Дедус': "🟢 <strong>Дедус говорит:</strong> «Мудрость и труд всё перетрут!»",
+            'Файер': "🔴 <strong>Файер говорит:</strong> «Огонь! Вы справились на все 100%!»",
+            'Икс': "🟡 <strong>Икс говорит:</strong> «Задача решена! Нейронные связи работают идеально!»",
+            'Мася': "🟣 <strong>Мася говорит:</strong> «Главное — начало положено! Практика — путь к мастерству!»",
+            'Файя': "🩷 <strong>Файя говорит:</strong> «Тепло от ваших знаний согревает весь компьютер!»"
+        };
+
+        msgDiv.innerHTML = messages[selectedFixie] + "<br><br>⚙️ <em>ТЫДЫЩ! Урок завершён. Спасибо за работу и отличную командную игру!</em> ⚙️";
+    }
+
+    function createConfetti() {
+        const colors = ['#ff8c00', '#00bfff', '#32cd32', '#ffd700', '#ff4500', '#9370db', '#ff69b4'];
+        const shapes = ['■', '●', '▲', '★', '♦'];
+        for (let i = 0; i < 80; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.textContent = shapes[Math.floor(Math.random() * shapes.length)];
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.top = '-20px';
+            confetti.style.color = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.fontSize = (Math.random() * 20 + 10) + 'px';
+            confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            confetti.style.animationDelay = Math.random() * 1.5 + 's';
+            document.body.appendChild(confetti);
+            setTimeout(() => confetti.remove(), 5000);
+        }
+    }
+
+    setCurrentDate();
+    updateProgress();
+</script>
+
+</body>
+</html>

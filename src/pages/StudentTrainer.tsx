@@ -36,6 +36,7 @@ type TrainerKey =
   | "media-access-test"
   | "digital-info"
   | "database-lesson"
+  | "text-processors"
   | "tcpip-addresses"
   | "network-equipment"
   | "linear-programs"
@@ -84,6 +85,7 @@ const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "media-access-test": "/media-access-test.html",
   "digital-info": "/computer-digital-info.html",
   "database-lesson": "/database-lesson.html",
+  "text-processors": "/text-processors.html",
   "tcpip-addresses": "/tcpip-addresses.html",
   "network-equipment": "/network-equipment.html",
   "linear-programs": "/linear-programs.html",
@@ -312,6 +314,14 @@ const TRAINERS: TrainerItem[] = [
     title: "Создание базы данных",
     description: "Урок из 12 шагов: виды БД, кликабельная схема «Библиотека», SQL-запросы, практика и сертификат",
     accent: "#2563EB",
+  },
+  {
+    key: "text-processors",
+    category: "informatics",
+    icon: "📝",
+    title: "Обработка информации в текстовых процессорах",
+    description: "Урок с теорией, 8 практических задач, 8 заданий на текстовую информацию, 3 симуляции, командная игра и рефлексия",
+    accent: "#005B9F",
   },
   {
     key: "tcpip-addresses",
