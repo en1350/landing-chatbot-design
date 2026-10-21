@@ -71,7 +71,6 @@ interface Result {
   title: string;
   text: string;
   advice: string;
-  bonus: string;
   icon: string;
 }
 
@@ -83,7 +82,6 @@ const getResult = (score: number): Result => {
       icon: "Sprout",
       text: "У вас есть прочная классическая база, но мир педагогики меняется! Вы только в начале пути освоения современных ИКТ и инклюзивных практик.",
       advice: "Начните с малого: попробуйте провести один урок с использованием онлайн-квиза или создайте простую таблицу учета в Excel.",
-      bonus: "Чек-лист: 5 простых ИКТ-инструментов для педагога",
     };
   }
   if (score <= 11) {
@@ -93,7 +91,6 @@ const getResult = (score: number): Result => {
       icon: "Target",
       text: "Вы отлично чувствуете себя в аудитории, идете в ногу со временем и уже применяете современные подходы. Вам не хватает лишь систематизации или смелости для масштабирования своего опыта.",
       advice: "Попробуйте оформить свой опыт в виде методической статьи или подайте заявку на небольшой грант для развития студенческого проекта.",
-      bonus: "Шаблон описания успешного педагогического кейса для конференции",
     };
   }
   return {
@@ -102,7 +99,6 @@ const getResult = (score: number): Result => {
     icon: "Crown",
     text: "Браво! Вы не просто преподаете, вы создаете образовательную среду. Инклюзия, ИКТ, проектная деятельность и психологическая поддержка для вас – не пустые слова, а ежедневная практика. Вы готовы делиться опытом на республиканских и международных площадках.",
     advice: "Создавайте свой личный бренд, запускайте авторские курсы или методические вебинары. Коллеги готовы у вас учиться!",
-    bonus: "Гайд: Как оформить и выиграть грант на социальный образовательный проект",
   };
 };
 
@@ -215,10 +211,6 @@ const TeacherMiniTest = () => {
               <div className="mt-4 rounded-xl bg-primary/5 p-4">
                 <p className="font-semibold">Совет</p>
                 <p className="mt-1 text-sm sm:text-base">{result.advice}</p>
-              </div>
-              <div className="mt-3 rounded-xl border border-coral/40 bg-coral/10 p-4">
-                <p className="font-semibold">Ваш бонус</p>
-                <p className="mt-1 text-sm sm:text-base">{result.bonus}</p>
               </div>
               <div className="mt-6 flex flex-col gap-2 sm:flex-row">
                 <Button onClick={restart} variant="outline">
