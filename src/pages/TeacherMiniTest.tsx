@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
+import { reachGoal } from "@/lib/metrika";
 import Icon from "@/components/ui/icon";
 
 interface Option {
@@ -189,7 +190,7 @@ const TeacherMiniTest = () => {
                 <span className="text-sm text-muted-foreground">
                   Отвечено: {answered} из {QUESTIONS.length}
                 </span>
-                <Button size="lg" disabled={answered < QUESTIONS.length} onClick={() => { setFinished(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
+                <Button size="lg" disabled={answered < QUESTIONS.length} onClick={() => { reachGoal("minitest_completed", { score, level: result.title }); setFinished(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
                   Узнать результат
                 </Button>
               </div>

@@ -14,6 +14,7 @@ import { useAuth } from "@/context/AuthContext";
 import AlgorithmsTask from "@/components/student-trainer/AlgorithmsTask";
 import BackwardsAnalysisTask from "@/components/student-trainer/BackwardsAnalysisTask";
 import NetworkProtocolsTask from "@/components/student-trainer/NetworkProtocolsTask";
+import { reachGoal } from "@/lib/metrika";
 import TrainerFullscreen from "@/components/student-trainer/TrainerFullscreen";
 
 /* ---------- Список тренажёров ---------- */
@@ -449,6 +450,7 @@ const StudentTrainer = () => {
       user ? openUpgrade() : openAuth();
       return;
     }
+    reachGoal("trainer_started", { trainer: t.key, title: t.title });
     setActive(t.key);
   };
 
