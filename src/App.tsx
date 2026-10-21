@@ -23,6 +23,7 @@ import ProjectActivity from "./pages/ProjectActivity";
 import CorrectionWork from "./pages/CorrectionWork";
 import EventCardBuilder from "./pages/EventCardBuilder";
 import Admin from "./pages/Admin";
+import TeacherMiniTest from "./pages/TeacherMiniTest";
 import WorksheetBuilder from "./pages/WorksheetBuilder";
 import UserAgreement from "./pages/UserAgreement";
 import RpdBuilder from "./pages/RpdBuilder";
@@ -65,6 +66,7 @@ const App = () => (
               <Route path="/konstruktor-rabochih-listov" element={<WorksheetBuilder />} />
               <Route path="/polzovatelskoe-soglashenie" element={<UserAgreement />} />
               <Route path="/konstruktor-rabochih-programm" element={<RpdBuilder />} />
+              <Route path="/mini-test-pedagogov" element={<TeacherMiniTest />} />
               <Route path="/chat" element={<MemberChat />} />
               <Route path="/admin" element={<Admin />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

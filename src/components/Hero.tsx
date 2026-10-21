@@ -38,6 +38,13 @@ const Hero = () => {
               Играть в «Педагогический ряд»
               <Icon name="ArrowRight" size={16} />
             </a>
+            <Link
+              to="/mini-test-pedagogov"
+              className="mt-3 flex items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-center font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors"
+            >
+              <Icon name="ClipboardCheck" size={18} />
+              Мини-тест: современна ли ваша методическая копилка?
+            </Link>
           </div>
         </div>
       </div>

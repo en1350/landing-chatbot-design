@@ -97,6 +97,7 @@ const Navbar = ({
     { label: "Антиплагиат", icon: "ShieldCheck", onClick: () => handleClick("antiplagiat") },
     { label: "Проверка тетради", icon: "NotebookPen", onClick: () => { setOpen(false); onOpenNotebook(); } },
     { label: "Игра «Педагогический ряд»", icon: "Gamepad2", href: "/pedagogical-row.html" },
+    { label: "Мини-тест для педагогов", icon: "ClipboardCheck", to: "/mini-test-pedagogov" },
   ];
 
   return (
