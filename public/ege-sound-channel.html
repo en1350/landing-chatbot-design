@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интерактивный разбор задачи ЕГЭ: Звук и каналы связи</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-bg: #eff6ff;
+            --success: #15803d;
+            --success-bg: #f0fdf4;
+            --text: #1e293b;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border: #94a3b8;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { color: var(--primary); text-align: center; margin-bottom: 30px; font-size: 1.8rem; }
+        h2 { margin-top: 0; font-size: 1.3rem; }
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+        }
+        .problem-text {
+            font-size: 1.1em;
+            background: var(--primary-bg);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .control-group { display: flex; flex-direction: column; }
+        .control-group label { font-weight: 600; margin-bottom: 6px; font-size: 0.95em; }
+        .input-wrapper { display: flex; align-items: center; gap: 10px; }
+        input[type="number"] {
+            width: 84px;
+            min-height: 44px;
+            padding: 8px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            font-size: 1.1em;
+            font-weight: bold;
+            text-align: center;
+            color: var(--primary);
+        }
+        input[type="range"] { flex-grow: 1; min-height: 44px; cursor: pointer; min-width: 0; }
+        :focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+        .solution-step {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            overflow-wrap: anywhere;
+        }
+        .solution-step.highlight { background: var(--success-bg); border-color: var(--success); }
+        .formula {
+            font-family: 'Courier New', monospace;
+            background: #e2e8f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #0f172a;
+        }
+        .final-answer {
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--success);
+            margin-top: 20px;
+            padding: 20px;
+            background: var(--success-bg);
+            border-radius: 8px;
+            border: 2px solid var(--success);
+        }
+        .variable { color: var(--primary); font-weight: bold; }
+        .hint { color: #475569; font-size: 0.9em; }
+        .note { color: #475569; font-size: 0.9em; margin: 8px 0 0; }
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .card { padding: 14px; margin-bottom: 14px; }
+            h1 { font-size: 1.35rem; margin-bottom: 16px; }
+            .problem-text { padding: 12px; font-size: 1em; }
+            .controls { grid-template-columns: 1fr; }
+        }
+        @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🎵 Интерактивный разбор задачи (Звук)</h1>
+
+    <div class="card">
+        <h2>📝 Условие задачи</h2>
+        <div class="problem-text">
+            Музыкальный фрагмент был оцифрован и записан в виде файла без использования сжатия данных.
+            Получившийся файл был передан в город А по каналу связи за <span class="variable" id="text-t1">30</span> секунд.
+            Затем тот же музыкальный фрагмент был оцифрован повторно с разрешением в <span class="variable" id="text-kD">2</span> раза выше
+            и частотой дискретизации в <span class="variable" id="text-kf">1.5</span> раза меньше, чем в первый раз.
+            Сжатие данных не производилось. Полученный файл был передан в город Б; пропускная способность канала связи
+            с городом Б в <span class="variable" id="text-kU">4</span> раза выше, чем канала связи с городом А.
+            Сколько секунд длилась передача файла в город Б?
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>⚙️ Изменить данные задачи</h2>
+        <p class="hint">Передвигайте ползунки или вводите числа вручную. Решение пересчитается мгновенно.</p>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="num-t1">Время передачи в город А (t₁), сек:</label>
+                <div class="input-wrapper">
+                    <input type="range" id="range-t1" min="1" max="120" value="30" aria-label="Ползунок: время передачи в город А">
+                    <input type="number" id="num-t1" min="1" max="999" value="30">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label for="num-kD">Во сколько раз выше разрешение (k_D):</label>
+                <div class="input-wrapper">
+                    <input type="range" id="range-kD" min="1" max="10" step="0.5" value="2" aria-label="Ползунок: разрешение">
+                    <input type="number" id="num-kD" min="1" max="100" step="0.1" value="2">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label for="num-kf">Во сколько раз меньше частота дискретизации (k_f):</label>
+                <div class="input-wrapper">
+                    <input type="range" id="range-kf" min="1" max="10" step="0.1" value="1.5" aria-label="Ползунок: частота дискретизации">
+                    <input type="number" id="num-kf" min="1" max="100" step="0.1" value="1.5">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label for="num-kU">Во сколько раз выше пропускная способность (k_U):</label>
+                <div class="input-wrapper">
+                    <input type="range" id="range-kU" min="1" max="20" step="0.5" value="4" aria-label="Ползунок: пропускная способность">
+                    <input type="number" id="num-kU" min="1" max="100" step="0.1" value="4">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" aria-live="polite">
+        <h2>🧮 Пошаговое решение</h2>
+
+        <div class="solution-step">
+            <strong>Шаг 1. Оценим изменение размера файла (V).</strong><br>
+            Размер звукового файла прямо пропорционален разрешению и частоте дискретизации: <span class="formula">V ~ D × f</span><br>
+            Новое разрешение: <span class="variable" id="step1-d">2</span> × D₁<br>
+            Новая частота: f₁ / <span class="variable" id="step1-f">1.5</span> = <span id="step1-f-calc">0.67</span> × f₁<br>
+            Общий коэффициент изменения объема файла:
+            <span class="formula" id="step1-kv">k_V = 2 / 1.5 = 1.33</span>
+        </div>
+
+        <div class="solution-step">
+            <strong>Шаг 2. Учтем изменение пропускной способности канала (U).</strong><br>
+            Скорость передачи в город Б выше в <span class="variable" id="step2-ku">4</span> раза.<br>
+            Формула времени: <span class="formula">t = V / U</span>
+        </div>
+
+        <div class="solution-step highlight">
+            <strong>Шаг 3. Вычислим итоговое время (t₂).</strong><br>
+            t₂ = t₁ × (коэффициент изменения объема) / (коэффициент изменения скорости)<br>
+            t₂ = <span class="variable" id="step3-t1">30</span> × <span id="step3-kv">1.33</span> / <span class="variable" id="step3-ku">4</span><br>
+            t₂ = <span id="step3-calc">10</span> секунд.
+        </div>
+
+        <div class="final-answer">
+            Ответ: <span id="final-answer">10</span>
+        </div>
+        <p class="note" id="round-note" hidden>Результат не целый: в ЕГЭ числа подобраны так, чтобы ответ получался целым, поэтому здесь он округлён.</p>
+    </div>
+</div>
+
+<script>
+    const inputs = {
+        t1: { range: document.getElementById('range-t1'), num: document.getElementById('num-t1'), text: document.getElementById('text-t1') },
+        kD: { range: document.getElementById('range-kD'), num: document.getElementById('num-kD'), text: document.getElementById('text-kD') },
+        kf: { range: document.getElementById('range-kf'), num: document.getElementById('num-kf'), text: document.getElementById('text-kf') },
+        kU: { range: document.getElementById('range-kU'), num: document.getElementById('num-kU'), text: document.getElementById('text-kU') }
+    };
+
+    const steps = {
+        step1d: document.getElementById('step1-d'),
+        step1f: document.getElementById('step1-f'),
+        step1fCalc: document.getElementById('step1-f-calc'),
+        step1kv: document.getElementById('step1-kv'),
+        step2ku: document.getElementById('step2-ku'),
+        step3t1: document.getElementById('step3-t1'),
+        step3kv: document.getElementById('step3-kv'),
+        step3ku: document.getElementById('step3-ku'),
+        step3calc: document.getElementById('step3-calc'),
+        final: document.getElementById('final-answer'),
+        note: document.getElementById('round-note')
+    };
+
+    function syncInputs(key, source) {
+        const val = parseFloat(source.value);
+        if (isNaN(val)) return;
+        if (source === inputs[key].range) inputs[key].num.value = val;
+        else inputs[key].range.value = val;
+        inputs[key].text.textContent = val;
+        calculate();
+    }
+
+    for (const key in inputs) {
+        inputs[key].range.addEventListener('input', () => syncInputs(key, inputs[key].range));
+        inputs[key].num.addEventListener('input', () => syncInputs(key, inputs[key].num));
+    }
+
+    function fmt(n) {
+        return Number.isInteger(n) ? String(n) : String(parseFloat(n.toFixed(2)));
+    }
+
+    function calculate() {
+        const t1 = parseFloat(inputs.t1.num.value);
+        const kD = parseFloat(inputs.kD.num.value);
+        const kfDiv = parseFloat(inputs.kf.num.value);
+        const kU = parseFloat(inputs.kU.num.value);
+        if ([t1, kD, kfDiv, kU].some(v => isNaN(v) || v <= 0)) return;
+
+        const kfMult = 1 / kfDiv;
+        const kV = kD * kfMult;
+        const t2 = (t1 * kV) / kU;
+
+        steps.step1d.textContent = kD;
+        steps.step1f.textContent = kfDiv;
+        steps.step1fCalc.textContent = fmt(kfMult);
+        steps.step1kv.textContent = `k_V = ${kD} / ${kfDiv} = ${fmt(kV)}`;
+        steps.step2ku.textContent = kU;
+        steps.step3t1.textContent = t1;
+        steps.step3kv.textContent = fmt(kV);
+        steps.step3ku.textContent = kU;
+        steps.step3calc.textContent = fmt(t2);
+        steps.final.textContent = Math.round(t2);
+        steps.note.hidden = Math.abs(t2 - Math.round(t2)) < 0.005;
+    }
+
+    calculate();
+</script>
+
+</body>
+</html>

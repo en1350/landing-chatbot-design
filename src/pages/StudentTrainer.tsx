@@ -49,7 +49,8 @@ type TrainerKey =
   | "set-theory"
   | "internet-ai"
   | "modeling-luntik"
-  | "ege-divisibility";
+  | "ege-divisibility"
+  | "ege-sound-channel";
 
 interface CategoryItem {
   key: CategoryKey;
@@ -96,6 +97,7 @@ const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "internet-ai": "/internet-ai.html",
   "modeling-luntik": "/modeling-luntik.html",
   "ege-divisibility": "/ege-divisibility.html",
+  "ege-sound-channel": "/ege-sound-channel.html",
 };
 
 const CATEGORIES: CategoryItem[] = [
@@ -378,6 +380,14 @@ const TRAINERS: TrainerItem[] = [
     icon: "🎯",
     title: "Делимость и пары чисел",
     description: "Задача на последовательности: минимальное кратное 21, подходящие пары и максимальная сумма. Теория, пример, алгоритм и тренажёр",
+    accent: "#F59E0B",
+  },
+  {
+    key: "ege-sound-channel",
+    category: "ege",
+    icon: "🎵",
+    title: "Звук и каналы связи",
+    description: "Интерактивный разбор задачи: объём звукового файла, разрешение, частота дискретизации и время передачи. Меняйте условие ползунками",
     accent: "#F59E0B",
   },
 ];
