@@ -56,6 +56,7 @@ const TRAINERS_MENU: NavItem[] = [
 const OVZ_MENU: NavItem[] = [
   { label: "Алгоритмический конвейер", href: "/algorithm-conveyor.html", icon: "Workflow" },
   { label: "IT-лаборатория", href: "/it-lab-ovz.html", icon: "FlaskConical" },
+  { label: "Граф и таблица смежности", href: "/graph-adjacency-ovz.html", icon: "Network" },
 ];
 
 const Navbar = ({
