@@ -22,14 +22,14 @@ const NewsSection = () => {
 
   return (
     <section className="container pb-4">
-      <div className="rounded-2xl border border-primary/20 bg-card shadow-md overflow-hidden animate-fade-in">
-        <div className="flex items-center gap-2 bg-primary px-5 py-3 text-primary-foreground">
+      <div className="mx-auto max-w-5xl overflow-hidden rounded-xl border border-primary/20 bg-card shadow-md animate-fade-in sm:rounded-2xl">
+        <div className="flex items-center gap-2 bg-primary px-4 py-3 text-primary-foreground sm:px-5">
           <Icon name="Newspaper" size={18} />
           <h2 className="font-display font-semibold">Новости сайта</h2>
         </div>
-        <div className="max-h-64 overflow-y-auto divide-y divide-border">
+        <div className="max-h-56 overflow-y-auto sm:max-h-64 divide-y divide-border">
           {items.map((n) => (
-            <article key={n.id} className="px-5 py-4">
+            <article key={n.id} className="px-4 py-3 sm:px-5 sm:py-4">
               <div className="text-xs text-muted-foreground mb-1">
                 {new Date(n.created_at).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" })}
               </div>

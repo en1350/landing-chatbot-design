@@ -2,11 +2,11 @@ import { Link } from "react-router-dom";
 
 const AutumnBanner = () => {
   return (
-    <section className="container py-6 md:py-8">
+    <section className="container py-4 md:py-6">
       <Link
         to="/generator-prezentaciy"
         aria-label="Открыть генератор презентаций"
-        className="group block overflow-hidden rounded-2xl shadow-lg animate-fade-in"
+        className="group mx-auto block max-w-5xl overflow-hidden rounded-xl shadow-lg animate-fade-in sm:rounded-2xl"
       >
         <img
           src="https://cdn.poehali.dev/projects/3a27d5a9-016a-43ab-946d-4c4fe8129705/bucket/ce900e0e-f936-487f-b13f-cd5ef3209cb8.jpg"

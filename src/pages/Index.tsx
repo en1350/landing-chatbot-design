@@ -62,7 +62,7 @@ const Index = () => {
       />
 
       <main className="flex-1">
-        <div className="container flex flex-wrap items-center justify-center gap-x-5 gap-y-2 pt-4">
+        <div className="container flex flex-wrap items-center justify-center gap-x-4 gap-y-2 px-4 pt-4 sm:gap-x-5">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary">
             <Icon name="Sparkles" size={13} />
             3 бесплатные генерации на все инструменты
