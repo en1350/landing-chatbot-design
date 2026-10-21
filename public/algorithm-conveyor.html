@@ -241,6 +241,20 @@
     clip: rect(0,0,0,0);
     border: 0;
   }
+
+  .graph-container { max-width: 100%; overflow: hidden; }
+  .graph-inner { position: relative; width: 580px; height: 420px; transform-origin: 0 0; }
+  @media (max-width: 700px) {
+    .container { padding: 0 10px; margin: 10px auto; }
+    .workspace { padding: 12px; min-height: 0; }
+    .controls { padding: 14px; }
+    .boxes-container { flex-wrap: nowrap; gap: 3px; min-height: 260px; }
+    .box { width: 0; flex: 1 1 0; min-width: 0; font-size: 13px; border-width: 2px; border-radius: 5px; }
+    .box::before { font-size: 11px; top: -15px; }
+    .action-btn { min-width: 45%; padding: 12px 8px; font-size: 14px; }
+    header h1 { font-size: 20px; }
+    .cat-tip { position: static; max-width: none; margin: 0 10px 16px; border-radius: 12px; }
+  }
 </style>
 </head>
 <body>
@@ -519,8 +533,11 @@ const graphEdges = [
 ];
 
 function renderGraph() {
-  const container = document.getElementById('graphContainer');
-  container.innerHTML = '';
+  const outer = document.getElementById('graphContainer');
+  outer.innerHTML = '';
+  const container = document.createElement('div');
+  container.className = 'graph-inner';
+  outer.appendChild(container);
   graphEdges.forEach(([a, b]) => {
     const n1 = graphNodes[a], n2 = graphNodes[b];
     const dx = n2.x - n1.x, dy = n2.y - n1.y;
@@ -545,7 +562,19 @@ function renderGraph() {
     el.style.top = node.y + 'px';
     container.appendChild(el);
   });
+  fitGraph();
 }
+
+function fitGraph() {
+  const outer = document.getElementById('graphContainer');
+  const inner = outer.firstElementChild;
+  if (!inner) return;
+  const w = outer.parentElement.clientWidth - 24;
+  const k = Math.min(1, w / 580);
+  inner.style.transform = 'scale(' + k + ')';
+  outer.style.height = (420 * k) + 'px';
+}
+window.addEventListener('resize', fitGraph);
 
 async function bfs() {
   const startNode = 0;

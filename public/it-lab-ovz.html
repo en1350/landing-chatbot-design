@@ -126,6 +126,27 @@
     *{animation:none !important; transition:none !important; scroll-behavior:auto !important}
   }
   body.reduce-motion *{animation:none !important; transition:none !important; scroll-behavior:auto !important}
+
+  html,body{overflow-x:hidden}
+  img,svg,table{max-width:100%}
+  @media (max-width:700px){
+    .wrap{padding:.6rem}
+    h1{font-size:1.4rem}
+    h2{font-size:1.25rem}
+    .panel,.module{padding:.9rem;border-radius:8px}
+    .nav-list a{flex:1 1 45%;justify-content:center}
+    button{width:100%}
+    .quick-cmds button,.nav-list a{width:auto}
+    .quick-cmds button{flex:1 1 40%}
+    #network table,#network thead,#network tbody,#network tr,#network th,#network td{display:block;width:100%}
+    #network thead{position:absolute;left:-9999px}
+    #network tr{border:2px solid var(--border);border-radius:8px;margin-bottom:.8rem;padding:.4rem}
+    #network th,#network td{border:0;padding:.35rem .5rem}
+    #network td:nth-child(2)::before{content:"Расстояние: ";font-weight:700}
+    #network td:nth-child(4)::before{content:"Результат: ";font-weight:700}
+    #network th[scope=row]::before{content:"Комната ";}
+    #network select{width:100%}
+  }
 </style>
 </head>
 

@@ -140,6 +140,17 @@
   @media (prefers-reduced-motion: reduce) {
     * { animation: none !important; transition: none !important; }
   }
+
+  html,body{overflow-x:hidden}
+  @media (max-width:700px){
+    .wrap{padding:.6rem}
+    h1{font-size:1.4rem}
+    .panel{padding:.9rem}
+    .graph-area,.table-area{padding:.7rem}
+    .adj-table th,.adj-table td{padding:6px 2px;min-width:0;font-size:.9rem}
+    button{width:100%}
+    .answer-row input{width:90px}
+  }
 </style>
 </head>
 <body data-theme="default">
