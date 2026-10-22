@@ -14,6 +14,12 @@ interface Stats {
   users_total: number;
   users_week: number;
   paid_users: number;
+  geo: {
+    visitors: { country: string; count: number }[];
+    registered: { country: string; count: number }[];
+    paid: { country: string; count: number }[];
+    cities: { country: string; city: string; count: number }[];
+  };
   single_payments: { total: number; amount: number; week: number; month: number; buyers: number };
 }
 
@@ -22,6 +28,21 @@ const Metric = ({ label, value, hint }: { label: string; value: number; hint?: s
     <div className="text-sm text-muted-foreground">{label}</div>
     <div className="text-3xl font-bold mt-1">{value}</div>
     {hint && <div className="text-xs text-muted-foreground mt-1">{hint}</div>}
+  </Card>
+);
+
+const GeoList = ({ title, items }: { title: string; items: { country: string; count: number }[] }) => (
+  <Card className="p-4">
+    <h3 className="font-semibold mb-3">{title}</h3>
+    <ul className="space-y-2 text-sm">
+      {items.map((g) => (
+        <li key={g.country} className="flex justify-between gap-3">
+          <span className="truncate">{g.country}</span>
+          <span className="font-semibold">{g.count}</span>
+        </li>
+      ))}
+      {items.length === 0 && <li className="text-muted-foreground">Пока нет данных</li>}
+    </ul>
   </Card>
 );
 
@@ -95,6 +116,29 @@ const StatsTab = ({ token }: { token: string }) => {
               </li>
             ))}
             {s.sources.length === 0 && <li className="text-muted-foreground">Пока нет данных</li>}
+          </ul>
+        </Card>
+      </div>
+
+      <div>
+        <h2 className="text-lg font-semibold mb-3">География</h2>
+        <div className="grid md:grid-cols-3 gap-4">
+          <GeoList title="Посетители по странам" items={s.geo.visitors} />
+          <GeoList title="Зарегистрированные по странам" items={s.geo.registered} />
+          <GeoList title="Оплатившие по странам" items={s.geo.paid} />
+        </div>
+        <Card className="p-4 mt-4">
+          <h3 className="font-semibold mb-3">Города посетителей (30 дней)</h3>
+          <ul className="space-y-2 text-sm">
+            {s.geo.cities.map((c) => (
+              <li key={`${c.country}-${c.city}`} className="flex justify-between gap-3">
+                <span className="truncate">
+                  {c.city}, {c.country}
+                </span>
+                <span className="font-semibold">{c.count}</span>
+              </li>
+            ))}
+            {s.geo.cities.length === 0 && <li className="text-muted-foreground">Пока нет данных</li>}
           </ul>
         </Card>
       </div>

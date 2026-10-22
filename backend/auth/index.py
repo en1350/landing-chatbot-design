@@ -94,6 +94,29 @@ def hash_password(password: str) -> str:
     return hashlib.sha256((salt + password).encode()).hexdigest()
 
 
+def client_ip(event):
+    headers = event.get('headers') or {}
+    fwd = headers.get('X-Forwarded-For') or headers.get('x-forwarded-for') or ''
+    ip = fwd.split(',')[0].strip()
+    if not ip:
+        ip = ((event.get('requestContext') or {}).get('identity') or {}).get('sourceIp') or ''
+    return ip
+
+
+def lookup_geo(ip):
+    if not ip:
+        return None, None
+    try:
+        req = urllib.request.Request(f"https://ipwho.is/{ip}?fields=success,country,city", headers={'User-Agent': 'urokai'})
+        with urllib.request.urlopen(req, timeout=2) as r:
+            data = json.loads(r.read().decode('utf-8'))
+        if data.get('success'):
+            return (data.get('country') or None), (data.get('city') or None)
+    except Exception:
+        pass
+    return None, None
+
+
 def cors_headers():
     return {
         'Access-Control-Allow-Origin': '*',
@@ -342,9 +365,21 @@ def handler(event: dict, context) -> dict:
                     (pw_hash, name or email.split('@')[0], user_id)
                 )
             else:
+                geo_country, geo_city = None, None
+                vid = str(body_data.get('visitor_id') or '')[:64]
+                if vid:
+                    cur.execute(
+                        f"SELECT country, city FROM {SCHEMA}.site_visits WHERE visitor_id = %s AND country IS NOT NULL ORDER BY id DESC LIMIT 1",
+                        (vid,)
+                    )
+                    kv = cur.fetchone()
+                    if kv:
+                        geo_country, geo_city = kv
+                if not geo_country:
+                    geo_country, geo_city = lookup_geo(client_ip(event))
                 cur.execute(
-                    f"INSERT INTO {SCHEMA}.users (email, password_hash, name, privacy_accepted_at, email_verified) VALUES (%s, %s, %s, now(), false) RETURNING id",
-                    (email, pw_hash, name or email.split('@')[0])
+                    f"INSERT INTO {SCHEMA}.users (email, password_hash, name, privacy_accepted_at, email_verified, country, city) VALUES (%s, %s, %s, now(), false, %s, %s) RETURNING id",
+                    (email, pw_hash, name or email.split('@')[0], geo_country, geo_city)
                 )
                 user_id = cur.fetchone()[0]
                 cur.execute(f"INSERT INTO {SCHEMA}.usage_counts (user_id) VALUES (%s)", (user_id,))

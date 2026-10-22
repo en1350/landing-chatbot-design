@@ -1,8 +1,32 @@
 import json
 import os
+import urllib.request
 import psycopg2
 
 SCHEMA = os.environ.get('MAIN_DB_SCHEMA', 'public')
+
+
+def client_ip(event):
+    headers = event.get('headers') or {}
+    fwd = headers.get('X-Forwarded-For') or headers.get('x-forwarded-for') or ''
+    ip = fwd.split(',')[0].strip()
+    if not ip:
+        ip = ((event.get('requestContext') or {}).get('identity') or {}).get('sourceIp') or ''
+    return ip
+
+
+def lookup_geo(ip):
+    if not ip:
+        return None, None
+    try:
+        req = urllib.request.Request(f"https://ipwho.is/{ip}?fields=success,country,city", headers={'User-Agent': 'urokai'})
+        with urllib.request.urlopen(req, timeout=2) as r:
+            data = json.loads(r.read().decode('utf-8'))
+        if data.get('success'):
+            return (data.get('country') or None), (data.get('city') or None)
+    except Exception:
+        pass
+    return None, None
 
 
 def cors():
@@ -130,7 +154,30 @@ def handler(event: dict, context) -> dict:
                     f"FROM {SCHEMA}.processed_payments WHERE plan = 'single'"
                 )
                 sp = cur.fetchone()
+                cur.execute(
+                    f"SELECT coalesce(country, 'Не определено') c, count(DISTINCT visitor_id) FROM {SCHEMA}.site_visits "
+                    f"GROUP BY c ORDER BY 2 DESC LIMIT 15"
+                )
+                geo_visitors = [{'country': r[0], 'count': r[1]} for r in cur.fetchall()]
+                cur.execute(
+                    f"SELECT coalesce(country, 'Не определено') c, count(*) FROM {SCHEMA}.users GROUP BY c ORDER BY 2 DESC LIMIT 15"
+                )
+                geo_registered = [{'country': r[0], 'count': r[1]} for r in cur.fetchall()]
+                cur.execute(
+                    f"SELECT coalesce(u.country, 'Не определено') c, count(*) FROM {SCHEMA}.users u WHERE u.id IN ("
+                    f"SELECT user_id FROM {SCHEMA}.processed_payments UNION "
+                    f"SELECT user_id FROM {SCHEMA}.subscriptions WHERE plan <> 'free') "
+                    f"GROUP BY c ORDER BY 2 DESC LIMIT 15"
+                )
+                geo_paid = [{'country': r[0], 'count': r[1]} for r in cur.fetchall()]
+                cur.execute(
+                    f"SELECT coalesce(country, 'Не определено'), coalesce(city, 'Не определён'), count(DISTINCT visitor_id) "
+                    f"FROM {SCHEMA}.site_visits WHERE created_at > now() - interval '30 days' "
+                    f"GROUP BY 1, 2 ORDER BY 3 DESC LIMIT 15"
+                )
+                geo_cities = [{'country': r[0], 'city': r[1], 'count': r[2]} for r in cur.fetchall()]
                 return resp(200, {
+                    'geo': {'visitors': geo_visitors, 'registered': geo_registered, 'paid': geo_paid, 'cities': geo_cities},
                     'single_payments': {
                         'total': sp[0], 'amount': float(sp[1]),
                         'week': sp[2], 'month': sp[3], 'buyers': sp[4],
@@ -182,8 +229,18 @@ def handler(event: dict, context) -> dict:
             if not visitor_id:
                 return resp(400, {'error': 'visitor_id'})
             cur.execute(
-                f"INSERT INTO {SCHEMA}.site_visits (visitor_id, path, referrer) VALUES (%s, %s, %s)",
-                (visitor_id, path, referrer),
+                f"SELECT country, city FROM {SCHEMA}.site_visits WHERE visitor_id = %s AND country IS NOT NULL "
+                f"ORDER BY id DESC LIMIT 1",
+                (visitor_id,),
+            )
+            known = cur.fetchone()
+            if known:
+                country, city = known
+            else:
+                country, city = lookup_geo(client_ip(event))
+            cur.execute(
+                f"INSERT INTO {SCHEMA}.site_visits (visitor_id, path, referrer, country, city) VALUES (%s, %s, %s, %s, %s)",
+                (visitor_id, path, referrer, country, city),
             )
             conn.commit()
             return resp(200, {'ok': True})

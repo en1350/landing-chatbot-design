@@ -163,6 +163,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       name,
       privacy_accepted: privacyAccepted,
       origin: window.location.origin,
+      visitor_id: (() => {
+        try {
+          return localStorage.getItem("urokai_visitor_id") || "";
+        } catch {
+          return "";
+        }
+      })(),
     });
     return (data.message as string) || "Мы отправили письмо со ссылкой для подтверждения email";
   };

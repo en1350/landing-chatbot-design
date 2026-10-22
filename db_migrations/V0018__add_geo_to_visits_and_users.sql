@@ -1,0 +1,5 @@
+ALTER TABLE site_visits ADD COLUMN IF NOT EXISTS country TEXT;
+ALTER TABLE site_visits ADD COLUMN IF NOT EXISTS city TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS country TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS city TEXT;
+CREATE INDEX IF NOT EXISTS idx_site_visits_country ON site_visits (country);
