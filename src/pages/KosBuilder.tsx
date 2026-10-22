@@ -19,6 +19,7 @@ import AuthModal from "@/components/AuthModal";
 import UpgradeModal from "@/components/UpgradeModal";
 import SaveMaterialButton from "@/components/SaveMaterialButton";
 import KosImportDialog from "@/components/kos/KosImportDialog";
+import KosInstruction from "@/components/kos/KosInstruction";
 import { useAuth } from "@/context/AuthContext";
 import { downloadDocx, downloadTxt } from "@/lib/download";
 import { GENERATE_URL } from "@/components/generator/generatorConfig";
@@ -289,6 +290,8 @@ const KosBuilder = () => {
               Фонд оценочных средств по ФГОС СПО: паспорт, компетенции, формы контроля, задания, критерии и матрица. ИИ заполнит разделы, а задания можно добавить из генераторов тестов, заданий и заданий по ПМ.
             </p>
           </div>
+
+          <KosInstruction />
 
           <div className="flex flex-wrap gap-2 mb-5 no-print">
             <Button className="gap-2" onClick={() => setAiOpen(true)}>
