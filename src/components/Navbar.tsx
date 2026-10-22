@@ -32,6 +32,7 @@ const GENERATORS_MENU: NavItem[] = [
   { label: "Конструктор игры", to: "/konstruktor-igry", icon: "Gamepad2" },
   { label: "Мастер-классы", to: "/konstruktor-masterklassov", icon: "Sparkles" },
   { label: "Задания по ПМ", to: "/generator-zadaniy-pm", icon: "Briefcase" },
+  { label: "Конструктор КОС", to: "/konstruktor-kos", icon: "ClipboardCheck" },
   { label: "Генератор проектов", to: "/generator-proektov", icon: "FolderKanban" },
 ];
 

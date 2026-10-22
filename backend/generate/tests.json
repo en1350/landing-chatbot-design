@@ -449,6 +449,25 @@
         "error": "string"
       },
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "KOS fill without paid subscription returns 403",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "kos_fill",
+        "parts": [
+          "control"
+        ],
+        "fields": {
+          "passport": {
+            "discipline": "Тест"
+          }
+        }
+      },
+      "expectedStatus": 403,
+      "expectedBody": {},
+      "bodyMatcher": "partial"
     }
   ]
 }

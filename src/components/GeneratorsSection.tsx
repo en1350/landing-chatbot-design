@@ -123,6 +123,25 @@ const GeneratorsSection = ({ onNeedAuth }: GeneratorsSectionProps) => {
               />
             </Link>
           </div>
+          <div className="animate-fade-in h-full" style={{ animationDelay: `${(GENERATORS.length + 3) * 80}ms` }}>
+            <Link
+              to="/konstruktor-kos"
+              className="group relative flex h-full w-full flex-col items-center text-center rounded-2xl p-6 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden text-white"
+              style={{ backgroundColor: "#0F766E" }}
+            >
+              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/15 text-3xl mb-3 transition-transform group-hover:scale-110">
+                📚
+              </div>
+              <h3 className="font-display text-base font-bold leading-snug flex-1 flex items-center">
+                Конструктор КОС
+              </h3>
+              <Icon
+                name="ArrowRight"
+                size={18}
+                className="mt-3 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all"
+              />
+            </Link>
+          </div>
           <div className="animate-fade-in h-full" style={{ animationDelay: `${(GENERATORS.length + 2) * 80}ms` }}>
             <Link
               to="/generator-proektov"

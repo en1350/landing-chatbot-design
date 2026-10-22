@@ -1623,6 +1623,108 @@ def normalize_rpd(part: str, parsed: dict) -> dict:
     return {k: rpd_text(parsed.get(k)) for k in ('currentControl', 'intermediateControl', 'criteria', 'sampleTasks', 'evalMethods')}
 
 
+KOS_TASK_TYPES = ['Практическое задание', 'Лабораторная работа', 'Тест', 'Кейс-задача', 'Курсовой проект', 'Устный опрос', 'Коллоквиум', 'Демонстрационный экзамен', 'Другое']
+KOS_CONTROL_TYPES = ['Текущий', 'Промежуточный', 'Итоговый', 'Демонстрационный экзамен']
+KOS_PARTS = ('competencies', 'control', 'tasks', 'criteria')
+
+KOS_FORMATS = {
+    'competencies': '{"competencies": [{"code": "ОК 01 или ПК 1.1", "name": "формулировка компетенции по ФГОС СПО", "indicators": [{"code": "З.1 | У.1 | В.1 | ПО.1", "name": "что знает, умеет или владеет обучающийся"}]}]}',
+    'control': '{"current": "виды текущего контроля", "intermediate": "виды промежуточного контроля", "final": "итоговая аттестация", "selfStudy": "самостоятельная работа"}',
+    'tasks': '{"tasks": [{"name": "название оценочного средства", "type": "один из допустимых типов", "controlType": "один из допустимых видов контроля", "indicator": "КОД_КОМПЕТЕНЦИИ.КОД_ЭЛЕМЕНТА строго из списка", "description": "формулировка задания, условия, требования к результату"}]}',
+    'criteria': '{"scale": "шкала оценивания, каждая оценка с новой строки", "generalCriteria": "общие критерии, каждый с новой строки", "levels": [{"name": "название уровня", "description": "диапазон, например 86-100%", "criteria": "признаки уровня"}]}',
+}
+
+
+def kos_context(f: dict) -> str:
+    p = f.get('passport') or {}
+    comps = f.get('competencies') or []
+    comp_lines = []
+    for c in comps:
+        inds = "; ".join(f"{_s(i.get('code'))} {_s(i.get('name'))}" for i in (c.get('indicators') or []))
+        comp_lines.append(f"- {_s(c.get('code'))} {_s(c.get('name'))} (элементы: {inds or 'нет'})")
+    tasks = f.get('tasks') or []
+    task_lines = [f"- {_s(t.get('name'))} [{_s(t.get('type'))}, {_s(t.get('controlType'))}]" for t in tasks]
+    return f"""Специальность СПО: {_s(p.get('direction')) or 'не указана'}
+Квалификация: {_s(p.get('profile')) or 'не указана'}
+Дисциплина / МДК: {_s(p.get('discipline')) or 'не указана'}
+Курс, семестр: {_s(p.get('semester')) or 'не указан'}
+Трудоёмкость: {_s(p.get('credits')) or 'не указана'}
+Форма промежуточной аттестации: {_s(p.get('intermediate')) or 'не указана'}
+Компетенции:
+{chr(10).join(comp_lines) or '(пока не заданы)'}
+Уже есть оценочные средства:
+{chr(10).join(task_lines) or '(пока нет)'}"""
+
+
+def build_kos_part_prompt(part: str, f: dict) -> str:
+    wish = _s(f.get('wish'))
+    wish_line = f"\nПожелания преподавателя: {wish}" if wish else ""
+    base = f"""Ты опытный методист СПО, разрабатываешь фонд оценочных средств (ФОС/КОС) по ФГОС СПО. Пиши на русском языке, конкретно, без markdown-разметки.
+
+{kos_context(f)}{wish_line}
+
+"""
+    if part == 'competencies':
+        count = _int(f.get('compCount'), 1, 12, 4)
+        task = f"Подбери {count} компетенций (общих ОК и профессиональных ПК), которые реально формируются по этой дисциплине / МДК в рамках указанной специальности. Для каждой дай 2-3 элемента (знать / уметь / владеть) с кодами вида З.1, У.1, В.1 (коды уникальны внутри компетенции). Если компетенции уже заданы, предложи только недостающие."
+    elif part == 'control':
+        task = "Сформулируй формы и виды контроля: текущий, промежуточный, итоговый (с учётом формы промежуточной аттестации) и самостоятельную работу обучающихся. Каждое поле 1-3 предложения."
+    elif part == 'tasks':
+        count = _int(f.get('taskCount'), 1, 15, 5)
+        comps = f.get('competencies') or []
+        codes = [f"{_s(c.get('code'))}.{_s(i.get('code'))}" for c in comps for i in (c.get('indicators') or [])]
+        task = f"""Составь {count} оценочных средств (заданий) для этой дисциплины / МДК. Каждое задание конкретное, выполнимое, с исходными данными и требуемым результатом. Распредели виды контроля от текущего к итоговому.
+Допустимые типы: {', '.join(KOS_TASK_TYPES)}.
+Допустимые виды контроля: {', '.join(KOS_CONTROL_TYPES)}.
+Поле indicator заполняй СТРОГО одним значением из списка: {', '.join(codes) if codes else 'оставь пустую строку, компетенции не заданы'}."""
+    else:
+        task = "Составь шкалу оценивания (5-балльная, с процентами), общие критерии оценивания и 3 уровня сформированности компетенций (высокий, средний, низкий) с диапазонами и признаками."
+    return f"""{base}{task}
+
+Верни ответ СТРОГО в формате JSON без markdown, пояснений и текста до/после:
+{KOS_FORMATS[part]}"""
+
+
+def normalize_kos_part(part: str, parsed: dict) -> dict:
+    if part == 'competencies':
+        out = []
+        for c in parsed.get('competencies') or []:
+            if not isinstance(c, dict):
+                continue
+            inds = [{'code': _s(i.get('code')), 'name': _s(i.get('name'))} for i in (c.get('indicators') or []) if isinstance(i, dict) and (_s(i.get('code')) or _s(i.get('name')))]
+            if _s(c.get('code')) or _s(c.get('name')):
+                out.append({'code': _s(c.get('code')), 'name': _s(c.get('name')), 'indicators': inds or [{'code': '', 'name': ''}]})
+        return {'competencies': out}
+    if part == 'control':
+        return {k: _s(parsed.get(k)) for k in ('current', 'intermediate', 'final', 'selfStudy')}
+    if part == 'tasks':
+        out = []
+        for t in parsed.get('tasks') or []:
+            if not isinstance(t, dict) or not _s(t.get('name')):
+                continue
+            ttype = _s(t.get('type'))
+            ctype = _s(t.get('controlType'))
+            out.append({
+                'name': _s(t.get('name')),
+                'type': ttype if ttype in KOS_TASK_TYPES else 'Практическое задание',
+                'controlType': ctype if ctype in KOS_CONTROL_TYPES else 'Текущий',
+                'indicator': _s(t.get('indicator')),
+                'description': _s(t.get('description')),
+                'competency': '',
+            })
+        return {'tasks': out}
+    levels = [{'name': _s(l.get('name')), 'description': _s(l.get('description')), 'criteria': _s(l.get('criteria'))} for l in (parsed.get('levels') or []) if isinstance(l, dict) and _s(l.get('name'))]
+    return {'scale': _s(parsed.get('scale')), 'generalCriteria': _s(parsed.get('generalCriteria')), 'levels': levels}
+
+
+def run_kos_part(part: str, fields: dict) -> dict:
+    raw = call_ai([
+        {'role': 'system', 'content': 'Ты профессиональный методист СПО. Отвечаешь строго валидным JSON без markdown и пояснений, всегда на русском языке.'},
+        {'role': 'user', 'content': build_kos_part_prompt(part, fields)},
+    ], temperature=0.6)
+    return normalize_kos_part(part, parse_ai_json(raw))
+
+
 def process(event: dict, context) -> dict:
     """Генерация учебных материалов, ИИ-чат-помощник через AITunnel. Декомпозитор компетенций, проверка тетради по фото, план коррекционной работы (аналитика качества обученности) и ИИ-анализ качества знаний по дисциплинам доступны только пользователям с платной подпиской. Антиплагиат (проверка текста и извлечение из PDF/DOCX) доступен бесплатно с лимитом попыток, учёт которых ведётся в backend/auth."""
     method = event.get('httpMethod', 'GET')
@@ -2242,6 +2344,36 @@ def process(event: dict, context) -> dict:
             if not result['tasks']:
                 return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ не составил план, попробуйте снова'})}
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps(result, ensure_ascii=False)}
+
+        elif action == 'kos_fill':
+            fields = body.get('fields') or {}
+            parts = [p for p in (body.get('parts') or []) if p in KOS_PARTS]
+            if not is_user_paid(event):
+                return {'statusCode': 403, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ в конструкторе КОС доступен по платной подписке'})}
+            p = fields.get('passport') or {}
+            if not parts:
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Выберите, что заполнить'})}
+            if not (_s(p.get('discipline')) or _s(p.get('direction'))):
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите дисциплину / МДК или специальность в паспорте'})}
+
+            def safe(part):
+                try:
+                    return part, run_kos_part(part, fields), None
+                except Exception:
+                    return part, None, True
+
+            with ThreadPoolExecutor(max_workers=len(parts)) as pool:
+                results = list(pool.map(safe, parts))
+            out = {}
+            failed = []
+            for part, data, err in results:
+                if err or not data:
+                    failed.append(part)
+                else:
+                    out[part] = data
+            if not out:
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ вернул некорректный ответ, попробуйте снова'})}
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'result': out, 'failed': failed}, ensure_ascii=False)}
 
         elif action == 'extract_text':
             file_base64 = body.get('file_base64') or ''
