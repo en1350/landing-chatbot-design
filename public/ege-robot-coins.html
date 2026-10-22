@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Симулятор Робота: Максимальная и минимальная сумма</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --primary: #6366f1;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --border: #334155;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 20px;
+    line-height: 1.6;
+  }
+  .container { max-width: 1200px; margin: 0 auto; }
+
+  header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 30px;
+    background: linear-gradient(135deg, #4338ca, #6366f1);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(99,102,241,0.3);
+  }
+  header h1 { font-size: 28px; margin-bottom: 10px; }
+  header p { opacity: 0.9; font-size: 15px; max-width: 800px; margin: 0 auto; }
+
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+  .panel h2 { font-size: 20px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+
+  .controls {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    align-items: center;
+  }
+  .btn {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn:hover { transform: translateY(-1px); filter: brightness(1.1); }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-success { background: var(--success); color: white; }
+  .btn-danger { background: var(--danger); color: white; }
+  .btn-secondary { background: var(--border); color: var(--text); }
+
+  .grid-wrapper {
+    overflow-x: auto;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+  }
+  .grid {
+    display: grid;
+    gap: 0;
+    border: 2px solid var(--border);
+    background: var(--border);
+  }
+  .cell {
+    background: var(--card);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: background 0.2s;
+    min-width: 70px;
+    min-height: 70px;
+  }
+  .cell.start { background: rgba(99,102,241,0.2); }
+  .cell.terminal { background: rgba(245,158,11,0.15); }
+  .cell.path-max { background: rgba(16,185,129,0.25); box-shadow: inset 0 0 0 2px var(--success); }
+  .cell.path-min { background: rgba(239,68,68,0.25); box-shadow: inset 0 0 0 2px var(--danger); }
+
+  .cell input {
+    width: 50px;
+    text-align: center;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 18px;
+    font-weight: 700;
+    border-radius: 4px;
+    padding: 4px;
+    margin-bottom: 4px;
+  }
+  .cell input:focus { outline: none; border-color: var(--primary); }
+
+  .wall-controls {
+    display: flex;
+    gap: 4px;
+  }
+  .wall-btn {
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .wall-btn.active {
+    background: var(--danger);
+    color: white;
+    border-color: var(--danger);
+    font-weight: bold;
+  }
+
+  .cell.wall-right { border-right: 4px solid var(--danger) !important; }
+  .cell.wall-down { border-bottom: 4px solid var(--danger) !important; }
+
+  .legend {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--muted);
+    justify-content: center;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-box { width: 16px; height: 16px; border-radius: 4px; border: 1px solid var(--border); }
+
+  details.explanation-box {
+    background: rgba(99, 102, 241, 0.05);
+    border: 1px solid var(--primary);
+    border-radius: 12px;
+    padding: 0;
+    overflow: hidden;
+  }
+  details.explanation-box summary {
+    padding: 16px 20px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--primary);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.2s;
+  }
+  details.explanation-box summary:hover {
+    background: rgba(99, 102, 241, 0.1);
+  }
+  details.explanation-box summary::after {
+    content: '▼';
+    margin-left: auto;
+    font-size: 12px;
+    transition: transform 0.2s;
+  }
+  details.explanation-box[open] summary::after {
+    transform: rotate(180deg);
+  }
+  details.explanation-box summary::-webkit-details-marker {
+    display: none;
+  }
+  .explanation-content {
+    padding: 0 20px 20px 20px;
+    border-top: 1px solid var(--border);
+  }
+  .explanation-content h3 {
+    color: var(--warning);
+    margin: 20px 0 10px 0;
+    font-size: 16px;
+  }
+  .explanation-content p, .explanation-content li {
+    color: var(--text);
+    margin-bottom: 8px;
+    font-size: 15px;
+  }
+  .explanation-content ul, .explanation-content ol {
+    margin-left: 20px;
+    margin-bottom: 12px;
+  }
+  .formula-box {
+    background: var(--bg);
+    border-left: 4px solid var(--success);
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 15px;
+    margin: 12px 0;
+    color: var(--success);
+  }
+  .formula-box.min {
+    border-left-color: var(--danger);
+    color: var(--danger);
+  }
+  .highlight-text {
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--warning);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+
+  .results {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+  }
+  .result-card {
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    border: 2px solid transparent;
+  }
+  .result-card.max { border-color: var(--success); }
+  .result-card.min { border-color: var(--danger); }
+  .result-card h3 { font-size: 16px; color: var(--muted); margin-bottom: 8px; }
+  .result-card .value { font-size: 36px; font-weight: 800; }
+  .result-card.max .value { color: var(--success); }
+  .result-card.min .value { color: var(--danger); }
+  .result-card .path-info { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+  .import-area {
+    width: 100%;
+    height: 120px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 12px;
+    font-family: monospace;
+    font-size: 13px;
+    resize: vertical;
+    margin-top: 10px;
+  }
+
+  @media (max-width: 768px) {
+    .results { grid-template-columns: 1fr; }
+    .cell { min-width: 60px; min-height: 60px; }
+    .cell input { width: 40px; font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🤖 Симулятор Робота (ЕГЭ/ОГЭ Информатика)</h1>
+    <p>Найдите максимальную и минимальную сумму монет, которую может собрать Робот, двигаясь вправо или вниз до «угловой» клетки.</p>
+  </header>
+
+  <div class="panel">
+    <h2>⚙️ Управление полем</h2>
+    <div class="controls">
+      <label style="color: var(--muted); font-size: 14px;">Размер:</label>
+      <select id="rowsSelect" class="btn btn-secondary" style="padding: 8px 12px;">
+        <option value="4">4 x 4</option>
+        <option value="5" selected>5 x 5</option>
+        <option value="6">6 x 6</option>
+        <option value="8">8 x 8</option>
+        <option value="10">10 x 10</option>
+      </select>
+      <button class="btn btn-secondary" onclick="clearGrid()">🗑️ Очистить</button>
+      <button class="btn btn-secondary" onclick="randomizeGrid()">🎲 Случайное поле</button>
+      <button class="btn btn-primary" onclick="loadDemo()">📋 Загрузить демо-пример</button>
+      <button class="btn btn-success" onclick="solve()" style="margin-left: auto; font-size: 16px; padding: 12px 24px;">▶️ Решить задачу</button>
+    </div>
+
+    <div class="grid-wrapper">
+      <div id="grid" class="grid"></div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-box" style="background: rgba(99,102,241,0.2); border-color: var(--primary);"></div> Старт (1,1)</div>
+      <div class="legend-item"><div class="legend-box" style="background: rgba(245,158,11,0.15); border-color: var(--warning);"></div> Угловая (конечная) клетка</div>
+      <div class="legend-item"><div class="legend-box" style="background: rgba(16,185,129,0.25); border-color: var(--success);"></div> Путь максимума</div>
+      <div class="legend-item"><div class="legend-box" style="background: rgba(239,68,68,0.25); border-color: var(--danger);"></div> Путь минимума</div>
+      <div class="legend-item"><div class="legend-box" style="border-right: 3px solid var(--danger);"></div> Стена (запрет хода)</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>💡 Теория и алгоритм решения</h2>
+    <details class="explanation-box" open>
+      <summary>📖 Нажмите, чтобы прочитать пошаговое объяснение (как решать на экзамене)</summary>
+      <div class="explanation-content">
+        <h3>1. Правила движения</h3>
+        <ul>
+          <li>Робот стартует в <span class="highlight-text">левом верхнем углу</span>.</li>
+          <li>Он может двигаться <strong>только вправо</strong> или <strong>вниз</strong>.</li>
+          <li>Он <strong>не может</strong> проходить сквозь стены (красные линии).</li>
+          <li>Робот останавливается только в <span class="highlight-text">«угловых» клетках</span> (жёлтый фон). Это клетки, откуда нельзя пойти ни вправо, ни вниз (там стоят стены или край поля).</li>
+        </ul>
+
+        <h3>2. Как решать вручную (Метод динамического программирования)</h3>
+        <p>Вместо перебора всех путей, мы заполняем таблицу сумм. В каждой клетке мы записываем <strong>максимальную (или минимальную) сумму</strong>, которую можно набрать, дойдя до неё.</p>
+
+        <p><strong>Для поиска МАКСИМУМА:</strong></p>
+        <div class="formula-box">
+          Сумма = (Значение монеты в текущей клетке) + MAX(Сумма из клетки сверху, Сумма из клетки слева)
+        </div>
+        <p><em>Если сверху или слева стоит стена, мы считаем, что прийти оттуда невозможно (сумма равна -∞).</em></p>
+
+        <p><strong>Для поиска МИНИМУМА:</strong></p>
+        <div class="formula-box min">
+          Сумма = (Значение монеты в текущей клетке) + MIN(Сумма из клетки сверху, Сумма из клетки слева)
+        </div>
+        <p><em>Если прийти неоткуда, сумма равна +∞.</em></p>
+
+        <h3>3. Где искать итоговый ответ?</h3>
+        <p>После заполнения всей таблицы, посмотрите <strong>только на «угловые» (конечные) клетки</strong> (они подсвечены жёлтым в симуляторе). <br>
+        ➡️ <strong>Максимальный ответ</strong> — это самое большое число среди этих угловых клеток.<br>
+        ➡️ <strong>Минимальный ответ</strong> — это самое маленькое число среди этих угловых клеток.</p>
+
+        <h3>4. Как использовать этот симулятор для проверки?</h3>
+        <ol>
+          <li>Решите задачу из сборника ЕГЭ на бумаге, заполнив таблицу.</li>
+          <li>Вбейте числа и стены в этот симулятор (или загрузите из Excel).</li>
+          <li>Нажмите <strong>«▶️ Решить задачу»</strong>.</li>
+          <li>Сравните свои числа с ответами симулятора. Нажмите <strong>«Показать путь»</strong>, чтобы проверить, не ошиблись ли вы в маршруте.</li>
+        </ol>
+      </div>
+    </details>
+  </div>
+
+  <div class="panel" id="resultsPanel" style="display: none;">
+    <h2>📊 Результаты вычислений</h2>
+    <div class="results">
+      <div class="result-card max">
+        <h3>Максимальная сумма</h3>
+        <div class="value" id="maxVal">0</div>
+        <div class="path-info" id="maxInfo">Путь не найден</div>
+        <button class="btn btn-success" style="margin: 12px auto 0; font-size: 13px;" onclick="highlightPath('max')">🟩 Показать путь на поле</button>
+      </div>
+      <div class="result-card min">
+        <h3>Минимальная сумма</h3>
+        <div class="value" id="minVal">0</div>
+        <div class="path-info" id="minInfo">Путь не найден</div>
+        <button class="btn btn-danger" style="margin: 12px auto 0; font-size: 13px;" onclick="highlightPath('min')">🟥 Показать путь на поле</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>📥 Импорт данных из CSV (Excel)</h2>
+    <p style="color: var(--muted); font-size: 13px; margin-bottom: 8px;">
+      Формат: <code>значение,стена_вправо(0/1),стена_вниз(0/1)</code>. Ячейки в строке разделяются точкой с запятой <code>;</code>, строки — переносом.<br>
+      Пример: <code>10,0,0; 20,1,0; 30,0,1</code>
+    </p>
+    <textarea id="importData" class="import-area" placeholder="10,0,0; 5,0,0; 15,1,0&#10;2,0,1; 8,0,0; 4,0,1"></textarea>
+    <div class="controls" style="margin-top: 12px; margin-bottom: 0;">
+      <button class="btn btn-secondary" onclick="importFromText()">Загрузить из текста</button>
+      <button class="btn btn-secondary" onclick="exportToText()">Экспорт в текст</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let rows = 5;
+let cols = 5;
+let gridData = [];
+let lastMaxPath = null;
+let lastMinPath = null;
+
+const clampValue = (v) => {
+  v = parseInt(v);
+  if (isNaN(v) || v < 1) return 1;
+  if (v > 100) return 100;
+  return v;
+};
+
+function buildGrid(data) {
+  gridData = data;
+  rows = data.length;
+  cols = data[0].length;
+  lastMaxPath = null;
+  lastMinPath = null;
+
+  const gridEl = document.getElementById('grid');
+  gridEl.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  gridEl.innerHTML = '';
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const cellData = gridData[r][c];
+
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.r = r;
+      cell.dataset.c = c;
+      if (r === 0 && c === 0) cell.classList.add('start');
+
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.min = 1;
+      input.max = 100;
+      input.value = cellData.value;
+      input.addEventListener('change', (e) => {
+        const v = clampValue(e.target.value);
+        gridData[r][c].value = v;
+        e.target.value = v;
+      });
+
+      const controls = document.createElement('div');
+      controls.className = 'wall-controls';
+
+      const btnR = document.createElement('button');
+      btnR.className = 'wall-btn';
+      btnR.title = 'Стена вправо';
+      btnR.innerHTML = '→';
+      btnR.onclick = () => toggleWall(r, c, 'right');
+
+      const btnD = document.createElement('button');
+      btnD.className = 'wall-btn';
+      btnD.title = 'Стена вниз';
+      btnD.innerHTML = '↓';
+      btnD.onclick = () => toggleWall(r, c, 'down');
+
+      controls.appendChild(btnR);
+      controls.appendChild(btnD);
+      cell.appendChild(input);
+      cell.appendChild(controls);
+      gridEl.appendChild(cell);
+    }
+  }
+  syncView();
+}
+
+function getCell(r, c) {
+  return document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+}
+
+function syncView() {
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const cell = getCell(r, c);
+      const d = gridData[r][c];
+      const btns = cell.querySelectorAll('.wall-btn');
+      cell.querySelector('input').value = d.value;
+      btns[0].classList.toggle('active', d.wallRight);
+      btns[1].classList.toggle('active', d.wallDown);
+      cell.classList.toggle('wall-right', d.wallRight);
+      cell.classList.toggle('wall-down', d.wallDown);
+    }
+  }
+  checkTerminals();
+  clearHighlights();
+  document.getElementById('resultsPanel').style.display = 'none';
+}
+
+function makeData(valueFn, wallFn) {
+  const size = parseInt(document.getElementById('rowsSelect').value);
+  const data = [];
+  for (let r = 0; r < size; r++) {
+    const row = [];
+    for (let c = 0; c < size; c++) {
+      row.push({
+        value: valueFn(),
+        wallRight: wallFn() && c < size - 1,
+        wallDown: wallFn() && r < size - 1
+      });
+    }
+    data.push(row);
+  }
+  return data;
+}
+
+function toggleWall(r, c, dir) {
+  const d = gridData[r][c];
+  if (dir === 'right') d.wallRight = !d.wallRight;
+  else d.wallDown = !d.wallDown;
+  syncView();
+}
+
+function checkTerminals() {
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const blockedRight = (c === cols - 1) || gridData[r][c].wallRight;
+      const blockedDown = (r === rows - 1) || gridData[r][c].wallDown;
+      getCell(r, c).classList.toggle('terminal', blockedRight && blockedDown);
+    }
+  }
+}
+
+function clearHighlights() {
+  document.querySelectorAll('.cell').forEach(c => {
+    c.classList.remove('path-max', 'path-min');
+  });
+}
+
+function solve() {
+  clearHighlights();
+
+  const maxDP = Array(rows).fill().map(() => Array(cols).fill(-Infinity));
+  const minDP = Array(rows).fill().map(() => Array(cols).fill(Infinity));
+  const fromMax = Array(rows).fill().map(() => Array(cols).fill(null));
+  const fromMin = Array(rows).fill().map(() => Array(cols).fill(null));
+
+  maxDP[0][0] = minDP[0][0] = gridData[0][0].value;
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (r === 0 && c === 0) continue;
+
+      const options = [];
+      if (r > 0 && !gridData[r-1][c].wallDown && maxDP[r-1][c] !== -Infinity) {
+        options.push({ mx: maxDP[r-1][c], mn: minDP[r-1][c], dir: 'U' });
+      }
+      if (c > 0 && !gridData[r][c-1].wallRight && maxDP[r][c-1] !== -Infinity) {
+        options.push({ mx: maxDP[r][c-1], mn: minDP[r][c-1], dir: 'L' });
+      }
+      if (!options.length) continue;
+
+      const bestMax = options.reduce((a, b) => a.mx >= b.mx ? a : b);
+      const bestMin = options.reduce((a, b) => a.mn <= b.mn ? a : b);
+      maxDP[r][c] = bestMax.mx + gridData[r][c].value;
+      fromMax[r][c] = bestMax.dir;
+      minDP[r][c] = bestMin.mn + gridData[r][c].value;
+      fromMin[r][c] = bestMin.dir;
+    }
+  }
+
+  let globalMax = -Infinity;
+  let globalMin = Infinity;
+  let bestMaxCell = null;
+  let bestMinCell = null;
+  let terminalCount = 0;
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const blockedRight = (c === cols - 1) || gridData[r][c].wallRight;
+      const blockedDown = (r === rows - 1) || gridData[r][c].wallDown;
+      if (!(blockedRight && blockedDown)) continue;
+
+      terminalCount++;
+      if (maxDP[r][c] === -Infinity) continue;
+      if (maxDP[r][c] > globalMax) {
+        globalMax = maxDP[r][c];
+        bestMaxCell = { r, c };
+      }
+      if (minDP[r][c] < globalMin) {
+        globalMin = minDP[r][c];
+        bestMinCell = { r, c };
+      }
+    }
+  }
+
+  document.getElementById('resultsPanel').style.display = 'block';
+
+  if (bestMaxCell) {
+    document.getElementById('maxVal').textContent = globalMax;
+    document.getElementById('maxInfo').textContent = `Достигнуто в клетке (${bestMaxCell.r+1}, ${bestMaxCell.c+1}). Найдено конечных клеток: ${terminalCount}`;
+    lastMaxPath = backtrack(fromMax, bestMaxCell);
+  } else {
+    document.getElementById('maxVal').textContent = "Нет пути";
+    document.getElementById('maxInfo').textContent = "Робот не может достичь ни одной конечной клетки";
+    lastMaxPath = null;
+  }
+
+  if (bestMinCell) {
+    document.getElementById('minVal').textContent = globalMin;
+    document.getElementById('minInfo').textContent = `Достигнуто в клетке (${bestMinCell.r+1}, ${bestMinCell.c+1}). Найдено конечных клеток: ${terminalCount}`;
+    lastMinPath = backtrack(fromMin, bestMinCell);
+  } else {
+    document.getElementById('minVal').textContent = "Нет пути";
+    document.getElementById('minInfo').textContent = "Робот не может достичь ни одной конечной клетки";
+    lastMinPath = null;
+  }
+
+  document.getElementById('resultsPanel').scrollIntoView({ behavior: 'smooth' });
+}
+
+function backtrack(fromTable, endCell) {
+  const path = [];
+  let curr = endCell;
+  while (curr) {
+    path.push(curr);
+    if (curr.r === 0 && curr.c === 0) break;
+    const dir = fromTable[curr.r][curr.c];
+    if (dir === 'U') curr = { r: curr.r - 1, c: curr.c };
+    else if (dir === 'L') curr = { r: curr.r, c: curr.c - 1 };
+    else break;
+  }
+  return path.reverse();
+}
+
+function highlightPath(type) {
+  clearHighlights();
+  const path = type === 'max' ? lastMaxPath : lastMinPath;
+  if (!path) return;
+  const cls = type === 'max' ? 'path-max' : 'path-min';
+  path.forEach(p => {
+    const cell = getCell(p.r, p.c);
+    if (cell) cell.classList.add(cls);
+  });
+}
+
+function clearGrid() {
+  buildGrid(makeData(() => 1, () => false));
+}
+
+function randomizeGrid() {
+  buildGrid(makeData(() => Math.floor(Math.random() * 50) + 1, () => Math.random() > 0.8));
+}
+
+function loadDemo() {
+  const demo = [
+    [{v:7,wr:0,wd:0}, {v:9,wr:1,wd:0}, {v:3,wr:0,wd:1}, {v:8,wr:0,wd:0}, {v:2,wr:0,wd:1}],
+    [{v:4,wr:0,wd:1}, {v:6,wr:0,wd:0}, {v:5,wr:1,wd:0}, {v:1,wr:0,wd:1}, {v:9,wr:0,wd:0}],
+    [{v:8,wr:1,wd:0}, {v:2,wr:0,wd:0}, {v:7,wr:0,wd:1}, {v:4,wr:0,wd:0}, {v:3,wr:0,wd:1}],
+    [{v:1,wr:0,wd:0}, {v:9,wr:0,wd:1}, {v:6,wr:1,wd:0}, {v:5,wr:0,wd:0}, {v:8,wr:0,wd:0}],
+    [{v:3,wr:0,wd:0}, {v:4,wr:1,wd:0}, {v:2,wr:0,wd:0}, {v:7,wr:0,wd:0}, {v:1,wr:0,wd:0}]
+  ];
+  document.getElementById('rowsSelect').value = "5";
+  buildGrid(demo.map(row => row.map(x => ({ value: x.v, wallRight: x.wr === 1, wallDown: x.wd === 1 }))));
+}
+
+function exportToText() {
+  const lines = gridData.map(row =>
+    row.map(d => `${d.value},${d.wallRight ? 1 : 0},${d.wallDown ? 1 : 0}`).join('; ')
+  );
+  document.getElementById('importData').value = lines.join('\n');
+}
+
+function importFromText() {
+  const text = document.getElementById('importData').value.trim();
+  if (!text) return;
+
+  const lines = text.split('\n').filter(l => l.trim() !== '');
+  const parsed = lines.map(l => l.split(';').map(s => s.trim()).filter(s => s !== ''));
+  const nRows = parsed.length;
+  const nCols = parsed[0].length;
+
+  if (nRows > 10 || nCols > 10) {
+    alert("Максимальный поддерживаемый размер 10x10 для удобства отображения");
+    return;
+  }
+  if (parsed.some(row => row.length !== nCols)) {
+    alert("В каждой строке должно быть одинаковое число ячеек, разделённых точкой с запятой");
+    return;
+  }
+
+  const data = parsed.map((row, r) => row.map((cellText, c) => {
+    const parts = cellText.split(',');
+    return {
+      value: clampValue(parts[0]),
+      wallRight: parts[1] === '1' && c < nCols - 1,
+      wallDown: parts[2] === '1' && r < nRows - 1
+    };
+  }));
+
+  const select = document.getElementById('rowsSelect');
+  if ([...select.options].some(o => o.value === String(nRows)) && nRows === nCols) {
+    select.value = String(nRows);
+  }
+  buildGrid(data);
+}
+
+document.getElementById('rowsSelect').addEventListener('change', randomizeGrid);
+
+loadDemo();
+</script>
+</body>
+</html>

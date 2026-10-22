@@ -53,7 +53,8 @@ type TrainerKey =
   | "modeling-luntik"
   | "ege-divisibility"
   | "ege-sound-channel"
-  | "ege-nonary-numbers";
+  | "ege-nonary-numbers"
+  | "ege-robot-coins";
 
 interface CategoryItem {
   key: CategoryKey;
@@ -103,6 +104,7 @@ const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "ege-divisibility": "/ege-divisibility.html",
   "ege-sound-channel": "/ege-sound-channel.html",
   "ege-nonary-numbers": "/ege-nonary-numbers.html",
+  "ege-robot-coins": "/ege-robot-coins.html",
 };
 
 const CATEGORIES: CategoryItem[] = [
@@ -410,6 +412,14 @@ const TRAINERS: TrainerItem[] = [
     title: "Девятеричные числа с ограничениями",
     description: "Разбор задачи на подсчёт девятеричных пятизначных чисел: две цифры 3 и нечётные цифры не рядом с 2. Пошаговое решение, симулятор перебора и проверка своего числа",
     accent: "#6366F1",
+  },
+  {
+    key: "ege-robot-coins",
+    category: "ege",
+    icon: "🤖",
+    title: "Робот и монеты: максимум и минимум",
+    description: "Симулятор задачи про Робота на поле со стенами: заполняйте клетки, ставьте стены, находите максимальную и минимальную суммы и смотрите путь. Теория метода динамического программирования и импорт из Excel",
+    accent: "#4F46E5",
   },
 ];
 
