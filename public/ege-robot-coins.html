@@ -262,7 +262,71 @@
     margin-top: 10px;
   }
 
+
+  .cell .dp-badge {
+    display: none;
+    position: absolute;
+    top: 2px;
+    left: 4px;
+    font-size: 10px;
+    line-height: 1.15;
+    font-weight: 700;
+    text-align: left;
+    pointer-events: none;
+  }
+  .grid.show-dp .dp-badge { display: block; }
+  .dp-max { color: #6ee7b7; }
+  .dp-min { color: #fca5a5; }
+
+  .check-row {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    margin-bottom: 16px;
+  }
+  .check-row label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); font-weight: 600; }
+  .check-row input[type="number"] {
+    width: 150px;
+    padding: 10px 12px;
+    background: var(--bg);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .check-row input[type="number"]:focus { outline: none; border-color: var(--primary); }
+  .feedback-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 8px; }
+  .feedback-card {
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 16px 18px;
+    border: 2px solid var(--border);
+  }
+  .feedback-card.ok { border-color: var(--success); }
+  .feedback-card.bad { border-color: var(--danger); }
+  .feedback-card.empty { border-color: var(--warning); }
+  .feedback-card h3 { font-size: 15px; margin-bottom: 6px; }
+  .feedback-card.ok h3 { color: var(--success); }
+  .feedback-card.bad h3 { color: var(--danger); }
+  .feedback-card.empty h3 { color: var(--warning); }
+  .feedback-card p { font-size: 14px; color: var(--text); margin-bottom: 6px; }
+  .feedback-card .hint { color: var(--muted); font-size: 13px; }
+  .summary-box {
+    margin-top: 16px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .summary-box.ok { background: rgba(16,185,129,0.15); border: 1px solid var(--success); color: #6ee7b7; }
+  .summary-box.bad { background: rgba(239,68,68,0.12); border: 1px solid var(--danger); color: #fca5a5; }
+  .check-stats { margin-left: auto; font-size: 13px; color: var(--muted); }
+  .check-tools { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+
   @media (max-width: 768px) {
+    .feedback-grid { grid-template-columns: 1fr; }
     .results { grid-template-columns: 1fr; }
     .cell { min-width: 60px; min-height: 60px; }
     .cell input { width: 40px; font-size: 16px; }
@@ -350,6 +414,31 @@
     </details>
   </div>
 
+  <div class="panel" id="selfCheckPanel">
+    <h2>🎓 Проверь себя</h2>
+    <p style="color: var(--muted); font-size: 14px; margin-bottom: 16px;">
+      Решите задачу для поля выше на бумаге, введите максимальную и минимальную суммы и нажмите «Проверить».
+      Симулятор сверит ответы и подскажет, в чём вероятная ошибка. Кнопку «Решить задачу» пока не нажимайте: она сразу покажет ответ.
+    </p>
+    <div class="check-row">
+      <button class="btn btn-secondary" onclick="newTask()">🎲 Новая задача</button>
+      <label>Ваш максимум
+        <input type="number" id="userMax" placeholder="Например, 48" onkeydown="if(event.key==='Enter')checkAnswers()">
+      </label>
+      <label>Ваш минимум
+        <input type="number" id="userMin" placeholder="Например, 31" onkeydown="if(event.key==='Enter')checkAnswers()">
+      </label>
+      <button class="btn btn-primary" onclick="checkAnswers()">✅ Проверить</button>
+      <span class="check-stats" id="checkStats">Верно решено задач: 0</span>
+    </div>
+    <div id="checkFeedback"></div>
+    <div class="check-tools" id="checkTools" style="display: none;">
+      <button class="btn btn-secondary" onclick="toggleDpTable()" id="dpToggleBtn">🔢 Показать таблицу сумм</button>
+      <button class="btn btn-success" onclick="showCorrectPath('max')">🟩 Верный путь максимума</button>
+      <button class="btn btn-danger" onclick="showCorrectPath('min')">🟥 Верный путь минимума</button>
+    </div>
+  </div>
+
   <div class="panel" id="resultsPanel" style="display: none;">
     <h2>📊 Результаты вычислений</h2>
     <div class="results">
@@ -426,6 +515,7 @@ function buildGrid(data) {
         const v = clampValue(e.target.value);
         gridData[r][c].value = v;
         e.target.value = v;
+        resetCheck();
       });
 
       const controls = document.createElement('div');
@@ -445,6 +535,10 @@ function buildGrid(data) {
 
       controls.appendChild(btnR);
       controls.appendChild(btnD);
+      const badge = document.createElement('div');
+      badge.className = 'dp-badge';
+
+      cell.appendChild(badge);
       cell.appendChild(input);
       cell.appendChild(controls);
       gridEl.appendChild(cell);
@@ -472,6 +566,7 @@ function syncView() {
   }
   checkTerminals();
   clearHighlights();
+  resetCheck();
   document.getElementById('resultsPanel').style.display = 'none';
 }
 
@@ -515,13 +610,13 @@ function clearHighlights() {
   });
 }
 
-function solve() {
-  clearHighlights();
-
+function computeSolution(ignoreWalls) {
   const maxDP = Array(rows).fill().map(() => Array(cols).fill(-Infinity));
   const minDP = Array(rows).fill().map(() => Array(cols).fill(Infinity));
   const fromMax = Array(rows).fill().map(() => Array(cols).fill(null));
   const fromMin = Array(rows).fill().map(() => Array(cols).fill(null));
+  const wallR = (r, c) => !ignoreWalls && gridData[r][c].wallRight;
+  const wallD = (r, c) => !ignoreWalls && gridData[r][c].wallDown;
 
   maxDP[0][0] = minDP[0][0] = gridData[0][0].value;
 
@@ -530,10 +625,10 @@ function solve() {
       if (r === 0 && c === 0) continue;
 
       const options = [];
-      if (r > 0 && !gridData[r-1][c].wallDown && maxDP[r-1][c] !== -Infinity) {
+      if (r > 0 && !wallD(r - 1, c) && maxDP[r-1][c] !== -Infinity) {
         options.push({ mx: maxDP[r-1][c], mn: minDP[r-1][c], dir: 'U' });
       }
-      if (c > 0 && !gridData[r][c-1].wallRight && maxDP[r][c-1] !== -Infinity) {
+      if (c > 0 && !wallR(r, c - 1) && maxDP[r][c-1] !== -Infinity) {
         options.push({ mx: maxDP[r][c-1], mn: minDP[r][c-1], dir: 'L' });
       }
       if (!options.length) continue;
@@ -547,19 +642,19 @@ function solve() {
     }
   }
 
+  const terminals = [];
   let globalMax = -Infinity;
   let globalMin = Infinity;
   let bestMaxCell = null;
   let bestMinCell = null;
-  let terminalCount = 0;
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
-      const blockedRight = (c === cols - 1) || gridData[r][c].wallRight;
-      const blockedDown = (r === rows - 1) || gridData[r][c].wallDown;
+      const blockedRight = (c === cols - 1) || wallR(r, c);
+      const blockedDown = (r === rows - 1) || wallD(r, c);
       if (!(blockedRight && blockedDown)) continue;
 
-      terminalCount++;
+      terminals.push({ r, c });
       if (maxDP[r][c] === -Infinity) continue;
       if (maxDP[r][c] > globalMax) {
         globalMax = maxDP[r][c];
@@ -572,26 +667,36 @@ function solve() {
     }
   }
 
+  return {
+    maxDP, minDP, fromMax, fromMin, terminals,
+    globalMax, globalMin, bestMaxCell, bestMinCell,
+    maxPath: bestMaxCell ? backtrack(fromMax, bestMaxCell) : null,
+    minPath: bestMinCell ? backtrack(fromMin, bestMinCell) : null
+  };
+}
+
+function solve() {
+  clearHighlights();
+  const sol = computeSolution(false);
+  lastMaxPath = sol.maxPath;
+  lastMinPath = sol.minPath;
+
   document.getElementById('resultsPanel').style.display = 'block';
 
-  if (bestMaxCell) {
-    document.getElementById('maxVal').textContent = globalMax;
-    document.getElementById('maxInfo').textContent = `Достигнуто в клетке (${bestMaxCell.r+1}, ${bestMaxCell.c+1}). Найдено конечных клеток: ${terminalCount}`;
-    lastMaxPath = backtrack(fromMax, bestMaxCell);
+  if (sol.bestMaxCell) {
+    document.getElementById('maxVal').textContent = sol.globalMax;
+    document.getElementById('maxInfo').textContent = `Достигнуто в клетке (${sol.bestMaxCell.r+1}, ${sol.bestMaxCell.c+1}). Найдено конечных клеток: ${sol.terminals.length}`;
   } else {
     document.getElementById('maxVal').textContent = "Нет пути";
     document.getElementById('maxInfo').textContent = "Робот не может достичь ни одной конечной клетки";
-    lastMaxPath = null;
   }
 
-  if (bestMinCell) {
-    document.getElementById('minVal').textContent = globalMin;
-    document.getElementById('minInfo').textContent = `Достигнуто в клетке (${bestMinCell.r+1}, ${bestMinCell.c+1}). Найдено конечных клеток: ${terminalCount}`;
-    lastMinPath = backtrack(fromMin, bestMinCell);
+  if (sol.bestMinCell) {
+    document.getElementById('minVal').textContent = sol.globalMin;
+    document.getElementById('minInfo').textContent = `Достигнуто в клетке (${sol.bestMinCell.r+1}, ${sol.bestMinCell.c+1}). Найдено конечных клеток: ${sol.terminals.length}`;
   } else {
     document.getElementById('minVal').textContent = "Нет пути";
     document.getElementById('minInfo').textContent = "Робот не может достичь ни одной конечной клетки";
-    lastMinPath = null;
   }
 
   document.getElementById('resultsPanel').scrollIntoView({ behavior: 'smooth' });
@@ -681,6 +786,159 @@ function importFromText() {
     select.value = String(nRows);
   }
   buildGrid(data);
+}
+
+
+let solvedCount = 0;
+let taskSolved = false;
+let dpShown = false;
+
+function cellName(cell) {
+  return `(${cell.r + 1}, ${cell.c + 1})`;
+}
+
+function resetCheck() {
+  const fb = document.getElementById('checkFeedback');
+  if (!fb) return;
+  fb.innerHTML = '';
+  document.getElementById('checkTools').style.display = 'none';
+  document.getElementById('userMax').value = '';
+  document.getElementById('userMin').value = '';
+  taskSolved = false;
+  hideDpTable();
+}
+
+function newTask() {
+  randomizeGrid();
+  document.getElementById('userMax').focus();
+}
+
+function diagnose(kind, value, sol, flat) {
+  const isMax = kind === 'max';
+  const correct = isMax ? sol.globalMax : sol.globalMin;
+  const otherCorrect = isMax ? sol.globalMin : sol.globalMax;
+  const dp = isMax ? sol.maxDP : sol.minDP;
+  const word = isMax ? 'максимум' : 'минимум';
+  const otherWord = isMax ? 'минимум' : 'максимум';
+
+  if (value === otherCorrect && otherCorrect !== correct) {
+    return `Это правильный ${otherWord}, а вы искали ${word}. На каждом шаге нужно брать ${isMax ? 'БОЛЬШЕЕ' : 'МЕНЬШЕЕ'} из значений «сверху» и «слева».`;
+  }
+
+  const flatCorrect = isMax ? flat.globalMax : flat.globalMin;
+  if (value === flatCorrect && flatCorrect !== correct) {
+    return 'Такая сумма получится, если не учитывать стены. Робот не может проходить сквозь красные линии: клетка «сверху» доступна, только если у неё нет стены вниз, а «слева» — только если нет стены вправо.';
+  }
+
+  const terminalHit = sol.terminals.find(t => dp[t.r][t.c] === value);
+  if (terminalHit) {
+    return `Это ${word} до угловой клетки ${cellName(terminalHit)}, но она не лучшая. Сравните значения во всех жёлтых клетках и выберите ${isMax ? 'наибольшее' : 'наименьшее'}.`;
+  }
+
+  let nonTerminal = null;
+  for (let r = 0; r < rows && !nonTerminal; r++) {
+    for (let c = 0; c < cols; c++) {
+      const isTerm = sol.terminals.some(t => t.r === r && t.c === c);
+      if (!isTerm && dp[r][c] === value) { nonTerminal = { r, c }; break; }
+    }
+  }
+  if (nonTerminal) {
+    return `Это сумма в клетке ${cellName(nonTerminal)}, но она не угловая: отсюда Робот ещё может идти дальше. Ответ берётся только из жёлтых клеток.`;
+  }
+
+  if (isMax) {
+    return value > correct
+      ? 'Ответ больше возможного максимума: такого пути не существует. Проверьте стены на маршруте и сложение.'
+      : 'Есть путь с большей суммой. Проверьте, что в каждой клетке вы выбирали большее из двух значений.';
+  }
+  return value < correct
+    ? 'Ответ меньше возможного минимума: такого пути не существует. Проверьте стены на маршруте и сложение.'
+    : 'Есть путь с меньшей суммой. Проверьте, что в каждой клетке вы выбирали меньшее из двух значений.';
+}
+
+function renderFeedback(kind, raw, sol, flat) {
+  const title = kind === 'max' ? 'Максимум' : 'Минимум';
+  const correct = kind === 'max' ? sol.globalMax : sol.globalMin;
+
+  if (raw === '' || isNaN(parseInt(raw))) {
+    return { ok: false, html: `<div class="feedback-card empty"><h3>⚠️ ${title}: ответ не введён</h3><p class="hint">Введите целое число.</p></div>` };
+  }
+  const value = parseInt(raw);
+  if (value === correct) {
+    return { ok: true, html: `<div class="feedback-card ok"><h3>✅ ${title}: верно</h3><p>Ваш ответ ${value} совпал с правильным.</p></div>` };
+  }
+  return {
+    ok: false,
+    html: `<div class="feedback-card bad"><h3>❌ ${title}: неверно</h3><p>Ваш ответ: <strong>${value}</strong></p><p class="hint">${diagnose(kind, value, sol, flat)}</p></div>`
+  };
+}
+
+function checkAnswers() {
+  const sol = computeSolution(false);
+  if (!sol.bestMaxCell) {
+    document.getElementById('checkFeedback').innerHTML = '<div class="summary-box bad">На этом поле Робот не может достичь ни одной угловой клетки. Нажмите «Новая задача».</div>';
+    return;
+  }
+  const flat = computeSolution(true);
+  lastMaxPath = sol.maxPath;
+  lastMinPath = sol.minPath;
+
+  const fMax = renderFeedback('max', document.getElementById('userMax').value.trim(), sol, flat);
+  const fMin = renderFeedback('min', document.getElementById('userMin').value.trim(), sol, flat);
+
+  let summary;
+  if (fMax.ok && fMin.ok) {
+    summary = '<div class="summary-box ok">🏆 Отлично! Оба ответа верны.</div>';
+    if (!taskSolved) {
+      taskSolved = true;
+      solvedCount++;
+      document.getElementById('checkStats').textContent = `Верно решено задач: ${solvedCount}`;
+    }
+  } else {
+    summary = '<div class="summary-box bad">Есть ошибки. Откройте таблицу сумм и найдите клетку, где ваше число расходится с правильным, затем сравните свой путь с верным.</div>';
+  }
+
+  document.getElementById('checkFeedback').innerHTML =
+    `<div class="feedback-grid">${fMax.html}${fMin.html}</div>${summary}`;
+  document.getElementById('checkTools').style.display = 'flex';
+}
+
+function showDpTable() {
+  const sol = computeSolution(false);
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const badge = getCell(r, c).querySelector('.dp-badge');
+      const mx = sol.maxDP[r][c];
+      const mn = sol.minDP[r][c];
+      badge.innerHTML = mx === -Infinity
+        ? '<span class="dp-max">—</span>'
+        : `<span class="dp-max">↑${mx}</span><br><span class="dp-min">↓${mn}</span>`;
+    }
+  }
+  document.getElementById('grid').classList.add('show-dp');
+  dpShown = true;
+  document.getElementById('dpToggleBtn').textContent = '🙈 Скрыть таблицу сумм';
+}
+
+function hideDpTable() {
+  const grid = document.getElementById('grid');
+  if (grid) grid.classList.remove('show-dp');
+  dpShown = false;
+  const btn = document.getElementById('dpToggleBtn');
+  if (btn) btn.textContent = '🔢 Показать таблицу сумм';
+}
+
+function toggleDpTable() {
+  if (dpShown) hideDpTable();
+  else showDpTable();
+}
+
+function showCorrectPath(type) {
+  clearHighlights();
+  const path = type === 'max' ? lastMaxPath : lastMinPath;
+  if (!path) return;
+  const cls = type === 'max' ? 'path-max' : 'path-min';
+  path.forEach(p => getCell(p.r, p.c).classList.add(cls));
 }
 
 document.getElementById('rowsSelect').addEventListener('change', randomizeGrid);
