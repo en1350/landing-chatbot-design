@@ -69,6 +69,8 @@ const KosBuilder = () => {
   const [refineParts, setRefineParts] = useState<string[]>(["tasks"]);
   const [refineText, setRefineText] = useState("");
   const [refining, setRefining] = useState(false);
+  const [criteriaIdx, setCriteriaIdx] = useState<number | null>(null);
+  const [maxScore, setMaxScore] = usePersistedState("kos_maxScore", "10");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const patch = (p: Partial<KosData>) => setData((d) => ({ ...d, ...p }));
@@ -169,7 +171,13 @@ const KosBuilder = () => {
         const next: KosData = { ...d };
         if (r.competencies) next.competencies = r.competencies.competencies;
         if (r.control) next.control = r.control;
-        if (r.tasks) next.tasks = r.tasks.tasks;
+        if (r.tasks) {
+          const old = d.tasks;
+          next.tasks = r.tasks.tasks.map((t: KosTask, i: number) => {
+            const prev = old.find((o) => o.name === t.name) || (old.length === r.tasks.tasks.length ? old[i] : undefined);
+            return prev?.criteria ? { ...t, criteria: prev.criteria } : t;
+          });
+        }
         if (r.criteria) {
           next.scale = r.criteria.scale;
           next.generalCriteria = r.criteria.generalCriteria;
@@ -185,6 +193,34 @@ const KosBuilder = () => {
       toast.error(e instanceof Error ? e.message : "Ошибка ИИ");
     } finally {
       setRefining(false);
+    }
+  };
+
+  const genTaskCriteria = async (ti: number) => {
+    if (!user) return setAuthOpen(true);
+    if (!isPaid) return setUpgradeOpen(true);
+    const t = data.tasks[ti];
+    if (!t.name.trim() && !t.description.trim()) return toast.error("Заполните название или описание задания");
+    setCriteriaIdx(ti);
+    try {
+      const res = await fetch(GENERATE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { "X-Authorization": token } : {}) },
+        body: JSON.stringify({
+          action: "kos_task_criteria",
+          maxScore: Number(maxScore) || 10,
+          task: { name: t.name, type: t.type, controlType: t.controlType, indicator: t.indicator, description: t.description },
+          fields: { passport: data.passport, competencies: data.competencies, scale: data.scale },
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Не удалось получить ответ от ИИ");
+      updateTask(ti, { criteria: json.criteria });
+      toast.success("Критерии составлены — проверьте и поправьте под себя");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Ошибка ИИ");
+    } finally {
+      setCriteriaIdx(null);
     }
   };
 
@@ -414,6 +450,27 @@ const KosBuilder = () => {
                     </Select>
                   </div>
                   <Textarea rows={5} value={t.description} onChange={(e) => updateTask(ti, { description: e.target.value })} placeholder="Формулировка задания, условия, требования" />
+                  <div className="border-t border-dashed border-border pt-3 space-y-2.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5 border-primary/30 text-primary hover:bg-primary/5"
+                        onClick={() => genTaskCriteria(ti)}
+                        disabled={criteriaIdx !== null}
+                      >
+                        {criteriaIdx === ti ? <Icon name="Loader2" size={14} className="animate-spin" /> : <Icon name="Sparkles" size={14} />}
+                        {criteriaIdx === ti ? "ИИ составляет критерии..." : t.criteria ? "Составить критерии заново" : "Сгенерировать критерии оценки"}
+                      </Button>
+                      <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        Макс. балл
+                        <Input type="number" min={1} max={100} value={maxScore} onChange={(e) => setMaxScore(e.target.value)} className="h-8 w-20" />
+                      </label>
+                    </div>
+                    {t.criteria !== undefined && t.criteria !== "" && (
+                      <Textarea rows={8} value={t.criteria} onChange={(e) => updateTask(ti, { criteria: e.target.value })} placeholder="Критерии оценивания и уровни" />
+                    )}
+                  </div>
                 </div>
               ))}
             </TabsContent>

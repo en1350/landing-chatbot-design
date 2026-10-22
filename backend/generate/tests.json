@@ -484,6 +484,21 @@
       "expectedStatus": 403,
       "expectedBody": {},
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "KOS task criteria without paid subscription returns 403",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "kos_task_criteria",
+        "task": {
+          "name": "Тест"
+        },
+        "fields": {}
+      },
+      "expectedStatus": 403,
+      "expectedBody": {},
+      "bodyMatcher": "partial"
     }
   ]
 }

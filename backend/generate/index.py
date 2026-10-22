@@ -50,7 +50,7 @@ def get_token(event):
 
 
 ACCESS = {'user_id': None, 'via_credit': False, 'action': None}
-CREDIT_EXCLUDED_ACTIONS = {'pm_task_refine', 'presentation_refine', 'project_refine', 'kos_refine'}
+CREDIT_EXCLUDED_ACTIONS = {'pm_task_refine', 'presentation_refine', 'project_refine', 'kos_refine', 'kos_task_criteria'}
 
 
 def is_user_paid(event) -> bool:
@@ -1771,6 +1771,43 @@ def run_kos_refine_part(part: str, fields: dict, instruction: str) -> dict:
     return normalize_kos_part(part, parse_ai_json(raw))
 
 
+def build_kos_task_criteria_prompt(f: dict, task: dict, max_score) -> str:
+    ind = _s(task.get('indicator'))
+    ind_line = ''
+    for c in (f.get('competencies') or []):
+        for i in (c.get('indicators') or []):
+            if f"{_s(c.get('code'))}.{_s(i.get('code'))}" == ind:
+                ind_line = f"{_s(c.get('code'))} {_s(c.get('name'))}; элемент {_s(i.get('code'))}: {_s(i.get('name'))}"
+    scale = _s(f.get('scale'))
+    return f"""Ты опытный методист СПО. Составь критерии оценивания именно для одного оценочного средства фонда оценочных средств. Пиши на русском языке, конкретно, без markdown-разметки.
+
+Специальность СПО: {_s((f.get('passport') or {}).get('direction')) or 'не указана'}
+Дисциплина / МДК: {_s((f.get('passport') or {}).get('discipline')) or 'не указана'}
+Оценочное средство: {_s(task.get('name'))}
+Тип: {_s(task.get('type'))}; вид контроля: {_s(task.get('controlType'))}
+Проверяемая компетенция: {ind_line or 'не указана'}
+Шкала оценивания дисциплины: {scale or 'не задана'}
+Формулировка задания:
+{_s(task.get('description')) or '(не задана, опирайся на название и тип)'}
+
+Максимальный балл за задание: {max_score}. Критерии должны опираться на конкретные требования этого задания (что именно проверяется в результате), а не быть общими. Сумма баллов по критериям равна {max_score}. Затем опиши 3 уровня выполнения (высокий, средний, низкий) с диапазонами баллов, которые покрывают шкалу от {max_score} до 0 без пропусков, и с признаками выполнения именно этого задания.
+
+Верни ответ СТРОГО в формате JSON без markdown, пояснений и текста до/после:
+{{"criteria": [{{"criterion": "что проверяется", "score": 2}}], "levels": [{{"name": "Высокий", "range": "9-10 баллов", "description": "признаки"}}]}}"""
+
+
+def format_kos_task_criteria(parsed: dict, max_score) -> str:
+    lines = [f"Максимальный балл: {max_score}", "Критерии:"]
+    for c in parsed.get('criteria') or []:
+        if isinstance(c, dict) and _s(c.get('criterion')):
+            lines.append(f"- {_s(c.get('criterion'))} — {_s(c.get('score'))} б.")
+    lines.append("Уровни выполнения:")
+    for l in parsed.get('levels') or []:
+        if isinstance(l, dict) and _s(l.get('name')):
+            lines.append(f"- {_s(l.get('name'))} ({_s(l.get('range'))}): {_s(l.get('description'))}")
+    return "\n".join(lines)
+
+
 def process(event: dict, context) -> dict:
     """Генерация учебных материалов, ИИ-чат-помощник через AITunnel. Декомпозитор компетенций, проверка тетради по фото, план коррекционной работы (аналитика качества обученности) и ИИ-анализ качества знаний по дисциплинам доступны только пользователям с платной подпиской. Антиплагиат (проверка текста и извлечение из PDF/DOCX) доступен бесплатно с лимитом попыток, учёт которых ведётся в backend/auth."""
     method = event.get('httpMethod', 'GET')
@@ -2452,6 +2489,26 @@ def process(event: dict, context) -> dict:
             if not out:
                 return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ вернул некорректный ответ, попробуйте снова'})}
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'result': out, 'failed': failed}, ensure_ascii=False)}
+
+        elif action == 'kos_task_criteria':
+            fields = body.get('fields') or {}
+            task = body.get('task') or {}
+            max_score = _int(body.get('maxScore'), 1, 100, 10)
+            if not is_user_paid(event):
+                return {'statusCode': 403, 'headers': cors_headers(), 'body': json.dumps({'error': 'Генерация критериев с ИИ доступна по платной подписке'})}
+            if not (_s(task.get('name')) or _s(task.get('description'))):
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Заполните название или описание задания'})}
+            raw = call_ai([
+                {'role': 'system', 'content': 'Ты профессиональный методист СПО. Отвечаешь строго валидным JSON без markdown и пояснений, всегда на русском языке.'},
+                {'role': 'user', 'content': build_kos_task_criteria_prompt(fields, task, max_score)},
+            ], temperature=0.5)
+            try:
+                parsed = parse_ai_json(raw)
+            except (json.JSONDecodeError, IndexError):
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ вернул некорректный ответ, попробуйте снова'})}
+            if not (parsed.get('criteria') or []):
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ не составил критерии, попробуйте снова'})}
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'criteria': format_kos_task_criteria(parsed, max_score)}, ensure_ascii=False)}
 
         elif action == 'extract_text':
             file_base64 = body.get('file_base64') or ''

@@ -15,6 +15,7 @@ export interface KosTask {
   controlType: string;
   indicator: string;
   description: string;
+  criteria?: string;
   source?: string;
 }
 
@@ -109,6 +110,7 @@ export const buildKosText = (d: KosData): string => {
     d.tasks.forEach((t, i) => {
       lines.push(`${i + 1}. ${t.name} (${t.type}; ${t.controlType}; ${t.indicator || "компетенция не выбрана"})`);
       if (t.description.trim()) lines.push(t.description.trim());
+      if (t.criteria && t.criteria.trim()) lines.push("", "Критерии оценивания:", t.criteria.trim());
       lines.push("");
     });
   }
