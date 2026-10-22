@@ -17,7 +17,18 @@ interface ChatMessage {
   author: string;
   text: string;
   created_at: string;
+  image_url?: string | null;
 }
+
+const MAX_IMAGE_MB = 4;
+
+const fileToBase64 = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
+    reader.onerror = () => reject(new Error("Не удалось прочитать файл"));
+    reader.readAsDataURL(file);
+  });
 
 const EMOJIS = [
   "😀","😃","😄","😁","😆","😅","😂","🤣","🙂","😉","😊","😇",
@@ -38,6 +49,10 @@ const MemberChat = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [emojiOpen, setEmojiOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [image, setImage] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [zoom, setZoom] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
@@ -110,20 +125,48 @@ const MemberChat = () => {
     });
   };
 
+  const pickImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) {
+      setError("Допустимы только JPG, PNG, WEBP или GIF");
+      return;
+    }
+    if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
+      setError(`Картинка должна быть не больше ${MAX_IMAGE_MB} МБ`);
+      return;
+    }
+    setError(null);
+    setImage(file);
+    setPreview(URL.createObjectURL(file));
+  };
+
+  const clearImage = () => {
+    if (preview) URL.revokeObjectURL(preview);
+    setImage(null);
+    setPreview(null);
+  };
+
   const send = async (e: React.FormEvent) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text || !token || sending) return;
+    if ((!text && !image) || !token || sending) return;
     setSending(true);
     try {
       const res = await fetch(CHAT_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-Authorization": token },
-        body: JSON.stringify({ message: text }),
+        body: JSON.stringify(
+          image
+            ? { message: text, image: await fileToBase64(image), image_type: image.type }
+            : { message: text }
+        ),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Не удалось отправить");
       setInput("");
+      clearImage();
       stickRef.current = true;
       await load();
     } catch (err) {
@@ -206,7 +249,16 @@ const MemberChat = () => {
                     }`}
                   >
                     {!mine && <p className="text-xs font-bold mb-0.5 opacity-80">{m.author}</p>}
-                    <p className="whitespace-pre-wrap break-words">{m.text}</p>
+                    {m.image_url && (
+                      <img
+                        src={m.image_url}
+                        alt="Картинка в чате"
+                        loading="lazy"
+                        onClick={() => setZoom(m.image_url!)}
+                        className="mb-1 max-h-64 w-full cursor-zoom-in rounded-lg object-cover"
+                      />
+                    )}
+                    {m.text && <p className="whitespace-pre-wrap break-words">{m.text}</p>}
                     <p className="text-[10px] mt-1 opacity-70 text-right">{formatTime(m.created_at)}</p>
                   </div>
                   {!mine && isAdmin && (
@@ -245,7 +297,28 @@ const MemberChat = () => {
             </div>
           )}
 
+          {preview && (
+            <div className="flex items-center gap-3 border-t border-border bg-secondary/40 px-3 py-2">
+              <img src={preview} alt="Предпросмотр" className="h-14 w-14 rounded-lg object-cover" />
+              <span className="flex-1 truncate text-xs text-muted-foreground">{image?.name}</span>
+              <button type="button" onClick={clearImage} title="Убрать картинку" className="text-muted-foreground hover:text-destructive">
+                <Icon name="X" size={16} />
+              </button>
+            </div>
+          )}
+
           <form onSubmit={send} className="flex items-center gap-2 border-t border-border p-2.5">
+            <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={pickImage} className="hidden" />
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              title="Прикрепить картинку"
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${
+                image ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground"
+              }`}
+            >
+              <Icon name="Image" size={20} />
+            </button>
             <button
               type="button"
               onClick={() => setEmojiOpen((v) => !v)}
@@ -266,7 +339,7 @@ const MemberChat = () => {
             />
             <button
               type="submit"
-              disabled={!input.trim() || sending}
+              disabled={(!input.trim() && !image) || sending}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-40"
             >
               <Icon name="ArrowUp" size={16} />
@@ -274,6 +347,12 @@ const MemberChat = () => {
           </form>
         </div>
       </main>
+
+      {zoom && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={() => setZoom(null)}>
+          <img src={zoom} alt="Картинка" className="max-h-full max-w-full rounded-lg" />
+        </div>
+      )}
 
       <Footer
         onOpenProfile={() => setProfileOpen(true)}

@@ -1,0 +1,1 @@
+ALTER TABLE t_p75689129_landing_chatbot_desi.chat_messages ADD COLUMN IF NOT EXISTS image_url TEXT;
