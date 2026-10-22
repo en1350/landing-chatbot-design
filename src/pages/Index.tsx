@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
-import AutumnBanner from "@/components/AutumnBanner";
+import WinterBanner from "@/components/WinterBanner";
 import NewsSection from "@/components/NewsSection";
 import { Button } from "@/components/ui/button";
 import Icon from "@/components/ui/icon";
@@ -76,7 +76,7 @@ const Index = () => {
             Соответствует ФГОС
           </span>
         </div>
-        <AutumnBanner />
+        <WinterBanner />
         <NewsSection />
         <div className="container relative z-10 flex justify-center mb-4">
           <Button
