@@ -154,30 +154,7 @@ def handler(event: dict, context) -> dict:
                     f"FROM {SCHEMA}.processed_payments WHERE plan = 'single'"
                 )
                 sp = cur.fetchone()
-                cur.execute(
-                    f"SELECT coalesce(country, 'Не определено') c, count(DISTINCT visitor_id) FROM {SCHEMA}.site_visits "
-                    f"GROUP BY c ORDER BY 2 DESC LIMIT 15"
-                )
-                geo_visitors = [{'country': r[0], 'count': r[1]} for r in cur.fetchall()]
-                cur.execute(
-                    f"SELECT coalesce(country, 'Не определено') c, count(*) FROM {SCHEMA}.users GROUP BY c ORDER BY 2 DESC LIMIT 15"
-                )
-                geo_registered = [{'country': r[0], 'count': r[1]} for r in cur.fetchall()]
-                cur.execute(
-                    f"SELECT coalesce(u.country, 'Не определено') c, count(*) FROM {SCHEMA}.users u WHERE u.id IN ("
-                    f"SELECT user_id FROM {SCHEMA}.processed_payments UNION "
-                    f"SELECT user_id FROM {SCHEMA}.subscriptions WHERE plan <> 'free') "
-                    f"GROUP BY c ORDER BY 2 DESC LIMIT 15"
-                )
-                geo_paid = [{'country': r[0], 'count': r[1]} for r in cur.fetchall()]
-                cur.execute(
-                    f"SELECT coalesce(country, 'Не определено'), coalesce(city, 'Не определён'), count(DISTINCT visitor_id) "
-                    f"FROM {SCHEMA}.site_visits WHERE created_at > now() - interval '30 days' "
-                    f"GROUP BY 1, 2 ORDER BY 3 DESC LIMIT 15"
-                )
-                geo_cities = [{'country': r[0], 'city': r[1], 'count': r[2]} for r in cur.fetchall()]
                 return resp(200, {
-                    'geo': {'visitors': geo_visitors, 'registered': geo_registered, 'paid': geo_paid, 'cities': geo_cities},
                     'single_payments': {
                         'total': sp[0], 'amount': float(sp[1]),
                         'week': sp[2], 'month': sp[3], 'buyers': sp[4],
@@ -194,6 +171,44 @@ def handler(event: dict, context) -> dict:
                     'users_week': users_week,
                     'paid_users': paid,
                 })
+
+            if action == 'geo':
+                period = params.get('period', '30d')
+                intervals = {'today': None, '7d': '7 days', '30d': '30 days', 'all': ''}
+                if period not in intervals:
+                    period = '30d'
+
+                def since(col):
+                    if period == 'all':
+                        return 'TRUE'
+                    if period == 'today':
+                        return f"{col} > date_trunc('day', now())"
+                    return f"{col} > now() - interval '{intervals[period]}'"
+
+                cur.execute(
+                    f"SELECT coalesce(country, 'Не определено') c, count(DISTINCT visitor_id) FROM {SCHEMA}.site_visits "
+                    f"WHERE {since('created_at')} GROUP BY c ORDER BY 2 DESC LIMIT 15"
+                )
+                geo_visitors = [{'country': r[0], 'count': r[1]} for r in cur.fetchall()]
+                cur.execute(
+                    f"SELECT coalesce(country, 'Не определено') c, count(*) FROM {SCHEMA}.users "
+                    f"WHERE {since('created_at')} GROUP BY c ORDER BY 2 DESC LIMIT 15"
+                )
+                geo_registered = [{'country': r[0], 'count': r[1]} for r in cur.fetchall()]
+                cur.execute(
+                    f"SELECT coalesce(u.country, 'Не определено') c, count(*) FROM {SCHEMA}.users u WHERE u.id IN ("
+                    f"SELECT user_id FROM {SCHEMA}.processed_payments WHERE {since('created_at')} UNION "
+                    f"SELECT user_id FROM {SCHEMA}.subscriptions WHERE plan <> 'free' AND {since('started_at')}) "
+                    f"GROUP BY c ORDER BY 2 DESC LIMIT 15"
+                )
+                geo_paid = [{'country': r[0], 'count': r[1]} for r in cur.fetchall()]
+                cur.execute(
+                    f"SELECT coalesce(country, 'Не определено'), coalesce(city, 'Не определён'), count(DISTINCT visitor_id) "
+                    f"FROM {SCHEMA}.site_visits WHERE {since('created_at')} "
+                    f"GROUP BY 1, 2 ORDER BY 3 DESC LIMIT 15"
+                )
+                geo_cities = [{'country': r[0], 'city': r[1], 'count': r[2]} for r in cur.fetchall()]
+                return resp(200, {'visitors': geo_visitors, 'registered': geo_registered, 'paid': geo_paid, 'cities': geo_cities})
 
             if action == 'news_all':
                 cur.execute(

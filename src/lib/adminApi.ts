@@ -1,7 +1,8 @@
 export const ADMIN_URL = "https://functions.poehali.dev/9418a5c8-dc4e-4ba3-9edd-88e20ffdc92a";
 
-export async function adminGet(action: string, token?: string | null) {
-  const res = await fetch(`${ADMIN_URL}?action=${action}`, {
+export async function adminGet(action: string, token?: string | null, extra: Record<string, string> = {}) {
+  const query = new URLSearchParams({ action, ...extra }).toString();
+  const res = await fetch(`${ADMIN_URL}?${query}`, {
     headers: token ? { "X-Authorization": token } : {},
   });
   const data = await res.json();

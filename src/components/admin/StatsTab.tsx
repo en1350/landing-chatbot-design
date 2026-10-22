@@ -2,6 +2,20 @@ import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { adminGet } from "@/lib/adminApi";
 
+interface Geo {
+  visitors: { country: string; count: number }[];
+  registered: { country: string; count: number }[];
+  paid: { country: string; count: number }[];
+  cities: { country: string; city: string; count: number }[];
+}
+
+const PERIODS = [
+  { value: "today", label: "Сегодня" },
+  { value: "7d", label: "7 дней" },
+  { value: "30d", label: "30 дней" },
+  { value: "all", label: "Всё время" },
+];
+
 interface Stats {
   today: { views: number; visitors: number };
   week: { views: number; visitors: number };
@@ -14,12 +28,6 @@ interface Stats {
   users_total: number;
   users_week: number;
   paid_users: number;
-  geo: {
-    visitors: { country: string; count: number }[];
-    registered: { country: string; count: number }[];
-    paid: { country: string; count: number }[];
-    cities: { country: string; city: string; count: number }[];
-  };
   single_payments: { total: number; amount: number; week: number; month: number; buyers: number };
 }
 
@@ -48,10 +56,17 @@ const GeoList = ({ title, items }: { title: string; items: { country: string; co
 
 const StatsTab = ({ token }: { token: string }) => {
   const [s, setS] = useState<Stats | null>(null);
+  const [period, setPeriod] = useState("30d");
+  const [geo, setGeo] = useState<Geo | null>(null);
 
   useEffect(() => {
     adminGet("stats", token).then(setS).catch(() => {});
   }, [token]);
+
+  useEffect(() => {
+    setGeo(null);
+    adminGet("geo", token, { period }).then(setGeo).catch(() => {});
+  }, [token, period]);
 
   if (!s) return <p className="text-muted-foreground">Загрузка...</p>;
 
@@ -121,26 +136,50 @@ const StatsTab = ({ token }: { token: string }) => {
       </div>
 
       <div>
-        <h2 className="text-lg font-semibold mb-3">География</h2>
-        <div className="grid md:grid-cols-3 gap-4">
-          <GeoList title="Посетители по странам" items={s.geo.visitors} />
-          <GeoList title="Зарегистрированные по странам" items={s.geo.registered} />
-          <GeoList title="Оплатившие по странам" items={s.geo.paid} />
-        </div>
-        <Card className="p-4 mt-4">
-          <h3 className="font-semibold mb-3">Города посетителей (30 дней)</h3>
-          <ul className="space-y-2 text-sm">
-            {s.geo.cities.map((c) => (
-              <li key={`${c.country}-${c.city}`} className="flex justify-between gap-3">
-                <span className="truncate">
-                  {c.city}, {c.country}
-                </span>
-                <span className="font-semibold">{c.count}</span>
-              </li>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <h2 className="text-lg font-semibold">География</h2>
+          <div className="inline-flex rounded-lg border p-0.5 bg-muted/40">
+            {PERIODS.map((p) => (
+              <button
+                key={p.value}
+                type="button"
+                onClick={() => setPeriod(p.value)}
+                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                  period === p.value
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {p.label}
+              </button>
             ))}
-            {s.geo.cities.length === 0 && <li className="text-muted-foreground">Пока нет данных</li>}
-          </ul>
-        </Card>
+          </div>
+        </div>
+        {!geo ? (
+          <p className="text-muted-foreground text-sm">Загрузка...</p>
+        ) : (
+          <>
+            <div className="grid md:grid-cols-3 gap-4">
+              <GeoList title="Посетители по странам" items={geo.visitors} />
+              <GeoList title="Зарегистрированные по странам" items={geo.registered} />
+              <GeoList title="Оплатившие по странам" items={geo.paid} />
+            </div>
+            <Card className="p-4 mt-4">
+              <h3 className="font-semibold mb-3">Города посетителей</h3>
+              <ul className="space-y-2 text-sm">
+                {geo.cities.map((c) => (
+                  <li key={`${c.country}-${c.city}`} className="flex justify-between gap-3">
+                    <span className="truncate">
+                      {c.city}, {c.country}
+                    </span>
+                    <span className="font-semibold">{c.count}</span>
+                  </li>
+                ))}
+                {geo.cities.length === 0 && <li className="text-muted-foreground">Пока нет данных</li>}
+              </ul>
+            </Card>
+          </>
+        )}
       </div>
     </div>
   );
