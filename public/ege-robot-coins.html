@@ -789,7 +789,28 @@ function importFromText() {
 }
 
 
-let solvedCount = 0;
+const SOLVED_KEY = 'ege_robot_coins_solved';
+
+function loadSolved() {
+  try {
+    const n = parseInt(localStorage.getItem(SOLVED_KEY));
+    return isNaN(n) || n < 0 ? 0 : n;
+  } catch (e) {
+    return 0;
+  }
+}
+
+function saveSolved(n) {
+  try {
+    localStorage.setItem(SOLVED_KEY, String(n));
+  } catch (e) {}
+}
+
+function renderSolved() {
+  document.getElementById('checkStats').textContent = `Верно решено задач: ${solvedCount}`;
+}
+
+let solvedCount = loadSolved();
 let taskSolved = false;
 let dpShown = false;
 
@@ -892,7 +913,8 @@ function checkAnswers() {
     if (!taskSolved) {
       taskSolved = true;
       solvedCount++;
-      document.getElementById('checkStats').textContent = `Верно решено задач: ${solvedCount}`;
+      saveSolved(solvedCount);
+      renderSolved();
     }
   } else {
     summary = '<div class="summary-box bad">Есть ошибки. Откройте таблицу сумм и найдите клетку, где ваше число расходится с правильным, затем сравните свой путь с верным.</div>';
@@ -943,6 +965,7 @@ function showCorrectPath(type) {
 
 document.getElementById('rowsSelect').addEventListener('change', randomizeGrid);
 
+renderSolved();
 loadDemo();
 </script>
 </body>
