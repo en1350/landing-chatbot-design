@@ -18,7 +18,19 @@ interface ChatMessage {
   text: string;
   created_at: string;
   image_url?: string | null;
+  file_url?: string | null;
+  file_name?: string | null;
 }
+
+const MAX_FILE_MB = 10;
+const DOC_EXTS = ["pdf", "doc", "docx", "xls", "xlsx"];
+
+const docMeta = (name: string) => {
+  const ext = name.split(".").pop()?.toLowerCase() || "";
+  if (ext === "pdf") return { icon: "FileText", color: "text-red-600" };
+  if (ext.startsWith("xls")) return { icon: "FileSpreadsheet", color: "text-emerald-600" };
+  return { icon: "FileText", color: "text-blue-600" };
+};
 
 const MAX_IMAGE_MB = 4;
 
@@ -50,6 +62,8 @@ const MemberChat = () => {
   const [emojiOpen, setEmojiOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const docRef = useRef<HTMLInputElement>(null);
+  const [doc, setDoc] = useState<File | null>(null);
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [zoom, setZoom] = useState<string | null>(null);
@@ -142,6 +156,23 @@ const MemberChat = () => {
     setPreview(URL.createObjectURL(file));
   };
 
+  const pickDoc = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    const ext = file.name.split(".").pop()?.toLowerCase() || "";
+    if (!DOC_EXTS.includes(ext)) {
+      setError("Допустимы только файлы PDF, Word и Excel");
+      return;
+    }
+    if (file.size > MAX_FILE_MB * 1024 * 1024) {
+      setError(`Файл должен быть не больше ${MAX_FILE_MB} МБ`);
+      return;
+    }
+    setError(null);
+    setDoc(file);
+  };
+
   const clearImage = () => {
     if (preview) URL.revokeObjectURL(preview);
     setImage(null);
@@ -151,22 +182,25 @@ const MemberChat = () => {
   const send = async (e: React.FormEvent) => {
     e.preventDefault();
     const text = input.trim();
-    if ((!text && !image) || !token || sending) return;
+    if ((!text && !image && !doc) || !token || sending) return;
     setSending(true);
     try {
       const res = await fetch(CHAT_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-Authorization": token },
         body: JSON.stringify(
-          image
-            ? { message: text, image: await fileToBase64(image), image_type: image.type }
-            : { message: text }
+          {
+            message: text,
+            ...(image ? { image: await fileToBase64(image), image_type: image.type } : {}),
+            ...(doc ? { file: await fileToBase64(doc), file_name: doc.name } : {}),
+          }
         ),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Не удалось отправить");
       setInput("");
       clearImage();
+      setDoc(null);
       stickRef.current = true;
       await load();
     } catch (err) {
@@ -258,6 +292,24 @@ const MemberChat = () => {
                         className="mb-1 max-h-64 w-full cursor-zoom-in rounded-lg object-cover"
                       />
                     )}
+                    {m.file_url && m.file_name && (
+                      <div className="mb-1 flex items-center gap-2.5 rounded-lg bg-background/90 p-2.5 text-foreground">
+                        <span className={`shrink-0 ${docMeta(m.file_name).color}`}>
+                          <Icon name={docMeta(m.file_name).icon} size={28} />
+                        </span>
+                        <span className="min-w-0 flex-1 break-words text-xs font-semibold leading-snug">{m.file_name}</span>
+                        <a
+                          href={m.file_url}
+                          download={m.file_name}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex shrink-0 items-center gap-1 rounded-md bg-primary px-2.5 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+                        >
+                          <Icon name="Download" size={13} />
+                          Скачать
+                        </a>
+                      </div>
+                    )}
                     {m.text && <p className="whitespace-pre-wrap break-words">{m.text}</p>}
                     <p className="text-[10px] mt-1 opacity-70 text-right">{formatTime(m.created_at)}</p>
                   </div>
@@ -307,7 +359,32 @@ const MemberChat = () => {
             </div>
           )}
 
+          {doc && (
+            <div className="flex items-center gap-3 border-t border-border bg-secondary/40 px-3 py-2">
+              <span className={docMeta(doc.name).color}>
+                <Icon name={docMeta(doc.name).icon} size={28} />
+              </span>
+              <span className="flex-1 truncate text-xs text-muted-foreground">
+                {doc.name} · {(doc.size / 1024 / 1024).toFixed(1)} МБ
+              </span>
+              <button type="button" onClick={() => setDoc(null)} title="Убрать файл" className="text-muted-foreground hover:text-destructive">
+                <Icon name="X" size={16} />
+              </button>
+            </div>
+          )}
+
           <form onSubmit={send} className="flex items-center gap-2 border-t border-border p-2.5">
+            <input ref={docRef} type="file" accept=".pdf,.doc,.docx,.xls,.xlsx" onChange={pickDoc} className="hidden" />
+            <button
+              type="button"
+              onClick={() => docRef.current?.click()}
+              title="Прикрепить документ (PDF, Word, Excel)"
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${
+                doc ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground"
+              }`}
+            >
+              <Icon name="Paperclip" size={20} />
+            </button>
             <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={pickImage} className="hidden" />
             <button
               type="button"
@@ -339,7 +416,7 @@ const MemberChat = () => {
             />
             <button
               type="submit"
-              disabled={(!input.trim() && !image) || sending}
+              disabled={(!input.trim() && !image && !doc) || sending}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-40"
             >
               <Icon name="ArrowUp" size={16} />

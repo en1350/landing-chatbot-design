@@ -1,0 +1,2 @@
+ALTER TABLE t_p75689129_landing_chatbot_desi.chat_messages ADD COLUMN IF NOT EXISTS file_url TEXT;
+ALTER TABLE t_p75689129_landing_chatbot_desi.chat_messages ADD COLUMN IF NOT EXISTS file_name VARCHAR(200);

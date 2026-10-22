@@ -1,13 +1,23 @@
 import base64
 import json
 import os
+import re
 import uuid
+from urllib.parse import quote
 import boto3
 import psycopg2
 
 SCHEMA = os.environ.get('MAIN_DB_SCHEMA', 'public')
 MAX_LEN = 1000
 MAX_IMAGE_BYTES = 4 * 1024 * 1024
+MAX_FILE_BYTES = 10 * 1024 * 1024
+FILE_TYPES = {
+    'pdf': 'application/pdf',
+    'doc': 'application/msword',
+    'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'xls': 'application/vnd.ms-excel',
+    'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+}
 IMAGE_TYPES = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif'}
 
 
@@ -30,6 +40,33 @@ def upload_image(data_b64, content_type):
     )
     s3.put_object(Bucket='files', Key=key, Body=raw, ContentType=content_type)
     return f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{key}", None
+
+
+def upload_file(data_b64, file_name):
+    name = re.sub(r'[\\/\r\n\t]', '_', (file_name or '').strip())[:150]
+    ext = name.rsplit('.', 1)[-1].lower() if '.' in name else ''
+    content_type = FILE_TYPES.get(ext)
+    if not content_type:
+        return None, None, 'Допустимы только файлы PDF, Word и Excel'
+    try:
+        raw = base64.b64decode(data_b64, validate=False)
+    except Exception:
+        return None, None, 'Не удалось прочитать файл'
+    if not raw or len(raw) > MAX_FILE_BYTES:
+        return None, None, 'Файл должен быть не больше 10 МБ'
+    key = f"chat/files/{uuid.uuid4().hex}.{ext}"
+    s3 = boto3.client(
+        's3',
+        endpoint_url='https://bucket.poehali.dev',
+        aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
+        aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'],
+    )
+    s3.put_object(
+        Bucket='files', Key=key, Body=raw, ContentType=content_type,
+        ContentDisposition=f"attachment; filename*=UTF-8''{quote(name)}",
+    )
+    url = f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{key}"
+    return url, name, None
 
 
 def cors():
@@ -99,14 +136,19 @@ def handler(event: dict, context) -> dict:
                 image_url, err = upload_image(body['image'], body.get('image_type') or '')
                 if err:
                     return resp(400, {'error': err})
-            if not text and not image_url:
+            file_url, file_name = None, None
+            if body.get('file'):
+                file_url, file_name, err = upload_file(body['file'], body.get('file_name'))
+                if err:
+                    return resp(400, {'error': err})
+            if not text and not image_url and not file_url:
                 return resp(400, {'error': 'Пустое сообщение'})
             if len(text) > MAX_LEN:
                 return resp(400, {'error': f'Сообщение длиннее {MAX_LEN} символов'})
             author = (name or '').strip() or email.split('@')[0]
             cur.execute(
-                f"INSERT INTO {SCHEMA}.chat_messages (user_id, author_name, message, image_url) VALUES (%s, %s, %s, %s) RETURNING id, created_at",
-                (user_id, author[:80], text, image_url),
+                f"INSERT INTO {SCHEMA}.chat_messages (user_id, author_name, message, image_url, file_url, file_name) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id, created_at",
+                (user_id, author[:80], text, image_url, file_url, file_name),
             )
             new_id, created_at = cur.fetchone()
             conn.commit()
@@ -132,20 +174,20 @@ def handler(event: dict, context) -> dict:
 
         if since_id > 0:
             cur.execute(
-                f"SELECT id, user_id, author_name, message, created_at, image_url FROM {SCHEMA}.chat_messages "
+                f"SELECT id, user_id, author_name, message, created_at, image_url, file_url, file_name FROM {SCHEMA}.chat_messages "
                 f"WHERE id > %s ORDER BY id ASC LIMIT 200",
                 (since_id,),
             )
             rows = cur.fetchall()
         else:
             cur.execute(
-                f"SELECT id, user_id, author_name, message, created_at, image_url FROM {SCHEMA}.chat_messages "
+                f"SELECT id, user_id, author_name, message, created_at, image_url, file_url, file_name FROM {SCHEMA}.chat_messages "
                 f"ORDER BY id DESC LIMIT 100"
             )
             rows = list(reversed(cur.fetchall()))
 
         messages = [
-            {'id': r[0], 'user_id': r[1], 'author': r[2], 'text': r[3], 'created_at': r[4], 'image_url': r[5]}
+            {'id': r[0], 'user_id': r[1], 'author': r[2], 'text': r[3], 'created_at': r[4], 'image_url': r[5], 'file_url': r[6], 'file_name': r[7]}
             for r in rows
         ]
         cur.execute(f"SELECT id FROM {SCHEMA}.chat_messages ORDER BY id DESC LIMIT 100")
