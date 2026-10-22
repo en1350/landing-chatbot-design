@@ -25,6 +25,7 @@ interface NavbarProps {
 
 const GENERATORS_MENU: NavItem[] = [
   { label: "Конструктор рабочих программ", to: "/konstruktor-rabochih-programm", icon: "BookMarked" },
+  { label: "Конструктор КОС", to: "/konstruktor-kos", icon: "ClipboardCheck" },
   { label: "Конструктор урока", to: "/konstruktor-uroka", icon: "BookOpen" },
   { label: "Конструктор заданий", to: "/konstruktor-zadaniy", icon: "ClipboardList" },
   { label: "Рабочие листы", to: "/konstruktor-rabochih-listov", icon: "FileText" },
@@ -32,7 +33,6 @@ const GENERATORS_MENU: NavItem[] = [
   { label: "Конструктор игры", to: "/konstruktor-igry", icon: "Gamepad2" },
   { label: "Мастер-классы", to: "/konstruktor-masterklassov", icon: "Sparkles" },
   { label: "Задания по ПМ", to: "/generator-zadaniy-pm", icon: "Briefcase" },
-  { label: "Конструктор КОС", to: "/konstruktor-kos", icon: "ClipboardCheck" },
   { label: "Генератор проектов", to: "/generator-proektov", icon: "FolderKanban" },
 ];
 
