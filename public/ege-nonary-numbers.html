@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Задача: Девятеричные числа — Симулятор</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --primary: #6366f1;
+    --primary-dark: #4338ca;
+    --accent: #f59e0b;
+    --bg: #0f172a;
+    --card: #1e293b;
+    --card-light: #334155;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --border: #475569;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --info: #06b6d4;
+    --pink: #ec4899;
+  }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 20px;
+    line-height: 1.6;
+  }
+  .container { max-width: 1100px; margin: 0 auto; }
+  header {
+    text-align: center;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #4338ca, #6366f1, #8b5cf6);
+    border-radius: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 20px 60px rgba(99,102,241,0.3);
+  }
+  header h1 { font-size: 32px; margin-bottom: 12px; }
+  header p { font-size: 16px; opacity: 0.9; max-width: 700px; margin: 0 auto; }
+
+  .section {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 30px;
+    margin-bottom: 24px;
+    border: 1px solid var(--border);
+  }
+  .section h2 {
+    font-size: 22px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section h2 .num {
+    background: var(--primary);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .condition-box {
+    background: linear-gradient(135deg, #1e1b4b, #312e81);
+    border: 2px solid var(--primary);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 16px 0;
+    font-size: 17px;
+    font-weight: 500;
+    text-align: center;
+  }
+
+  .highlight {
+    background: rgba(99,102,241,0.2);
+    padding: 2px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--primary);
+    font-weight: 600;
+  }
+  .hl-odd { background: rgba(239,68,68,0.2); border-color: var(--danger); color: #fca5a5; }
+  .hl-even { background: rgba(16,185,129,0.2); border-color: var(--success); color: #6ee7b7; }
+  .hl-3 { background: rgba(245,158,11,0.2); border-color: var(--warning); color: #fcd34d; }
+  .hl-2 { background: rgba(236,72,153,0.2); border-color: var(--pink); color: #f9a8d4; }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 16px 0;
+  }
+  .info-card {
+    background: var(--card-light);
+    border-radius: 12px;
+    padding: 20px;
+    border-left: 4px solid var(--primary);
+  }
+  .info-card h3 { font-size: 16px; margin-bottom: 10px; color: var(--accent); }
+  .info-card p { font-size: 14px; color: var(--muted); }
+  .info-card .digits {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .digit-badge {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 16px;
+  }
+  .digit-badge.odd { background: rgba(239,68,68,0.2); border: 2px solid var(--danger); color: #fca5a5; }
+  .digit-badge.even { background: rgba(16,185,129,0.2); border: 2px solid var(--success); color: #6ee7b7; }
+
+  .step {
+    background: var(--card-light);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    border-left: 4px solid var(--info);
+    position: relative;
+  }
+  .step h3 { color: var(--info); margin-bottom: 10px; font-size: 16px; }
+  .step .formula {
+    background: rgba(6,182,212,0.1);
+    border: 1px solid rgba(6,182,212,0.3);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 10px 0;
+    font-family: 'Courier New', monospace;
+    font-size: 15px;
+    text-align: center;
+  }
+  .step ul { margin-left: 20px; margin-top: 8px; }
+  .step li { margin-bottom: 6px; color: var(--muted); }
+
+  .result-box {
+    background: linear-gradient(135deg, #065f46, #064e3b);
+    border: 2px solid var(--success);
+    border-radius: 16px;
+    padding: 30px;
+    text-align: center;
+    margin: 24px 0;
+  }
+  .result-box .answer {
+    font-size: 48px;
+    font-weight: 800;
+    color: var(--success);
+    margin: 10px 0;
+  }
+
+  .simulator-controls {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    align-items: center;
+  }
+  .btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-success { background: var(--success); color: white; }
+  .btn-danger { background: var(--danger); color: white; }
+  .btn-info { background: var(--info); color: white; }
+
+  .progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--card-light);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 16px 0;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--info));
+    width: 0%;
+    transition: width 0.1s;
+    border-radius: 4px;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin: 20px 0;
+  }
+  .stat-card {
+    background: var(--card-light);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-card .value {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent);
+  }
+  .stat-card .label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .numbers-display {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 16px;
+    background: var(--bg);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+  .num-card {
+    display: flex;
+    gap: 2px;
+    padding: 4px;
+    border-radius: 6px;
+    background: var(--card-light);
+    border: 1px solid var(--border);
+  }
+  .num-card.valid { border-color: var(--success); background: rgba(16,185,129,0.1); }
+  .num-card.invalid { border-color: var(--danger); opacity: 0.5; }
+  .num-cell {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .num-cell.d3 { background: var(--warning); color: #000; }
+  .num-cell.d2 { background: var(--pink); color: #fff; }
+  .num-cell.odd { background: rgba(239,68,68,0.3); color: #fca5a5; }
+  .num-cell.even { background: rgba(16,185,129,0.2); color: #6ee7b7; }
+  .num-cell.zero { background: var(--card-light); color: var(--muted); }
+  .num-cell.conflict { box-shadow: 0 0 0 2px var(--danger); }
+
+  .examples-section { margin-top: 20px; }
+  .example-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px;
+    background: var(--card-light);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .example-row .status {
+    font-size: 24px;
+    width: 40px;
+    text-align: center;
+  }
+  .example-row .explanation {
+    flex: 1;
+    font-size: 13px;
+    color: var(--muted);
+    min-width: 200px;
+  }
+
+  .filter-section {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .filter-btn {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 2px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+  .filter-btn.active { border-color: var(--primary); background: rgba(99,102,241,0.2); }
+  .filter-btn:hover { border-color: var(--primary); }
+
+  .check-section {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+  .check-input {
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 2px solid var(--border);
+    background: var(--card-light);
+    color: var(--text);
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    width: 160px;
+    text-align: center;
+  }
+  .check-input:focus { outline: none; border-color: var(--primary); }
+  .check-result {
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    min-width: 200px;
+  }
+  .check-result.pass { background: rgba(16,185,129,0.2); border: 2px solid var(--success); color: #6ee7b7; }
+  .check-result.fail { background: rgba(239,68,68,0.2); border: 2px solid var(--danger); color: #fca5a5; }
+
+  .speed-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .speed-control input[type="range"] { width: 120px; }
+
+  @media (max-width: 768px) {
+    .info-grid { grid-template-columns: 1fr; }
+    header h1 { font-size: 24px; }
+    .result-box .answer { font-size: 36px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🔢 Девятеричные пятизначные числа</h1>
+    <p>Интерактивный разбор задачи с полным решением и симулятором перебора</p>
+  </header>
+
+  <div class="section">
+    <h2><span class="num">1</span> Условие задачи</h2>
+    <div class="condition-box">
+      Определите количество <span class="highlight">девятеричных пятизначных</span> чисел, в записи которых
+      <span class="highlight hl-3">ровно две цифры 3</span>, при этом
+      <span class="highlight hl-odd">никакая нечётная цифра</span> не стоит рядом с
+      <span class="highlight hl-2">цифрой 2</span>.
+    </div>
+
+    <div class="info-grid">
+      <div class="info-card">
+        <h3>🔢 Девятеричная система счисления</h3>
+        <p>Основание = 9. Используются цифры:</p>
+        <div class="digits">
+          <span class="digit-badge even">0</span>
+          <span class="digit-badge odd">1</span>
+          <span class="digit-badge even">2</span>
+          <span class="digit-badge odd">3</span>
+          <span class="digit-badge even">4</span>
+          <span class="digit-badge odd">5</span>
+          <span class="digit-badge even">6</span>
+          <span class="digit-badge odd">7</span>
+          <span class="digit-badge even">8</span>
+        </div>
+      </div>
+      <div class="info-card">
+        <h3>📐 Чётные и нечётные</h3>
+        <p>В девятеричной СС:</p>
+        <div style="margin-top: 8px;">
+          <p><strong style="color:#6ee7b7">Чётные:</strong> 0, 2, 4, 6, 8</p>
+          <p><strong style="color:#fca5a5">Нечётные:</strong> 1, 3, 5, 7</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">2</span> Разбор ограничений</h2>
+
+    <div class="step">
+      <h3>Ограничение 1: Пятизначное девятеричное число</h3>
+      <ul>
+        <li>Ровно 5 позиций: <code>_ _ _ _ _</code></li>
+        <li>Первая цифра ≠ 0 (иначе число не пятизначное)</li>
+        <li>Все цифры из {0, 1, 2, 3, 4, 5, 6, 7, 8}</li>
+      </ul>
+    </div>
+
+    <div class="step">
+      <h3>Ограничение 2: Ровно две цифры 3</h3>
+      <ul>
+        <li>Среди 5 позиций ровно 2 заняты цифрой «3»</li>
+        <li>Оставшиеся 3 позиции — НЕ тройки</li>
+        <li>Способов выбрать 2 позиции из 5: C(5,2) = 10</li>
+      </ul>
+    </div>
+
+    <div class="step">
+      <h3>Ограничение 3: Нечётная цифра НЕ рядом с цифрой 2</h3>
+      <ul>
+        <li>Если в числе есть цифра «2», то все её соседи должны быть <strong>чётными</strong> (0, 2, 4, 6, 8)</li>
+        <li>Нечётные {1, 3, 5, 7} не могут стоять непосредственно слева или справа от «2»</li>
+        <li>Поскольку «3» — нечётная, она тоже не может быть соседом «2»</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">3</span> Решение перебором позиций троек</h2>
+
+    <p style="margin-bottom: 16px; color: var(--muted);">
+      Переберём все 10 способов расположения двух троек на 5 позициях. Для каждого случая посчитаем,
+      сколько допустимых заполнений трёх оставшихся позиций.
+    </p>
+    <p style="margin-bottom: 16px; color: var(--muted);">
+      <strong>Допустимые цифры на свободных позициях:</strong><br>
+      • На первой позиции (если она свободна): {1, 2, 4, 5, 6, 7, 8} — 7 вариантов (нельзя 0 и 3)<br>
+      • На остальных позициях: {0, 1, 2, 4, 5, 6, 7, 8} — 8 вариантов (нельзя 3)<br>
+      • Но нужно вычесть случаи, где нечётная цифра соседствует с 2.
+    </p>
+
+    <div class="step">
+      <h3>💡 Ключевое наблюдение о соседстве 3 и 2</h3>
+      <p style="color: var(--muted);">
+        Поскольку цифра 3 — нечётная, она не может стоять рядом с 2. Значит, если тройка стоит на позиции i,
+        то на соседних позициях НЕ может быть цифры 2. Это автоматически исключает конфликты на границах троек.
+      </p>
+    </div>
+
+    <p style="margin-bottom: 16px; color: var(--muted);">
+      Для каждого расположения троек напишем допустимые значения свободных позиций и проверим конфликты «2 рядом с нечётной».
+    </p>
+
+    <div id="caseAnalysis"></div>
+
+    <div class="result-box">
+      <p style="font-size: 18px;">Ответ:</p>
+      <div class="answer" id="totalAnswer">—</div>
+      <p style="color: var(--muted); margin-top: 8px;">девятеричных пятизначных чисел удовлетворяют всем условиям</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">4</span> Симулятор перебора</h2>
+    <p style="color: var(--muted); margin-bottom: 20px;">
+      Компьютер перебирает все 52 488 девятеричных пятизначных чисел (от 10000₉ до 88888₉) и проверяет каждое по всем условиям.
+    </p>
+
+    <div class="simulator-controls">
+      <button class="btn btn-primary" id="btnRun" onclick="runSimulation()">▶️ Запустить перебор</button>
+      <button class="btn btn-danger" id="btnStop" onclick="stopSimulation()" disabled>⏹️ Стоп</button>
+      <button class="btn btn-info" onclick="resetSimulation()">🔄 Сбросить</button>
+      <div class="speed-control">
+        <label style="font-size: 13px;">Скорость:</label>
+        <input type="range" id="speedSlider" min="1" max="100" value="50">
+        <span id="speedLabel" style="font-size: 13px; min-width: 30px;">50×</span>
+      </div>
+    </div>
+
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="value" id="statTotal">0</div>
+        <div class="label">Перебрано</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" id="statValid">0</div>
+        <div class="label">Подходящие ✓</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" id="statInvalid">0</div>
+        <div class="label">Не подходят ✗</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" id="statCurrent">—</div>
+        <div class="label">Текущее число</div>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <span style="font-size: 13px; color: var(--muted);">Показать:</span>
+      <button class="filter-btn active" onclick="setFilter('valid', this)">✓ Подходящие</button>
+      <button class="filter-btn" onclick="setFilter('all', this)">Все</button>
+    </div>
+
+    <div class="numbers-display" id="numbersDisplay">
+      <p style="color: var(--muted); text-align: center; width: 100%; padding: 40px;">
+        Нажмите «Запустить перебор» для начала работы симулятора
+      </p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">5</span> Проверить своё число</h2>
+    <p style="color: var(--muted); margin-bottom: 16px;">
+      Введите девятеричное число (5 цифр от 0 до 8, первая ≠ 0) и узнайте, подходит ли оно.
+    </p>
+    <div class="check-section">
+      <input type="text" class="check-input" id="checkInput" maxlength="5" placeholder="_ _ _ _ _" oninput="checkNumber()">
+      <button class="btn btn-primary" onclick="checkNumber()">Проверить</button>
+      <div class="check-result" id="checkResult" style="display:none;"></div>
+    </div>
+    <div id="checkDetails"></div>
+  </div>
+
+  <div class="section">
+    <h2><span class="num">6</span> Примеры чисел</h2>
+
+    <div class="examples-section">
+      <h3 style="color: var(--success); margin-bottom: 12px;">✅ Подходящие числа:</h3>
+      <div id="validExamples"></div>
+
+      <h3 style="color: var(--danger); margin: 20px 0 12px;">❌ Неподходящие числа:</h3>
+      <div id="invalidExamples"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const triplePositions = [];
+for (let i = 0; i < 5; i++) {
+  for (let j = i + 1; j < 5; j++) {
+    triplePositions.push([i, j]);
+  }
+}
+
+const ODD = [1, 3, 5, 7];
+const NON_THREE = [0, 1, 2, 4, 5, 6, 7, 8];
+
+function solveCase(triplePos) {
+  const freePos = [0, 1, 2, 3, 4].filter(p => !triplePos.includes(p));
+  let count = 0;
+
+  const options = [];
+  for (let fp of freePos) {
+    let opts = NON_THREE.slice();
+    if (fp === 0) opts = opts.filter(d => d !== 0);
+    options.push(opts);
+  }
+
+  for (let a of options[0]) {
+    for (let b of options[1]) {
+      for (let c of options[2]) {
+        const digits = [0, 0, 0, 0, 0];
+        digits[triplePos[0]] = 3;
+        digits[triplePos[1]] = 3;
+        digits[freePos[0]] = a;
+        digits[freePos[1]] = b;
+        digits[freePos[2]] = c;
+
+        let valid = true;
+        for (let i = 0; i < 5; i++) {
+          if (digits[i] === 2) {
+            if (i > 0 && ODD.includes(digits[i-1])) { valid = false; break; }
+            if (i < 4 && ODD.includes(digits[i+1])) { valid = false; break; }
+          }
+        }
+        if (valid) count++;
+      }
+    }
+  }
+
+  return count;
+}
+
+let totalAnswer = 0;
+const caseResults = [];
+const caseAnalysisDiv = document.getElementById('caseAnalysis');
+
+triplePositions.forEach((tp, idx) => {
+  const count = solveCase(tp);
+  caseResults.push({ positions: tp, count });
+  totalAnswer += count;
+
+  const posStr = tp.map(p => `П${p+1}`).join(', ');
+  const freeStr = [0,1,2,3,4].filter(p => !tp.includes(p)).map(p => `П${p+1}`).join(', ');
+
+  caseAnalysisDiv.innerHTML += `
+    <div class="step" style="padding: 14px 20px; margin-bottom: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <div>
+          <strong style="color: var(--info);">Кейс ${idx + 1}:</strong> Тройки на позициях <span style="color:var(--warning)">${posStr}</span>
+          <span style="color: var(--muted); font-size: 13px;"> (свободны: ${freeStr})</span>
+        </div>
+        <div style="background: rgba(16,185,129,0.2); padding: 6px 14px; border-radius: 8px; border: 1px solid var(--success);">
+          <strong style="color: var(--success);">${count} вариантов</strong>
+        </div>
+      </div>
+    </div>
+  `;
+});
+
+document.getElementById('totalAnswer').textContent = totalAnswer;
+
+let simRunning = false;
+let simStopped = false;
+let validNumbers = [];
+let currentFilter = 'valid';
+let simIndex = 0;
+
+const speedSlider = document.getElementById('speedSlider');
+speedSlider.addEventListener('input', () => {
+  document.getElementById('speedLabel').textContent = speedSlider.value + '×';
+});
+
+function toBase9(num) {
+  return num.toString(9);
+}
+
+function isValidNumber(numStr) {
+  if (numStr.length !== 5) return false;
+  if (numStr[0] === '0') return false;
+
+  const digits = numStr.split('').map(Number);
+
+  if (digits.some(d => isNaN(d) || d < 0 || d > 8)) return false;
+
+  const threes = digits.filter(d => d === 3).length;
+  if (threes !== 2) return false;
+
+  for (let i = 0; i < 5; i++) {
+    if (digits[i] === 2) {
+      if (i > 0 && ODD.includes(digits[i-1])) return false;
+      if (i < 4 && ODD.includes(digits[i+1])) return false;
+    }
+  }
+
+  return true;
+}
+
+function checkReasons(numStr) {
+  if (numStr.length !== 5) return 'Нужно ровно 5 цифр';
+  if (numStr[0] === '0') return 'Первая цифра не может быть 0';
+
+  const digits = numStr.split('').map(Number);
+  if (digits.some(d => isNaN(d) || d < 0 || d > 8)) return 'Допустимы только цифры 0–8 (девятеричная СС)';
+
+  const threes = digits.filter(d => d === 3).length;
+  if (threes !== 2) return `Троек должно быть ровно 2, а найдено: ${threes}`;
+
+  for (let i = 0; i < 5; i++) {
+    if (digits[i] === 2) {
+      if (i > 0 && ODD.includes(digits[i-1]))
+        return `Конфликт: нечётная ${digits[i-1]} (позиция ${i}) стоит рядом с 2 (позиция ${i+1})`;
+      if (i < 4 && ODD.includes(digits[i+1]))
+        return `Конфликт: нечётная ${digits[i+1]} (позиция ${i+2}) стоит рядом с 2 (позиция ${i+1})`;
+    }
+  }
+
+  return 'Все условия выполнены! ✓';
+}
+
+function renderNumCard(numStr, valid) {
+  const digits = numStr.split('').map(Number);
+  let html = `<div class="num-card ${valid ? 'valid' : 'invalid'}">`;
+
+  for (let i = 0; i < digits.length; i++) {
+    let cls = 'num-cell ';
+    if (digits[i] === 3) cls += 'd3';
+    else if (digits[i] === 2) {
+      cls += 'd2';
+      const leftOdd = i > 0 && ODD.includes(digits[i-1]);
+      const rightOdd = i < digits.length - 1 && ODD.includes(digits[i+1]);
+      if (leftOdd || rightOdd) cls += ' conflict';
+    }
+    else if (digits[i] === 0) cls += 'zero';
+    else if ([1,5,7].includes(digits[i])) cls += 'odd';
+    else cls += 'even';
+
+    html += `<span class="${cls}">${digits[i]}</span>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+async function runSimulation() {
+  if (simRunning) return;
+  simRunning = true;
+  simStopped = false;
+
+  document.getElementById('btnRun').disabled = true;
+  document.getElementById('btnStop').disabled = false;
+
+  const display = document.getElementById('numbersDisplay');
+  const startFrom = simIndex;
+
+  if (startFrom === 0) {
+    validNumbers = [];
+    display.innerHTML = '';
+  }
+
+  const start = 6561;
+  const end = 59048;
+  const total = end - start + 1;
+
+  let validCount = validNumbers.length;
+  let invalidCount = startFrom - validCount;
+  let processed = startFrom;
+
+  document.getElementById('statTotal').textContent = processed;
+  document.getElementById('statValid').textContent = validCount;
+  document.getElementById('statInvalid').textContent = invalidCount;
+
+  for (let num = start + startFrom; num <= end && !simStopped; num++) {
+    const numStr = toBase9(num);
+    const valid = isValidNumber(numStr);
+
+    processed++;
+    if (valid) {
+      validCount++;
+      validNumbers.push(numStr);
+      display.insertAdjacentHTML('beforeend', renderNumCard(numStr, true));
+    } else {
+      invalidCount++;
+    }
+
+    document.getElementById('statTotal').textContent = processed;
+    document.getElementById('statValid').textContent = validCount;
+    document.getElementById('statInvalid').textContent = invalidCount;
+    document.getElementById('statCurrent').textContent = numStr + '₉';
+    document.getElementById('progressFill').style.width = ((processed / total) * 100) + '%';
+
+    const speed = parseInt(speedSlider.value);
+    const batchDelay = Math.max(1, 101 - speed);
+
+    if (processed % speed === 0) {
+      await new Promise(r => setTimeout(r, batchDelay));
+    }
+  }
+
+  simRunning = false;
+  simIndex = processed;
+  document.getElementById('btnRun').disabled = false;
+  document.getElementById('btnStop').disabled = true;
+}
+
+function stopSimulation() {
+  simStopped = true;
+}
+
+function resetSimulation() {
+  simStopped = true;
+  simRunning = false;
+  simIndex = 0;
+  validNumbers = [];
+  document.getElementById('numbersDisplay').innerHTML = '<p style="color: var(--muted); text-align: center; width: 100%; padding: 40px;">Нажмите «Запустить перебор» для начала работы симулятора</p>';
+  document.getElementById('statTotal').textContent = '0';
+  document.getElementById('statValid').textContent = '0';
+  document.getElementById('statInvalid').textContent = '0';
+  document.getElementById('statCurrent').textContent = '—';
+  document.getElementById('progressFill').style.width = '0%';
+  document.getElementById('btnRun').disabled = false;
+  document.getElementById('btnStop').disabled = true;
+}
+
+function setFilter(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const display = document.getElementById('numbersDisplay');
+  if (validNumbers.length === 0 && simIndex === 0) return;
+
+  let html = '';
+  if (filter === 'valid') {
+    validNumbers.forEach(numStr => { html += renderNumCard(numStr, true); });
+  } else {
+    const start = 6561;
+    const limit = Math.min(simIndex, 600);
+    for (let n = 0; n < limit; n++) {
+      const numStr = toBase9(start + n);
+      html += renderNumCard(numStr, isValidNumber(numStr));
+    }
+    if (simIndex > limit) {
+      html += `<p style="width:100%;text-align:center;color:var(--muted);font-size:13px;margin-top:8px;">Показаны первые ${limit} чисел из ${simIndex} перебранных</p>`;
+    }
+  }
+  display.innerHTML = html;
+}
+
+function checkNumber() {
+  const input = document.getElementById('checkInput').value.replace(/\s/g, '');
+  const resultDiv = document.getElementById('checkResult');
+  const detailsDiv = document.getElementById('checkDetails');
+
+  if (input.length !== 5) {
+    resultDiv.style.display = 'block';
+    resultDiv.className = 'check-result fail';
+    resultDiv.textContent = 'Введите ровно 5 цифр';
+    detailsDiv.innerHTML = '';
+    return;
+  }
+
+  if (!/^[0-9]{5}$/.test(input)) {
+    resultDiv.style.display = 'block';
+    resultDiv.className = 'check-result fail';
+    resultDiv.textContent = 'Только цифры 0–8';
+    detailsDiv.innerHTML = '';
+    return;
+  }
+
+  const valid = isValidNumber(input);
+  const reason = checkReasons(input);
+
+  resultDiv.style.display = 'block';
+  resultDiv.className = 'check-result ' + (valid ? 'pass' : 'fail');
+  resultDiv.textContent = valid ? '✅ Подходит!' : '❌ Не подходит';
+
+  detailsDiv.innerHTML = `
+    <div style="margin-top: 16px;">
+      ${renderNumCard(input, valid)}
+      <p style="margin-top: 12px; color: var(--muted); font-size: 14px;">${reason}</p>
+    </div>
+  `;
+}
+
+function generateExamples() {
+  const valid = [];
+  const invalid = [];
+
+  for (let num = 6561; num <= 59048 && (valid.length < 5 || invalid.length < 5); num++) {
+    const numStr = toBase9(num);
+    if (isValidNumber(numStr) && valid.length < 5) {
+      valid.push(numStr);
+    }
+    if (!isValidNumber(numStr) && invalid.length < 5) {
+      const digits = numStr.split('').map(Number);
+      const threes = digits.filter(d => d === 3).length;
+      if (threes === 3 || (threes === 2 && digits.some((d, i) => d === 2 && ((i > 0 && ODD.includes(digits[i-1])) || (i < 4 && ODD.includes(digits[i+1])))))) {
+        invalid.push(numStr);
+      }
+    }
+  }
+
+  const validDiv = document.getElementById('validExamples');
+  valid.forEach(numStr => {
+    validDiv.innerHTML += `
+      <div class="example-row">
+        <div class="status">✅</div>
+        ${renderNumCard(numStr, true)}
+        <div class="explanation">✓ Ровно 2 тройки, нет конфликтов нечётных с 2</div>
+      </div>
+    `;
+  });
+
+  const invalidDiv = document.getElementById('invalidExamples');
+  invalid.forEach(numStr => {
+    invalidDiv.innerHTML += `
+      <div class="example-row">
+        <div class="status">❌</div>
+        ${renderNumCard(numStr, false)}
+        <div class="explanation">${checkReasons(numStr)}</div>
+      </div>
+    `;
+  });
+}
+
+generateExamples();
+</script>
+</body>
+</html>

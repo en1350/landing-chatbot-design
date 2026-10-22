@@ -52,7 +52,8 @@ type TrainerKey =
   | "internet-ai"
   | "modeling-luntik"
   | "ege-divisibility"
-  | "ege-sound-channel";
+  | "ege-sound-channel"
+  | "ege-nonary-numbers";
 
 interface CategoryItem {
   key: CategoryKey;
@@ -101,6 +102,7 @@ const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "modeling-luntik": "/modeling-luntik.html",
   "ege-divisibility": "/ege-divisibility.html",
   "ege-sound-channel": "/ege-sound-channel.html",
+  "ege-nonary-numbers": "/ege-nonary-numbers.html",
 };
 
 const CATEGORIES: CategoryItem[] = [
@@ -400,6 +402,14 @@ const TRAINERS: TrainerItem[] = [
     title: "Звук и каналы связи",
     description: "Интерактивный разбор задачи: объём звукового файла, разрешение, частота дискретизации и время передачи. Меняйте условие ползунками",
     accent: "#F59E0B",
+  },
+  {
+    key: "ege-nonary-numbers",
+    category: "ege",
+    icon: "🔢",
+    title: "Девятеричные числа с ограничениями",
+    description: "Разбор задачи на подсчёт девятеричных пятизначных чисел: две цифры 3 и нечётные цифры не рядом с 2. Пошаговое решение, симулятор перебора и проверка своего числа",
+    accent: "#6366F1",
   },
 ];
 
