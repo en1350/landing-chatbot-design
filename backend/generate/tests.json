@@ -468,6 +468,22 @@
       "expectedStatus": 403,
       "expectedBody": {},
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "KOS refine without paid subscription returns 403",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "kos_refine",
+        "parts": [
+          "tasks"
+        ],
+        "instruction": "сделай сложнее",
+        "fields": {}
+      },
+      "expectedStatus": 403,
+      "expectedBody": {},
+      "bodyMatcher": "partial"
     }
   ]
 }

@@ -50,7 +50,7 @@ def get_token(event):
 
 
 ACCESS = {'user_id': None, 'via_credit': False, 'action': None}
-CREDIT_EXCLUDED_ACTIONS = {'pm_task_refine', 'presentation_refine', 'project_refine'}
+CREDIT_EXCLUDED_ACTIONS = {'pm_task_refine', 'presentation_refine', 'project_refine', 'kos_refine'}
 
 
 def is_user_paid(event) -> bool:
@@ -1725,6 +1725,52 @@ def run_kos_part(part: str, fields: dict) -> dict:
     return normalize_kos_part(part, parse_ai_json(raw))
 
 
+def kos_current_part(part: str, f: dict) -> str:
+    if part == 'competencies':
+        data = f.get('competencies') or []
+    elif part == 'control':
+        data = f.get('control') or {}
+    elif part == 'tasks':
+        data = [
+            {'name': _s(t.get('name')), 'type': _s(t.get('type')), 'controlType': _s(t.get('controlType')), 'indicator': _s(t.get('indicator')), 'description': _s(t.get('description'))}
+            for t in (f.get('tasks') or [])
+        ]
+    else:
+        data = {'scale': _s(f.get('scale')), 'generalCriteria': _s(f.get('generalCriteria')), 'levels': f.get('levels') or []}
+    return json.dumps(data, ensure_ascii=False)
+
+
+def build_kos_refine_prompt(part: str, f: dict, instruction: str) -> str:
+    extra = ''
+    if part == 'tasks':
+        comps = f.get('competencies') or []
+        codes = [f"{_s(c.get('code'))}.{_s(i.get('code'))}" for c in comps for i in (c.get('indicators') or [])]
+        extra = f"\nДопустимые типы: {', '.join(KOS_TASK_TYPES)}.\nДопустимые виды контроля: {', '.join(KOS_CONTROL_TYPES)}.\nПоле indicator заполняй СТРОГО значением из списка: {', '.join(codes) if codes else 'пустая строка'}. Если у задания уже был корректный indicator, сохрани его.\nКоличество заданий сохраняй, если замечание прямо не просит добавить или убрать."
+    if part == 'competencies':
+        extra = "\nКоды компетенций и элементов, которые уже есть, не меняй: на них ссылаются задания. Новые коды допустимы только для добавляемых компетенций."
+    return f"""Ты опытный методист СПО, дорабатываешь фонд оценочных средств (ФОС/КОС) по ФГОС СПО. Пиши на русском языке, конкретно, без markdown-разметки.
+
+{kos_context(f)}
+
+Текущее содержимое раздела в JSON:
+{kos_current_part(part, f)}
+
+Преподаватель просит доработать раздел по замечанию: «{instruction}»
+
+Обнови раздел в соответствии с замечанием и верни его ЦЕЛИКОМ, включая неизменённые элементы.{extra}
+
+Верни ответ СТРОГО в формате JSON без markdown, пояснений и текста до/после:
+{KOS_FORMATS[part]}"""
+
+
+def run_kos_refine_part(part: str, fields: dict, instruction: str) -> dict:
+    raw = call_ai([
+        {'role': 'system', 'content': 'Ты профессиональный методист СПО. Отвечаешь строго валидным JSON без markdown и пояснений, всегда на русском языке.'},
+        {'role': 'user', 'content': build_kos_refine_prompt(part, fields, instruction)},
+    ], temperature=0.6)
+    return normalize_kos_part(part, parse_ai_json(raw))
+
+
 def process(event: dict, context) -> dict:
     """Генерация учебных материалов, ИИ-чат-помощник через AITunnel. Декомпозитор компетенций, проверка тетради по фото, план коррекционной работы (аналитика качества обученности) и ИИ-анализ качества знаний по дисциплинам доступны только пользователям с платной подпиской. Антиплагиат (проверка текста и извлечение из PDF/DOCX) доступен бесплатно с лимитом попыток, учёт которых ведётся в backend/auth."""
     method = event.get('httpMethod', 'GET')
@@ -2368,6 +2414,38 @@ def process(event: dict, context) -> dict:
             failed = []
             for part, data, err in results:
                 if err or not data:
+                    failed.append(part)
+                else:
+                    out[part] = data
+            if not out:
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ вернул некорректный ответ, попробуйте снова'})}
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'result': out, 'failed': failed}, ensure_ascii=False)}
+
+        elif action == 'kos_refine':
+            fields = body.get('fields') or {}
+            instruction = (body.get('instruction') or '').strip()
+            parts = [p for p in (body.get('parts') or []) if p in KOS_PARTS]
+            if not is_user_paid(event):
+                return {'statusCode': 403, 'headers': cors_headers(), 'body': json.dumps({'error': 'Доработка КОС с ИИ доступна по платной подписке'})}
+            if not instruction:
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите, что нужно доработать'})}
+            if not parts:
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Выберите разделы для доработки'})}
+
+            def safe_refine(part):
+                try:
+                    return part, run_kos_refine_part(part, fields, instruction), None
+                except Exception:
+                    return part, None, True
+
+            with ThreadPoolExecutor(max_workers=len(parts)) as pool:
+                results = list(pool.map(safe_refine, parts))
+            out = {}
+            failed = []
+            for part, data, err in results:
+                empty_tasks = part == 'tasks' and not (data or {}).get('tasks')
+                empty_comps = part == 'competencies' and not (data or {}).get('competencies')
+                if err or not data or empty_tasks or empty_comps:
                     failed.append(part)
                 else:
                     out[part] = data

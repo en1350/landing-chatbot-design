@@ -43,6 +43,8 @@ const AI_PARTS: { key: string; label: string }[] = [
   { key: "criteria", label: "Шкала, критерии и уровни" },
 ];
 
+const REFINE_HINTS = ["Сделай задания сложнее", "Добавь практический пример", "Уточни критерии оценки", "Сократи формулировки"];
+
 const NONE = "none";
 
 const KosBuilder = () => {
@@ -63,6 +65,10 @@ const KosBuilder = () => {
   const [compCount, setCompCount] = useState("4");
   const [taskCount, setTaskCount] = useState("5");
   const [aiLoading, setAiLoading] = useState(false);
+  const [refineOpen, setRefineOpen] = useState(false);
+  const [refineParts, setRefineParts] = useState<string[]>(["tasks"]);
+  const [refineText, setRefineText] = useState("");
+  const [refining, setRefining] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const patch = (p: Partial<KosData>) => setData((d) => ({ ...d, ...p }));
@@ -122,6 +128,63 @@ const KosBuilder = () => {
       toast.error(e instanceof Error ? e.message : "Ошибка ИИ");
     } finally {
       setAiLoading(false);
+    }
+  };
+
+  const partHasContent = (key: string) =>
+    key === "competencies"
+      ? data.competencies.length > 0
+      : key === "control"
+      ? Object.values(data.control).some((v) => v.trim())
+      : key === "tasks"
+      ? data.tasks.length > 0
+      : !!(data.scale.trim() || data.generalCriteria.trim() || data.levels.length);
+
+  const hasAnyContent = AI_PARTS.some((p) => partHasContent(p.key));
+
+  const openRefine = () => {
+    if (!user) return setAuthOpen(true);
+    if (!isPaid) return setUpgradeOpen(true);
+    setRefineParts((prev) => {
+      const filled = prev.filter(partHasContent);
+      return filled.length ? filled : AI_PARTS.filter((p) => partHasContent(p.key)).slice(0, 1).map((p) => p.key);
+    });
+    setRefineOpen(true);
+  };
+
+  const runRefine = async () => {
+    if (!refineText.trim()) return toast.error("Напишите, что нужно доработать");
+    if (!refineParts.length) return toast.error("Выберите разделы для доработки");
+    setRefining(true);
+    try {
+      const res = await fetch(GENERATE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { "X-Authorization": token } : {}) },
+        body: JSON.stringify({ action: "kos_refine", parts: refineParts, instruction: refineText.trim(), fields: data }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Не удалось получить ответ от ИИ");
+      const r = json.result as Record<string, any>;
+      setData((d) => {
+        const next: KosData = { ...d };
+        if (r.competencies) next.competencies = r.competencies.competencies;
+        if (r.control) next.control = r.control;
+        if (r.tasks) next.tasks = r.tasks.tasks;
+        if (r.criteria) {
+          next.scale = r.criteria.scale;
+          next.generalCriteria = r.criteria.generalCriteria;
+          next.levels = r.criteria.levels;
+        }
+        return next;
+      });
+      setRefineText("");
+      setRefineOpen(false);
+      if (json.failed?.length) toast.warning("Часть разделов доработать не удалось, они остались без изменений");
+      else toast.success("Разделы доработаны — проверьте изменения");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Ошибка ИИ");
+    } finally {
+      setRefining(false);
     }
   };
 
@@ -195,6 +258,10 @@ const KosBuilder = () => {
             <Button className="gap-2" onClick={() => setAiOpen(true)}>
               <Icon name="Sparkles" size={16} />
               Заполнить с ИИ
+            </Button>
+            <Button variant="outline" className="gap-2 border-primary/30 text-primary hover:bg-primary/5" onClick={openRefine} disabled={!hasAnyContent}>
+              <Icon name="Sparkles" size={16} />
+              Доработать с ИИ
             </Button>
             <Button variant="outline" className="gap-2" onClick={() => setImportOpen(true)}>
               <Icon name="Plus" size={16} />
@@ -458,6 +525,59 @@ const KosBuilder = () => {
             {aiLoading ? "ИИ составляет КОС..." : "Заполнить"}
           </Button>
           {!isPaid && <p className="text-center text-xs text-muted-foreground">ИИ-заполнение доступно по подписке.</p>}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={refineOpen} onOpenChange={(v) => !refining && setRefineOpen(v)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Доработать КОС с ИИ</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Выберите разделы и напишите замечание. ИИ перепишет выбранные разделы целиком, остальные не тронет.
+          </p>
+          <div className="space-y-2">
+            {AI_PARTS.map((p) => {
+              const filled = partHasContent(p.key);
+              return (
+                <label key={p.key} className={`flex items-center gap-2 text-sm ${filled ? "cursor-pointer" : "opacity-50"}`}>
+                  <input
+                    type="checkbox"
+                    disabled={!filled || refining}
+                    checked={refineParts.includes(p.key)}
+                    onChange={() => setRefineParts((prev) => (prev.includes(p.key) ? prev.filter((x) => x !== p.key) : [...prev, p.key]))}
+                  />
+                  {p.label}
+                  {!filled && <span className="text-xs text-muted-foreground">(пусто)</span>}
+                </label>
+              );
+            })}
+          </div>
+          <div>
+            {label("Что доработать или исправить?")}
+            <Textarea
+              rows={3}
+              value={refineText}
+              onChange={(e) => setRefineText(e.target.value)}
+              disabled={refining}
+              placeholder="Например: сделай задания сложнее, добавь задание на демонстрационный экзамен, уточни критерии..."
+            />
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {REFINE_HINTS.map((h) => (
+              <button
+                key={h}
+                type="button"
+                disabled={refining}
+                onClick={() => setRefineText(h)}
+                className="rounded-full border border-border bg-background px-3 py-1 text-xs hover:bg-accent transition-colors disabled:opacity-50"
+              >
+                {h}
+              </button>
+            ))}
+          </div>
+          <Button className="w-full gap-2" onClick={runRefine} disabled={refining || !refineText.trim() || !refineParts.length}>
+            {refining ? <Icon name="Loader2" size={16} className="animate-spin" /> : <Icon name="Sparkles" size={16} />}
+            {refining ? "ИИ дорабатывает..." : "Применить"}
+          </Button>
         </DialogContent>
       </Dialog>
 
