@@ -499,6 +499,19 @@
       "expectedStatus": 403,
       "expectedBody": {},
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "KOS from program without paid subscription returns 403",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "kos_from_program",
+        "file_base64": "x",
+        "filename": "a.pdf"
+      },
+      "expectedStatus": 403,
+      "expectedBody": {},
+      "bodyMatcher": "partial"
     }
   ]
 }

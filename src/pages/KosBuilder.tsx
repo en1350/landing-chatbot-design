@@ -73,6 +73,7 @@ const KosBuilder = () => {
   const [criteriaIdx, setCriteriaIdx] = useState<number | null>(null);
   const [maxScore, setMaxScore] = usePersistedState("kos_maxScore", "10");
   const fileRef = useRef<HTMLInputElement>(null);
+  const [programLoading, setProgramLoading] = useState(false);
 
   const patch = (p: Partial<KosData>) => setData((d) => ({ ...d, ...p }));
   const setPassport = (k: string, v: string) => setData((d) => ({ ...d, passport: { ...d.passport, [k]: v } }));
@@ -225,31 +226,52 @@ const KosBuilder = () => {
     }
   };
 
-  const exportJson = () => {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "kos.json";
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const importJson = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const loadProgram = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const parsed = JSON.parse(String(reader.result));
-        setData({ ...EMPTY_KOS, ...parsed, control: { ...EMPTY_KOS.control, ...(parsed.control || {}) } });
-        toast.success("Данные загружены");
-      } catch {
-        toast.error("Не удалось прочитать файл");
-      }
-    };
-    reader.readAsText(file);
+    if (!user) return setAuthOpen(true);
+    if (!isPaid) return setUpgradeOpen(true);
+    if (!/\.(pdf|docx)$/i.test(file.name)) return toast.error("Загрузите файл в формате PDF или DOCX");
+    if (file.size > 8 * 1024 * 1024) return toast.error("Файл слишком большой, максимум 8 МБ");
+    setProgramLoading(true);
+    try {
+      const fileBase64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      const res = await fetch(GENERATE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { "X-Authorization": token } : {}) },
+        body: JSON.stringify({ action: "kos_from_program", file_base64: fileBase64, filename: file.name }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Не удалось прочитать рабочую программу");
+      const r = json.result as {
+        direction: string;
+        discipline: string;
+        intermediate: string;
+        credits: string;
+        competencies: KosCompetency[];
+      };
+      setData((d) => {
+        const passport = { ...d.passport };
+        (["direction", "discipline", "intermediate", "credits"] as const).forEach((k) => {
+          if (r[k]) passport[k] = r[k];
+        });
+        const known = new Set(d.competencies.map((c) => c.code.trim().toLowerCase()).filter(Boolean));
+        const added = (r.competencies || []).filter((c) => !c.code || !known.has(c.code.trim().toLowerCase()));
+        return { ...d, passport, competencies: [...d.competencies, ...added] };
+      });
+      toast.success(`Программа загружена. Компетенций добавлено: ${r.competencies?.length || 0}. Проверьте паспорт`);
+      setTab("passport");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Ошибка загрузки");
+    } finally {
+      setProgramLoading(false);
+    }
   };
 
   const clearAll = () => {
@@ -310,15 +332,11 @@ const KosBuilder = () => {
               <Icon name="Eye" size={16} />
               Предпросмотр
             </Button>
-            <Button variant="outline" className="gap-2" onClick={exportJson}>
-              <Icon name="Download" size={16} />
-              Экспорт JSON
+            <Button variant="outline" className="gap-2" onClick={() => fileRef.current?.click()} disabled={programLoading}>
+              {programLoading ? <Icon name="Loader2" size={16} className="animate-spin" /> : <Icon name="Upload" size={16} />}
+              {programLoading ? "Читаю программу..." : "Загрузить рабочую программу"}
             </Button>
-            <Button variant="outline" className="gap-2" onClick={() => fileRef.current?.click()}>
-              <Icon name="Upload" size={16} />
-              Импорт JSON
-            </Button>
-            <input ref={fileRef} type="file" accept=".json" className="hidden" onChange={importJson} />
+            <input ref={fileRef} type="file" accept=".pdf,.docx" className="hidden" onChange={loadProgram} />
             <Button variant="ghost" className="gap-2 text-muted-foreground" onClick={clearAll}>
               <Icon name="Trash2" size={16} />
               Очистить
@@ -353,10 +371,6 @@ const KosBuilder = () => {
                       {INTERMEDIATE_OPTIONS.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                </div>
-                <div>
-                  {label("Год разработки")}
-                  <Input value={data.passport.year || ""} onChange={(e) => setPassport("year", e.target.value)} />
                 </div>
               </div>
             </TabsContent>

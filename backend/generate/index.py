@@ -1645,9 +1645,7 @@ def kos_context(f: dict) -> str:
     tasks = f.get('tasks') or []
     task_lines = [f"- {_s(t.get('name'))} [{_s(t.get('type'))}, {_s(t.get('controlType'))}]" for t in tasks]
     return f"""Специальность СПО: {_s(p.get('direction')) or 'не указана'}
-Квалификация: {_s(p.get('profile')) or 'не указана'}
 Дисциплина / МДК: {_s(p.get('discipline')) or 'не указана'}
-Курс, семестр: {_s(p.get('semester')) or 'не указан'}
 Трудоёмкость: {_s(p.get('credits')) or 'не указана'}
 Форма промежуточной аттестации: {_s(p.get('intermediate')) or 'не указана'}
 Компетенции:
@@ -2509,6 +2507,44 @@ def process(event: dict, context) -> dict:
             if not (parsed.get('criteria') or []):
                 return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ не составил критерии, попробуйте снова'})}
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'criteria': format_kos_task_criteria(parsed, max_score)}, ensure_ascii=False)}
+
+        elif action == 'kos_from_program':
+            file_base64 = body.get('file_base64') or ''
+            filename = body.get('filename') or ''
+            if not is_user_paid(event):
+                return {'statusCode': 403, 'headers': cors_headers(), 'body': json.dumps({'error': 'Загрузка рабочей программы доступна по платной подписке'})}
+            if not file_base64:
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Файл не передан'})}
+            try:
+                program_text = extract_text_from_file(file_base64, filename)
+            except ValueError as e:
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': str(e)})}
+            if not program_text.strip():
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Не удалось извлечь текст из файла — возможно, в нём только изображения'})}
+            options = ['Экзамен', 'Зачёт', 'Дифференцированный зачёт', 'Курсовой проект', 'Демонстрационный экзамен']
+            prompt = f"""Ты методист СПО. Ниже текст рабочей программы дисциплины или профессионального модуля. Извлеки из него данные для фонда оценочных средств. Ничего не выдумывай: если данных нет, оставь пустую строку или пустой список.
+
+Верни СТРОГО JSON без markdown и пояснений:
+{{"direction": "код и наименование специальности СПО, например 09.02.07 Информационные системы и программирование", "discipline": "код и наименование дисциплины / МДК", "intermediate": "форма промежуточной аттестации строго одним из значений: {', '.join(options)}, либо пустая строка", "credits": "общая трудоёмкость, например 108 часов", "competencies": [{{"code": "ОК 01 или ПК 1.1", "name": "формулировка компетенции дословно из программы", "indicators": [{{"code": "З.1 | У.1 | В.1 | ПО.1", "name": "что знает, умеет или владеет обучающийся"}}]}}]}}
+
+Текст рабочей программы:
+{program_text[:20000]}"""
+            raw = call_ai([
+                {'role': 'system', 'content': 'Ты профессиональный методист СПО. Отвечаешь строго валидным JSON без markdown и пояснений, всегда на русском языке.'},
+                {'role': 'user', 'content': prompt},
+            ], temperature=0.2)
+            parsed = parse_ai_json(raw)
+            if not isinstance(parsed, dict):
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ вернул некорректный ответ, попробуйте снова'})}
+            intermediate = _s(parsed.get('intermediate'))
+            result = {
+                'direction': _s(parsed.get('direction')),
+                'discipline': _s(parsed.get('discipline')),
+                'intermediate': intermediate if intermediate in options else '',
+                'credits': _s(parsed.get('credits')),
+                'competencies': normalize_kos_part('competencies', parsed)['competencies'],
+            }
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'result': result}, ensure_ascii=False)}
 
         elif action == 'extract_text':
             file_base64 = body.get('file_base64') or ''

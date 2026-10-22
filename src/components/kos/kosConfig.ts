@@ -36,7 +36,7 @@ export interface KosData {
 }
 
 export const EMPTY_KOS: KosData = {
-  passport: { year: String(new Date().getFullYear()) },
+  passport: {},
   competencies: [],
   tasks: [],
   levels: [],
@@ -62,15 +62,8 @@ export const KOS_CONTROL_TYPES = ["Текущий", "Промежуточный"
 export const INTERMEDIATE_OPTIONS = ["Экзамен", "Зачёт", "Дифференцированный зачёт", "Курсовой проект", "Демонстрационный экзамен"];
 
 export const PASSPORT_FIELDS: { key: string; label: string; placeholder: string }[] = [
-  { key: "org", label: "Образовательная организация", placeholder: "ГБПОУ «Колледж информационных технологий»" },
-  { key: "faculty", label: "Структурное подразделение / отделение", placeholder: "Отделение информационных технологий" },
   { key: "direction", label: "Код и наименование специальности СПО", placeholder: "09.02.07 Информационные системы и программирование" },
-  { key: "profile", label: "Квалификация выпускника", placeholder: "Разработчик веб и мультимедийных приложений" },
   { key: "discipline", label: "Дисциплина / МДК", placeholder: "МДК.01.01 Разработка кода информационных систем" },
-  { key: "department", label: "Цикловая комиссия", placeholder: "ЦК информационных технологий" },
-  { key: "author", label: "Разработчик ФОС", placeholder: "ФИО преподавателя, должность" },
-  { key: "approved", label: "Утверждён на заседании ЦК", placeholder: "Протокол № __ от __.__.____" },
-  { key: "semester", label: "Курс, семестр", placeholder: "2 курс, 3 семестр" },
   { key: "credits", label: "Общая трудоёмкость", placeholder: "108 часов (в т.ч. 36 ч. аудиторных)" },
 ];
 
@@ -85,14 +78,8 @@ export const buildKosText = (d: KosData): string => {
   const lines: string[] = [
     `Дисциплина / МДК: ${v(p.discipline)}`,
     `Специальность СПО: ${v(p.direction)}`,
-    `Квалификация: ${v(p.profile)}`,
-    `Организация: ${v(p.org)}`,
-    `Подразделение: ${v(p.faculty)}`,
-    `Цикловая комиссия: ${v(p.department)}`,
-    `Разработчик: ${v(p.author)}`,
-    `Утверждён: ${v(p.approved)}`,
-    `Курс, семестр: ${v(p.semester)} | Трудоёмкость: ${v(p.credits)}`,
-    `Форма аттестации: ${v(p.intermediate)} | Год: ${v(p.year)}`,
+    `Форма промежуточной аттестации: ${v(p.intermediate)}`,
+    `Общая трудоёмкость: ${v(p.credits)}`,
     "",
     "1. ПЕРЕЧЕНЬ КОМПЕТЕНЦИЙ",
   ];
