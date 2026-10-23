@@ -52,6 +52,7 @@ type TrainerKey =
   | "internet-ai"
   | "modeling-luntik"
   | "multimedia-slide-ovz"
+  | "executor-algorithms-ovz"
   | "ege-divisibility"
   | "ege-sound-channel"
   | "ege-nonary-numbers"
@@ -103,6 +104,7 @@ const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "internet-ai": "/internet-ai.html",
   "modeling-luntik": "/modeling-luntik.html",
   "multimedia-slide-ovz": "/multimedia-slide-ovz.html",
+  "executor-algorithms-ovz": "/executor-algorithms-ovz.html",
   "ege-divisibility": "/ege-divisibility.html",
   "ege-sound-channel": "/ege-sound-channel.html",
   "ege-nonary-numbers": "/ege-nonary-numbers.html",
@@ -180,6 +182,15 @@ const TRAINERS: TrainerItem[] = [
     title: "Теория множеств",
     description: "Теория, диаграммы Эйлера-Венна, практика с операциями над множествами, тест, игра на 2 команды и сертификат",
     accent: "#667eea",
+  },
+  {
+    key: "executor-algorithms-ovz",
+    category: "programming",
+    icon: "🎯",
+    title: "Исполнитель и алгоритмы (для ОВЗ)",
+    description: "Доступная версия: свои числа для задачи, пошаговый пример решения, симулятор исполнителя, проверка ответа, озвучивание, контраст и шрифт для дислексии, сертификат",
+    accent: "#27ae60",
+    paid: true,
   },
   {
     key: "quadratic-complexity",
