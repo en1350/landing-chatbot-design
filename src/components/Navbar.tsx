@@ -52,6 +52,7 @@ const TRAINERS_MENU: NavItem[] = [
   { label: "Программирование", to: "/trenazher-dlya-uchenikov?cat=programming", icon: "Code" },
   { label: "Операционные системы", to: "/trenazher-dlya-uchenikov?cat=os", icon: "Monitor" },
   { label: "ЕГЭ по информатике", to: "/trenazher-dlya-uchenikov?cat=ege", icon: "GraduationCap" },
+  { label: "Тренажёры для ОВЗ", to: "/trenazher-dlya-uchenikov?cat=ovz", icon: "Accessibility" },
 ];
 
 const OVZ_MENU: NavItem[] = [

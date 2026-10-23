@@ -19,7 +19,7 @@ import TrainerFullscreen from "@/components/student-trainer/TrainerFullscreen";
 
 /* ---------- Список тренажёров ---------- */
 
-type CategoryKey = "informatics" | "networks" | "programming" | "os" | "ege";
+type CategoryKey = "informatics" | "networks" | "programming" | "os" | "ege" | "ovz";
 
 type TrainerKey =
   | "algorithms"
@@ -147,6 +147,13 @@ const CATEGORIES: CategoryItem[] = [
     description: "Разбор типовых заданий ЕГЭ с генерацией задач, проверкой ответа и счётчиком выполненных заданий",
     accent: "#F59E0B",
   },
+  {
+    key: "ovz",
+    icon: "♿",
+    title: "Тренажёры для ОВЗ",
+    description: "Доступные уроки с озвучиванием, крупным шрифтом, режимами контраста и поддержкой дислексии",
+    accent: "#2980b9",
+  },
 ];
 
 const TRAINERS: TrainerItem[] = [
@@ -160,7 +167,7 @@ const TRAINERS: TrainerItem[] = [
   },
   {
     key: "multimedia-slide-ovz",
-    category: "informatics",
+    category: "ovz",
     icon: "🎬",
     title: "Мультимедиа на слайде (для ОВЗ)",
     description: "Инклюзивный урок: простая теория, тренажёр слайда, 4 задания, тест на 6 вопросов, озвучивание, режимы для слабовидящих, дальтоников и дислексии, сертификат",
@@ -185,7 +192,7 @@ const TRAINERS: TrainerItem[] = [
   },
   {
     key: "executor-algorithms-ovz",
-    category: "programming",
+    category: "ovz",
     icon: "🎯",
     title: "Исполнитель и алгоритмы (для ОВЗ)",
     description: "Доступная версия: свои числа для задачи, пошаговый пример решения, симулятор исполнителя, проверка ответа, озвучивание, контраст и шрифт для дислексии, сертификат",
