@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎓 Инклюзивный урок: Мультимедиа на слайде</title>
+<link href="https://fonts.cdnfonts.com/css/opendyslexic" rel="stylesheet">
+<style>
+:root {
+  --bg-color: #f0f4f8;
+  --text-color: #111111;
+  --container-bg: #ffffff;
+  --primary: #2980b9;
+  --primary-hover: #1f618d;
+  --accent: #f1c40f;
+  --success: #27ae60;
+  --danger: #c0392b;
+  --border-color: #bdc3c7;
+  --font-size-base: 18px;
+  --font-family: 'Verdana', 'Segoe UI', Arial, sans-serif;
+}
+
+body.theme-contrast {
+  --bg-color: #000000;
+  --text-color: #ffff00;
+  --container-bg: #000000;
+  --primary: #ffffff;
+  --primary-hover: #cccccc;
+  --accent: #00ffff;
+  --success: #00ff00;
+  --danger: #ff0000;
+  --border-color: #ffffff;
+}
+body.theme-contrast .card,
+body.theme-contrast .task,
+body.theme-contrast .test-question {
+  border: 3px solid #ffffff;
+  background: #000000;
+}
+body.theme-contrast .nav-tab.active {
+  background: #ffff00;
+  color: #000000;
+}
+
+body.theme-colorblind {
+  --bg-color: #fffff0;
+  --text-color: #000080;
+  --container-bg: #ffffff;
+  --primary: #0000cd;
+  --primary-hover: #00008b;
+  --accent: #ffd700;
+  --success: #000080;
+  --danger: #8b0000;
+  --border-color: #000080;
+}
+body.theme-colorblind .option.correct::after { content: " ✅"; }
+body.theme-colorblind .option.wrong::after { content: " ❌"; }
+
+body.theme-dyslexia {
+  --font-family: 'OpenDyslexic', 'Comic Sans MS', 'Arial', sans-serif;
+  --bg-color: #fdf6e3;
+  --text-color: #2c3e50;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-family);
+  background: var(--bg-color);
+  min-height: 100vh;
+  padding: 20px;
+  color: var(--text-color);
+  font-size: var(--font-size-base);
+  line-height: 1.8;
+  transition: background 0.3s, color 0.3s;
+}
+
+*:focus-visible {
+  outline: 4px solid var(--accent) !important;
+  outline-offset: 3px;
+}
+
+.a11y-panel {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: var(--container-bg);
+  border: 3px solid var(--primary);
+  border-radius: 0 0 12px 12px;
+  padding: 10px 20px;
+  margin: -20px -20px 20px -20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+.a11y-label {
+  font-weight: bold;
+  font-size: 16px;
+  margin-right: 10px;
+  color: var(--text-color);
+}
+.a11y-btn {
+  padding: 10px 16px;
+  font-size: 16px;
+  font-weight: bold;
+  border: 2px solid var(--border-color);
+  background: var(--bg-color);
+  color: var(--text-color);
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.a11y-btn:hover, .a11y-btn.active {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+.a11y-btn.speaking {
+  background: var(--danger);
+  color: white;
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  background: var(--container-bg);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  overflow: hidden;
+  border: 2px solid var(--border-color);
+}
+
+header {
+  background: var(--primary);
+  color: #ffffff;
+  padding: 30px;
+  text-align: center;
+}
+body.theme-contrast header { background: #000000; border-bottom: 3px solid #ffff00; }
+
+header h1 { font-size: 28px; margin-bottom: 10px; }
+header p { font-size: 18px; opacity: 0.95; }
+#lessonDate { font-size: 18px; margin-top: 10px; font-weight: bold; color: var(--accent); }
+
+.progress-bar {
+  height: 16px;
+  background: #ddd;
+  overflow: hidden;
+  border-bottom: 2px solid var(--border-color);
+}
+.progress-fill {
+  height: 100%;
+  background: var(--success);
+  width: 0%;
+  transition: width 0.5s ease;
+}
+
+.nav-tabs {
+  display: flex;
+  background: var(--bg-color);
+  border-bottom: 3px solid var(--border-color);
+  flex-wrap: wrap;
+}
+.nav-tab {
+  flex: 1;
+  padding: 18px 10px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--text-color);
+  transition: all 0.2s;
+  min-width: 150px;
+  text-align: center;
+  border-right: 1px solid var(--border-color);
+}
+.nav-tab:hover { background: rgba(0,0,0,0.05); }
+.nav-tab.active {
+  color: #ffffff;
+  background: var(--primary);
+}
+.nav-tab.done::after { content: ' ✓'; }
+
+.content { padding: 30px; min-height: 500px; }
+.section { display: none; animation: fadeIn 0.5s; }
+.section.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+h2 {
+  color: var(--primary);
+  font-size: 26px;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 3px solid var(--primary);
+}
+body.theme-contrast h2 { color: #ffff00; }
+
+h3 { color: var(--primary); font-size: 22px; margin: 25px 0 15px; }
+
+.theory-block {
+  background: var(--bg-color);
+  padding: 25px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border-left: 6px solid var(--primary);
+}
+.theory-block p { margin-bottom: 15px; }
+.theory-block strong { color: var(--danger); }
+body.theme-contrast .theory-block strong { color: #ffff00; text-decoration: underline; }
+
+.info-card {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin: 20px 0;
+}
+.card {
+  background: var(--container-bg);
+  padding: 20px;
+  border-radius: 12px;
+  border: 2px solid var(--border-color);
+  text-align: center;
+}
+.card .icon { font-size: 48px; margin-bottom: 10px; display: block; }
+.card h4 { color: var(--text-color); margin-bottom: 10px; font-size: 20px; }
+.card p { font-size: 16px; color: var(--text-color); opacity: 0.9; }
+
+.simulator {
+  background: #2c3e50;
+  border-radius: 12px;
+  padding: 20px;
+  color: white;
+  margin: 20px 0;
+  border: 3px solid var(--border-color);
+}
+body.theme-contrast .simulator { background: #000000; border-color: #ffff00; }
+
+.slide-canvas {
+  width: 100%;
+  height: 300px;
+  background: #ffffff;
+  border: 3px dashed #7f8c8d;
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 15px;
+}
+body.theme-contrast .slide-canvas { background: #000000; border-color: #ffffff; }
+
+.slide-obj {
+  position: absolute;
+  cursor: grab;
+  border: 3px solid var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
+  min-width: 120px;
+  min-height: 60px;
+  color: #ffffff;
+}
+.slide-obj:active { cursor: grabbing; }
+.slide-obj.selected { border: 4px solid var(--accent); box-shadow: 0 0 15px var(--accent); }
+
+.toolbar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 15px;
+  background: #34495e;
+  border-radius: 8px;
+}
+body.theme-contrast .toolbar { background: #000000; border: 2px solid #ffffff; }
+
+.tool-btn {
+  padding: 12px 20px;
+  background: var(--primary);
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  flex: 1;
+  min-width: 140px;
+}
+.tool-btn:hover { background: var(--primary-hover); }
+.tool-btn.danger { background: var(--danger); }
+.tool-btn.success { background: var(--success); }
+
+.task {
+  background: var(--container-bg);
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 20px;
+}
+.task.completed {
+  border-color: var(--success);
+  background: rgba(39, 174, 96, 0.1);
+}
+.task h4 { color: var(--text-color); margin-bottom: 15px; font-size: 20px; }
+.task p { margin-bottom: 15px; }
+
+.task-actions { display: flex; gap: 15px; flex-wrap: wrap; }
+
+.btn {
+  padding: 15px 25px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 18px;
+  transition: all 0.2s;
+}
+.btn-primary { background: var(--primary); color: #ffffff; }
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-success { background: var(--success); color: #ffffff; }
+.btn-warning { background: var(--accent); color: #111; }
+
+.test-question {
+  background: var(--container-bg);
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 20px;
+}
+.test-question h4 { color: var(--text-color); margin-bottom: 20px; font-size: 20px; }
+
+.options { display: flex; flex-direction: column; gap: 12px; }
+.option {
+  padding: 18px 20px;
+  background: var(--bg-color);
+  border: 3px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--text-color);
+  transition: all 0.2s;
+}
+.option:hover { border-color: var(--primary); }
+.option.selected { background: var(--primary); color: white; border-color: var(--primary-hover); }
+.option.correct { background: var(--success); color: white; border-color: var(--success); }
+.option.wrong { background: var(--danger); color: white; border-color: var(--danger); }
+
+.result-box {
+  background: var(--primary);
+  color: white;
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  margin: 20px 0;
+}
+body.theme-contrast .result-box { background: #000000; border: 3px solid #ffff00; color: #ffff00; }
+
+.score { font-size: 56px; font-weight: bold; margin: 20px 0; color: var(--accent); }
+
+.certificate {
+  background: #fff;
+  border: 6px double var(--accent);
+  border-radius: 12px;
+  padding: 30px;
+  text-align: center;
+  margin: 20px 0;
+  color: #111;
+}
+.certificate h2 { color: #d35400; border: none; font-size: 32px; }
+.student-name {
+  font-size: 28px;
+  color: var(--primary);
+  margin: 20px 0;
+  font-weight: bold;
+  border-bottom: 3px solid var(--accent);
+  display: inline-block;
+  padding: 0 20px 5px;
+}
+
+.mistake-review {
+  background: rgba(192, 57, 43, 0.1);
+  border-left: 6px solid var(--danger);
+  padding: 20px;
+  border-radius: 8px;
+  margin: 15px 0;
+}
+.mistake-review.correct-review {
+  background: rgba(39, 174, 96, 0.1);
+  border-left-color: var(--success);
+}
+.mistake-review h4 { color: var(--text-color); margin-bottom: 10px; }
+.mistake-review .poem {
+  font-style: italic;
+  color: var(--text-color);
+  padding: 15px;
+  background: rgba(255,255,255,0.5);
+  border-radius: 8px;
+  margin: 10px 0;
+  font-size: 18px;
+}
+
+.name-input {
+  width: 100%;
+  padding: 15px;
+  border: 3px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 20px;
+  margin: 10px 0;
+  background: var(--container-bg);
+  color: var(--text-color);
+}
+
+.hint-box {
+  background: rgba(241, 196, 15, 0.2);
+  border-left: 6px solid var(--accent);
+  padding: 20px;
+  border-radius: 8px;
+  margin: 20px 0;
+  font-size: 18px;
+}
+
+.navigation-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 3px solid var(--border-color);
+  gap: 15px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 6px 12px;
+  background: var(--accent);
+  color: #111;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  margin-left: 10px;
+  border: 1px solid #000;
+}
+
+@media (max-width: 768px) {
+  body { font-size: 16px; padding: 10px; }
+  .content { padding: 15px; }
+  header h1 { font-size: 22px; }
+  .nav-tab { min-width: 100%; border-bottom: 1px solid var(--border-color); border-right: none; }
+  .tool-btn { min-width: 100%; }
+  .a11y-panel { flex-direction: column; align-items: stretch; margin: -10px -10px 20px -10px; }
+  .a11y-btn { justify-content: center; }
+}
+</style>
+</head>
+<body>
+
+<div class="a11y-panel" role="region" aria-label="Настройки специальных возможностей">
+  <span class="a11y-label">⚙️ Доступность:</span>
+  <button class="a11y-btn" onclick="changeFontSize(2)" aria-label="Увеличить шрифт">🔼 Шрифт A+</button>
+  <button class="a11y-btn" onclick="changeFontSize(-2)" aria-label="Уменьшить шрифт">🔽 Шрифт A-</button>
+  <button class="a11y-btn" onclick="setTheme('normal')" aria-label="Обычная тема">🎨 Обычная</button>
+  <button class="a11y-btn" onclick="setTheme('contrast')" aria-label="Высокий контраст">🌗 Контраст</button>
+  <button class="a11y-btn" onclick="setTheme('colorblind')" aria-label="Режим для дальтоников">👁️ Дальтония</button>
+  <button class="a11y-btn" onclick="setTheme('dyslexia')" aria-label="Шрифт для дислексии">🔤 Дислексия</button>
+  <button class="a11y-btn" id="speechBtn" onclick="toggleSpeech()" aria-label="Включить или выключить озвучивание текста">🔊 Озвучить</button>
+</div>
+
+<div class="container">
+  <header>
+    <h1>🎬 Мультимедиа на слайде</h1>
+    <p>Инклюзивный интерактивный урок по Информатике</p>
+    <p id="lessonDate"></p>
+  </header>
+
+  <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+
+  <nav class="nav-tabs" role="tablist">
+    <button class="nav-tab active" role="tab" aria-selected="true" onclick="showSection('theory', this)">📚 1. Теория</button>
+    <button class="nav-tab" role="tab" aria-selected="false" onclick="showSection('practice', this)">🛠️ 2. Практика</button>
+    <button class="nav-tab" role="tab" aria-selected="false" onclick="showSection('test', this)">📝 3. Тест</button>
+    <button class="nav-tab" role="tab" aria-selected="false" onclick="showSection('result', this)">🏆 4. Итог</button>
+  </nav>
+
+  <div class="content">
+
+    <div class="section active" id="theory" role="tabpanel">
+      <h2>📚 Простыми словами о мультимедиа</h2>
+
+      <div class="theory-block">
+        <p><strong>Мультимедиа</strong> — это когда на одном слайде есть не только текст, но и <strong>картинки, звук или видео</strong>.</p>
+        <p>Это делает презентацию интересной и понятной.</p>
+      </div>
+
+      <h3>🎯 Что можно добавить на слайд?</h3>
+      <div class="info-card">
+        <div class="card">
+          <span class="icon">🖼️</span>
+          <h4>Картинки</h4>
+          <p>Фотографии, рисунки. Помогают увидеть то, о чём говорится.</p>
+        </div>
+        <div class="card">
+          <span class="icon">🎬</span>
+          <h4>Видео</h4>
+          <p>Короткие ролики. Показывают движение или процесс.</p>
+        </div>
+        <div class="card">
+          <span class="icon">🎵</span>
+          <h4>Звук</h4>
+          <p>Музыка или голос. Помогает услышать информацию.</p>
+        </div>
+        <div class="card">
+          <span class="icon">🔘</span>
+          <h4>Кнопки</h4>
+          <p>На них можно нажать мышкой, чтобы что-то произошло.</p>
+        </div>
+      </div>
+
+      <h3>✨ Анимация (Движение)</h3>
+      <div class="theory-block">
+        <p>Анимация заставляет объекты двигаться. Есть 4 простых типа:</p>
+        <ul style="margin-left: 20px; line-height: 2;">
+          <li>🟢 <strong>Появление:</strong> объект плавно выходит на слайд.</li>
+          <li>🟡 <strong>Изменение:</strong> объект меняет цвет или размер.</li>
+          <li>🔴 <strong>Исчезновение:</strong> объект уходит со слайда.</li>
+          <li>🔵 <strong>Движение:</strong> объект едет по дорожке.</li>
+        </ul>
+      </div>
+
+      <div class="hint-box">
+        💡 <strong>Важное правило:</strong> Не делай слишком много движений на одном слайде. 2-3 движения достаточно, чтобы не отвлекать внимание.
+      </div>
+
+      <div class="navigation-buttons">
+        <span></span>
+        <button class="btn btn-primary" onclick="markDone('theory'); showSection('practice', document.querySelectorAll('.nav-tab')[1])">Перейти к практике →</button>
+      </div>
+    </div>
+
+    <div class="section" id="practice" role="tabpanel">
+      <h2>🎮 Тренажёр: Собери свой слайд</h2>
+      <p>Нажимай на кнопки ниже, чтобы добавить объекты на белый слайд. Объекты можно перетаскивать мышкой.</p>
+
+      <div class="simulator">
+        <div class="slide-canvas" id="slideCanvas" aria-label="Рабочая область слайда">
+          <div style="position:absolute; top:10px; left:10px; color:#7f8c8d; font-size:16px;">📍 Здесь будет твой слайд</div>
+        </div>
+
+        <div class="toolbar">
+          <button class="tool-btn" onclick="addSlideObject('text')" aria-label="Добавить текст">📝 Текст</button>
+          <button class="tool-btn" onclick="addSlideObject('image')" aria-label="Добавить картинку">🖼️ Картинка</button>
+          <button class="tool-btn" onclick="addSlideObject('video')" aria-label="Добавить видео">🎬 Видео</button>
+          <button class="tool-btn success" onclick="animateSelected()" aria-label="Применить анимацию к выбранному объекту">✨ Анимация</button>
+          <button class="tool-btn danger" onclick="clearCanvas()" aria-label="Очистить слайд">🗑️ Очистить</button>
+        </div>
+
+        <div style="margin-top:15px; padding:15px; background:#34495e; border-radius:8px; text-align:center;">
+          <div id="simStatus" style="color:#ffd700; font-size:20px; font-weight:bold;">👆 Нажми кнопку выше, чтобы добавить объект</div>
+        </div>
+      </div>
+
+      <hr style="margin: 40px 0; border: 0; border-top: 3px dashed var(--border-color);">
+
+      <h2>🛠️ Практические задания</h2>
+      <p>Выполни задания и нажми кнопку "Я сделал(а)", чтобы получить баллы.</p>
+
+      <div class="task" id="task1">
+        <h4>Задание 1. Добавь заголовок <span class="badge">5 баллов</span></h4>
+        <p>В тренажёре выше добавь объект "Текст" и напиши в нём слово "Привет".</p>
+        <div class="task-actions">
+          <button class="btn btn-primary" onclick="simulateTask(1)">🎯 Открыть тренажёр</button>
+          <button class="btn btn-success" onclick="completeTask(1)">✅ Я сделал(а)</button>
+        </div>
+      </div>
+
+      <div class="task" id="task2">
+        <h4>Задание 2. Добавь картинку <span class="badge">5 баллов</span></h4>
+        <p>Добавь объект "Картинка" и перетащи его в правый верхний угол слайда.</p>
+        <div class="task-actions">
+          <button class="btn btn-primary" onclick="simulateTask(2)">🎯 Открыть тренажёр</button>
+          <button class="btn btn-success" onclick="completeTask(2)">✅ Я сделал(а)</button>
+        </div>
+      </div>
+
+      <div class="task" id="task3">
+        <h4>Задание 3. Сделай анимацию <span class="badge">5 баллов</span></h4>
+        <p>Нажми на добавленный объект, чтобы выделить его (появится яркая рамка). Затем нажми кнопку "✨ Анимация".</p>
+        <div class="task-actions">
+          <button class="btn btn-primary" onclick="simulateTask(3)">🎯 Открыть тренажёр</button>
+          <button class="btn btn-success" onclick="completeTask(3)">✅ Я сделал(а)</button>
+        </div>
+      </div>
+
+      <div class="task" id="task4">
+        <h4>Задание 4. Добавь видео <span class="badge">5 баллов</span></h4>
+        <p>Добавь объект "Видео" и размести его в центре слайда.</p>
+        <div class="task-actions">
+          <button class="btn btn-primary" onclick="simulateTask(4)">🎯 Открыть тренажёр</button>
+          <button class="btn btn-success" onclick="completeTask(4)">✅ Я сделал(а)</button>
+        </div>
+      </div>
+
+      <div class="navigation-buttons">
+        <button class="btn btn-warning" onclick="showSection('theory', document.querySelectorAll('.nav-tab')[0])">← Назад к теории</button>
+        <button class="btn btn-primary" onclick="markDone('practice'); showSection('test', document.querySelectorAll('.nav-tab')[2])">Перейти к тесту →</button>
+      </div>
+    </div>
+
+    <div class="section" id="test" role="tabpanel">
+      <h2>📝 Проверь себя (6 вопросов)</h2>
+      <p>Выбери один правильный ответ в каждом вопросе. Нажми на вариант мышкой или выбери клавишей Tab и Enter.</p>
+
+      <div id="testContainer"></div>
+
+      <div class="navigation-buttons">
+        <button class="btn btn-warning" onclick="showSection('practice', document.querySelectorAll('.nav-tab')[1])">← Назад к практике</button>
+        <button class="btn btn-success" onclick="finishTest()">🏁 Завершить тест</button>
+      </div>
+    </div>
+
+    <div class="section" id="result" role="tabpanel">
+      <h2>🏆 Твои результаты</h2>
+
+      <div class="field">
+        <label for="studentName" style="font-weight:bold; font-size:20px;">Введи своё имя для сертификата:</label>
+        <input type="text" class="name-input" id="studentName" placeholder="Например: Иван Петров" aria-label="Введите ваше имя">
+      </div>
+
+      <div class="result-box">
+        <h2>Итоги урока</h2>
+        <div class="score" id="totalScore">0</div>
+        <div id="gradeText" style="font-size:24px; margin:10px 0;">Выполни задания и тест</div>
+        <div id="detailedStats" style="margin-top:20px; font-size:18px;"></div>
+      </div>
+
+      <div id="certificateArea"></div>
+      <div id="mistakesReview"></div>
+
+      <div class="navigation-buttons">
+        <button class="btn btn-warning" onclick="showSection('test', document.querySelectorAll('.nav-tab')[2])">← Назад к тесту</button>
+        <button class="btn btn-success" onclick="generateFinalResult()">🎓 Получить сертификат</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+document.getElementById('lessonDate').textContent = '📅 ' + new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+
+const state = {
+  completedTasks: new Set(),
+  testAnswers: {},
+  testScore: 0,
+  sectionsDone: new Set(),
+  currentFontSize: 18
+};
+
+const testQuestions = [
+  {
+    q: "Что такое мультимедиа?",
+    options: ["Только обычный текст", "Сочетание текста, картинок, звука и видео", "Только видеофайлы"],
+    correct: 1,
+    explanation: "Мультимедиа объединяет разные формы: текст, изображения, звук и видео."
+  },
+  {
+    q: "Какой объект можно нажать мышкой?",
+    options: ["Обычный текст", "Фоновый цвет слайда", "Интерактивную кнопку"],
+    correct: 2,
+    explanation: "Кнопка создана специально для того, чтобы на неё нажимать."
+  },
+  {
+    q: "Какой файл является видео?",
+    options: ["MP4", "JPG (картинка)", "TXT (текст)"],
+    correct: 0,
+    explanation: "MP4 — это видеоформат. JPG — картинка, TXT — текст."
+  },
+  {
+    q: "Что делает анимация 'Появление'?",
+    options: ["Объект исчезает со слайда", "Объект плавно выходит на слайд", "Объект меняет цвет"],
+    correct: 1,
+    explanation: "'Появление' означает, что объект становится виден на слайде."
+  },
+  {
+    q: "Сколько анимаций лучше всего делать на одном слайде?",
+    options: ["2-3 (чтобы не мешать вниманию)", "20-30 (чем больше, тем лучше)", "100"],
+    correct: 0,
+    explanation: "2-3 анимации достаточно. Большое количество движений утомляет глаза."
+  },
+  {
+    q: "Как быстро вставить ссылку на другой слайд?",
+    options: ["Нажать Ctrl+K", "Нажать Ctrl+C", "Нажать Ctrl+Z"],
+    correct: 0,
+    explanation: "Ctrl+K — это быстрая клавиша для вставки гиперссылки."
+  }
+];
+
+function changeFontSize(delta) {
+  state.currentFontSize = Math.max(14, Math.min(32, state.currentFontSize + delta));
+  document.documentElement.style.setProperty('--font-size-base', state.currentFontSize + 'px');
+}
+
+function setTheme(theme) {
+  document.body.className = '';
+  if (theme !== 'normal') {
+    document.body.classList.add('theme-' + theme);
+  }
+  if (isSpeaking) toggleSpeech();
+}
+
+let isSpeaking = false;
+let speechUtterance = null;
+
+function toggleSpeech() {
+  const btn = document.getElementById('speechBtn');
+  if (isSpeaking) {
+    window.speechSynthesis.cancel();
+    isSpeaking = false;
+    btn.textContent = '🔊 Озвучить';
+    btn.classList.remove('speaking');
+  } else {
+    const activeSection = document.querySelector('.section.active');
+    if (!activeSection) return;
+
+    const text = activeSection.innerText.replace(/🔼|🔽|🎨|🌗|👁️|🔤|🔊|⏹️/g, '').trim();
+
+    speechUtterance = new SpeechSynthesisUtterance(text);
+    speechUtterance.lang = 'ru-RU';
+    speechUtterance.rate = 0.85;
+    speechUtterance.pitch = 1;
+
+    speechUtterance.onend = () => {
+      isSpeaking = false;
+      btn.textContent = '🔊 Озвучить';
+      btn.classList.remove('speaking');
+    };
+
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(speechUtterance);
+    isSpeaking = true;
+    btn.textContent = '⏹️ Остановить';
+    btn.classList.add('speaking');
+  }
+}
+
+function showSection(id, tab) {
+  if (isSpeaking) toggleSpeech();
+
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+
+  document.querySelectorAll('.nav-tab').forEach(t => {
+    t.classList.remove('active');
+    t.setAttribute('aria-selected', 'false');
+  });
+
+  if (tab) {
+    tab.classList.add('active');
+    tab.setAttribute('aria-selected', 'true');
+  }
+
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function markDone(section) {
+  state.sectionsDone.add(section);
+  const tabs = document.querySelectorAll('.nav-tab');
+  const map = { theory: 0, practice: 1, test: 2, result: 3 };
+  if (map[section] !== undefined) tabs[map[section]].classList.add('done');
+  updateProgress();
+}
+
+function updateProgress() {
+  const total = 4;
+  const done = state.sectionsDone.size + state.completedTasks.size * 0.2;
+  const percent = Math.min(100, (done / total) * 100);
+  const fill = document.getElementById('progressFill');
+  fill.style.width = percent + '%';
+  fill.parentElement.setAttribute('aria-valuenow', Math.round(percent));
+}
+
+let objCounter = 0;
+let selectedObj = null;
+
+function addSlideObject(type) {
+  const canvas = document.getElementById('slideCanvas');
+  const obj = document.createElement('div');
+  obj.className = 'slide-obj';
+  objCounter++;
+  obj.dataset.id = objCounter;
+  obj.setAttribute('tabindex', '0');
+
+  const x = 30 + Math.random() * 100;
+  const y = 30 + Math.random() * 100;
+  obj.style.left = x + 'px';
+  obj.style.top = y + 'px';
+
+  let content = '';
+  let bg = '';
+  switch(type) {
+    case 'text': content = 'Текст'; bg = '#2980b9'; break;
+    case 'image': content = '🖼️ Картинка'; bg = '#7f8c8d'; break;
+    case 'video': content = '▶️ Видео'; bg = '#c0392b'; break;
+  }
+  obj.style.backgroundColor = bg;
+  obj.innerHTML = content;
+
+  const selectObj = () => {
+    document.querySelectorAll('.slide-obj').forEach(o => o.classList.remove('selected'));
+    obj.classList.add('selected');
+    selectedObj = obj;
+    updateSimStatus(`✅ Выбран объект: ${content}. Можно перетащить или нажать "Анимация"`);
+  };
+
+  obj.onclick = selectObj;
+  obj.onfocus = selectObj;
+  makeDraggable(obj);
+  canvas.appendChild(obj);
+  updateSimStatus(`✅ Добавлен: ${content}. Перетащи его мышкой!`);
+}
+
+function makeDraggable(el) {
+  let offsetX, offsetY, isDragging = false;
+
+  const startDrag = (e) => {
+    isDragging = true;
+    const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+    offsetX = clientX - el.offsetLeft;
+    offsetY = clientY - el.offsetTop;
+    el.style.zIndex = 100;
+    el.classList.add('selected');
+    selectedObj = el;
+  };
+
+  const drag = (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+    el.style.left = (clientX - offsetX) + 'px';
+    el.style.top = (clientY - offsetY) + 'px';
+  };
+
+  const stopDrag = () => { isDragging = false; el.style.zIndex = 1; };
+
+  el.addEventListener('mousedown', startDrag);
+  el.addEventListener('touchstart', startDrag, {passive: false});
+  document.addEventListener('mousemove', drag);
+  document.addEventListener('touchmove', drag, {passive: false});
+  document.addEventListener('mouseup', stopDrag);
+  document.addEventListener('touchend', stopDrag);
+}
+
+function animateSelected() {
+  if (!selectedObj) {
+    updateSimStatus('⚠️ Сначала нажми на объект на слайде, чтобы выбрать его!');
+    return;
+  }
+  selectedObj.style.transition = 'all 0.8s';
+  selectedObj.style.transform = 'scale(1.15)';
+  selectedObj.style.boxShadow = '0 0 25px #ffd700';
+  setTimeout(() => {
+    selectedObj.style.transform = 'scale(1)';
+    selectedObj.style.boxShadow = '';
+  }, 800);
+  updateSimStatus('✨ Отлично! Анимация применена к объекту.');
+}
+
+function clearCanvas() {
+  const canvas = document.getElementById('slideCanvas');
+  canvas.querySelectorAll('.slide-obj').forEach(o => o.remove());
+  selectedObj = null;
+  updateSimStatus('🗑️ Слайд очищен. Можно начинать заново.');
+}
+
+function updateSimStatus(text) {
+  document.getElementById('simStatus').textContent = text;
+}
+
+function simulateTask(num) {
+  showSection('practice', document.querySelectorAll('.nav-tab')[1]);
+  updateSimStatus(`🎯 Задание ${num}. Попробуй выполнить это в тренажёре выше!`);
+  document.querySelector('.simulator').scrollIntoView({ behavior: 'smooth' });
+}
+
+function completeTask(num) {
+  if (state.completedTasks.has(num)) return;
+  state.completedTasks.add(num);
+  const taskEl = document.getElementById('task' + num);
+  taskEl.classList.add('completed');
+  taskEl.querySelector('h4').innerHTML += ' ✅ Выполнено';
+  updateProgress();
+  updateSimStatus(`🎉 Задание ${num} засчитано! +5 баллов.`);
+}
+
+function renderTest() {
+  const container = document.getElementById('testContainer');
+  container.innerHTML = '';
+  testQuestions.forEach((q, idx) => {
+    const div = document.createElement('div');
+    div.className = 'test-question';
+    div.innerHTML = `
+      <h4>Вопрос ${idx+1}. ${q.q}</h4>
+      <div class="options" role="radiogroup" aria-label="Варианты ответа на вопрос ${idx+1}">
+        ${q.options.map((opt, i) => `
+          <div class="option" role="radio" aria-checked="false" tabindex="0"
+               onclick="selectOption(${idx}, ${i}, this)"
+               onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectOption(${idx}, ${i}, this)}">
+            ${opt}
+          </div>
+        `).join('')}
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function selectOption(qIdx, optIdx, el) {
+  const question = el.closest('.test-question');
+  question.querySelectorAll('.option').forEach(o => {
+    o.classList.remove('selected');
+    o.setAttribute('aria-checked', 'false');
+  });
+  el.classList.add('selected');
+  el.setAttribute('aria-checked', 'true');
+  state.testAnswers[qIdx] = optIdx;
+}
+
+function finishTest() {
+  if (Object.keys(state.testAnswers).length < testQuestions.length) {
+    alert('Пожалуйста, ответь на все вопросы перед завершением.');
+    return;
+  }
+  markDone('test');
+  showSection('result', document.querySelectorAll('.nav-tab')[3]);
+  generateFinalResult();
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function gradeFor(percent) {
+  if (percent >= 80) return 'Отлично';
+  if (percent >= 60) return 'Хорошо';
+  if (percent >= 40) return 'Удовлетворительно';
+  return 'Нужно повторить';
+}
+
+function generateFinalResult() {
+  if (isSpeaking) toggleSpeech();
+  const name = escapeHtml(document.getElementById('studentName').value.trim() || 'Ученик');
+
+  const practiceScore = state.completedTasks.size * 5;
+  let testScore = 0;
+  const mistakes = [];
+
+  testQuestions.forEach((q, idx) => {
+    if (state.testAnswers[idx] === q.correct) testScore += 5;
+    else mistakes.push({ qIdx: idx, userAnswer: state.testAnswers[idx], correct: q.correct });
+  });
+  state.testScore = testScore;
+
+  const total = practiceScore + testScore;
+  const maxScore = 4 * 5 + testQuestions.length * 5;
+
+  document.getElementById('totalScore').textContent = total + ' из ' + maxScore;
+
+  let gradeColor, emoji;
+  const percent = (total / maxScore) * 100;
+  const grade = gradeFor(percent);
+  if (percent >= 80) { gradeColor = '#2ecc71'; emoji = '🌟'; }
+  else if (percent >= 60) { gradeColor = '#3498db'; emoji = '👍'; }
+  else if (percent >= 40) { gradeColor = '#f1c40f'; emoji = '📚'; }
+  else { gradeColor = '#e74c3c'; emoji = '💪'; }
+
+  document.getElementById('gradeText').innerHTML = `<span style="color:${gradeColor}; font-size:28px; font-weight:bold;">${emoji} Оценка: ${grade}</span>`;
+  document.getElementById('detailedStats').innerHTML = `
+    <p>🛠️ Практика: <b>${state.completedTasks.size} из 4</b> заданий (${practiceScore} баллов)</p>
+    <p>📝 Тест: <b>${testQuestions.length - mistakes.length} из ${testQuestions.length}</b> верных ответов (${testScore} баллов)</p>
+  `;
+
+  const cert = document.getElementById('certificateArea');
+  if (percent >= 40) {
+    const today = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+    cert.innerHTML = `
+      <div class="certificate" id="certDoc">
+        <h2>СЕРТИФИКАТ</h2>
+        <p style="font-size:20px; margin:10px 0;">об успешном прохождении урока</p>
+        <p style="font-size:18px; margin:15px 0; color:#555;">«Мультимедиа на слайде»</p>
+        <p style="font-size:18px;">выдан</p>
+        <div class="student-name">${name}</div>
+        <p style="margin-top:20px; font-size:20px;">Оценка: <b style="color:#2c3e50;">${grade}</b></p>
+        <p style="font-size:18px;">Результат: <b>${total} из ${maxScore} баллов</b></p>
+        <p style="color:#666; margin-top:20px;">📅 ${today}</p>
+        <p style="margin-top:15px; font-style:italic; color:#555;">Преподаватель информатики</p>
+      </div>
+      <div style="text-align:center; margin:20px 0;">
+        <button class="btn btn-primary" onclick="downloadCertificate()">💾 Скачать сертификат (картинка)</button>
+      </div>
+    `;
+  } else {
+    cert.innerHTML = `
+      <div class="hint-box" style="text-align:center;">
+        <h3>💪 Не расстраивайся!</h3>
+        <p>Для получения сертификата нужно набрать немного больше баллов. Перечитай теорию и попробуй ещё раз. У тебя обязательно получится!</p>
+      </div>
+    `;
+  }
+
+  const review = document.getElementById('mistakesReview');
+  let reviewHTML = '<h3 style="margin-top:30px;">🔍 Работа над ошибками</h3>';
+
+  if (mistakes.length === 0) {
+    reviewHTML += `
+      <div class="mistake-review correct-review">
+        <h4>🎉 Великолепная работа!</h4>
+        <div class="poem">
+          Ты всё понял и смог ответить верно,<br>
+          Твои знания теперь безупречны!<br>
+          Мультимедиа тебе полностью подвластно,<br>
+          Учиться дальше будет только классно! 🌟
+        </div>
+      </div>
+    `;
+  } else {
+    const mascots = ['🦉', '🐱', '🦊', '🐼', '🐸', '🦋'];
+    mistakes.forEach((m, i) => {
+      const q = testQuestions[m.qIdx];
+      const mascot = mascots[i % mascots.length];
+      const userAns = m.userAnswer !== undefined ? q.options[m.userAnswer] : 'нет ответа';
+      reviewHTML += `
+        <div class="mistake-review">
+          <h4>${mascot} Вопрос ${m.qIdx + 1}</h4>
+          <p><b>Твой ответ:</b> <span style="color:var(--danger);">${userAns}</span></p>
+          <p><b>Правильный ответ:</b> <span style="color:var(--success); font-weight:bold;">${q.options[q.correct]}</span></p>
+          <div class="poem">${generatePoem(m.qIdx)}</div>
+          <p><b>💡 Подсказка:</b> ${q.explanation}</p>
+        </div>
+      `;
+    });
+  }
+  review.innerHTML = reviewHTML;
+}
+
+function generatePoem(qIdx) {
+  const poems = [
+    "Мультимедиа — это не только текст,<br>Звук, видео и картинка — вот успех!",
+    "Кнопку можно смело нажимать,<br>Чтобы что-то новое узнать!",
+    "Видео имеет формат MP4,<br>Запомни это, как дважды два — четыре!",
+    "Появление — объект выходит в свет,<br>Другого, более простого смысла нет.",
+    "Две или три анимации — вот предел,<br>Чтобы зритель не устал и всё сумел.",
+    "Ctrl и K нажми скорей,<br>Ссылку вставишь ты быстрей!"
+  ];
+  return poems[qIdx] || "Повтори этот момент, и всё получится!";
+}
+
+function downloadCertificate() {
+  const name = document.getElementById('studentName').value.trim() || 'student';
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = 1000;
+  canvas.height = 700;
+
+  const gradient = ctx.createLinearGradient(0, 0, 1000, 700);
+  gradient.addColorStop(0, '#fff9e6');
+  gradient.addColorStop(1, '#ffffff');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 1000, 700);
+
+  ctx.strokeStyle = '#f39c12';
+  ctx.lineWidth = 15;
+  ctx.strokeRect(15, 15, 970, 670);
+  ctx.lineWidth = 3;
+  ctx.strokeRect(35, 35, 930, 630);
+
+  ctx.fillStyle = '#d35400';
+  ctx.font = 'bold 52px Verdana';
+  ctx.textAlign = 'center';
+  ctx.fillText('СЕРТИФИКАТ', 500, 120);
+
+  ctx.fillStyle = '#111';
+  ctx.font = '24px Verdana';
+  ctx.fillText('об успешном прохождении урока', 500, 180);
+
+  ctx.font = 'italic 28px Verdana';
+  ctx.fillStyle = '#2980b9';
+  ctx.fillText('«Мультимедиа на слайде»', 500, 240);
+
+  ctx.fillStyle = '#111';
+  ctx.font = '24px Verdana';
+  ctx.fillText('выдан', 500, 300);
+
+  ctx.font = 'bold italic 40px Verdana';
+  ctx.fillStyle = '#2c3e50';
+  ctx.fillText(name, 500, 370);
+
+  ctx.strokeStyle = '#f39c12';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(250, 390);
+  ctx.lineTo(750, 390);
+  ctx.stroke();
+
+  const maxScore = 4 * 5 + testQuestions.length * 5;
+  const total = state.completedTasks.size * 5 + state.testScore;
+  const percent = (total / maxScore) * 100;
+  const grade = gradeFor(percent);
+
+  ctx.fillStyle = '#111';
+  ctx.font = '26px Verdana';
+  ctx.fillText(`Оценка: ${grade}`, 500, 450);
+  ctx.fillText(`Результат: ${total} из ${maxScore} баллов`, 500, 500);
+
+  const today = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+  ctx.font = '22px Verdana';
+  ctx.fillStyle = '#666';
+  ctx.fillText(today, 500, 570);
+
+  ctx.font = 'italic 20px Verdana';
+  ctx.fillText('Преподаватель информатики', 500, 630);
+
+  canvas.toBlob((blob) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Сертификат_${name}.png`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+}
+
+renderTest();
+updateProgress();
+</script>
+</body>
+</html>

@@ -51,6 +51,7 @@ type TrainerKey =
   | "set-theory"
   | "internet-ai"
   | "modeling-luntik"
+  | "multimedia-slide-ovz"
   | "ege-divisibility"
   | "ege-sound-channel"
   | "ege-nonary-numbers"
@@ -101,6 +102,7 @@ const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "set-theory": "/set-theory.html",
   "internet-ai": "/internet-ai.html",
   "modeling-luntik": "/modeling-luntik.html",
+  "multimedia-slide-ovz": "/multimedia-slide-ovz.html",
   "ege-divisibility": "/ege-divisibility.html",
   "ege-sound-channel": "/ege-sound-channel.html",
   "ege-nonary-numbers": "/ege-nonary-numbers.html",
@@ -153,6 +155,15 @@ const TRAINERS: TrainerItem[] = [
     title: "Модели и моделирование",
     description: "Теория, 3 симуляции, 5 практических заданий, тест на 10 вопросов и сертификат с разбором ошибок",
     accent: "#9b59b6",
+  },
+  {
+    key: "multimedia-slide-ovz",
+    category: "informatics",
+    icon: "🎬",
+    title: "Мультимедиа на слайде (для ОВЗ)",
+    description: "Инклюзивный урок: простая теория, тренажёр слайда, 4 задания, тест на 6 вопросов, озвучивание, режимы для слабовидящих, дальтоников и дислексии, сертификат",
+    accent: "#2980b9",
+    paid: true,
   },
   {
     key: "internet-ai",
