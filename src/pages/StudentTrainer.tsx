@@ -19,7 +19,7 @@ import TrainerFullscreen from "@/components/student-trainer/TrainerFullscreen";
 
 /* ---------- Список тренажёров ---------- */
 
-type CategoryKey = "informatics" | "networks" | "programming" | "os" | "ege" | "ovz";
+type CategoryKey = "informatics" | "networks" | "programming" | "os" | "ege" | "ovz" | "hardware";
 
 type TrainerKey =
   | "algorithms"
@@ -56,7 +56,8 @@ type TrainerKey =
   | "ege-divisibility"
   | "ege-sound-channel"
   | "ege-nonary-numbers"
-  | "ege-robot-coins";
+  | "ege-robot-coins"
+  | "pc-builder";
 
 interface CategoryItem {
   key: CategoryKey;
@@ -109,6 +110,7 @@ const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "ege-sound-channel": "/ege-sound-channel.html",
   "ege-nonary-numbers": "/ege-nonary-numbers.html",
   "ege-robot-coins": "/ege-robot-coins.html",
+  "pc-builder": "/pc-builder.html",
 };
 
 const CATEGORIES: CategoryItem[] = [
@@ -147,9 +149,24 @@ const CATEGORIES: CategoryItem[] = [
     description: "Разбор типовых заданий ЕГЭ с генерацией задач, проверкой ответа и счётчиком выполненных заданий",
     accent: "#F59E0B",
   },
+  {
+    key: "hardware",
+    icon: "🖥️",
+    title: "Архитектура аппаратных сред",
+    description: "Устройство компьютера, комплектующие и их совместимость",
+    accent: "#EC4899",
+  },
 ];
 
 const TRAINERS: TrainerItem[] = [
+  {
+    key: "pc-builder",
+    category: "hardware",
+    icon: "🖥️",
+    title: "Сборка компьютера (PC Builder Pro)",
+    description: "Подберите комплектующие под задачу: проверка совместимости сокета, памяти, блока питания и корпуса, оценка производительности и бюджета, авто-подбор",
+    accent: "#EC4899",
+  },
   {
     key: "modeling-luntik",
     category: "informatics",

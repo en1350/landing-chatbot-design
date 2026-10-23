@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🖥️ PC Builder Pro — Симулятор сборки компьютера</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  color: #fff;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.container { max-width: 1400px; margin: 0 auto; }
+
+header {
+  text-align: center;
+  padding: 20px;
+  margin-bottom: 20px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 16px;
+  border: 1px solid rgba(0, 200, 255, 0.3);
+}
+
+header h1 {
+  font-size: 2.2rem;
+  background: linear-gradient(90deg, #00c8ff, #ff00c8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+
+header p { color: #aaa; font-size: 1rem; }
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr 360px;
+  gap: 20px;
+}
+
+.main-grid > * { min-width: 0; }
+
+@media (max-width: 1100px) {
+  .main-grid { grid-template-columns: 1fr; }
+}
+
+.panel {
+  background: rgba(20, 20, 40, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.panel h2 {
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid rgba(0, 200, 255, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.task-btn {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+  background: rgba(255,255,255,0.05);
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  color: #fff;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.3s;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.task-btn:hover {
+  background: rgba(0, 200, 255, 0.1);
+  border-color: #00c8ff;
+  transform: translateX(5px);
+}
+
+.task-btn.active {
+  background: linear-gradient(135deg, rgba(0, 200, 255, 0.2), rgba(255, 0, 200, 0.2));
+  border-color: #00c8ff;
+  box-shadow: 0 0 15px rgba(0, 200, 255, 0.4);
+}
+
+.task-btn .icon { font-size: 1.5rem; margin-right: 8px; }
+.task-btn .name { font-weight: bold; display: block; }
+.task-btn .desc { font-size: 0.8rem; color: #aaa; margin-top: 4px; display: block; }
+
+.component-group {
+  margin-bottom: 15px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 10px;
+  padding: 12px;
+  border-left: 4px solid #555;
+  transition: all 0.3s;
+}
+
+.component-group.ok { border-left-color: #00ff88; background: rgba(0, 255, 136, 0.05); }
+.component-group.warn { border-left-color: #ffaa00; background: rgba(255, 170, 0, 0.05); }
+.component-group.error { border-left-color: #ff3355; background: rgba(255, 51, 85, 0.05); }
+
+.component-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  color: #aaa;
+}
+
+.component-label .title { font-weight: bold; color: #fff; }
+.component-label .price { color: #00ff88; font-weight: bold; white-space: nowrap; }
+
+.component-select {
+  width: 100%;
+  padding: 10px;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.component-select option { background: #1a1a2e; color: #fff; }
+.component-select:focus { outline: none; border-color: #00c8ff; }
+
+.component-info {
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 6px;
+  padding: 6px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 4px;
+  line-height: 1.4;
+}
+
+.pc-visual {
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  border: 2px solid rgba(0, 200, 255, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 20px;
+  position: relative;
+  min-height: 200px;
+}
+
+.pc-case {
+  font-size: 5rem;
+  margin: 10px 0;
+  filter: drop-shadow(0 0 20px rgba(0, 200, 255, 0.5));
+  transition: all 0.5s;
+}
+
+.pc-case.working { animation: glow 2s ease-in-out infinite; }
+
+@keyframes glow {
+  0%, 100% { filter: drop-shadow(0 0 20px rgba(0, 200, 255, 0.5)); }
+  50% { filter: drop-shadow(0 0 40px rgba(0, 255, 136, 0.8)); }
+}
+
+.pc-status { font-size: 0.9rem; color: #aaa; margin-top: 10px; }
+
+.analysis-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  margin-bottom: 8px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.analysis-item .label { color: #aaa; }
+.analysis-item .value { font-weight: bold; text-align: right; }
+.analysis-item.ok .value { color: #00ff88; }
+.analysis-item.warn .value { color: #ffaa00; }
+.analysis-item.error .value { color: #ff3355; }
+
+.perf-bar {
+  height: 10px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 5px;
+  overflow: hidden;
+  margin-top: 5px;
+}
+
+.perf-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff3355, #ffaa00, #00ff88);
+  transition: width 0.5s;
+  border-radius: 5px;
+}
+
+.messages { margin-top: 15px; max-height: 200px; overflow-y: auto; }
+
+.message {
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  border-left: 4px solid;
+}
+
+.message.error { background: rgba(255, 51, 85, 0.1); border-color: #ff3355; color: #ffaaaa; }
+.message.warn { background: rgba(255, 170, 0, 0.1); border-color: #ffaa00; color: #ffddaa; }
+.message.success { background: rgba(0, 255, 136, 0.1); border-color: #00ff88; color: #aaffcc; }
+
+.total-box {
+  background: linear-gradient(135deg, rgba(0, 200, 255, 0.1), rgba(255, 0, 200, 0.1));
+  border: 2px solid rgba(0, 200, 255, 0.5);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  margin-top: 15px;
+}
+
+.total-price {
+  font-size: 2rem;
+  font-weight: bold;
+  background: linear-gradient(90deg, #00ff88, #00c8ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 10px 0;
+}
+
+.grade {
+  display: inline-block;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-top: 10px;
+}
+
+.grade.A { background: #00ff88; color: #000; }
+.grade.B { background: #88ff00; color: #000; }
+.grade.C { background: #ffaa00; color: #000; }
+.grade.D { background: #ff6600; color: #fff; }
+.grade.F { background: #ff3355; color: #fff; }
+
+.action-buttons { display: flex; gap: 10px; margin-top: 15px; }
+
+.btn {
+  flex: 1;
+  padding: 12px;
+  min-height: 46px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.btn-primary { background: linear-gradient(135deg, #00c8ff, #0088ff); color: #fff; }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 200, 255, 0.4); }
+.btn-secondary { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); }
+.btn-secondary:hover { background: rgba(255,255,255,0.2); }
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+::-webkit-scrollbar-thumb { background: #00c8ff; border-radius: 4px; }
+
+.tasks-list { display: block; }
+
+@media (max-width: 1100px) {
+  .tasks-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+  .tasks-list .task-btn { margin-bottom: 0; }
+  .task-btn:hover { transform: none; }
+}
+
+@media (max-width: 600px) {
+  body { padding: 10px; }
+  header { padding: 14px 10px; margin-bottom: 12px; }
+  header h1 { font-size: 1.5rem; }
+  header p { font-size: 0.85rem; }
+  .main-grid { gap: 12px; }
+  .panel { padding: 14px; border-radius: 12px; }
+  .tasks-list { grid-template-columns: 1fr; }
+  .component-select { font-size: 16px; padding: 12px 10px; }
+  .component-label { flex-wrap: wrap; }
+  .pc-visual { min-height: 150px; padding: 14px; }
+  .pc-case { font-size: 3.5rem; }
+  .total-price { font-size: 1.6rem; }
+  .messages { max-height: none; }
+  .action-buttons { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>🖥️ PC Builder Pro</h1>
+    <p>Интерактивный симулятор сборки компьютера под различные задачи</p>
+  </header>
+
+  <div class="main-grid">
+
+    <div class="panel">
+      <h2>🎯 Выберите задачу</h2>
+      <div id="tasksList" class="tasks-list"></div>
+
+      <div style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 10px; font-size: 0.8rem; color: #aaa;">
+        💡 <b>Совет:</b> Выберите задачу, а затем подбирайте комплектующие. Система автоматически проверит совместимость и оценит сборку.
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>🔧 Комплектующие</h2>
+      <div id="componentsList"></div>
+    </div>
+
+    <div class="panel">
+      <h2>📊 Анализ сборки</h2>
+
+      <div class="pc-visual">
+        <div class="pc-case" id="pcCase">🖥️</div>
+        <div class="pc-status" id="pcStatus">Выберите комплектующие</div>
+      </div>
+
+      <div id="analysisList"></div>
+
+      <div class="messages" id="messages"></div>
+
+      <div class="total-box">
+        <div style="color: #aaa; font-size: 0.9rem;">Общая стоимость:</div>
+        <div class="total-price" id="totalPrice">0 ₽</div>
+        <div style="color: #aaa; font-size: 0.85rem;">Оценка под задачу:</div>
+        <div class="grade" id="grade">—</div>
+      </div>
+
+      <div class="action-buttons">
+        <button class="btn btn-secondary" onclick="resetBuild()">🔄 Сброс</button>
+        <button class="btn btn-primary" onclick="autoBuild()">✨ Авто-подбор</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const COMPONENTS = {
+  cpu: {
+    name: 'Процессор (CPU)',
+    icon: '🧠',
+    items: [
+      { id: 'i3_12100', name: 'Intel Core i3-12100F', price: 9000, socket: 'LGA1700', tdp: 58, perf: 35, ram: 'DDR4', cores: 4, threads: 8 },
+      { id: 'i5_12400', name: 'Intel Core i5-12400F', price: 15000, socket: 'LGA1700', tdp: 65, perf: 55, ram: 'DDR4', cores: 6, threads: 12 },
+      { id: 'i5_13600', name: 'Intel Core i5-13600KF', price: 28000, socket: 'LGA1700', tdp: 125, perf: 78, ram: 'DDR5', cores: 14, threads: 20 },
+      { id: 'i7_13700', name: 'Intel Core i7-13700K', price: 42000, socket: 'LGA1700', tdp: 125, perf: 88, ram: 'DDR5', cores: 16, threads: 24 },
+      { id: 'i9_13900', name: 'Intel Core i9-13900K', price: 58000, socket: 'LGA1700', tdp: 125, perf: 95, ram: 'DDR5', cores: 24, threads: 32 },
+      { id: 'r5_5600', name: 'AMD Ryzen 5 5600', price: 13000, socket: 'AM4', tdp: 65, perf: 52, ram: 'DDR4', cores: 6, threads: 12 },
+      { id: 'r7_5800', name: 'AMD Ryzen 7 5800X', price: 24000, socket: 'AM4', tdp: 105, perf: 72, ram: 'DDR4', cores: 8, threads: 16 },
+      { id: 'r7_7700', name: 'AMD Ryzen 7 7700X', price: 32000, socket: 'AM5', tdp: 105, perf: 82, ram: 'DDR5', cores: 8, threads: 16 },
+      { id: 'r9_7950', name: 'AMD Ryzen 9 7950X', price: 55000, socket: 'AM5', tdp: 170, perf: 96, ram: 'DDR5', cores: 16, threads: 32 }
+    ]
+  },
+  gpu: {
+    name: 'Видеокарта (GPU)',
+    icon: '🎮',
+    items: [
+      { id: 'gtx1650', name: 'NVIDIA GTX 1650', price: 13000, tdp: 75, perf: 25 },
+      { id: 'rtx3050', name: 'NVIDIA RTX 3050', price: 22000, tdp: 130, perf: 45 },
+      { id: 'rtx3060', name: 'NVIDIA RTX 3060', price: 30000, tdp: 170, perf: 60 },
+      { id: 'rtx3070', name: 'NVIDIA RTX 3070', price: 45000, tdp: 220, perf: 75 },
+      { id: 'rtx4070', name: 'NVIDIA RTX 4070', price: 60000, tdp: 200, perf: 85 },
+      { id: 'rtx4080', name: 'NVIDIA RTX 4080', price: 95000, tdp: 320, perf: 93 },
+      { id: 'rtx4090', name: 'NVIDIA RTX 4090', price: 160000, tdp: 450, perf: 100 },
+      { id: 'rx6600', name: 'AMD RX 6600', price: 22000, tdp: 132, perf: 48 },
+      { id: 'rx6700', name: 'AMD RX 6700 XT', price: 38000, tdp: 230, perf: 68 },
+      { id: 'rx7900', name: 'AMD RX 7900 XTX', price: 90000, tdp: 355, perf: 92 }
+    ]
+  },
+  mb: {
+    name: 'Материнская плата',
+    icon: '🔌',
+    items: [
+      { id: 'b660', name: 'MSI PRO B660M-A (LGA1700, DDR4)', price: 11000, socket: 'LGA1700', ram: 'DDR4', form: 'mATX' },
+      { id: 'b760', name: 'ASUS TUF B760-PLUS (LGA1700, DDR5)', price: 18000, socket: 'LGA1700', ram: 'DDR5', form: 'ATX' },
+      { id: 'z790', name: 'MSI MPG Z790 CARBON (LGA1700, DDR5)', price: 35000, socket: 'LGA1700', ram: 'DDR5', form: 'ATX' },
+      { id: 'b550', name: 'Gigabyte B550 AORUS (AM4, DDR4)', price: 12000, socket: 'AM4', ram: 'DDR4', form: 'ATX' },
+      { id: 'x570', name: 'ASUS ROG X570-E (AM4, DDR4)', price: 28000, socket: 'AM4', ram: 'DDR4', form: 'ATX' },
+      { id: 'b650', name: 'ASRock B650 Pro RS (AM5, DDR5)', price: 19000, socket: 'AM5', ram: 'DDR5', form: 'ATX' },
+      { id: 'x670', name: 'MSI MAG X670 TOMAHAWK (AM5, DDR5)', price: 32000, socket: 'AM5', ram: 'DDR5', form: 'ATX' }
+    ]
+  },
+  ram: {
+    name: 'Оперативная память (RAM)',
+    icon: '💾',
+    items: [
+      { id: 'ddr4_8', name: 'Kingston Fury 8GB DDR4-3200', price: 2500, type: 'DDR4', size: 8, perf: 20 },
+      { id: 'ddr4_16', name: 'Kingston Fury 16GB DDR4-3200', price: 4500, type: 'DDR4', size: 16, perf: 40 },
+      { id: 'ddr4_32', name: 'G.Skill Ripjaws 32GB DDR4-3600', price: 9000, type: 'DDR4', size: 32, perf: 60 },
+      { id: 'ddr4_64', name: 'Corsair Vengeance 64GB DDR4-3600', price: 18000, type: 'DDR4', size: 64, perf: 75 },
+      { id: 'ddr5_16', name: 'Kingston Fury 16GB DDR5-5600', price: 6500, type: 'DDR5', size: 16, perf: 50 },
+      { id: 'ddr5_32', name: 'G.Skill Trident 32GB DDR5-6000', price: 13000, type: 'DDR5', size: 32, perf: 70 },
+      { id: 'ddr5_64', name: 'Corsair Dominator 64GB DDR5-6000', price: 25000, type: 'DDR5', size: 64, perf: 85 },
+      { id: 'ddr5_128', name: 'Corsair Dominator 128GB DDR5-5600', price: 50000, type: 'DDR5', size: 128, perf: 95 }
+    ]
+  },
+  storage: {
+    name: 'Накопитель',
+    icon: '💿',
+    items: [
+      { id: 'ssd_sata_256', name: 'Kingston A400 256GB SATA', price: 2000, type: 'SATA', size: 256, perf: 15 },
+      { id: 'ssd_sata_512', name: 'Crucial MX500 512GB SATA', price: 4000, type: 'SATA', size: 512, perf: 30 },
+      { id: 'ssd_nvme_500', name: 'Samsung 970 EVO 500GB NVMe', price: 5500, type: 'NVMe', size: 500, perf: 55 },
+      { id: 'ssd_nvme_1', name: 'Samsung 980 PRO 1TB NVMe', price: 9500, type: 'NVMe', size: 1000, perf: 75 },
+      { id: 'ssd_nvme_2', name: 'Samsung 990 PRO 2TB NVMe', price: 18000, type: 'NVMe', size: 2000, perf: 90 },
+      { id: 'hdd_1', name: 'WD Blue 1TB HDD 7200rpm', price: 3500, type: 'HDD', size: 1000, perf: 10 },
+      { id: 'hdd_2', name: 'Seagate Barracuda 2TB HDD', price: 5500, type: 'HDD', size: 2000, perf: 12 }
+    ]
+  },
+  psu: {
+    name: 'Блок питания (PSU)',
+    icon: '⚡',
+    items: [
+      { id: 'psu450', name: 'DeepCool PF450 450W', price: 3000, watt: 450 },
+      { id: 'psu550', name: 'Chieftec Proton 550W 80+ Bronze', price: 4500, watt: 550 },
+      { id: 'psu650', name: 'Corsair RM650 650W 80+ Gold', price: 7500, watt: 650 },
+      { id: 'psu750', name: 'be quiet! Pure Power 750W Gold', price: 9500, watt: 750 },
+      { id: 'psu850', name: 'Corsair RM850x 850W 80+ Gold', price: 12000, watt: 850 },
+      { id: 'psu1000', name: 'Seasonic Prime 1000W Platinum', price: 18000, watt: 1000 },
+      { id: 'psu1200', name: 'Corsair HX1200 1200W Platinum', price: 25000, watt: 1200 },
+      { id: 'psu1600', name: 'be quiet! Dark Power 1600W', price: 40000, watt: 1600 }
+    ]
+  },
+  case: {
+    name: 'Корпус',
+    icon: '📦',
+    items: [
+      { id: 'case_matx', name: 'DeepCool MATREX 2 (mATX)', price: 3500, form: 'mATX' },
+      { id: 'case_atx_bud', name: 'Zalman i3 Neo (ATX)', price: 4500, form: 'ATX' },
+      { id: 'case_atx', name: 'Lian Li Lancool 215 (ATX)', price: 8000, form: 'ATX' },
+      { id: 'case_atx_prem', name: 'NZXT H7 Flow (ATX)', price: 12000, form: 'ATX' },
+      { id: 'case_eatx', name: 'Corsair 7000D (E-ATX)', price: 22000, form: 'E-ATX' }
+    ]
+  }
+};
+
+const TASKS = [
+  { id: 'office', name: 'Офисный ПК', icon: '💼', desc: 'Документы, браузер, почта', weights: { cpu: 20, gpu: 5, ram: 25, storage: 30 }, minRam: 8, budget: 40000 },
+  { id: 'gaming', name: 'Игровой ПК', icon: '🎮', desc: 'Современные игры в 1080p/1440p', weights: { cpu: 25, gpu: 50, ram: 15, storage: 10 }, minRam: 16, budget: 120000 },
+  { id: 'streaming', name: 'Стриминг', icon: '📹', desc: 'Игры + трансляции', weights: { cpu: 35, gpu: 40, ram: 15, storage: 10 }, minRam: 32, budget: 180000 },
+  { id: 'work', name: 'Работа / Программирование', icon: '💻', desc: 'IDE, компиляция, виртуалки', weights: { cpu: 45, gpu: 10, ram: 35, storage: 10 }, minRam: 32, budget: 100000 },
+  { id: 'video', name: 'Видеомонтаж 4K', icon: '🎬', desc: 'Premiere, DaVinci, After Effects', weights: { cpu: 40, gpu: 35, ram: 15, storage: 10 }, minRam: 64, budget: 250000 },
+  { id: '3d', name: '3D-рендеринг', icon: '🎨', desc: 'Blender, 3ds Max, Cinema 4D', weights: { cpu: 35, gpu: 50, ram: 15, storage: 0 }, minRam: 64, budget: 300000 }
+];
+
+let state = {
+  task: null,
+  selected: { cpu: null, gpu: null, mb: null, ram: null, storage: null, psu: null, case: null }
+};
+
+function init() {
+  renderTasks();
+  renderComponents();
+  updateAnalysis();
+}
+
+function renderTasks() {
+  const container = document.getElementById('tasksList');
+  container.innerHTML = TASKS.map(task => `
+    <button class="task-btn" data-task="${task.id}" onclick="selectTask('${task.id}')">
+      <span class="icon">${task.icon}</span>
+      <span class="name">${task.name}</span>
+      <span class="desc">${task.desc}</span>
+    </button>
+  `).join('');
+}
+
+function renderComponents() {
+  const container = document.getElementById('componentsList');
+  container.innerHTML = Object.keys(COMPONENTS).map(key => {
+    const comp = COMPONENTS[key];
+    return `
+      <div class="component-group" id="group-${key}">
+        <div class="component-label">
+          <span class="title">${comp.icon} ${comp.name}</span>
+          <span class="price" id="price-${key}">—</span>
+        </div>
+        <select class="component-select" id="select-${key}" onchange="selectComponent('${key}')">
+          <option value="">— Не выбрано —</option>
+          ${comp.items.map(item => `
+            <option value="${item.id}">${item.name} — ${item.price.toLocaleString('ru')} ₽</option>
+          `).join('')}
+        </select>
+        <div class="component-info" id="info-${key}">Выберите компонент</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function selectTask(taskId) {
+  state.task = TASKS.find(t => t.id === taskId);
+  document.querySelectorAll('.task-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.task === taskId);
+  });
+  updateAnalysis();
+}
+
+function selectComponent(key) {
+  const select = document.getElementById(`select-${key}`);
+  const itemId = select.value;
+  if (!itemId) {
+    state.selected[key] = null;
+    document.getElementById(`price-${key}`).textContent = '—';
+    document.getElementById(`info-${key}`).textContent = 'Выберите компонент';
+  } else {
+    const item = COMPONENTS[key].items.find(i => i.id === itemId);
+    state.selected[key] = item;
+    document.getElementById(`price-${key}`).textContent = item.price.toLocaleString('ru') + ' ₽';
+    document.getElementById(`info-${key}`).innerHTML = getComponentInfo(key, item);
+  }
+  updateAnalysis();
+}
+
+function getComponentInfo(key, item) {
+  switch(key) {
+    case 'cpu': return `Сокет: ${item.socket} | TDP: ${item.tdp}W | ${item.cores}C/${item.threads}T | RAM: ${item.ram}`;
+    case 'gpu': return `TDP: ${item.tdp}W | Производительность: ${item.perf}/100`;
+    case 'mb': return `Сокет: ${item.socket} | RAM: ${item.ram} | Форм-фактор: ${item.form}`;
+    case 'ram': return `Тип: ${item.type} | Объём: ${item.size}GB | Производительность: ${item.perf}/100`;
+    case 'storage': return `Тип: ${item.type} | Объём: ${item.size >= 1000 ? (item.size/1000) + 'TB' : item.size + 'GB'}`;
+    case 'psu': return `Мощность: ${item.watt}W`;
+    case 'case': return `Форм-фактор: ${item.form}`;
+  }
+}
+
+function updateAnalysis() {
+  const messages = [];
+  let totalPrice = 0;
+  let hasErrors = false;
+
+  Object.values(state.selected).forEach(item => {
+    if (item) totalPrice += item.price;
+  });
+
+  if (state.selected.cpu && state.selected.mb) {
+    if (state.selected.cpu.socket !== state.selected.mb.socket) {
+      messages.push({ type: 'error', text: `❌ Несовместимость: CPU (${state.selected.cpu.socket}) не подходит к материнской плате (${state.selected.mb.socket})` });
+      hasErrors = true;
+    } else {
+      messages.push({ type: 'success', text: `✅ Сокет CPU и материнской платы совпадают: ${state.selected.cpu.socket}` });
+    }
+  }
+
+  if (state.selected.ram && state.selected.mb) {
+    if (state.selected.ram.type !== state.selected.mb.ram) {
+      messages.push({ type: 'error', text: `❌ Несовместимость: RAM (${state.selected.ram.type}) не поддерживается материнской платой (${state.selected.mb.ram})` });
+      hasErrors = true;
+    } else {
+      messages.push({ type: 'success', text: `✅ Тип памяти RAM и материнской платы совпадают: ${state.selected.ram.type}` });
+    }
+  }
+
+  if (state.selected.cpu && state.selected.ram) {
+    if (state.selected.cpu.ram !== state.selected.ram.type) {
+      messages.push({ type: 'warn', text: `⚠️ Предупреждение: CPU поддерживает ${state.selected.cpu.ram}, а выбрана память ${state.selected.ram.type}. Проверьте совместимость.` });
+    }
+  }
+
+  if (state.selected.cpu && state.selected.gpu && state.selected.psu) {
+    const totalTDP = state.selected.cpu.tdp + state.selected.gpu.tdp + 100;
+    const psuWatt = state.selected.psu.watt;
+    const ratio = totalTDP / psuWatt;
+
+    if (ratio > 0.9) {
+      messages.push({ type: 'error', text: `❌ Критично: БП ${psuWatt}W не справится! Потребление ~${totalTDP}W (запас менее 10%)` });
+      hasErrors = true;
+    } else if (ratio > 0.75) {
+      messages.push({ type: 'warn', text: `⚠️ Внимание: БП ${psuWatt}W работает на пределе. Потребление ~${totalTDP}W. Рекомендуется запас 25-30%.` });
+    } else {
+      messages.push({ type: 'success', text: `✅ Блок питания ${psuWatt}W достаточен. Потребление ~${totalTDP}W (запас ${(100 - ratio*100).toFixed(0)}%)` });
+    }
+  }
+
+  if (state.selected.mb && state.selected.case) {
+    const formOrder = ['mATX', 'ATX', 'E-ATX'];
+    const mbForm = state.selected.mb.form;
+    const caseForm = state.selected.case.form;
+
+    if (formOrder.indexOf(mbForm) > formOrder.indexOf(caseForm)) {
+      messages.push({ type: 'error', text: `❌ Материнская плата ${mbForm} не влезет в корпус ${caseForm}` });
+      hasErrors = true;
+    } else {
+      messages.push({ type: 'success', text: `✅ Материнская плата ${mbForm} подходит к корпусу ${caseForm}` });
+    }
+  }
+
+  if (state.task && state.selected.ram) {
+    if (state.selected.ram.size < state.task.minRam) {
+      messages.push({ type: 'warn', text: `⚠️ Для задачи "${state.task.name}" рекомендуется минимум ${state.task.minRam}GB RAM. У вас: ${state.selected.ram.size}GB.` });
+    } else {
+      messages.push({ type: 'success', text: `✅ Объём RAM (${state.selected.ram.size}GB) соответствует задаче` });
+    }
+  }
+
+  let taskPerf = 0;
+  if (state.task) {
+    const weights = state.task.weights;
+    if (state.selected.cpu) taskPerf += state.selected.cpu.perf * (weights.cpu / 100);
+    if (state.selected.gpu) taskPerf += state.selected.gpu.perf * (weights.gpu / 100);
+    if (state.selected.ram) taskPerf += state.selected.ram.perf * (weights.ram / 100);
+    if (state.selected.storage) taskPerf += state.selected.storage.perf * (weights.storage / 100);
+  }
+
+  if (hasErrors) taskPerf = 0;
+
+  let grade, gradeClass;
+  if (taskPerf >= 85) { grade = 'A — Отлично'; gradeClass = 'A'; }
+  else if (taskPerf >= 70) { grade = 'B — Хорошо'; gradeClass = 'B'; }
+  else if (taskPerf >= 55) { grade = 'C — Удовлетворительно'; gradeClass = 'C'; }
+  else if (taskPerf >= 40) { grade = 'D — Слабо'; gradeClass = 'D'; }
+  else { grade = 'F — Не подходит'; gradeClass = 'F'; }
+
+  document.getElementById('totalPrice').textContent = totalPrice.toLocaleString('ru') + ' ₽';
+
+  const gradeEl = document.getElementById('grade');
+  gradeEl.textContent = state.task ? grade : '—';
+  gradeEl.className = 'grade ' + (state.task ? gradeClass : '');
+
+  const analysisList = document.getElementById('analysisList');
+  if (state.task) {
+    analysisList.innerHTML = `
+      <div class="analysis-item ${taskPerf >= 70 ? 'ok' : taskPerf >= 50 ? 'warn' : 'error'}">
+        <span class="label">Производительность:</span>
+        <span class="value">${taskPerf.toFixed(0)}/100</span>
+      </div>
+      <div class="perf-bar"><div class="perf-fill" style="width: ${taskPerf}%"></div></div>
+      <div class="analysis-item" style="margin-top: 10px;">
+        <span class="label">Бюджет задачи:</span>
+        <span class="value" style="color: ${totalPrice <= state.task.budget ? '#00ff88' : '#ff3355'}">
+          ${state.task.budget.toLocaleString('ru')} ₽
+        </span>
+      </div>
+      <div class="analysis-item">
+        <span class="label">Статус бюджета:</span>
+        <span class="value" style="color: ${totalPrice <= state.task.budget ? '#00ff88' : '#ff3355'}">
+          ${totalPrice <= state.task.budget ? '✅ В рамках' : '❌ Превышен на ' + (totalPrice - state.task.budget).toLocaleString('ru') + ' ₽'}
+        </span>
+      </div>
+    `;
+  } else {
+    analysisList.innerHTML = '<div style="text-align: center; color: #aaa; padding: 20px;">Выберите задачу для анализа</div>';
+  }
+
+  document.getElementById('messages').innerHTML = messages.map(m => `
+    <div class="message ${m.type}">${m.text}</div>
+  `).join('');
+
+  const pcCase = document.getElementById('pcCase');
+  const pcStatus = document.getElementById('pcStatus');
+  const selectedCount = Object.values(state.selected).filter(x => x).length;
+
+  if (hasErrors) {
+    pcCase.textContent = '💥';
+    pcCase.className = 'pc-case';
+    pcStatus.textContent = 'Сборка содержит критические ошибки!';
+    pcStatus.style.color = '#ff3355';
+  } else if (selectedCount === 7) {
+    pcCase.textContent = '🖥️';
+    pcCase.className = 'pc-case working';
+    pcStatus.textContent = '✅ Сборка готова к работе!';
+    pcStatus.style.color = '#00ff88';
+  } else if (selectedCount > 0) {
+    pcCase.textContent = '🔧';
+    pcCase.className = 'pc-case';
+    pcStatus.textContent = `Собрано компонентов: ${selectedCount}/7`;
+    pcStatus.style.color = '#ffaa00';
+  } else {
+    pcCase.textContent = '🖥️';
+    pcCase.className = 'pc-case';
+    pcStatus.textContent = 'Выберите комплектующие';
+    pcStatus.style.color = '#aaa';
+  }
+
+  Object.keys(COMPONENTS).forEach(key => {
+    const group = document.getElementById(`group-${key}`);
+    group.classList.remove('ok', 'warn', 'error');
+
+    const item = state.selected[key];
+    if (!item) return;
+
+    if (key === 'cpu' && state.selected.mb && item.socket !== state.selected.mb.socket) {
+      group.classList.add('error');
+    } else if (key === 'mb' && state.selected.cpu && item.socket !== state.selected.cpu.socket) {
+      group.classList.add('error');
+    } else if (key === 'ram' && state.selected.mb && item.type !== state.selected.mb.ram) {
+      group.classList.add('error');
+    } else if (key === 'mb' && state.selected.ram && item.ram !== state.selected.ram.type) {
+      group.classList.add('error');
+    } else if (key === 'case' && state.selected.mb) {
+      const formOrder = ['mATX', 'ATX', 'E-ATX'];
+      if (formOrder.indexOf(state.selected.mb.form) > formOrder.indexOf(item.form)) {
+        group.classList.add('error');
+      } else {
+        group.classList.add('ok');
+      }
+    } else if (key === 'psu' && state.selected.cpu && state.selected.gpu) {
+      const totalTDP = state.selected.cpu.tdp + state.selected.gpu.tdp + 100;
+      const ratio = totalTDP / item.watt;
+      if (ratio > 0.9) group.classList.add('error');
+      else if (ratio > 0.75) group.classList.add('warn');
+      else group.classList.add('ok');
+    } else {
+      group.classList.add('ok');
+    }
+  });
+}
+
+function resetBuild() {
+  state.selected = { cpu: null, gpu: null, mb: null, ram: null, storage: null, psu: null, case: null };
+  Object.keys(COMPONENTS).forEach(key => {
+    document.getElementById(`select-${key}`).value = '';
+    document.getElementById(`price-${key}`).textContent = '—';
+    document.getElementById(`info-${key}`).textContent = 'Выберите компонент';
+  });
+  updateAnalysis();
+}
+
+function autoBuild() {
+  if (!state.task) {
+    alert('Сначала выберите задачу!');
+    return;
+  }
+
+  resetBuild();
+
+  const task = state.task;
+
+  const sortedCpu = [...COMPONENTS.cpu.items].sort((a, b) => b.perf - a.perf);
+  state.selected.cpu = sortedCpu[0];
+  document.getElementById('select-cpu').value = sortedCpu[0].id;
+
+  const compatibleMb = COMPONENTS.mb.items.filter(m => m.socket === state.selected.cpu.socket);
+  state.selected.mb = compatibleMb[0];
+  document.getElementById('select-mb').value = compatibleMb[0].id;
+
+  const compatibleRam = COMPONENTS.ram.items.filter(r => r.type === state.selected.mb.ram && r.size >= task.minRam);
+  state.selected.ram = compatibleRam.sort((a, b) => a.size - b.size)[0];
+  document.getElementById('select-ram').value = state.selected.ram.id;
+
+  const sortedGpu = [...COMPONENTS.gpu.items].sort((a, b) => b.perf - a.perf);
+  state.selected.gpu = sortedGpu[0];
+  document.getElementById('select-gpu').value = sortedGpu[0].id;
+
+  state.selected.storage = COMPONENTS.storage.items.find(s => s.type === 'NVMe' && s.size >= 1000);
+  document.getElementById('select-storage').value = state.selected.storage.id;
+
+  const totalTDP = state.selected.cpu.tdp + state.selected.gpu.tdp + 100;
+  const minPsu = Math.ceil(totalTDP * 1.3 / 50) * 50;
+  const compatiblePsu = COMPONENTS.psu.items.filter(p => p.watt >= minPsu).sort((a, b) => a.watt - b.watt);
+  state.selected.psu = compatiblePsu[0];
+  document.getElementById('select-psu').value = state.selected.psu.id;
+
+  const formOrder = ['mATX', 'ATX', 'E-ATX'];
+  const mbIdx = formOrder.indexOf(state.selected.mb.form);
+  const compatibleCase = COMPONENTS.case.items.filter(c => formOrder.indexOf(c.form) >= mbIdx);
+  state.selected.case = compatibleCase[0];
+  document.getElementById('select-case').value = state.selected.case.id;
+
+  Object.keys(COMPONENTS).forEach(key => {
+    const item = state.selected[key];
+    document.getElementById(`price-${key}`).textContent = item.price.toLocaleString('ru') + ' ₽';
+    document.getElementById(`info-${key}`).innerHTML = getComponentInfo(key, item);
+  });
+
+  updateAnalysis();
+}
+
+init();
+</script>
+
+</body>
+</html>
