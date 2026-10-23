@@ -26,37 +26,8 @@ const TechMatrixPassport = ({ data, patch, patchFgos }: TechMatrixPassportProps)
         Эти данные попадают в файл и помогают ИИ точнее подобрать технологии.
       </p>
       <div className="grid gap-4 md:grid-cols-6">
-        <div className="md:col-span-3">
-          <label className="text-sm font-medium mb-1.5 block">Название документа</label>
-          <Input
-            value={data.docTitle}
-            onChange={(e) => patch({ docTitle: e.target.value })}
-            placeholder="Матрица технологий обучения по дисциплине …"
-          />
-        </div>
-        <div className="md:col-span-2">
-          <label className="text-sm font-medium mb-1.5 block">Преподаватель (ФИО)</label>
-          <Input
-            value={data.author}
-            onChange={(e) => patch({ author: e.target.value })}
-            placeholder="Иванова Елена Петровна"
-          />
-        </div>
-        <div className="md:col-span-1">
-          <label className="text-sm font-medium mb-1.5 block">Дата</label>
-          <Input type="date" value={data.date} onChange={(e) => patch({ date: e.target.value })} />
-        </div>
-
-        <div className="md:col-span-3">
-          <label className="text-sm font-medium mb-1.5 block">Образовательная организация</label>
-          <Input
-            value={data.org}
-            onChange={(e) => patch({ org: e.target.value })}
-            placeholder="ГБПОУ «…», специальность / профессия"
-          />
-        </div>
-        <div className="md:col-span-3">
-          <label className="text-sm font-medium mb-1.5 block">Дисциплина, МДК или модуль</label>
+        <div className="md:col-span-6">
+          <label className="text-sm font-medium mb-1.5 block">Дисциплина / предмет</label>
           <Input
             value={data.subject}
             onChange={(e) => patch({ subject: e.target.value })}
@@ -92,12 +63,12 @@ const TechMatrixPassport = ({ data, patch, patchFgos }: TechMatrixPassportProps)
             />
           </div>
         )}
-        <div className="md:col-span-3">
-          <label className="text-sm font-medium mb-1.5 block">Курс / группа</label>
+        <div className={profSelectValue === PROF_OTHER ? "md:col-span-6" : "md:col-span-3"}>
+          <label className="text-sm font-medium mb-1.5 block">Региональный компонент</label>
           <Input
-            value={data.course}
-            onChange={(e) => patch({ course: e.target.value })}
-            placeholder="2 курс, гр. ТС-21"
+            value={data.region}
+            onChange={(e) => patch({ region: e.target.value })}
+            placeholder="Например: предприятия региона, местные традиции и реалии"
           />
         </div>
 

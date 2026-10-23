@@ -29,7 +29,10 @@ const loadDraft = (): MatrixData => {
     const base = emptyMatrix();
     return {
       ...base,
-      ...parsed,
+      subject: parsed.subject || "",
+      prof: parsed.prof || "",
+      profOther: parsed.profOther || "",
+      region: parsed.region || "",
       fgos: { ...base.fgos, ...(parsed.fgos || {}) },
       rows: parsed.rows && parsed.rows.length ? parsed.rows : base.rows,
     };
@@ -99,9 +102,8 @@ const TechMatrix = () => {
         action: "tech_matrix",
         data: {
           subject: data.subject,
-          org: data.org,
           prof: matrixProf(data),
-          course: data.course,
+          region: data.region,
           fgos: data.fgos,
           technologies,
           count,
@@ -129,9 +131,8 @@ const TechMatrix = () => {
           action: "tech_matrix_analysis",
           data: {
             subject: data.subject,
-            org: data.org,
             prof: matrixProf(data),
-            course: data.course,
+            region: data.region,
             fgos: data.fgos,
             rows,
           },

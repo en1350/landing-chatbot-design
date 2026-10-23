@@ -175,7 +175,7 @@ const TechMatrixTable = ({
       <Button
         variant="outline"
         className="gap-1.5"
-        onClick={() => ensureRows() && downloadDocx(data.docTitle || DOC_TITLE, data.docTitle || DOC_TITLE, matrixToText(data))}
+        onClick={() => ensureRows() && downloadDocx(DOC_TITLE, DOC_TITLE, matrixToText(data))}
       >
         <Icon name="FileText" size={15} />
         Скачать Word

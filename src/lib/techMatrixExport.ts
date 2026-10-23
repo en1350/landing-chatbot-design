@@ -1,4 +1,4 @@
-import { MatrixData, TechRow } from "@/components/tech-matrix/techMatrixConfig";
+import { DOC_TITLE, MatrixData, TechRow } from "@/components/tech-matrix/techMatrixConfig";
 
 const esc = (s: unknown) =>
   String(s ?? "").replace(/[<>&"']/g, (m) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&apos;" }[m] as string));
@@ -7,12 +7,9 @@ export const matrixProf = (d: MatrixData) => (d.prof === "Другая (указ
 
 const metaPairs = (d: MatrixData): [string, string][] => {
   const meta: [string, string][] = [
-    ["Преподаватель", d.author],
-    ["Организация", d.org],
-    ["Дата", d.date],
-    ["Предмет / дисциплина", d.subject],
+    ["Дисциплина / предмет", d.subject],
     ["Профессиональная направленность", matrixProf(d)],
-    ["Курс / группа", d.course],
+    ["Региональный компонент", d.region],
   ];
   if (d.fgos.on) {
     meta.push(
@@ -40,7 +37,7 @@ const download = (blob: Blob, name: string) => {
 };
 
 export const matrixFileName = (d: MatrixData, ext: string) => {
-  const base = (d.docTitle || d.subject || "Матрица_технологий").replace(/[\\/:*?"<>|]/g, "_").slice(0, 60);
+  const base = (d.subject || "Матрица_технологий").replace(/[\\/:*?"<>|]/g, "_").slice(0, 60);
   return `${base}_${new Date().toISOString().slice(0, 10)}.${ext}`;
 };
 
@@ -57,7 +54,7 @@ export function downloadMatrixExcel(d: MatrixData) {
 <Style ss:ID="lbl"><Font ss:Bold="1"/><Alignment ss:Vertical="Top" ss:WrapText="1"/></Style>
 <Style ss:ID="cell"><Alignment ss:Vertical="Top" ss:WrapText="1"/></Style>
 </Styles><Worksheet ss:Name="Технологии"><Table><Column ss:Width="34"/><Column ss:Width="190"/><Column ss:Width="270"/><Column ss:Width="280"/>`;
-  xml += `<Row ss:Height="24"><Cell ss:StyleID="title" ss:MergeAcross="3"><Data ss:Type="String">${esc(d.docTitle || "Матрица используемых технологий обучения")}</Data></Cell></Row>`;
+  xml += `<Row ss:Height="24"><Cell ss:StyleID="title" ss:MergeAcross="3"><Data ss:Type="String">${esc(DOC_TITLE)}</Data></Cell></Row>`;
   metaPairs(d).forEach(([k, v]) => {
     xml += `<Row>${cell(k, "lbl")}<Cell ss:StyleID="cell" ss:MergeAcross="2"><Data ss:Type="String">${esc(v)}</Data></Cell></Row>`;
   });
@@ -72,7 +69,7 @@ export function downloadMatrixExcel(d: MatrixData) {
 
 export function downloadMatrixCsv(d: MatrixData) {
   const q = (v: unknown) => '"' + String(v ?? "").replace(/"/g, '""') + '"';
-  const out: unknown[][] = [[d.docTitle || "Матрица используемых технологий обучения"]];
+  const out: unknown[][] = [[DOC_TITLE]];
   metaPairs(d).forEach(([k, v]) => out.push([k, v]));
   out.push([]);
   out.push(["№", "Технология", "Обоснование выбора технологии", "Методическая и практическая результативность применения технологии"]);

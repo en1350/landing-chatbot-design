@@ -14,14 +14,10 @@ export interface FgosData {
 }
 
 export interface MatrixData {
-  docTitle: string;
-  author: string;
-  org: string;
-  date: string;
   subject: string;
   prof: string;
   profOther: string;
-  course: string;
+  region: string;
   fgos: FgosData;
   rows: TechRow[];
 }
@@ -58,14 +54,10 @@ export const EMPTY_FGOS: FgosData = {
 };
 
 export const emptyMatrix = (): MatrixData => ({
-  docTitle: "",
-  author: "",
-  org: "",
-  date: new Date().toISOString().slice(0, 10),
   subject: "",
   prof: "",
   profOther: "",
-  course: "",
+  region: "",
   fgos: { ...EMPTY_FGOS },
   rows: [{ t: "", o: "", r: "" }],
 });
