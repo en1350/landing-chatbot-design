@@ -5,6 +5,12 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { reachGoal } from "@/lib/metrika";
 import Icon from "@/components/ui/icon";
+import DecomposerModal from "@/components/DecomposerModal";
+import RandomizerModal from "@/components/RandomizerModal";
+import AntiplagiatModal from "@/components/AntiplagiatModal";
+import ProfileSheet from "@/components/ProfileSheet";
+import AuthModal from "@/components/AuthModal";
+import UpgradeModal from "@/components/UpgradeModal";
 
 interface Option {
   text: string;
@@ -106,6 +112,23 @@ const getResult = (score: number): Result => {
 const TeacherMiniTest = () => {
   const [answers, setAnswers] = useState<(number | null)[]>(QUESTIONS.map(() => null));
   const [finished, setFinished] = useState(false);
+  const [decomposerOpen, setDecomposerOpen] = useState(false);
+  const [randomizerOpen, setRandomizerOpen] = useState(false);
+  const [antiplagiatOpen, setAntiplagiatOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+
+  const openAuth = () => {
+    setProfileOpen(false);
+    setAuthOpen(true);
+  };
+
+  const openUpgrade = () => {
+    setDecomposerOpen(false);
+    setAntiplagiatOpen(false);
+    setUpgradeOpen(true);
+  };
 
   const answered = answers.filter((a) => a !== null).length;
   const score = answers.reduce<number>((sum, a, i) => sum + (a === null ? 0 : QUESTIONS[i].options[a].points), 0);
@@ -119,18 +142,16 @@ const TeacherMiniTest = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const noop = () => {};
-
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar
-        onOpenNotebook={noop}
-        onOpenDecomposer={noop}
-        onOpenRandomizer={noop}
-        onOpenAntiplagiat={noop}
-        onOpenProfile={noop}
-        onOpenAuth={noop}
-        onOpenPricing={noop}
+        onOpenNotebook={() => (window.location.href = "/#notebook")}
+        onOpenDecomposer={() => setDecomposerOpen(true)}
+        onOpenRandomizer={() => setRandomizerOpen(true)}
+        onOpenAntiplagiat={() => setAntiplagiatOpen(true)}
+        onOpenProfile={() => setProfileOpen(true)}
+        onOpenAuth={openAuth}
+        onOpenPricing={() => setProfileOpen(true)}
       />
 
       <main className="flex-1">
@@ -226,7 +247,28 @@ const TeacherMiniTest = () => {
         </div>
       </main>
 
-      <Footer onOpenProfile={noop} onOpenRandomizer={noop} onOpenAntiplagiat={noop} />
+      <Footer
+        onOpenProfile={() => setProfileOpen(true)}
+        onOpenRandomizer={() => setRandomizerOpen(true)}
+        onOpenAntiplagiat={() => setAntiplagiatOpen(true)}
+      />
+
+      <DecomposerModal
+        open={decomposerOpen}
+        onClose={() => setDecomposerOpen(false)}
+        onNeedAuth={openAuth}
+        onNeedUpgrade={openUpgrade}
+      />
+      <RandomizerModal open={randomizerOpen} onClose={() => setRandomizerOpen(false)} />
+      <AntiplagiatModal
+        open={antiplagiatOpen}
+        onClose={() => setAntiplagiatOpen(false)}
+        onNeedAuth={openAuth}
+        onNeedUpgrade={openUpgrade}
+      />
+      <ProfileSheet open={profileOpen} onClose={() => setProfileOpen(false)} onNeedAuth={openAuth} />
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
+      <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} onNeedAuth={openAuth} />
     </div>
   );
 };
