@@ -147,13 +147,6 @@ const CATEGORIES: CategoryItem[] = [
     description: "Разбор типовых заданий ЕГЭ с генерацией задач, проверкой ответа и счётчиком выполненных заданий",
     accent: "#F59E0B",
   },
-  {
-    key: "ovz",
-    icon: "♿",
-    title: "Тренажёры для ОВЗ",
-    description: "Доступные уроки с озвучиванием, крупным шрифтом, режимами контраста и поддержкой дислексии",
-    accent: "#2980b9",
-  },
 ];
 
 const TRAINERS: TrainerItem[] = [
@@ -469,12 +462,14 @@ const StudentTrainer = () => {
   const [searchParams] = useSearchParams();
   const [category, setCategory] = useState<CategoryKey | null>(null);
   const catParam = searchParams.get("cat");
+  const trainerParam = searchParams.get("trainer");
+  const [active, setActive] = useState<TrainerKey | null>(null);
   useEffect(() => {
     const found = CATEGORIES.find((c) => c.key === catParam);
+    const direct = TRAINERS.find((t) => t.key === trainerParam);
     setCategory(found ? found.key : null);
-    setActive(null);
-  }, [catParam]);
-  const [active, setActive] = useState<TrainerKey | null>(null);
+    setActive(direct ? direct.key : null);
+  }, [catParam, trainerParam]);
   const activeTrainer = TRAINERS.find((t) => t.key === active);
   const [decomposerOpen, setDecomposerOpen] = useState(false);
   const [randomizerOpen, setRandomizerOpen] = useState(false);
