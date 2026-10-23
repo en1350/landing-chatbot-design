@@ -943,5 +943,45 @@ function generateCertificate() {
 applySettings(true);
 updateSimulatorUI();
 </script>
+<style id="ovz-toggle-style">
+.ovz-toggle{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:8px 16px;font:inherit;font-size:1rem;font-weight:700;background:transparent;color:inherit;border:2px solid currentColor;border-radius:8px;cursor:pointer;width:auto}
+.ovz-collapsed > :not(.ovz-keep){display:none !important}
+.a11y-panel.ovz-collapsed{padding-top:6px;padding-bottom:6px}
+.panel.ovz-collapsed{padding-bottom:.9rem}
+.panel.ovz-collapsed #settingsTitle{margin-bottom:.6rem}
+@media (max-width:768px){.ovz-toggle{width:100%}}
+</style>
+<script>
+(function(){
+  var panel=document.querySelector('.a11y-panel');
+  var sticky=!!panel;
+  var head=null;
+  if(!panel){
+    head=document.getElementById('settingsTitle');
+    panel=head&&head.closest('.panel');
+  }
+  if(!panel)return;
+  var KEY='ovz_settings_hidden';
+  var saved=null;
+  try{saved=localStorage.getItem(KEY);}catch(e){}
+  var hidden=saved===null?window.innerWidth<=768:saved==='1';
+  var btn=document.createElement('button');
+  btn.type='button';
+  btn.className='ovz-toggle ovz-keep';
+  if(sticky){panel.insertBefore(btn,panel.firstChild);}
+  else{head.classList.add('ovz-keep');head.insertAdjacentElement('afterend',btn);}
+  function apply(){
+    panel.classList.toggle('ovz-collapsed',hidden);
+    btn.textContent=hidden?'\u2699\uFE0F Показать настройки':'\uD83D\uDE48 Скрыть настройки';
+    btn.setAttribute('aria-expanded',hidden?'false':'true');
+  }
+  btn.addEventListener('click',function(){
+    hidden=!hidden;
+    try{localStorage.setItem(KEY,hidden?'1':'0');}catch(e){}
+    apply();
+  });
+  apply();
+})();
+</script>
 </body>
 </html>
