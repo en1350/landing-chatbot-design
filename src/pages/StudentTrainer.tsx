@@ -459,7 +459,7 @@ const getSolvedCount = (key: TrainerKey): number | null => {
 const StudentTrainer = () => {
   const { user, isPaid: planPaid, trainersUnlocked } = useAuth();
   const isPaid = planPaid || trainersUnlocked;
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [category, setCategory] = useState<CategoryKey | null>(null);
   const catParam = searchParams.get("cat");
   const trainerParam = searchParams.get("trainer");
@@ -520,7 +520,7 @@ const StudentTrainer = () => {
             На главную
           </Link>
 
-          {!category ? (
+          {!category && !active ? (
             <>
               <div className="max-w-2xl mb-8">
                 <span className="text-xs font-bold uppercase tracking-widest text-coral">Для учеников</span>
@@ -635,11 +635,14 @@ const StudentTrainer = () => {
           ) : (
             <>
               <button
-                onClick={() => setActive(null)}
+                onClick={() => {
+                  setActive(null);
+                  if (trainerParam) setSearchParams({});
+                }}
                 className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
               >
                 <Icon name="ArrowLeft" size={15} />
-                Назад к разделу
+                {category ? "Назад к разделу" : "Ко всем разделам"}
               </button>
 
               <div className="max-w-2xl mb-6">
