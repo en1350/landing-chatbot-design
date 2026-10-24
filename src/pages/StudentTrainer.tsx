@@ -79,7 +79,7 @@ interface TrainerItem {
   paid?: boolean;
 }
 
-const ASSET_VERSION = "20261024b";
+const ASSET_VERSION = "20261024c";
 
 const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "ip-diagnostics": "/ip-diagnostics.html",
