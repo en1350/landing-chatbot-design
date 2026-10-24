@@ -669,5 +669,26 @@ renderDegrees();
   apply();
 })();
 </script>
+<script>
+(function () {
+  var KEY = 'ovz-prefs:' + location.pathname;
+  function load() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
+  function save(patch) { try { var p = load(); for (var k in patch) p[k] = patch[k]; localStorage.setItem(KEY, JSON.stringify(p)); } catch (e) {} }
+  var themeEl = document.getElementById('theme');
+  var sizeEl = document.getElementById('fontSize');
+  var saved = load();
+  function hasOption(el, v) { return Array.prototype.some.call(el.options, function (o) { return o.value === v; }); }
+  if (saved.theme && hasOption(themeEl, saved.theme)) {
+    themeEl.value = saved.theme;
+    document.body.dataset.theme = saved.theme;
+  }
+  if (saved.fontSize && hasOption(sizeEl, saved.fontSize)) {
+    sizeEl.value = saved.fontSize;
+    document.documentElement.style.fontSize = saved.fontSize + '%';
+  }
+  themeEl.addEventListener('change', function () { save({ theme: themeEl.value }); });
+  sizeEl.addEventListener('change', function () { save({ fontSize: sizeEl.value }); });
+})();
+</script>
 </body>
 </html>

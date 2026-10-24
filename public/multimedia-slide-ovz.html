@@ -1189,5 +1189,19 @@ updateProgress();
   apply();
 })();
 </script>
+<script>
+(function () {
+  var KEY = 'ovz-prefs:' + location.pathname;
+  function load() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
+  function save(patch) { try { var p = load(); for (var k in patch) p[k] = patch[k]; localStorage.setItem(KEY, JSON.stringify(p)); } catch (e) {} }
+  var origSize = changeFontSize;
+  var origTheme = setTheme;
+  changeFontSize = function (d) { origSize(d); save({ fontSize: state.currentFontSize }); };
+  setTheme = function (t) { origTheme(t); save({ theme: t }); };
+  var saved = load();
+  if (typeof saved.fontSize === 'number') origSize(saved.fontSize - state.currentFontSize);
+  if (saved.theme) origTheme(saved.theme);
+})();
+</script>
 </body>
 </html>
