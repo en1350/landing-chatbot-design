@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JS Симулятор: Браузер vs Node.js</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/matchbrackets.min.js"></script>
     <style>
         :root {
             --bg-color: #1e1e1e;
@@ -107,6 +113,21 @@
             min-height: 100px;
         }
 
+        .CodeMirror {
+            width: 100%;
+            flex: 2;
+            min-height: 100px;
+            height: auto;
+            box-sizing: border-box;
+            background-color: var(--panel-bg) !important;
+            border-bottom: 1px solid var(--border-color);
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+            font-size: 14px !important;
+            line-height: 1.5;
+        }
+        .CodeMirror-gutters { background-color: var(--panel-bg) !important; border-right: 1px solid var(--border-color) !important; }
+        .CodeMirror-linenumber { color: #858585 !important; }
+
         .resizer {
             height: 10px;
             background-color: var(--border-color);
@@ -182,7 +203,7 @@
             body { padding: 5px; height: auto; min-height: 100vh; }
             .container { flex-direction: column; flex: none; }
             .panel { flex: none; }
-            .editor { flex: none; height: 220px; font-size: 16px; }
+            .CodeMirror { flex: none; height: 220px; font-size: 15px !important; }
             .output-container { flex: none; }
             .output { min-height: 120px; max-height: 260px; flex: none; }
             button { min-height: 44px; flex: 1; }
@@ -272,13 +293,27 @@ try {
     </div>
 
     <script>
+        const editors = {};
+        ['browser-code', 'node-code'].forEach(id => {
+            editors[id] = CodeMirror.fromTextArea(document.getElementById(id), {
+                mode: 'javascript',
+                theme: 'dracula',
+                lineNumbers: true,
+                autoCloseBrackets: true,
+                matchBrackets: true,
+                indentUnit: 4,
+                tabSize: 4
+            });
+        });
+    </script>
+    <script>
         document.querySelectorAll('.resizer').forEach(resizer => {
             let isResizing = false;
             let startY = 0;
             let startHeight = 0;
 
             const panel = resizer.parentElement;
-            const editor = panel.querySelector('.editor');
+            const editor = panel.querySelector('.CodeMirror');
 
             const begin = (y) => {
                 isResizing = true;
@@ -303,6 +338,7 @@ try {
                 }
                 if (newHeight > 80 && newHeight < maxHeight) {
                     editor.style.height = newHeight + 'px';
+                    editor.CodeMirror.refresh();
                 }
             };
 
@@ -371,7 +407,7 @@ try {
         }
 
         function runCode(codeElementId, outputElementId, environment) {
-            const code = document.getElementById(codeElementId).value;
+            const code = editors[codeElementId].getValue();
             const output = document.getElementById(outputElementId);
             output.innerText = "";
             output.classList.remove('error', 'info');
