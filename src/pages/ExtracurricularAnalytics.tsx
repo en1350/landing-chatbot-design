@@ -3,17 +3,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import Icon from "@/components/ui/icon";
 import DecomposerModal from "@/components/DecomposerModal";
 import RandomizerModal from "@/components/RandomizerModal";
@@ -22,11 +12,13 @@ import ProfileSheet from "@/components/ProfileSheet";
 import AuthModal from "@/components/AuthModal";
 import UpgradeModal from "@/components/UpgradeModal";
 import { useAuth, AUTH_URL } from "@/context/AuthContext";
-import { downloadDocx, downloadTxt } from "@/lib/download";
 import { toast } from "sonner";
-import SaveMaterialButton from "@/components/SaveMaterialButton";
 import StatsPanel from "@/components/extracurricular/StatsPanel";
-import { EventRow, YEARS, ACTIVITY_TYPES, DEMO_ROWS, pct, levelOf } from "@/components/extracurricular/types";
+import EventInputForm from "@/components/extracurricular/EventInputForm";
+import EventsTable from "@/components/extracurricular/EventsTable";
+import ReportCard from "@/components/extracurricular/ReportCard";
+import PlanCard from "@/components/extracurricular/PlanCard";
+import { EventRow, YEARS, ACTIVITY_TYPES, DEMO_ROWS, pct } from "@/components/extracurricular/types";
 
 const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
 
@@ -317,11 +309,6 @@ const ExtracurricularAnalytics = () => {
   const reportTitle = "Аналитическая справка о вовлечении обучающихся во внеаудиторную деятельность";
   const planTitle = "План внеаудиторной деятельности";
 
-  const levelClass = (p: number) => {
-    const l = levelOf(p);
-    return l === "high" ? "text-emerald-600" : l === "mid" ? "text-amber-600" : "text-destructive";
-  };
-
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar
@@ -372,172 +359,36 @@ const ExtracurricularAnalytics = () => {
               <TabsTrigger value="report" className="text-sm py-2">Справка</TabsTrigger>
             </TabsList>
 
-            {/* ===== ВВОД ===== */}
+
             <TabsContent value="input" className="mt-6">
-              <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm">
-                <h2 className="font-display text-lg font-bold mb-4">Добавить мероприятие</h2>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  <div>
-                    <label className="block text-sm font-semibold mb-1.5">Учебный год</label>
-                    <Select value={year} onValueChange={setYear}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {YEARS.map((y) => (
-                          <SelectItem key={y} value={y}>{y}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold mb-1.5">Дата</label>
-                    <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold mb-1.5">Вид деятельности</label>
-                    <Select value={type} onValueChange={setType}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {ACTIVITY_TYPES.map((t) => (
-                          <SelectItem key={t} value={t}>{t}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="sm:col-span-2 lg:col-span-3">
-                    <label className="block text-sm font-semibold mb-1.5">Наименование УД / МДК / ПМ / практики</label>
-                    <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Например: Основы реабилитации" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold mb-1.5">Группа</label>
-                    <Input value={group} onChange={(e) => setGroup(e.target.value)} placeholder="Например: 234" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold mb-1.5">Численность группы</label>
-                    <Input type="number" min={1} value={total} onChange={(e) => setTotal(e.target.value)} placeholder="24" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold mb-1.5">Участников</label>
-                    <Input type="number" min={0} value={participants} onChange={(e) => setParticipants(e.target.value)} placeholder="18" />
-                  </div>
-                  <div className="sm:col-span-2 lg:col-span-3">
-                    <label className="block text-sm font-semibold mb-1.5">Описание мероприятия</label>
-                    <Textarea value={desc} onChange={(e) => setDesc(e.target.value)} rows={2} placeholder="Например: мастер-класс «СЛР»" />
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2 mt-5">
-                  <Button className="gap-2 w-full sm:w-auto" onClick={addRow}>
-                    <Icon name="Plus" size={16} />
-                    Добавить
-                  </Button>
-                  <Button variant="outline" className="gap-2 w-full sm:w-auto" onClick={loadDemo}>
-                    <Icon name="Sparkles" size={16} />
-                    Загрузить пример
-                  </Button>
-                  <Button variant="ghost" className="gap-2 w-full sm:w-auto text-destructive hover:text-destructive" onClick={clearAll}>
-                    <Icon name="Trash2" size={16} />
-                    Очистить всё
-                  </Button>
-                </div>
-
-                <div className="mt-6 rounded-xl border border-border bg-muted/30 p-4">
-                  <div className="flex items-start gap-2 mb-3">
-                    <Icon name="Save" size={16} className="text-primary mt-0.5 shrink-0" />
-                    <p className="text-sm text-muted-foreground">
-                      Таблица сохраняется автоматически в этом браузере
-                      {rows.length > 0 && <> — сейчас записей: <b className="text-foreground">{rows.length}</b></>}.
-                      Чтобы перенести данные на другой компьютер, сделайте резервную копию.
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Button variant="outline" size="sm" className="gap-1.5" onClick={exportBackup}>
-                      <Icon name="HardDriveDownload" size={15} />
-                      Сохранить копию
-                    </Button>
-                    <label className="inline-flex">
-                      <input
-                        type="file"
-                        accept="application/json,.json"
-                        className="hidden"
-                        onChange={(e) => {
-                          const f = e.target.files?.[0];
-                          if (f) importBackup(f);
-                          e.target.value = "";
-                        }}
-                      />
-                      <span className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-md border border-input bg-background px-3 text-sm font-medium hover:bg-accent transition-colors">
-                        <Icon name="HardDriveUpload" size={15} />
-                        Восстановить из копии
-                      </span>
-                    </label>
-                  </div>
-                </div>
-              </div>
+              <EventInputForm
+                year={year}
+                setYear={setYear}
+                date={date}
+                setDate={setDate}
+                subject={subject}
+                setSubject={setSubject}
+                group={group}
+                setGroup={setGroup}
+                total={total}
+                setTotal={setTotal}
+                type={type}
+                setType={setType}
+                desc={desc}
+                setDesc={setDesc}
+                participants={participants}
+                setParticipants={setParticipants}
+                rowsCount={rows.length}
+                onAdd={addRow}
+                onLoadDemo={loadDemo}
+                onClearAll={clearAll}
+                onExportBackup={exportBackup}
+                onImportBackup={importBackup}
+              />
             </TabsContent>
 
-            {/* ===== ТАБЛИЦА ===== */}
             <TabsContent value="table" className="mt-6">
-              <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm">
-                <div className="flex flex-wrap gap-2 mb-4 no-print">
-                  <Button variant="outline" size="sm" className="gap-1.5" onClick={exportCsv}>
-                    <Icon name="FileSpreadsheet" size={15} />
-                    Экспорт CSV
-                  </Button>
-                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => window.print()}>
-                    <Icon name="Printer" size={15} />
-                    Печать
-                  </Button>
-                </div>
-
-                {rows.length === 0 ? (
-                  <p className="py-12 text-center text-muted-foreground">
-                    Данных пока нет — добавьте мероприятия на вкладке «Ввод»
-                  </p>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm border-collapse">
-                      <thead>
-                        <tr className="bg-primary text-primary-foreground">
-                          {["№", "Год", "Дата", "Дисциплина", "Группа", "Чел.", "Вид", "Описание", "Уч.", "%", ""].map((h) => (
-                            <th key={h} className="px-2.5 py-2.5 text-left font-semibold whitespace-nowrap first:rounded-l-lg last:rounded-r-lg">
-                              {h}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rows.map((r, i) => {
-                          const p = pct(r);
-                          return (
-                            <tr key={r.id} className="border-b border-border hover:bg-accent/40 transition-colors">
-                              <td className="px-2.5 py-2">{i + 1}</td>
-                              <td className="px-2.5 py-2 whitespace-nowrap">{r.year}</td>
-                              <td className="px-2.5 py-2 whitespace-nowrap">
-                                {r.date ? new Date(r.date).toLocaleDateString("ru-RU") : "—"}
-                              </td>
-                              <td className="px-2.5 py-2 min-w-[140px] sm:min-w-[180px]">{r.subject}</td>
-                              <td className="px-2.5 py-2">{r.group}</td>
-                              <td className="px-2.5 py-2">{r.total}</td>
-                              <td className="px-2.5 py-2 whitespace-nowrap">{r.type}</td>
-                              <td className="px-2.5 py-2 min-w-[130px] sm:min-w-[160px]">{r.desc || "—"}</td>
-                              <td className="px-2.5 py-2">{r.participants}</td>
-                              <td className={`px-2.5 py-2 font-bold ${levelClass(p)}`}>{p.toFixed(1)}%</td>
-                              <td className="px-2.5 py-2 no-print">
-                                <button
-                                  onClick={() => removeRow(r.id)}
-                                  className="flex h-7 w-7 items-center justify-center rounded-md text-destructive hover:bg-destructive/10 transition-colors"
-                                >
-                                  <Icon name="X" size={14} />
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
+              <EventsTable rows={rows} onExportCsv={exportCsv} onRemove={removeRow} />
             </TabsContent>
 
             {/* ===== СТАТИСТИКА ===== */}
@@ -547,135 +398,28 @@ const ExtracurricularAnalytics = () => {
               </div>
             </TabsContent>
 
-            {/* ===== СПРАВКА ===== */}
+
             <TabsContent value="report" className="mt-6">
-              <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm">
-                <div className="flex flex-wrap gap-2 mb-4 no-print">
-                  <Button className="gap-2" onClick={generateReport} disabled={loading}>
-                    {loading ? (
-                      <>
-                        <Icon name="Loader2" size={16} className="animate-spin" />
-                        ИИ составляет справку...
-                      </>
-                    ) : (
-                      <>
-                        <Icon name="Sparkles" size={16} />
-                        Сформировать справку с ИИ
-                      </>
-                    )}
-                  </Button>
-                  {report && (
-                    <>
-                      <Button variant="outline" className="gap-1.5" onClick={() => window.print()}>
-                        <Icon name="Printer" size={15} />
-                        Печать
-                      </Button>
-                      <Button variant="outline" className="gap-1.5" onClick={() => downloadDocx(reportTitle, reportTitle, report)}>
-                        <Icon name="FileText" size={15} />
-                        Word
-                      </Button>
-                      <Button variant="outline" className="gap-1.5" onClick={() => downloadTxt(reportTitle, [reportTitle, "", report])}>
-                        <Icon name="Download" size={15} />
-                        TXT
-                      </Button>
-                      <SaveMaterialButton type="extracurricular_report" title={reportTitle} content={report} onNeedAuth={() => setAuthOpen(true)} />
-                    </>
-                  )}
-                </div>
-
-                {!isPaid && (
-                  <p className="mb-4 text-xs text-muted-foreground no-print">
-                    ИИ-справка доступна по подписке. Учёт, таблица и статистика работают бесплатно.
-                  </p>
-                )}
-
-                {report ? (
-                  <div className="rounded-xl border border-border bg-muted/30 p-5 md:p-7">
-                    <h2 className="font-display text-lg font-bold text-primary text-center mb-4">{reportTitle}</h2>
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{report}</p>
-                  </div>
-                ) : (
-                  <p className="py-12 text-center text-muted-foreground">
-                    Нажмите «Сформировать справку с ИИ» — документ появится здесь
-                  </p>
-                )}
-              </div>
-
-              <div className="mt-6 rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm">
-                <h2 className="font-display text-lg font-bold mb-1">📅 {planTitle}</h2>
-                <p className="text-xs text-muted-foreground mb-4 no-print">
-                  ИИ учтёт проведённые мероприятия и охват: усилит слабые направления и распределит новые по месяцам.
-                </p>
-
-                <div className="flex flex-wrap items-center gap-2 mb-4 no-print">
-                  <Select value={planPeriod} onValueChange={setPlanPeriod}>
-                    <SelectTrigger className="w-full sm:w-52" aria-label="Период плана">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PLAN_PERIODS.map((p) => (
-                        <SelectItem key={p} value={p}>
-                          {p}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button className="gap-2" onClick={generatePlan} disabled={planLoading}>
-                    {planLoading ? (
-                      <>
-                        <Icon name="Loader2" size={16} className="animate-spin" />
-                        ИИ составляет план...
-                      </>
-                    ) : (
-                      <>
-                        <Icon name="CalendarPlus" size={16} />
-                        Составить план внеаудиторной деятельности
-                      </>
-                    )}
-                  </Button>
-                </div>
-
-                {plan ? (
-                  <>
-                    <div className="flex flex-wrap gap-2 mb-4 no-print">
-                      <Button variant="outline" className="gap-1.5" onClick={savePlan} disabled={planSaving || planSaved}>
-                        {planSaving ? (
-                          <Icon name="Loader2" size={15} className="animate-spin" />
-                        ) : (
-                          <Icon name={planSaved ? "Check" : "Save"} size={15} />
-                        )}
-                        {planSaved ? "Сохранено" : "Сохранить в кабинет"}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="gap-1.5"
-                        onClick={() => downloadDocx(`${planTitle} — ${planPeriod}`, planTitle, plan)}
-                      >
-                        <Icon name="FileText" size={15} />
-                        Скачать Word
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="gap-1.5"
-                        onClick={() => downloadTxt(`${planTitle} — ${planPeriod}`, [planTitle, "", plan])}
-                      >
-                        <Icon name="Download" size={15} />
-                        Скачать TXT
-                      </Button>
-                    </div>
-                    <div className="rounded-xl border border-border bg-muted/30 p-5 md:p-7">
-                      <h3 className="font-display text-lg font-bold text-primary text-center mb-4">
-                        {planTitle}
-                      </h3>
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{plan}</p>
-                    </div>
-                  </>
-                ) : (
-                  <p className="py-8 text-center text-muted-foreground">
-                    Выберите период и нажмите «Составить план внеаудиторной деятельности»
-                  </p>
-                )}
-              </div>
+              <ReportCard
+                report={report}
+                reportTitle={reportTitle}
+                loading={loading}
+                isPaid={isPaid}
+                onGenerate={generateReport}
+                onNeedAuth={() => setAuthOpen(true)}
+              />
+              <PlanCard
+                plan={plan}
+                planTitle={planTitle}
+                planPeriod={planPeriod}
+                setPlanPeriod={setPlanPeriod}
+                periods={PLAN_PERIODS}
+                planLoading={planLoading}
+                planSaving={planSaving}
+                planSaved={planSaved}
+                onGenerate={generatePlan}
+                onSave={savePlan}
+              />
             </TabsContent>
           </Tabs>
           )}
