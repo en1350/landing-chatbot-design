@@ -182,6 +182,17 @@
             min-height: 60px;
         }
 
+        .preview {
+            display: none;
+            flex: 1;
+            min-height: 160px;
+            width: 100%;
+            border: none;
+            background: #fff;
+        }
+        .output-container.has-preview .preview { display: block; }
+        .output-container.has-preview .output { flex: none; min-height: 50px; max-height: 110px; }
+
         .output {
             flex: 1;
             background-color: var(--console-bg);
@@ -206,6 +217,7 @@
             .CodeMirror { flex: none; height: 220px; font-size: 15px !important; }
             .output-container { flex: none; }
             .output { min-height: 120px; max-height: 260px; flex: none; }
+            .preview { flex: none; height: 240px; }
             button { min-height: 44px; flex: 1; }
         }
     </style>
@@ -249,6 +261,7 @@ console.log("\n✅ Доступно: document, window, fetch, localStorage");
                 <button class="btn-clear" data-clear="browser-output">Очистить</button>
             </div>
             <div class="output-container">
+                <iframe id="browser-preview" class="preview" title="Предпросмотр страницы" sandbox="allow-scripts allow-modals allow-forms allow-popups"></iframe>
                 <pre id="browser-output" class="output">Нажмите "Запустить" для выполнения кода.</pre>
             </div>
         </div>
@@ -406,8 +419,54 @@ try {
             throw new Error(`Cannot find module '${moduleName}'`);
         }
 
+
+        const previewFrame = document.getElementById('browser-preview');
+        const browserOutput = document.getElementById('browser-output');
+        const browserOutputBox = browserOutput.parentElement;
+        let previewLogs = [];
+
+        const BRIDGE = '<script>(function(){var send=function(t,a){try{parent.postMessage({__sim:1,type:t,text:Array.prototype.map.call(a,function(x){try{return typeof x==="object"?JSON.stringify(x,null,2):String(x)}catch(e){return String(x)}}).join(" ")},"*")}catch(e){}};["log","error","info","warn"].forEach(function(m){var o=console[m];console[m]=function(){send(m,arguments);o.apply(console,arguments)}});window.addEventListener("error",function(e){send("exception",[e.message])})})();<\/script>';
+
+        function looksLikeHtml(code) {
+            return /^\s*(<!doctype|<html|<head|<body|<[a-z][\w-]*[\s>\/])/i.test(code);
+        }
+
+        function hidePreview() {
+            browserOutputBox.classList.remove('has-preview');
+            previewFrame.srcdoc = '';
+        }
+
+        function renderPrefix(type) {
+            if (type === 'error' || type === 'exception') return '❌ ';
+            if (type === 'warn') return '⚠️ ';
+            if (type === 'info') return 'ℹ️ ';
+            return '';
+        }
+
+        window.addEventListener('message', (e) => {
+            const d = e.data;
+            if (!d || !d.__sim || e.source !== previewFrame.contentWindow) return;
+            previewLogs.push(renderPrefix(d.type) + d.text);
+            browserOutput.innerText = previewLogs.join('\n');
+            browserOutput.classList.toggle('error', d.type === 'exception');
+        });
+
+        function runHtml(code) {
+            previewLogs = [];
+            browserOutput.classList.remove('error', 'info');
+            browserOutput.innerText = 'Страница запущена. Вывод console появится здесь.';
+            browserOutputBox.classList.add('has-preview');
+            previewFrame.srcdoc = BRIDGE + code;
+        }
+
+        document.querySelectorAll('.btn-clear').forEach(btn => {
+            if (btn.getAttribute('data-clear') === 'browser-output') btn.addEventListener('click', hidePreview);
+        });
+
         function runCode(codeElementId, outputElementId, environment) {
             const code = editors[codeElementId].getValue();
+            if (environment === 'browser' && looksLikeHtml(code)) { runHtml(code); return; }
+            if (environment === 'browser') hidePreview();
             const output = document.getElementById(outputElementId);
             output.innerText = "";
             output.classList.remove('error', 'info');
