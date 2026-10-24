@@ -19,7 +19,7 @@ import TrainerFullscreen from "@/components/student-trainer/TrainerFullscreen";
 
 /* ---------- Список тренажёров ---------- */
 
-type CategoryKey = "informatics" | "networks" | "programming" | "os" | "ege" | "ovz" | "hardware";
+type CategoryKey = "informatics" | "networks" | "programming" | "os" | "ege" | "ovz" | "hardware" | "code";
 
 type TrainerKey =
   | "algorithms"
@@ -160,12 +160,19 @@ const CATEGORIES: CategoryItem[] = [
     description: "Устройство компьютера, комплектующие и их совместимость",
     accent: "#EC4899",
   },
+  {
+    key: "code",
+    icon: "💻",
+    title: "Симуляторы кода",
+    description: "Пишите и запускайте код на Python и JavaScript прямо в браузере, сравнивайте среды выполнения",
+    accent: "#6366F1",
+  },
 ];
 
 const TRAINERS: TrainerItem[] = [
   {
     key: "python-js-simulator",
-    category: "programming",
+    category: "code",
     icon: "🖥️",
     title: "Симулятор кода: Python и JavaScript",
     description: "Два редактора с подсветкой синтаксиса: Python запускается прямо в браузере, JavaScript в родной среде. Пишите, запускайте и сравнивайте результат",
@@ -174,7 +181,7 @@ const TRAINERS: TrainerItem[] = [
   },
   {
     key: "js-browser-vs-node",
-    category: "programming",
+    category: "code",
     icon: "⚡",
     title: "JavaScript: Браузер vs Node.js",
     description: "Учебная эмуляция: запускайте один и тот же код в песочнице браузера и в эмуляторе Node.js с виртуальной файловой системой и сравнивайте, что доступно в каждой среде",

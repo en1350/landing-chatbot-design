@@ -53,6 +53,7 @@ const TRAINERS_MENU: NavItem[] = [
   { label: "Операционные системы", to: "/trenazher-dlya-uchenikov?cat=os", icon: "Monitor" },
   { label: "ЕГЭ по информатике", to: "/trenazher-dlya-uchenikov?cat=ege", icon: "GraduationCap" },
   { label: "Архитектура аппаратных сред", to: "/trenazher-dlya-uchenikov?cat=hardware", icon: "Cpu" },
+  { label: "Симуляторы кода", to: "/trenazher-dlya-uchenikov?cat=code", icon: "Terminal" },
 ];
 
 const OVZ_MENU: NavItem[] = [
