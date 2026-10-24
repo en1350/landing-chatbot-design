@@ -79,6 +79,8 @@ interface TrainerItem {
   paid?: boolean;
 }
 
+const ASSET_VERSION = "20261024b";
+
 const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "ip-diagnostics": "/ip-diagnostics.html",
   "subnet-calculator": "/subnet-calculator.html",
@@ -725,7 +727,7 @@ const StudentTrainer = () => {
                   {IFRAME_SRC[active] ? (
                     <iframe
                       key={active}
-                      src={IFRAME_SRC[active]}
+                      src={`${IFRAME_SRC[active]}?v=${ASSET_VERSION}`}
                       title={activeTrainer?.title}
                       className="block h-full w-full border-0"
                     />
