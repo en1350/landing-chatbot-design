@@ -17,6 +17,7 @@
   --danger: #c0392b;
   --border-color: #bdc3c7;
   --font-size-base: 18px;
+  --fs-scale: 1;
   --font-family: 'Verdana', 'Segoe UI', Arial, sans-serif;
 }
 
@@ -98,13 +99,13 @@ body {
 }
 .a11y-label {
   font-weight: bold;
-  font-size: 16px;
+  font-size: calc(16px * var(--fs-scale));
   margin-right: 10px;
   color: var(--text-color);
 }
 .a11y-btn {
   padding: 10px 16px;
-  font-size: 16px;
+  font-size: calc(16px * var(--fs-scale));
   font-weight: bold;
   border: 2px solid var(--border-color);
   background: var(--bg-color);
@@ -149,9 +150,9 @@ header {
 }
 body.theme-contrast header { background: #000000; border-bottom: 3px solid #ffff00; }
 
-header h1 { font-size: 28px; margin-bottom: 10px; }
-header p { font-size: 18px; opacity: 0.95; }
-#lessonDate { font-size: 18px; margin-top: 10px; font-weight: bold; color: var(--accent); }
+header h1 { font-size: calc(28px * var(--fs-scale)); margin-bottom: 10px; }
+header p { font-size: calc(18px * var(--fs-scale)); opacity: 0.95; }
+#lessonDate { font-size: calc(18px * var(--fs-scale)); margin-top: 10px; font-weight: bold; color: var(--accent); }
 
 .progress-bar {
   height: 16px;
@@ -178,7 +179,7 @@ header p { font-size: 18px; opacity: 0.95; }
   border: none;
   background: transparent;
   cursor: pointer;
-  font-size: 18px;
+  font-size: calc(18px * var(--fs-scale));
   font-weight: bold;
   color: var(--text-color);
   transition: all 0.2s;
@@ -200,14 +201,14 @@ header p { font-size: 18px; opacity: 0.95; }
 
 h2 {
   color: var(--primary);
-  font-size: 26px;
+  font-size: calc(26px * var(--fs-scale));
   margin-bottom: 20px;
   padding-bottom: 10px;
   border-bottom: 3px solid var(--primary);
 }
 body.theme-contrast h2 { color: #ffff00; }
 
-h3 { color: var(--primary); font-size: 22px; margin: 25px 0 15px; }
+h3 { color: var(--primary); font-size: calc(22px * var(--fs-scale)); margin: 25px 0 15px; }
 
 .theory-block {
   background: var(--bg-color);
@@ -233,9 +234,9 @@ body.theme-contrast .theory-block strong { color: #ffff00; text-decoration: unde
   border: 2px solid var(--border-color);
   text-align: center;
 }
-.card .icon { font-size: 48px; margin-bottom: 10px; display: block; }
-.card h4 { color: var(--text-color); margin-bottom: 10px; font-size: 20px; }
-.card p { font-size: 16px; color: var(--text-color); opacity: 0.9; }
+.card .icon { font-size: calc(48px * var(--fs-scale)); margin-bottom: 10px; display: block; }
+.card h4 { color: var(--text-color); margin-bottom: 10px; font-size: calc(20px * var(--fs-scale)); }
+.card p { font-size: calc(16px * var(--fs-scale)); color: var(--text-color); opacity: 0.9; }
 
 .simulator {
   background: #2c3e50;
@@ -267,7 +268,7 @@ body.theme-contrast .slide-canvas { background: #000000; border-color: #ffffff; 
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  font-size: 18px;
+  font-size: calc(18px * var(--fs-scale));
   min-width: 120px;
   min-height: 60px;
   color: #ffffff;
@@ -292,7 +293,7 @@ body.theme-contrast .toolbar { background: #000000; border: 2px solid #ffffff; }
   border: 2px solid #ffffff;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 18px;
+  font-size: calc(18px * var(--fs-scale));
   font-weight: bold;
   flex: 1;
   min-width: 140px;
@@ -312,7 +313,7 @@ body.theme-contrast .toolbar { background: #000000; border: 2px solid #ffffff; }
   border-color: var(--success);
   background: rgba(39, 174, 96, 0.1);
 }
-.task h4 { color: var(--text-color); margin-bottom: 15px; font-size: 20px; }
+.task h4 { color: var(--text-color); margin-bottom: 15px; font-size: calc(20px * var(--fs-scale)); }
 .task p { margin-bottom: 15px; }
 
 .task-actions { display: flex; gap: 15px; flex-wrap: wrap; }
@@ -323,7 +324,7 @@ body.theme-contrast .toolbar { background: #000000; border: 2px solid #ffffff; }
   border-radius: 8px;
   cursor: pointer;
   font-weight: bold;
-  font-size: 18px;
+  font-size: calc(18px * var(--fs-scale));
   transition: all 0.2s;
 }
 .btn-primary { background: var(--primary); color: #ffffff; }
@@ -338,7 +339,7 @@ body.theme-contrast .toolbar { background: #000000; border: 2px solid #ffffff; }
   padding: 25px;
   margin-bottom: 20px;
 }
-.test-question h4 { color: var(--text-color); margin-bottom: 20px; font-size: 20px; }
+.test-question h4 { color: var(--text-color); margin-bottom: 20px; font-size: calc(20px * var(--fs-scale)); }
 
 .options { display: flex; flex-direction: column; gap: 12px; }
 .option {
@@ -347,7 +348,7 @@ body.theme-contrast .toolbar { background: #000000; border: 2px solid #ffffff; }
   border: 3px solid transparent;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 18px;
+  font-size: calc(18px * var(--fs-scale));
   color: var(--text-color);
   transition: all 0.2s;
 }
@@ -366,7 +367,7 @@ body.theme-contrast .toolbar { background: #000000; border: 2px solid #ffffff; }
 }
 body.theme-contrast .result-box { background: #000000; border: 3px solid #ffff00; color: #ffff00; }
 
-.score { font-size: 56px; font-weight: bold; margin: 20px 0; color: var(--accent); }
+.score { font-size: calc(56px * var(--fs-scale)); font-weight: bold; margin: 20px 0; color: var(--accent); }
 
 .certificate {
   background: #fff;
@@ -377,9 +378,9 @@ body.theme-contrast .result-box { background: #000000; border: 3px solid #ffff00
   margin: 20px 0;
   color: #111;
 }
-.certificate h2 { color: #d35400; border: none; font-size: 32px; }
+.certificate h2 { color: #d35400; border: none; font-size: calc(32px * var(--fs-scale)); }
 .student-name {
-  font-size: 28px;
+  font-size: calc(28px * var(--fs-scale));
   color: var(--primary);
   margin: 20px 0;
   font-weight: bold;
@@ -407,7 +408,7 @@ body.theme-contrast .result-box { background: #000000; border: 3px solid #ffff00
   background: rgba(255,255,255,0.5);
   border-radius: 8px;
   margin: 10px 0;
-  font-size: 18px;
+  font-size: calc(18px * var(--fs-scale));
 }
 
 .name-input {
@@ -415,7 +416,7 @@ body.theme-contrast .result-box { background: #000000; border: 3px solid #ffff00
   padding: 15px;
   border: 3px solid var(--border-color);
   border-radius: 8px;
-  font-size: 20px;
+  font-size: calc(20px * var(--fs-scale));
   margin: 10px 0;
   background: var(--container-bg);
   color: var(--text-color);
@@ -427,7 +428,7 @@ body.theme-contrast .result-box { background: #000000; border: 3px solid #ffff00
   padding: 20px;
   border-radius: 8px;
   margin: 20px 0;
-  font-size: 18px;
+  font-size: calc(18px * var(--fs-scale));
 }
 
 .navigation-buttons {
@@ -445,21 +446,22 @@ body.theme-contrast .result-box { background: #000000; border: 3px solid #ffff00
   background: var(--accent);
   color: #111;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: calc(16px * var(--fs-scale));
   font-weight: bold;
   margin-left: 10px;
   border: 1px solid #000;
 }
 
 @media (max-width: 768px) {
-  body { font-size: 16px; padding: 10px; }
+  body { font-size: calc(16px * var(--fs-scale)); padding: 10px; }
   .content { padding: 15px; }
-  header h1 { font-size: 22px; }
+  header h1 { font-size: calc(22px * var(--fs-scale)); }
   .nav-tab { min-width: 100%; border-bottom: 1px solid var(--border-color); border-right: none; }
   .tool-btn { min-width: 100%; }
   .a11y-panel { flex-direction: column; align-items: stretch; margin: -10px -10px 20px -10px; }
   .a11y-btn { justify-content: center; }
 }
+.a11y-panel .a11y-btn,.a11y-panel .a11y-label{font-size:16px !important}
 </style>
 </head>
 <body>
@@ -554,7 +556,7 @@ body.theme-contrast .result-box { background: #000000; border: 3px solid #ffff00
 
       <div class="simulator">
         <div class="slide-canvas" id="slideCanvas" aria-label="Рабочая область слайда">
-          <div style="position:absolute; top:10px; left:10px; color:#7f8c8d; font-size:16px;">📍 Здесь будет твой слайд</div>
+          <div style="position:absolute; top:10px; left:10px; color:#7f8c8d; font-size: calc(16px * var(--fs-scale));">📍 Здесь будет твой слайд</div>
         </div>
 
         <div class="toolbar">
@@ -566,7 +568,7 @@ body.theme-contrast .result-box { background: #000000; border: 3px solid #ffff00
         </div>
 
         <div style="margin-top:15px; padding:15px; background:#34495e; border-radius:8px; text-align:center;">
-          <div id="simStatus" style="color:#ffd700; font-size:20px; font-weight:bold;">👆 Нажми кнопку выше, чтобы добавить объект</div>
+          <div id="simStatus" style="color:#ffd700; font-size: calc(20px * var(--fs-scale)); font-weight:bold;">👆 Нажми кнопку выше, чтобы добавить объект</div>
         </div>
       </div>
 
@@ -633,15 +635,15 @@ body.theme-contrast .result-box { background: #000000; border: 3px solid #ffff00
       <h2>🏆 Твои результаты</h2>
 
       <div class="field">
-        <label for="studentName" style="font-weight:bold; font-size:20px;">Введи своё имя для сертификата:</label>
+        <label for="studentName" style="font-weight:bold; font-size: calc(20px * var(--fs-scale));">Введи своё имя для сертификата:</label>
         <input type="text" class="name-input" id="studentName" placeholder="Например: Иван Петров" aria-label="Введите ваше имя">
       </div>
 
       <div class="result-box">
         <h2>Итоги урока</h2>
         <div class="score" id="totalScore">0</div>
-        <div id="gradeText" style="font-size:24px; margin:10px 0;">Выполни задания и тест</div>
-        <div id="detailedStats" style="margin-top:20px; font-size:18px;"></div>
+        <div id="gradeText" style="font-size: calc(24px * var(--fs-scale)); margin:10px 0;">Выполни задания и тест</div>
+        <div id="detailedStats" style="margin-top:20px; font-size: calc(18px * var(--fs-scale));"></div>
       </div>
 
       <div id="certificateArea"></div>
@@ -709,6 +711,7 @@ const testQuestions = [
 function changeFontSize(delta) {
   state.currentFontSize = Math.max(14, Math.min(32, state.currentFontSize + delta));
   document.documentElement.style.setProperty('--font-size-base', state.currentFontSize + 'px');
+  document.documentElement.style.setProperty('--fs-scale', state.currentFontSize / 18);
 }
 
 function setTheme(theme) {
@@ -987,7 +990,7 @@ function generateFinalResult() {
   else if (percent >= 40) { gradeColor = '#f1c40f'; emoji = '📚'; }
   else { gradeColor = '#e74c3c'; emoji = '💪'; }
 
-  document.getElementById('gradeText').innerHTML = `<span style="color:${gradeColor}; font-size:28px; font-weight:bold;">${emoji} Оценка: ${grade}</span>`;
+  document.getElementById('gradeText').innerHTML = `<span style="color:${gradeColor}; font-size: calc(28px * var(--fs-scale)); font-weight:bold;">${emoji} Оценка: ${grade}</span>`;
   document.getElementById('detailedStats').innerHTML = `
     <p>🛠️ Практика: <b>${state.completedTasks.size} из 4</b> заданий (${practiceScore} баллов)</p>
     <p>📝 Тест: <b>${testQuestions.length - mistakes.length} из ${testQuestions.length}</b> верных ответов (${testScore} баллов)</p>
@@ -999,12 +1002,12 @@ function generateFinalResult() {
     cert.innerHTML = `
       <div class="certificate" id="certDoc">
         <h2>СЕРТИФИКАТ</h2>
-        <p style="font-size:20px; margin:10px 0;">об успешном прохождении урока</p>
-        <p style="font-size:18px; margin:15px 0; color:#555;">«Мультимедиа на слайде»</p>
-        <p style="font-size:18px;">выдан</p>
+        <p style="font-size: calc(20px * var(--fs-scale)); margin:10px 0;">об успешном прохождении урока</p>
+        <p style="font-size: calc(18px * var(--fs-scale)); margin:15px 0; color:#555;">«Мультимедиа на слайде»</p>
+        <p style="font-size: calc(18px * var(--fs-scale));">выдан</p>
         <div class="student-name">${name}</div>
-        <p style="margin-top:20px; font-size:20px;">Оценка: <b style="color:#2c3e50;">${grade}</b></p>
-        <p style="font-size:18px;">Результат: <b>${total} из ${maxScore} баллов</b></p>
+        <p style="margin-top:20px; font-size: calc(20px * var(--fs-scale));">Оценка: <b style="color:#2c3e50;">${grade}</b></p>
+        <p style="font-size: calc(18px * var(--fs-scale));">Результат: <b>${total} из ${maxScore} баллов</b></p>
         <p style="color:#666; margin-top:20px;">📅 ${today}</p>
         <p style="margin-top:15px; font-style:italic; color:#555;">Преподаватель информатики</p>
       </div>
