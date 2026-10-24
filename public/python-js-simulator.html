@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Симулятор кода: Python и JavaScript</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/matchbrackets.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.0/full/pyodide.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #1e1e1e;
+            --panel-bg: #252526;
+            --text-color: #d4d4d4;
+            --accent-py: #3776ab;
+            --accent-js: #f7df1e;
+            --border-color: #3e3e42;
+            --console-bg: #111111;
+            --resizer-hover: #007acc;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        h1 { text-align: center; font-size: 1.2rem; margin: 0 0 4px 0; }
+
+        .subtitle {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #888;
+            margin: 0 0 8px 0;
+            line-height: 1.3;
+        }
+
+        .container { display: flex; flex: 1; min-height: 0; }
+
+        .panel {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--panel-bg);
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 6px 12px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .panel.python .panel-header { background-color: var(--accent-py); color: white; }
+        .panel.javascript .panel-header { background-color: var(--accent-js); color: black; }
+
+        .status { font-size: 0.75rem; font-weight: normal; opacity: 0.9; }
+
+        .editor-container {
+            min-height: 100px;
+            border-bottom: 1px solid var(--border-color);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .CodeMirror {
+            height: 100% !important;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+            font-size: 14px !important;
+            background-color: var(--panel-bg) !important;
+            color: var(--text-color) !important;
+            line-height: 1.5 !important;
+        }
+
+        .CodeMirror-gutters {
+            background-color: var(--panel-bg) !important;
+            border-right: 1px solid var(--border-color) !important;
+        }
+        .CodeMirror-linenumber { color: #858585 !important; }
+
+        .resizer {
+            height: 10px;
+            background-color: var(--border-color);
+            cursor: ns-resize;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.2s;
+            flex-shrink: 0;
+            user-select: none;
+            touch-action: none;
+            position: relative;
+            z-index: 5;
+        }
+
+        .resizer:hover, .resizer.active { background-color: var(--resizer-hover); }
+
+        .resizer::after {
+            content: "⋯";
+            color: #888;
+            font-size: 16px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+        .resizer:hover::after, .resizer.active::after { color: white; }
+
+        .split-resizer {
+            width: 8px;
+            background-color: var(--border-color);
+            cursor: ew-resize;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.2s, width 0.2s;
+            flex-shrink: 0;
+            user-select: none;
+            touch-action: none;
+            z-index: 10;
+        }
+
+        .split-resizer:hover, .split-resizer.active {
+            background-color: var(--resizer-hover);
+            width: 10px;
+        }
+
+        .split-resizer::after {
+            content: "⋮";
+            color: #888;
+            font-size: 18px;
+            font-weight: bold;
+            line-height: 1;
+        }
+        .split-resizer:hover::after, .split-resizer.active::after { color: white; }
+
+        .controls {
+            padding: 6px 12px;
+            display: flex;
+            gap: 8px;
+            background-color: #2d2d30;
+            flex-shrink: 0;
+        }
+
+        button {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.85rem;
+            transition: opacity 0.2s;
+        }
+
+        button:hover { opacity: 0.8; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-py { background-color: var(--accent-py); color: white; }
+        .btn-js { background-color: var(--accent-js); color: black; }
+        .btn-clear { background-color: #444; color: white; }
+
+        .output {
+            flex: 1;
+            background-color: var(--console-bg);
+            color: #4ec9b0;
+            padding: 10px 12px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+            border-top: 1px solid var(--border-color);
+            margin: 0;
+            min-height: 60px;
+        }
+
+        .output.error { color: #f48771; }
+
+        @media (max-width: 768px) {
+            body { padding: 5px; height: auto; min-height: 100vh; }
+            .container { flex-direction: column; flex: none; gap: 10px; }
+            .panel { flex: none; }
+            .split-resizer { display: none; }
+            .editor-container { height: 230px; flex: none; }
+            .CodeMirror { font-size: 15px !important; }
+            .output { flex: none; min-height: 120px; max-height: 260px; }
+            button { min-height: 44px; flex: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🖥️ Симулятор: Python и JavaScript</h1>
+    <p class="subtitle">Python в WebAssembly-песочнице (Pyodide). JS в родной среде браузера.</p>
+
+    <div class="container">
+        <div class="panel python" id="panel-py">
+            <div class="panel-header">
+                <span>🐍 Python</span>
+                <span id="py-status" class="status">Загрузка...</span>
+            </div>
+
+            <div class="editor-container">
+                <textarea id="py-code">
+# Пример кода на Python
+numbers = [1, 2, 3, 4, 5]
+squared = [x**2 for x in numbers]
+
+print("Оригинал:", numbers)
+print("Квадраты:", squared)
+
+import os
+print("Директория в песочнице:", os.getcwd())
+                </textarea>
+            </div>
+
+            <div class="resizer" data-panel="python" title="Потяните вверх или вниз для изменения размера"></div>
+
+            <div class="controls">
+                <button id="btn-run-py" class="btn-py" disabled>▶ Запустить</button>
+                <button class="btn-clear" onclick="document.getElementById('py-output').innerText = ''">Очистить</button>
+            </div>
+            <pre id="py-output" class="output">Ожидание загрузки Python...</pre>
+        </div>
+
+        <div class="split-resizer" id="split-resizer" title="Потяните влево или вправо для изменения ширины"></div>
+
+        <div class="panel javascript" id="panel-js">
+            <div class="panel-header">
+                <span>🌐 JavaScript</span>
+                <span class="status">Готов</span>
+            </div>
+
+            <div class="editor-container">
+                <textarea id="js-code">
+// Пример кода на JavaScript
+const numbers = [1, 2, 3, 4, 5];
+const squared = numbers.map(x => x ** 2);
+
+console.log("Оригинал:", numbers);
+console.log("Квадраты:", squared);
+
+try {
+    console.log("Попытка доступа к require('fs')...");
+    const fs = require('fs');
+} catch (e) {
+    console.error("❌ Ошибка:", e.message);
+    console.info("ℹ️ В браузере нет модуля 'fs'.");
+}
+                </textarea>
+            </div>
+
+            <div class="resizer" data-panel="javascript" title="Потяните вверх или вниз для изменения размера"></div>
+
+            <div class="controls">
+                <button id="btn-run-js" class="btn-js">▶ Запустить</button>
+                <button class="btn-clear" onclick="document.getElementById('js-output').innerText = ''">Очистить</button>
+            </div>
+            <pre id="js-output" class="output">Нажмите "Запустить" для выполнения кода.</pre>
+        </div>
+    </div>
+
+    <script>
+        const pyEditor = CodeMirror.fromTextArea(document.getElementById("py-code"), {
+            mode: "python",
+            theme: "dracula",
+            lineNumbers: true,
+            autoCloseBrackets: true,
+            matchBrackets: true,
+            indentUnit: 4,
+            tabSize: 4
+        });
+
+        const jsEditor = CodeMirror.fromTextArea(document.getElementById("js-code"), {
+            mode: "javascript",
+            theme: "dracula",
+            lineNumbers: true,
+            autoCloseBrackets: true,
+            matchBrackets: true,
+            indentUnit: 2,
+            tabSize: 2
+        });
+
+        const splitResizer = document.getElementById('split-resizer');
+        const panelPy = document.getElementById('panel-py');
+        const panelJs = document.getElementById('panel-js');
+
+        let isSplitResizing = false;
+        let startX = 0;
+        let startWidthPy = 0;
+        let startWidthJs = 0;
+        let splitRafId = null;
+
+        splitResizer.addEventListener('mousedown', (e) => {
+            isSplitResizing = true;
+            startX = e.clientX;
+            startWidthPy = panelPy.offsetWidth;
+            startWidthJs = panelJs.offsetWidth;
+
+            splitResizer.classList.add('active');
+            document.body.style.cursor = 'ew-resize';
+            document.body.style.userSelect = 'none';
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isSplitResizing) return;
+            if (splitRafId) cancelAnimationFrame(splitRafId);
+
+            splitRafId = requestAnimationFrame(() => {
+                const deltaX = e.clientX - startX;
+                const newWidthPy = startWidthPy + deltaX;
+                const newWidthJs = startWidthJs - deltaX;
+                const minPanelWidth = 250;
+
+                if (newWidthPy > minPanelWidth && newWidthJs > minPanelWidth) {
+                    panelPy.style.flex = `0 0 ${newWidthPy}px`;
+                    panelJs.style.flex = `0 0 ${newWidthJs}px`;
+
+                    pyEditor.refresh();
+                    jsEditor.refresh();
+                }
+            });
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isSplitResizing) {
+                isSplitResizing = false;
+                splitResizer.classList.remove('active');
+                document.body.style.cursor = 'default';
+                document.body.style.userSelect = 'auto';
+                if (splitRafId) cancelAnimationFrame(splitRafId);
+            }
+        });
+
+        document.querySelectorAll('.resizer').forEach(resizer => {
+            let isResizing = false;
+            let startY = 0;
+            let startHeight = 0;
+            let maxHeight = 0;
+            let rafId = null;
+
+            const panel = resizer.parentElement;
+            const editorContainer = panel.querySelector('.editor-container');
+            const isPython = panel.classList.contains('python');
+            const editorInstance = isPython ? pyEditor : jsEditor;
+
+            const begin = (y) => {
+                isResizing = true;
+                startY = y;
+                startHeight = editorContainer.offsetHeight;
+
+                const header = panel.querySelector('.panel-header');
+                const controls = panel.querySelector('.controls');
+
+                if (window.matchMedia('(max-width: 768px)').matches) {
+                    maxHeight = 700;
+                } else {
+                    maxHeight = panel.offsetHeight - header.offsetHeight - controls.offsetHeight - 10 - 60;
+                }
+
+                editorContainer.style.flex = '0 0 auto';
+
+                resizer.classList.add('active');
+                document.body.style.userSelect = 'none';
+            };
+
+            const move = (y) => {
+                if (!isResizing) return;
+                if (rafId) cancelAnimationFrame(rafId);
+
+                rafId = requestAnimationFrame(() => {
+                    const newHeight = startHeight + (y - startY);
+                    if (newHeight > 80 && newHeight < maxHeight) {
+                        editorContainer.style.height = newHeight + 'px';
+                        editorInstance.refresh();
+                    }
+                });
+            };
+
+            const end = () => {
+                if (!isResizing) return;
+                isResizing = false;
+                resizer.classList.remove('active');
+                document.body.style.userSelect = 'auto';
+                if (rafId) cancelAnimationFrame(rafId);
+            };
+
+            resizer.addEventListener('mousedown', (e) => { begin(e.clientY); e.preventDefault(); });
+            document.addEventListener('mousemove', (e) => move(e.clientY));
+            document.addEventListener('mouseup', end);
+
+            resizer.addEventListener('touchstart', (e) => begin(e.touches[0].clientY), { passive: true });
+            document.addEventListener('touchmove', (e) => { if (isResizing) move(e.touches[0].clientY); }, { passive: true });
+            document.addEventListener('touchend', end);
+        });
+
+        let pyodide = null;
+        const pyOutput = document.getElementById('py-output');
+        const pyStatus = document.getElementById('py-status');
+        const btnRunPy = document.getElementById('btn-run-py');
+
+        async function loadPython() {
+            try {
+                pyOutput.innerText = "Загрузка WebAssembly...";
+                pyodide = await loadPyodide();
+                pyStatus.innerText = "Готов ✅";
+                pyOutput.innerText = "Python успешно загружен.";
+                btnRunPy.disabled = false;
+            } catch (err) {
+                pyStatus.innerText = "Ошибка ❌";
+                pyOutput.innerText = "Не удалось загрузить Python: " + err.message;
+                pyOutput.classList.add('error');
+            }
+        }
+
+        document.getElementById('btn-run-py').addEventListener('click', async () => {
+            const code = pyEditor.getValue();
+            pyOutput.innerText = "";
+            pyOutput.classList.remove('error');
+
+            try {
+                pyodide.setStdout({ batched: (msg) => { pyOutput.innerText += msg + "\n"; }});
+                await pyodide.runPythonAsync(code);
+            } catch (err) {
+                pyOutput.innerText += "\n[Ошибка выполнения]:\n" + err.message;
+                pyOutput.classList.add('error');
+            }
+        });
+
+        loadPython();
+
+        const jsOutput = document.getElementById('js-output');
+
+        document.getElementById('btn-run-js').addEventListener('click', () => {
+            const code = jsEditor.getValue();
+            jsOutput.innerText = "";
+            jsOutput.classList.remove('error');
+
+            const logs = [];
+            const originalLog = console.log;
+            const originalError = console.error;
+            const originalInfo = console.info;
+
+            console.log = function(...args) {
+                logs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' '));
+                originalLog.apply(console, args);
+            };
+            console.error = function(...args) {
+                logs.push("❌ " + args.map(a => String(a)).join(' '));
+                originalError.apply(console, args);
+            };
+            console.info = function(...args) {
+                logs.push("ℹ️ " + args.map(a => String(a)).join(' '));
+                originalInfo.apply(console, args);
+            };
+
+            try {
+                const func = new Function(code);
+                const result = func();
+                if (result !== undefined) {
+                    logs.push("=> " + (typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result)));
+                }
+                jsOutput.innerText = logs.join('\n') || "Код выполнен (нет вывода)";
+            } catch (err) {
+                jsOutput.innerText = "[Ошибка выполнения]:\n" + err.message;
+                jsOutput.classList.add('error');
+            } finally {
+                console.log = originalLog;
+                console.error = originalError;
+                console.info = originalInfo;
+            }
+        });
+    </script>
+</body>
+</html>

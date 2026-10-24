@@ -58,7 +58,8 @@ type TrainerKey =
   | "ege-nonary-numbers"
   | "ege-robot-coins"
   | "pc-builder"
-  | "js-browser-vs-node";
+  | "js-browser-vs-node"
+  | "python-js-simulator";
 
 interface CategoryItem {
   key: CategoryKey;
@@ -113,6 +114,7 @@ const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "ege-robot-coins": "/ege-robot-coins.html",
   "pc-builder": "/pc-builder.html",
   "js-browser-vs-node": "/js-browser-vs-node.html",
+  "python-js-simulator": "/python-js-simulator.html",
 };
 
 const CATEGORIES: CategoryItem[] = [
@@ -161,6 +163,15 @@ const CATEGORIES: CategoryItem[] = [
 ];
 
 const TRAINERS: TrainerItem[] = [
+  {
+    key: "python-js-simulator",
+    category: "programming",
+    icon: "🖥️",
+    title: "Симулятор кода: Python и JavaScript",
+    description: "Два редактора с подсветкой синтаксиса: Python запускается прямо в браузере, JavaScript в родной среде. Пишите, запускайте и сравнивайте результат",
+    accent: "#3776AB",
+    paid: true,
+  },
   {
     key: "js-browser-vs-node",
     category: "programming",
