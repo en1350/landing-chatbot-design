@@ -140,6 +140,7 @@
         }
 
         .preview-header {
+            flex-wrap: wrap;
             padding: 5px 12px;
             font-weight: bold;
             font-size: 0.85rem;
@@ -169,6 +170,7 @@
 
         .btn-run { background-color: #4caf50; color: white; }
         .btn-auto { background-color: #2196f3; color: white; }
+        .btn-open { background-color: #6c5ce7; color: white; }
         .btn-auto.active { background-color: #ff9800; }
 
         @media (max-width: 768px) {
@@ -303,6 +305,7 @@ console.log('Скрипт загружен! Готов к работе.');
                 <div class="controls">
                     <button id="btn-run" class="btn-run">▶ Запустить</button>
                     <button id="btn-auto" class="btn-auto">🔄 Авто</button>
+                    <button id="btn-open" class="btn-open" title="Открыть результат в новом окне">⤢ В новом окне</button>
                 </div>
             </div>
             <iframe id="preview-frame" class="preview-frame" title="Результат" sandbox="allow-scripts allow-modals allow-forms allow-popups"></iframe>
@@ -332,19 +335,32 @@ console.log('Скрипт загружен! Готов к работе.');
             ed.focus();
         }
 
-        function updatePreview() {
+        function buildDoc() {
             const html = htmlEditor.getValue();
             const css = cssEditor.getValue();
             const js = jsEditor.getValue().replace(/<\/script/gi, '<\\/script');
 
-            document.getElementById('preview-frame').srcdoc =
-                '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>' + css + '</style></head><body>' +
+            return '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>' + css + '</style></head><body>' +
                 html +
                 '<script>try{' + js + '\n}catch(err){document.body.insertAdjacentHTML("beforeend","<div style=\\"color:#b00020;padding:10px;background:#ffe6e6;margin:10px;border-radius:5px;font-family:sans-serif\\"><strong>Ошибка:</strong> "+String(err.message).replace(/</g,"&lt;")+"</div>")}<\/script>' +
                 '</body></html>';
         }
 
+        function updatePreview() {
+            document.getElementById('preview-frame').srcdoc = buildDoc();
+        }
+
+        function openFullscreen() {
+            const inner = buildDoc().replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+            const wrapper = '<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Результат</title><style>html,body{margin:0;height:100%;background:#fff}iframe{border:0;width:100%;height:100%;display:block}</style></head><body><iframe sandbox="allow-scripts allow-modals allow-forms allow-popups" srcdoc="' + inner + '"></iframe></body></html>';
+            const url = URL.createObjectURL(new Blob([wrapper], { type: 'text/html;charset=utf-8' }));
+            const w = window.open(url, '_blank');
+            if (!w) { alert('Браузер заблокировал новое окно. Разрешите всплывающие окна для этого сайта.'); }
+            setTimeout(() => URL.revokeObjectURL(url), 60000);
+        }
+
         document.getElementById('btn-run').addEventListener('click', updatePreview);
+        document.getElementById('btn-open').addEventListener('click', openFullscreen);
 
         let autoUpdate = false;
         const btnAuto = document.getElementById('btn-auto');
