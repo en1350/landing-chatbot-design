@@ -225,7 +225,7 @@ console.log("\n✅ Доступно: document, window, fetch, localStorage");
 
             <div class="controls">
                 <button id="btn-run-browser" class="btn-browser">▶ Запустить</button>
-                <button class="btn-clear" onclick="document.getElementById('browser-output').innerText = ''">Очистить</button>
+                <button class="btn-clear" data-clear="browser-output">Очистить</button>
             </div>
             <div class="output-container">
                 <pre id="browser-output" class="output">Нажмите "Запустить" для выполнения кода.</pre>
@@ -263,7 +263,7 @@ try {
 
             <div class="controls">
                 <button id="btn-run-node" class="btn-node">▶ Запустить</button>
-                <button class="btn-clear" onclick="document.getElementById('node-output').innerText = ''">Очистить</button>
+                <button class="btn-clear" data-clear="node-output">Очистить</button>
             </div>
             <div class="output-container">
                 <pre id="node-output" class="output">Нажмите "Запустить" для выполнения кода.</pre>
@@ -422,6 +422,14 @@ try {
 
         document.getElementById('btn-run-browser').addEventListener('click', () => runCode('browser-code', 'browser-output', 'browser'));
         document.getElementById('btn-run-node').addEventListener('click', () => runCode('node-code', 'node-output', 'node'));
+        document.querySelectorAll('.btn-clear').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var out = document.getElementById(btn.getAttribute('data-clear'));
+                if (!out) return;
+                out.textContent = '';
+                out.classList.remove('error', 'info');
+            });
+        });
     </script>
 </body>
 </html>

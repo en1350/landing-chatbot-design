@@ -237,7 +237,7 @@ print("Директория в песочнице:", os.getcwd())
 
             <div class="controls">
                 <button id="btn-run-py" class="btn-py" disabled>▶ Запустить</button>
-                <button class="btn-clear" onclick="document.getElementById('py-output').innerText = ''">Очистить</button>
+                <button class="btn-clear" data-clear="py-output">Очистить</button>
             </div>
             <pre id="py-output" class="output">Ожидание загрузки Python...</pre>
         </div>
@@ -273,7 +273,7 @@ try {
 
             <div class="controls">
                 <button id="btn-run-js" class="btn-js">▶ Запустить</button>
-                <button class="btn-clear" onclick="document.getElementById('js-output').innerText = ''">Очистить</button>
+                <button class="btn-clear" data-clear="js-output">Очистить</button>
             </div>
             <pre id="js-output" class="output">Нажмите "Запустить" для выполнения кода.</pre>
         </div>
@@ -489,6 +489,14 @@ try {
                 console.error = originalError;
                 console.info = originalInfo;
             }
+        });
+        document.querySelectorAll('.btn-clear').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var out = document.getElementById(btn.getAttribute('data-clear'));
+                if (!out) return;
+                out.textContent = '';
+                out.classList.remove('error', 'info');
+            });
         });
     </script>
 </body>
