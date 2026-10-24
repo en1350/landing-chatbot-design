@@ -259,6 +259,7 @@ console.log("\n✅ Доступно: document, window, fetch, localStorage");
             <div class="controls">
                 <button id="btn-run-browser" class="btn-browser">▶ Запустить</button>
                 <button class="btn-clear" data-clear="browser-output">Очистить</button>
+                <button class="btn-clear" data-reset="browser-code">Сбросить код</button>
             </div>
             <div class="output-container">
                 <iframe id="browser-preview" class="preview" title="Предпросмотр страницы" sandbox="allow-scripts allow-modals allow-forms allow-popups"></iframe>
@@ -298,6 +299,7 @@ try {
             <div class="controls">
                 <button id="btn-run-node" class="btn-node">▶ Запустить</button>
                 <button class="btn-clear" data-clear="node-output">Очистить</button>
+                <button class="btn-clear" data-reset="node-code">Сбросить код</button>
             </div>
             <div class="output-container">
                 <pre id="node-output" class="output">Нажмите "Запустить" для выполнения кода.</pre>
@@ -461,6 +463,17 @@ try {
 
         document.querySelectorAll('.btn-clear').forEach(btn => {
             if (btn.getAttribute('data-clear') === 'browser-output') btn.addEventListener('click', hidePreview);
+        });
+
+
+        const initialCode = {};
+        Object.keys(editors).forEach(id => { initialCode[id] = editors[id].getValue(); });
+        document.querySelectorAll('[data-reset]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-reset');
+                editors[id].setValue(initialCode[id]);
+                editors[id].focus();
+            });
         });
 
         function runCode(codeElementId, outputElementId, environment) {
