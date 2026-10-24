@@ -59,7 +59,8 @@ type TrainerKey =
   | "ege-robot-coins"
   | "pc-builder"
   | "js-browser-vs-node"
-  | "python-js-simulator";
+  | "python-js-simulator"
+  | "html-css-js-simulator";
 
 interface CategoryItem {
   key: CategoryKey;
@@ -79,7 +80,7 @@ interface TrainerItem {
   paid?: boolean;
 }
 
-const ASSET_VERSION = "20261024d";
+const ASSET_VERSION = "20261024e";
 
 const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "ip-diagnostics": "/ip-diagnostics.html",
@@ -117,6 +118,7 @@ const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "pc-builder": "/pc-builder.html",
   "js-browser-vs-node": "/js-browser-vs-node.html",
   "python-js-simulator": "/python-js-simulator.html",
+  "html-css-js-simulator": "/html-css-js-simulator.html",
 };
 
 const CATEGORIES: CategoryItem[] = [
@@ -172,6 +174,15 @@ const CATEGORIES: CategoryItem[] = [
 ];
 
 const TRAINERS: TrainerItem[] = [
+  {
+    key: "html-css-js-simulator",
+    category: "code",
+    icon: "🌐",
+    title: "Симулятор: HTML + CSS + JavaScript",
+    description: "Три редактора с подсветкой: HTML, CSS и JavaScript. Результат страницы сразу виден рядом, можно включить автообновление",
+    accent: "#E44D26",
+    paid: true,
+  },
   {
     key: "python-js-simulator",
     category: "code",

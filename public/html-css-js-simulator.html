@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Симулятор: HTML + CSS + JavaScript</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/matchbrackets.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #1e1e1e;
+            --panel-bg: #252526;
+            --text-color: #d4d4d4;
+            --accent-html: #e44d26;
+            --accent-css: #264de4;
+            --accent-js: #f7df1e;
+            --border-color: #3e3e42;
+            --resizer-hover: #007acc;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        h1 { text-align: center; font-size: 1.2rem; margin: 0 0 4px 0; }
+        .subtitle { text-align: center; font-size: 0.8rem; color: #888; margin: 0 0 8px 0; }
+
+        .main-container { display: flex; flex: 1; min-height: 0; }
+
+        .editors-panel { display: flex; flex-direction: column; min-width: 300px; flex: 1; }
+
+        .editor-section {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .editor-header {
+            padding: 5px 12px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+            color: white;
+        }
+
+        .editor-header.html { background-color: var(--accent-html); }
+        .editor-header.css { background-color: var(--accent-css); }
+        .editor-header.js { background-color: var(--accent-js); color: black; }
+
+        .header-right { display: flex; align-items: center; gap: 8px; }
+        .hint { font-size: 0.7rem; opacity: 0.8; font-weight: normal; }
+
+        .btn-reset {
+            padding: 3px 10px;
+            font-size: 0.75rem;
+            background-color: rgba(0,0,0,0.35);
+            color: white;
+        }
+        .editor-header.js .btn-reset { background-color: rgba(0,0,0,0.25); color: black; }
+
+        .editor-container { flex: 1; min-height: 60px; overflow: hidden; position: relative; }
+
+        .CodeMirror {
+            height: 100% !important;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+            font-size: 13px !important;
+            background-color: var(--panel-bg) !important;
+            color: var(--text-color) !important;
+            line-height: 1.4 !important;
+        }
+        .CodeMirror-gutters { background-color: var(--panel-bg) !important; border-right: 1px solid var(--border-color) !important; }
+        .CodeMirror-linenumber { color: #858585 !important; }
+
+        .editor-resizer {
+            height: 8px;
+            background-color: var(--border-color);
+            cursor: ns-resize;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.2s;
+            flex-shrink: 0;
+            user-select: none;
+            touch-action: none;
+            z-index: 5;
+        }
+        .editor-resizer:hover, .editor-resizer.active { background-color: var(--resizer-hover); }
+        .editor-resizer::after { content: "⋯"; color: #888; font-size: 14px; font-weight: bold; }
+
+        .split-resizer {
+            width: 8px;
+            background-color: var(--border-color);
+            cursor: ew-resize;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.2s;
+            flex-shrink: 0;
+            user-select: none;
+            touch-action: none;
+            z-index: 10;
+        }
+        .split-resizer:hover, .split-resizer.active { background-color: var(--resizer-hover); }
+        .split-resizer::after { content: "⋮"; color: #888; font-size: 16px; font-weight: bold; }
+
+        .preview-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            min-width: 300px;
+        }
+
+        .preview-header {
+            padding: 5px 12px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            background-color: #2d2d30;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .controls { display: flex; gap: 8px; }
+
+        .preview-frame { flex: 1; border: none; background-color: white; min-height: 200px; width: 100%; }
+
+        button {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.85rem;
+            transition: opacity 0.2s;
+        }
+        button:hover { opacity: 0.8; }
+
+        .btn-run { background-color: #4caf50; color: white; }
+        .btn-auto { background-color: #2196f3; color: white; }
+        .btn-auto.active { background-color: #ff9800; }
+
+        @media (max-width: 768px) {
+            body { height: auto; min-height: 100vh; overflow: auto; padding: 5px; }
+            .main-container { flex-direction: column; flex: none; gap: 10px; }
+            .editors-panel { min-width: 0; flex: none; gap: 10px; }
+            .editor-section { flex: none; }
+            .editor-container { flex: none; height: 200px; }
+            .CodeMirror { font-size: 15px !important; }
+            .editor-resizer, .split-resizer { display: none; }
+            .preview-panel { min-width: 0; flex: none; }
+            .preview-frame { flex: none; height: 380px; }
+            button { min-height: 40px; }
+            .btn-reset { min-height: 32px; }
+            .hint { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🌐 Симулятор: HTML + CSS + JavaScript</h1>
+    <p class="subtitle">Пишите код в трёх редакторах — результат отображается справа</p>
+
+    <div class="main-container">
+        <div class="editors-panel" id="editors-panel">
+
+            <div class="editor-section" id="html-section">
+                <div class="editor-header html">
+                    <span>📄 HTML <span class="hint">Структура</span></span>
+                    <div class="header-right"><button class="btn-reset" onclick="resetCode('html-code')">Возврат кода</button></div>
+                </div>
+                <div class="editor-container">
+                    <textarea id="html-code">
+<div class="container">
+  <h1>Привет, мир! 👋</h1>
+  <p>Это мой первый веб-сайт</p>
+  <button id="myButton">Нажми меня</button>
+  <p id="output"></p>
+</div></textarea>
+                </div>
+            </div>
+
+            <div class="editor-resizer" data-target="html"></div>
+
+            <div class="editor-section" id="css-section">
+                <div class="editor-header css">
+                    <span>🎨 CSS <span class="hint">Стили</span></span>
+                    <div class="header-right"><button class="btn-reset" onclick="resetCode('css-code')">Возврат кода</button></div>
+                </div>
+                <div class="editor-container">
+                    <textarea id="css-code">
+body {
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+}
+
+.container {
+  background: white;
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  text-align: center;
+}
+
+h1 {
+  color: #667eea;
+  margin-bottom: 20px;
+}
+
+button {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 25px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+button:hover {
+  transform: scale(1.1);
+}
+
+#output {
+  margin-top: 20px;
+  font-size: 18px;
+  color: #333;
+}</textarea>
+                </div>
+            </div>
+
+            <div class="editor-resizer" data-target="css"></div>
+
+            <div class="editor-section" id="js-section">
+                <div class="editor-header js">
+                    <span>⚡ JavaScript <span class="hint">Логика</span></span>
+                    <div class="header-right"><button class="btn-reset" onclick="resetCode('js-code')">Возврат кода</button></div>
+                </div>
+                <div class="editor-container">
+                    <textarea id="js-code">
+const button = document.getElementById('myButton');
+const output = document.getElementById('output');
+
+let clickCount = 0;
+
+button.addEventListener('click', function() {
+  clickCount++;
+  output.textContent = `Кнопка нажата ${clickCount} раз(а)! 🎉`;
+
+  const colors = ['#667eea', '#f093fb', '#4facfe', '#43e97b', '#fa709a'];
+  const randomColor = colors[Math.floor(Math.random() * colors.length)];
+  button.style.background = randomColor;
+});
+
+console.log('Скрипт загружен! Готов к работе.');
+</textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="split-resizer" id="split-resizer"></div>
+
+        <div class="preview-panel" id="preview-panel">
+            <div class="preview-header">
+                <span>👁️ Результат</span>
+                <div class="controls">
+                    <button id="btn-run" class="btn-run">▶ Запустить</button>
+                    <button id="btn-auto" class="btn-auto">🔄 Авто</button>
+                </div>
+            </div>
+            <iframe id="preview-frame" class="preview-frame" title="Результат" sandbox="allow-scripts allow-modals allow-forms allow-popups"></iframe>
+        </div>
+    </div>
+
+    <script>
+        const mk = (id, mode, indent) => CodeMirror.fromTextArea(document.getElementById(id), {
+            mode: mode,
+            theme: "dracula",
+            lineNumbers: true,
+            autoCloseBrackets: true,
+            matchBrackets: true,
+            indentUnit: indent,
+            tabSize: indent
+        });
+
+        const htmlEditor = mk("html-code", "htmlmixed", 2);
+        const cssEditor = mk("css-code", "css", 2);
+        const jsEditor = mk("js-code", "javascript", 2);
+
+        function resetCode(id) {
+            const ta = document.getElementById(id);
+            const ed = ta && ta.nextSibling && ta.nextSibling.CodeMirror;
+            if (!ed) return;
+            ed.setValue(ta.defaultValue.replace(/^\n/, ''));
+            ed.focus();
+        }
+
+        function updatePreview() {
+            const html = htmlEditor.getValue();
+            const css = cssEditor.getValue();
+            const js = jsEditor.getValue().replace(/<\/script/gi, '<\\/script');
+
+            document.getElementById('preview-frame').srcdoc =
+                '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>' + css + '</style></head><body>' +
+                html +
+                '<script>try{' + js + '\n}catch(err){document.body.insertAdjacentHTML("beforeend","<div style=\\"color:#b00020;padding:10px;background:#ffe6e6;margin:10px;border-radius:5px;font-family:sans-serif\\"><strong>Ошибка:</strong> "+String(err.message).replace(/</g,"&lt;")+"</div>")}<\/script>' +
+                '</body></html>';
+        }
+
+        document.getElementById('btn-run').addEventListener('click', updatePreview);
+
+        let autoUpdate = false;
+        const btnAuto = document.getElementById('btn-auto');
+        btnAuto.addEventListener('click', () => {
+            autoUpdate = !autoUpdate;
+            btnAuto.classList.toggle('active', autoUpdate);
+            btnAuto.textContent = autoUpdate ? '🔄 Авто: ВКЛ' : '🔄 Авто';
+            if (autoUpdate) updatePreview();
+        });
+
+        [htmlEditor, cssEditor, jsEditor].forEach(editor => {
+            editor.on('change', () => {
+                if (autoUpdate) {
+                    clearTimeout(editor._t);
+                    editor._t = setTimeout(updatePreview, 500);
+                }
+            });
+        });
+
+        document.querySelectorAll('.editor-resizer').forEach(resizer => {
+            let isResizing = false, startY = 0, startHeight = 0, rafId = null;
+            const target = resizer.dataset.target;
+            const section = document.getElementById(target + '-section');
+            const editor = target === 'html' ? htmlEditor : cssEditor;
+
+            const begin = (y) => {
+                isResizing = true;
+                startY = y;
+                startHeight = section.offsetHeight;
+                resizer.classList.add('active');
+                document.body.style.userSelect = 'none';
+            };
+            const move = (y) => {
+                if (!isResizing) return;
+                if (rafId) cancelAnimationFrame(rafId);
+                rafId = requestAnimationFrame(() => {
+                    const h = startHeight + (y - startY);
+                    if (h > 80 && h < window.innerHeight - 200) {
+                        section.style.flex = '0 0 ' + h + 'px';
+                        editor.refresh();
+                    }
+                });
+            };
+            const end = () => {
+                if (!isResizing) return;
+                isResizing = false;
+                resizer.classList.remove('active');
+                document.body.style.userSelect = 'auto';
+            };
+
+            resizer.addEventListener('mousedown', (e) => { begin(e.clientY); e.preventDefault(); });
+            document.addEventListener('mousemove', (e) => move(e.clientY));
+            document.addEventListener('mouseup', end);
+            resizer.addEventListener('touchstart', (e) => begin(e.touches[0].clientY), { passive: true });
+            document.addEventListener('touchmove', (e) => { if (isResizing) move(e.touches[0].clientY); }, { passive: true });
+            document.addEventListener('touchend', end);
+        });
+
+        const splitResizer = document.getElementById('split-resizer');
+        const editorsPanel = document.getElementById('editors-panel');
+        let isSplit = false, startX = 0, startWidth = 0, splitRaf = null;
+
+        const splitBegin = (x) => {
+            isSplit = true;
+            startX = x;
+            startWidth = editorsPanel.offsetWidth;
+            splitResizer.classList.add('active');
+            document.body.style.userSelect = 'none';
+        };
+        const splitMove = (x) => {
+            if (!isSplit) return;
+            if (splitRaf) cancelAnimationFrame(splitRaf);
+            splitRaf = requestAnimationFrame(() => {
+                const w = startWidth + (x - startX);
+                if (w > 300 && w < window.innerWidth - 350) {
+                    editorsPanel.style.flex = '0 0 ' + w + 'px';
+                    htmlEditor.refresh(); cssEditor.refresh(); jsEditor.refresh();
+                }
+            });
+        };
+        const splitEnd = () => {
+            if (!isSplit) return;
+            isSplit = false;
+            splitResizer.classList.remove('active');
+            document.body.style.userSelect = 'auto';
+        };
+        splitResizer.addEventListener('mousedown', (e) => { splitBegin(e.clientX); e.preventDefault(); });
+        document.addEventListener('mousemove', (e) => splitMove(e.clientX));
+        document.addEventListener('mouseup', splitEnd);
+        splitResizer.addEventListener('touchstart', (e) => splitBegin(e.touches[0].clientX), { passive: true });
+        document.addEventListener('touchmove', (e) => { if (isSplit) splitMove(e.touches[0].clientX); }, { passive: true });
+        document.addEventListener('touchend', splitEnd);
+
+        window.addEventListener('load', () => setTimeout(updatePreview, 300));
+    </script>
+</body>
+</html>
