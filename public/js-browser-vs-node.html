@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JS Симулятор: Браузер vs Node.js</title>
+    <style>
+        :root {
+            --bg-color: #1e1e1e;
+            --panel-bg: #252526;
+            --text-color: #d4d4d4;
+            --accent-browser: #f0db4f;
+            --accent-node: #68a063;
+            --border-color: #3e3e42;
+            --console-bg: #111111;
+            --resizer-hover: #007acc;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.2rem;
+            margin: 0 0 4px 0;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #888;
+            margin: 0 0 8px 0;
+            line-height: 1.3;
+        }
+
+        .warning {
+            background-color: #3d2f1f;
+            border-left: 3px solid #f0db4f;
+            padding: 6px 12px;
+            margin: 0 auto 8px;
+            max-width: 800px;
+            font-size: 0.75rem;
+            border-radius: 3px;
+        }
+
+        .container {
+            display: flex;
+            gap: 12px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .panel {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--panel-bg);
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 6px 12px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .panel.browser .panel-header { background-color: var(--accent-browser); color: #333; }
+        .panel.node .panel-header { background-color: var(--accent-node); color: white; }
+
+        .info-badge {
+            font-size: 0.7rem;
+            font-weight: normal;
+            padding: 1px 6px;
+            border-radius: 8px;
+            background-color: rgba(0,0,0,0.2);
+        }
+
+        .editor {
+            width: 100%;
+            background-color: var(--panel-bg);
+            color: var(--text-color);
+            border: none;
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            resize: none;
+            outline: none;
+            box-sizing: border-box;
+            flex: 2;
+            min-height: 100px;
+        }
+
+        .resizer {
+            height: 10px;
+            background-color: var(--border-color);
+            cursor: ns-resize;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.2s;
+            flex-shrink: 0;
+            user-select: none;
+            touch-action: none;
+        }
+
+        .resizer:hover, .resizer.active { background-color: var(--resizer-hover); }
+
+        .resizer::after {
+            content: "⋯";
+            color: #888;
+            font-size: 14px;
+            line-height: 1;
+            font-weight: bold;
+        }
+
+        .controls {
+            padding: 6px 12px;
+            display: flex;
+            gap: 8px;
+            background-color: #2d2d30;
+            flex-shrink: 0;
+        }
+
+        button {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.85rem;
+            transition: opacity 0.2s;
+        }
+
+        button:hover { opacity: 0.8; }
+
+        .btn-browser { background-color: var(--accent-browser); color: #333; }
+        .btn-node { background-color: var(--accent-node); color: white; }
+        .btn-clear { background-color: #444; color: white; }
+
+        .output-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 60px;
+        }
+
+        .output {
+            flex: 1;
+            background-color: var(--console-bg);
+            color: #4ec9b0;
+            padding: 10px 12px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+            border-top: 1px solid var(--border-color);
+            margin: 0;
+        }
+
+        .output.error { color: #f48771; }
+        .output.info { color: #9cdcfe; }
+
+        @media (max-width: 768px) {
+            body { padding: 5px; height: auto; min-height: 100vh; }
+            .container { flex-direction: column; flex: none; }
+            .panel { flex: none; }
+            .editor { flex: none; height: 220px; font-size: 16px; }
+            .output-container { flex: none; }
+            .output { min-height: 120px; max-height: 260px; flex: none; }
+            button { min-height: 44px; flex: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>⚡ JavaScript: Браузер vs Node.js</h1>
+    <p class="subtitle">Слева: песочница браузера. Справа: эмуляция серверного API.</p>
+
+    <div class="warning">
+        ⚠️ <strong>Важно:</strong> Это учебная эмуляция. Настоящий Node.js имеет полный доступ к ОС.
+    </div>
+
+    <div class="container">
+        <div class="panel browser">
+            <div class="panel-header">
+                <span>🌐 Браузер</span>
+                <span class="info-badge">Песочница</span>
+            </div>
+            <textarea id="browser-code" class="editor" spellcheck="false">
+// === Среда: Браузер ===
+console.log("🌐 Привет из браузера!");
+console.log("User Agent:", navigator.userAgent.substring(0, 40) + "...");
+console.log("Разрешение экрана:", window.innerWidth, "x", window.innerHeight);
+
+try {
+    const fs = require('fs');
+    console.log("fs загружен:", fs);
+} catch (e) {
+    console.error("❌ Ошибка:", e.message);
+    console.info("ℹ️ В браузере нет модуля 'fs' — это защита пользователя.");
+}
+
+console.log("\n✅ Доступно: document, window, fetch, localStorage");
+</textarea>
+
+            <div class="resizer" data-panel="browser"></div>
+
+            <div class="controls">
+                <button id="btn-run-browser" class="btn-browser">▶ Запустить</button>
+                <button class="btn-clear" onclick="document.getElementById('browser-output').innerText = ''">Очистить</button>
+            </div>
+            <div class="output-container">
+                <pre id="browser-output" class="output">Нажмите "Запустить" для выполнения кода.</pre>
+            </div>
+        </div>
+
+        <div class="panel node">
+            <div class="panel-header">
+                <span>🟢 Node.js</span>
+                <span class="info-badge">Эмуляция</span>
+            </div>
+            <textarea id="node-code" class="editor" spellcheck="false">
+// === Среда: Node.js (эмуляция) ===
+console.log("🟢 Привет из Node.js!");
+console.log("Версия Node:", process.version);
+console.log("Платформа:", process.platform);
+
+const fs = require('fs');
+console.log("\n📁 Содержимое виртуальной ФС:");
+console.log("  Файлы:", fs.readdirSync('.').join(', '));
+
+const content = fs.readFileSync('hello.txt', 'utf-8');
+console.log("\n📖 Содержимое hello.txt:\n  ", content);
+
+try {
+    console.log("\nПопытка обратиться к document...");
+    console.log(document.title);
+} catch (e) {
+    console.error("❌ Ошибка:", e.message);
+    console.info("ℹ️ В Node.js нет объекта 'document'.");
+}
+</textarea>
+
+            <div class="resizer" data-panel="node"></div>
+
+            <div class="controls">
+                <button id="btn-run-node" class="btn-node">▶ Запустить</button>
+                <button class="btn-clear" onclick="document.getElementById('node-output').innerText = ''">Очистить</button>
+            </div>
+            <div class="output-container">
+                <pre id="node-output" class="output">Нажмите "Запустить" для выполнения кода.</pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.querySelectorAll('.resizer').forEach(resizer => {
+            let isResizing = false;
+            let startY = 0;
+            let startHeight = 0;
+
+            const panel = resizer.parentElement;
+            const editor = panel.querySelector('.editor');
+
+            const begin = (y) => {
+                isResizing = true;
+                startY = y;
+                startHeight = parseInt(window.getComputedStyle(editor).height, 10);
+                resizer.classList.add('active');
+                document.body.style.userSelect = 'none';
+                editor.style.flex = '0 0 auto';
+            };
+
+            const move = (y) => {
+                if (!isResizing) return;
+                const newHeight = startHeight + (y - startY);
+                const isMobile = window.matchMedia('(max-width: 768px)').matches;
+                let maxHeight;
+                if (isMobile) {
+                    maxHeight = 700;
+                } else {
+                    const headerHeight = panel.querySelector('.panel-header').offsetHeight;
+                    const controlsHeight = panel.querySelector('.controls').offsetHeight;
+                    maxHeight = panel.clientHeight - headerHeight - controlsHeight - 60 - 10;
+                }
+                if (newHeight > 80 && newHeight < maxHeight) {
+                    editor.style.height = newHeight + 'px';
+                }
+            };
+
+            const end = () => {
+                if (!isResizing) return;
+                isResizing = false;
+                resizer.classList.remove('active');
+                document.body.style.userSelect = 'auto';
+            };
+
+            resizer.addEventListener('mousedown', (e) => { begin(e.clientY); e.preventDefault(); });
+            document.addEventListener('mousemove', (e) => move(e.clientY));
+            document.addEventListener('mouseup', end);
+
+            resizer.addEventListener('touchstart', (e) => begin(e.touches[0].clientY), { passive: true });
+            document.addEventListener('touchmove', (e) => { if (isResizing) move(e.touches[0].clientY); }, { passive: true });
+            document.addEventListener('touchend', end);
+        });
+
+        const NodeEmulator = {
+            _files: {
+                'hello.txt': 'Привет из виртуальной файловой системы Node.js!',
+                'data.json': '{"users": ["Анна", "Борис", "Вика"]}',
+                'config.ini': '[settings]\ntheme=dark\nlanguage=ru'
+            },
+            _cwd: '/home/user/project',
+
+            fs: {
+                readFileSync(path, encoding = 'utf-8') {
+                    const filename = path.split('/').pop();
+                    if (NodeEmulator._files[filename] !== undefined) return NodeEmulator._files[filename];
+                    throw new Error(`ENOENT: no such file or directory, open '${path}'`);
+                },
+                writeFileSync(path, data, encoding = 'utf-8') {
+                    const filename = path.split('/').pop();
+                    NodeEmulator._files[filename] = data;
+                    console.log(`💾 Файл '${filename}' записан (${data.length} байт)`);
+                },
+                readdirSync() { return Object.keys(NodeEmulator._files); },
+                existsSync(path) {
+                    const filename = path.split('/').pop();
+                    return NodeEmulator._files[filename] !== undefined;
+                }
+            },
+
+            path: {
+                join(...parts) { return parts.join('/').replace(/\/+/g, '/'); },
+                basename(path) { return path.split('/').pop(); }
+            },
+
+            process: {
+                version: 'v20.10.0 (эмуляция)',
+                platform: 'win32',
+                arch: 'x64',
+                cwd() { return NodeEmulator._cwd; },
+                env: { NODE_ENV: 'development', USER: 'developer' },
+                pid: 12345
+            }
+        };
+
+        function nodeRequire(moduleName) {
+            if (moduleName === 'fs') return NodeEmulator.fs;
+            if (moduleName === 'path') return NodeEmulator.path;
+            if (moduleName === 'process') return NodeEmulator.process;
+            throw new Error(`Cannot find module '${moduleName}'`);
+        }
+
+        function runCode(codeElementId, outputElementId, environment) {
+            const code = document.getElementById(codeElementId).value;
+            const output = document.getElementById(outputElementId);
+            output.innerText = "";
+            output.classList.remove('error', 'info');
+
+            const logs = [];
+            const originalLog = console.log;
+            const originalError = console.error;
+            const originalInfo = console.info;
+
+            console.log = function(...args) {
+                logs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' '));
+                originalLog.apply(console, args);
+            };
+            console.error = function(...args) {
+                logs.push("❌ " + args.map(a => String(a)).join(' '));
+                originalError.apply(console, args);
+            };
+            console.info = function(...args) {
+                logs.push("ℹ️ " + args.map(a => String(a)).join(' '));
+                originalInfo.apply(console, args);
+            };
+
+            try {
+                if (environment === 'browser') {
+                    const func = new Function(code);
+                    const result = func();
+                    if (result !== undefined) logs.push("=> " + (typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result)));
+                } else if (environment === 'node') {
+                    const wrappedCode = `
+                        const require = __nodeRequire;
+                        const process = __nodeProcess;
+                        ${code}
+                    `;
+                    const func = new Function('__nodeRequire', '__nodeProcess', wrappedCode);
+                    const result = func(nodeRequire, NodeEmulator.process);
+                    if (result !== undefined) logs.push("=> " + (typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result)));
+                }
+                output.innerText = logs.join('\n') || "Код выполнен (нет вывода в консоль)";
+            } catch (err) {
+                output.innerText = logs.join('\n') + "\n\n💥 Ошибка выполнения:\n" + err.message;
+                output.classList.add('error');
+            } finally {
+                console.log = originalLog;
+                console.error = originalError;
+                console.info = originalInfo;
+            }
+        }
+
+        document.getElementById('btn-run-browser').addEventListener('click', () => runCode('browser-code', 'browser-output', 'browser'));
+        document.getElementById('btn-run-node').addEventListener('click', () => runCode('node-code', 'node-output', 'node'));
+    </script>
+</body>
+</html>

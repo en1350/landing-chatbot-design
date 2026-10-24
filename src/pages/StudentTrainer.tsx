@@ -57,7 +57,8 @@ type TrainerKey =
   | "ege-sound-channel"
   | "ege-nonary-numbers"
   | "ege-robot-coins"
-  | "pc-builder";
+  | "pc-builder"
+  | "js-browser-vs-node";
 
 interface CategoryItem {
   key: CategoryKey;
@@ -111,6 +112,7 @@ const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "ege-nonary-numbers": "/ege-nonary-numbers.html",
   "ege-robot-coins": "/ege-robot-coins.html",
   "pc-builder": "/pc-builder.html",
+  "js-browser-vs-node": "/js-browser-vs-node.html",
 };
 
 const CATEGORIES: CategoryItem[] = [
@@ -159,6 +161,15 @@ const CATEGORIES: CategoryItem[] = [
 ];
 
 const TRAINERS: TrainerItem[] = [
+  {
+    key: "js-browser-vs-node",
+    category: "programming",
+    icon: "⚡",
+    title: "JavaScript: Браузер vs Node.js",
+    description: "Учебная эмуляция: запускайте один и тот же код в песочнице браузера и в эмуляторе Node.js с виртуальной файловой системой и сравнивайте, что доступно в каждой среде",
+    accent: "#F0DB4F",
+    paid: true,
+  },
   {
     key: "pc-builder",
     category: "hardware",
