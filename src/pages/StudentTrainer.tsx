@@ -54,6 +54,7 @@ type TrainerKey =
   | "modeling-luntik"
   | "multimedia-slide-ovz"
   | "executor-algorithms-ovz"
+  | "number-systems-ovz"
   | "ege-divisibility"
   | "ege-sound-channel"
   | "ege-nonary-numbers"
@@ -81,7 +82,7 @@ interface TrainerItem {
   paid?: boolean;
 }
 
-const ASSET_VERSION = "20261024h";
+const ASSET_VERSION = "20261024i";
 
 const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "ip-diagnostics": "/ip-diagnostics.html",
@@ -113,6 +114,7 @@ const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "modeling-luntik": "/modeling-luntik.html",
   "multimedia-slide-ovz": "/multimedia-slide-ovz.html",
   "executor-algorithms-ovz": "/executor-algorithms-ovz.html",
+  "number-systems-ovz": "/number-systems-ovz.html",
   "ege-divisibility": "/ege-divisibility.html",
   "ege-sound-channel": "/ege-sound-channel.html",
   "ege-nonary-numbers": "/ege-nonary-numbers.html",
@@ -243,6 +245,15 @@ const TRAINERS: TrainerItem[] = [
     title: "Теория множеств",
     description: "Теория, диаграммы Эйлера-Венна, практика с операциями над множествами, тест, игра на 2 команды и сертификат",
     accent: "#667eea",
+  },
+  {
+    key: "number-systems-ovz",
+    category: "ovz",
+    icon: "🔢",
+    title: "Системы счисления (для ОВЗ)",
+    description: "Доступная версия: теория, калькулятор перевода между системами, 8 заданий, тест на 5 вопросов, озвучивание, высокий контраст, шрифт для дислексии, сертификат",
+    accent: "#0056b3",
+    paid: true,
   },
   {
     key: "executor-algorithms-ovz",

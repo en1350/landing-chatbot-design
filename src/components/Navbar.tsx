@@ -62,6 +62,7 @@ const OVZ_MENU: NavItem[] = [
   { label: "Граф и таблица смежности", href: "/graph-adjacency-ovz.html", icon: "Network" },
   { label: "Мультимедиа на слайде", to: "/trenazher-dlya-uchenikov?trainer=multimedia-slide-ovz", icon: "MonitorPlay" },
   { label: "Исполнитель и алгоритмы", to: "/trenazher-dlya-uchenikov?trainer=executor-algorithms-ovz", icon: "Target" },
+  { label: "Системы счисления", to: "/trenazher-dlya-uchenikov?trainer=number-systems-ovz", icon: "Binary" },
 ];
 
 const Navbar = ({
