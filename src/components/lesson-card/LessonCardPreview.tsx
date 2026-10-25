@@ -1,107 +1,161 @@
-import { STAGES } from "./lessonCardConfig";
+import { FGOS_LABELS, INSTITUTIONS, type Stage } from "./lessonCardConfig";
 
 export interface PreviewData {
+  institution: string;
+  fgos: string;
+  classNum: string;
+  courseNum: string;
+  pm: string;
+  mdk: string;
   discipline: string;
+  specialty: string;
   group: string;
+  teacher: string;
   topic: string;
   goal: string;
-  duration: string;
-  lessonType: string;
-  competencies: string[];
+  taskEducational: string;
+  taskDeveloping: string;
+  taskUpbringing: string;
   technologies: string[];
-  times: Record<string, number>;
-  contents: Record<string, string>;
+  lessonType: string;
+  lessonForm: string;
+  intersubject: string;
+  intrasubject: string;
+  materials: string;
+  sources: string;
+  uud: string;
+  competencies: string[];
+  pk: string;
+  stages: Stage[];
 }
 
 interface Props {
   data: PreviewData;
 }
 
+const dash = (v: string) => (v.trim() ? v : "—");
+
+const Row = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <tr>
+    <td className="w-[32%] border border-slate-300 bg-slate-100 px-3 py-2 align-top font-semibold">{label}</td>
+    <td className="border border-slate-300 px-3 py-2 align-top whitespace-pre-wrap">{children}</td>
+  </tr>
+);
+
 const LessonCardPreview = ({ data }: Props) => {
-  const filledStages = STAGES.filter((s) => (data.contents[s.key] || "").trim() !== "");
+  const isSchool = data.institution === "school";
+  const isCollege = data.institution === "college";
+  const total = data.stages.reduce((sum, s) => sum + (s.time || 0), 0);
+  const institutionLabel = INSTITUTIONS.find((i) => i.value === data.institution)?.label || "";
 
   return (
-    <div id="lesson-card-print" className="rounded-xl border-2 border-primary/60 bg-white p-6 md:p-8 text-[#1e1b4b]">
-      <div className="text-center border-b-2 border-dashed border-border pb-4 mb-5">
-        <h3 className="font-display text-xl md:text-2xl font-bold text-primary">
-          {data.topic.trim() || "Тема урока не указана"}
-        </h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          {(data.discipline.trim() || "Дисциплина не указана") + " | " + (data.group.trim() || "Группа не указана")}
-        </p>
+    <div id="lesson-card-print" className="rounded-xl border-2 border-primary/60 bg-white p-4 md:p-6 text-[#1e1b4b] text-sm">
+      <div className="rounded-lg bg-[#1e3c72] text-white text-center px-4 py-4 mb-5">
+        <h3 className="font-display text-lg md:text-xl font-bold">Технологическая карта учебного занятия</h3>
+        <p className="mt-1">Преподаватель: {dash(data.teacher)}</p>
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-3 mb-5 text-sm">
-        <div className="rounded-lg bg-primary/10 px-3 py-2">
-          <span className="font-semibold text-primary">Время:</span> {data.duration} мин
-        </div>
-        <div className="rounded-lg bg-primary/10 px-3 py-2">
-          <span className="font-semibold text-primary">Тип:</span> {data.lessonType}
-        </div>
-        <div className="rounded-lg bg-primary/10 px-3 py-2">
-          <span className="font-semibold text-primary">Этапов:</span> {filledStages.length} из {STAGES.length}
-        </div>
-      </div>
+      <h4 className="font-bold text-base text-[#1e3c72] border-b-[3px] border-[#2a5298] pb-1.5 mb-3">
+        1. Общие сведения о занятии
+      </h4>
+      <table className="w-full border-collapse mb-6">
+        <tbody>
+          <Row label="Тип учреждения">{institutionLabel}</Row>
+          <Row label="ФГОС">{FGOS_LABELS[data.fgos] || "—"}</Row>
+          <Row label="Класс / Курс">{isSchool ? `${data.classNum} класс` : `${data.courseNum} курс`}</Row>
+          {isCollege && (
+            <Row label="ПМ, МДК">
+              <b>ПМ:</b> {dash(data.pm)}
+              {"\n"}
+              <b>МДК:</b> {dash(data.mdk)}
+            </Row>
+          )}
+          <Row label="Предмет / Дисциплина">{dash(data.discipline)}</Row>
+          {!isSchool && <Row label="Специальность">{dash(data.specialty)}</Row>}
+          {data.group.trim() && <Row label="Группа">{data.group}</Row>}
+          <Row label="Тема учебного занятия">{dash(data.topic)}</Row>
+          <Row label="Цель учебного занятия">{dash(data.goal)}</Row>
+          <Row label="Задачи учебного занятия">
+            <b>1. Образовательная:</b> {dash(data.taskEducational)}
+            {"\n"}
+            <b>2. Развивающая:</b> {dash(data.taskDeveloping)}
+            {"\n"}
+            <b>3. Воспитательная:</b> {dash(data.taskUpbringing)}
+          </Row>
+          <Row label="Используемые педагогические технологии">
+            {data.technologies.length ? data.technologies.join(", ") : "—"}
+          </Row>
+          <Row label="Тип учебного занятия">{data.lessonType}</Row>
+          <Row label="Форма организации учебного занятия">{data.lessonForm}</Row>
+          <Row label="Межпредметные связи">{dash(data.intersubject)}</Row>
+          <Row label="Внутрипредметные связи">{dash(data.intrasubject)}</Row>
+          <Row label="Информационное обеспечение">{dash(data.materials)}</Row>
+          <Row label="Формируемые компетенции">
+            {isSchool ? (
+              <>
+                <b>Формируемые УУД:</b>
+                {"\n"}
+                {dash(data.uud)}
+              </>
+            ) : (
+              <>
+                <b>ОК:</b>
+                {"\n"}
+                {data.competencies.length ? data.competencies.join("\n") : "—"}
+                {"\n\n"}
+                <b>ПК:</b>
+                {"\n"}
+                {dash(data.pk)}
+              </>
+            )}
+          </Row>
+          <Row label="Используемые источники информации">{dash(data.sources)}</Row>
+        </tbody>
+      </table>
 
-      <div className="font-bold border-l-4 border-primary pl-2.5 mb-2">🎯 Цель урока</div>
-      <p className="rounded-lg bg-muted/60 px-3.5 py-2.5 text-sm leading-relaxed mb-5 whitespace-pre-wrap">
-        {data.goal.trim() || <span className="italic text-muted-foreground">Цель не сформулирована</span>}
+      <h4 className="font-bold text-base text-[#1e3c72] border-b-[3px] border-[#2a5298] pb-1.5 mb-2">
+        2. Организационная структура учебного занятия
+      </h4>
+      <p className="text-slate-500 mb-3">
+        <b>Общая продолжительность:</b> {total} мин.
       </p>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[760px] border-collapse">
+          <thead>
+            <tr className="bg-[#1e3c72] text-white">
+              <th className="border border-slate-300 px-3 py-2 w-[15%]">Этап занятия</th>
+              <th className="border border-slate-300 px-3 py-2 w-[8%]">Время</th>
+              <th className="border border-slate-300 px-3 py-2 w-[17%]">Цель этапа</th>
+              <th className="border border-slate-300 px-3 py-2 w-[25%]">Деятельность преподавателя</th>
+              <th className="border border-slate-300 px-3 py-2 w-[22%]">Деятельность обучающегося, форма организации</th>
+              <th className="border border-slate-300 px-3 py-2 w-[13%]">Формируемые компетенции</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.stages.map((s) => (
+              <tr key={s.id}>
+                <td className="border border-slate-300 px-3 py-2 align-top font-bold">{s.name}</td>
+                <td className="border border-slate-300 px-3 py-2 align-top text-center font-bold text-red-700">
+                  {s.time} мин.
+                </td>
+                <td className="border border-slate-300 bg-blue-50 px-3 py-2 align-top font-bold italic text-blue-900">
+                  {s.purpose}
+                </td>
+                <td className="border border-slate-300 px-3 py-2 align-top whitespace-pre-wrap">{s.teacher}</td>
+                <td className="border border-slate-300 px-3 py-2 align-top whitespace-pre-wrap">{s.student}</td>
+                <td className="border border-slate-300 px-3 py-2 align-top text-xs text-slate-600">{s.competency}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-      <div className="font-bold border-l-4 border-primary pl-2.5 mb-2">🏆 Компетенции</div>
-      {data.competencies.length === 0 ? (
-        <p className="text-sm italic text-muted-foreground mb-5">Не выбраны</p>
-      ) : (
-        <ul className="mb-5 space-y-1.5">
-          {data.competencies.map((c) => (
-            <li key={c} className="relative pl-5 text-sm leading-snug">
-              <span className="absolute left-0 font-bold text-emerald-600">✔</span>
-              {c}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <div className="font-bold border-l-4 border-primary pl-2.5 mb-2">⚙️ Технологии обучения</div>
-      {data.technologies.length === 0 ? (
-        <p className="text-sm italic text-muted-foreground mb-5">Не выбраны</p>
-      ) : (
-        <ul className="mb-5 space-y-1.5">
-          {data.technologies.map((t) => (
-            <li key={t} className="relative pl-5 text-sm leading-snug">
-              <span className="absolute left-0 font-bold text-amber-500">◆</span>
-              {t}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <div className="font-bold border-l-4 border-primary pl-2.5 mb-2">📚 Ход урока</div>
-      {filledStages.length === 0 ? (
-        <p className="text-sm italic text-muted-foreground">
-          Заполните хотя бы один этап урока или нажмите «Заполнить с помощью ИИ»
+      <div className="text-center mt-6 pt-3 border-t-2 border-slate-300 text-slate-500 text-xs">
+        <p>
+          Технологическая карта разработана преподавателем <b>{dash(data.teacher)}</b>
         </p>
-      ) : (
-        <div className="space-y-3">
-          {STAGES.map((s, i) => {
-            const content = (data.contents[s.key] || "").trim();
-            if (!content) return null;
-            return (
-              <div key={s.key} className="rounded-lg border-l-[3px] border-primary bg-primary/5 px-3 py-2.5">
-                <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <span className="font-bold text-primary text-sm">
-                    {i + 1}. {s.name}
-                  </span>
-                  <span className="rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold text-primary-foreground shrink-0">
-                    {data.times[s.key] || 0} мин
-                  </span>
-                </div>
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{content}</p>
-              </div>
-            );
-          })}
-        </div>
-      )}
+        <p>Дата: «___» ____________ 20___ г.</p>
+      </div>
     </div>
   );
 };

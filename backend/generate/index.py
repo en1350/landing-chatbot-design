@@ -547,57 +547,79 @@ def build_kz_analysis_prompt(data: dict) -> str:
 Пиши развёрнуто, конкретно, по-деловому, без markdown-разметки (без **, #), обычным текстом с нумерацией разделов."""
 
 
-LESSON_CARD_STAGES = [
-    ('s1', 'Приветствие'),
-    ('s2', 'Актуализация'),
-    ('s3', 'Повторение пройденного материала'),
-    ('s4', 'Сообщение новой темы'),
-    ('s5', 'Закрепление изученной темы'),
-    ('s6', 'Рефлексия'),
-    ('s7', 'Домашнее задание'),
-]
+def _lesson_card_context(f: dict) -> str:
+    def val(key, default='не указано'):
+        return (str(f.get(key) or '')).strip() or default
+
+    competencies = f.get('competencies') or []
+    technologies = f.get('technologies') or []
+    comp_block = "\n".join(f"- {c}" for c in competencies) if competencies else "не выбраны"
+    tech_block = ", ".join(technologies) if technologies else "не выбраны"
+    return f"""Тип учреждения: {val('institution')}
+{val('fgos')}
+Класс / курс: {val('classOrCourse')}
+Дисциплина: {val('discipline')}
+Специальность: {val('specialty')}
+ПМ: {val('pm')}
+МДК: {val('mdk')}
+Группа: {val('group')}
+Тема урока: {val('topic')}
+Время урока: {val('duration', '45')} минут
+Тип занятия: {val('lessonType')}
+Форма организации: {val('lessonForm')}
+Педагогические технологии: {tech_block}
+Общие компетенции:
+{comp_block}
+Профессиональные компетенции: {val('pk')}
+УУД: {val('uud')}"""
+
+
+def _lesson_card_stages_block(f: dict, with_content: bool) -> str:
+    lines = []
+    for st in (f.get('stages') or []):
+        sid = st.get('id')
+        if not sid:
+            continue
+        line = f'"{sid}" — этап «{st.get("name", "")}», {st.get("time", 0)} мин, цель этапа: {st.get("purpose", "")}'
+        if with_content:
+            teacher = (st.get('teacher') or '').strip() or '(пусто)'
+            student = (st.get('student') or '').strip() or '(пусто)'
+            line += f'. Сейчас — преподаватель: {teacher} | обучающиеся: {student}'
+        lines.append(line)
+    return "\n".join(lines)
+
+
+LESSON_CARD_JSON_FORMAT = (
+    '{"goal": "цель занятия одним предложением", '
+    '"tasks": {"educational": "образовательная задача", "developing": "развивающая задача", "upbringing": "воспитательная задача"}, '
+    '"stages": {"<id этапа>": {"teacher": "деятельность преподавателя", "student": "деятельность обучающихся и форма организации"}}}'
+)
 
 
 def build_lesson_card_prompt(f: dict) -> str:
-    discipline = (f.get('discipline') or '').strip() or 'дисциплина не указана'
-    group = (f.get('group') or '').strip() or 'группа не указана'
     topic = (f.get('topic') or '').strip() or 'тема не указана'
     goal = (f.get('goal') or '').strip()
-    duration = str(f.get('duration') or '45')
-    lesson_type = (f.get('lessonType') or 'Теоретическое занятие').strip()
-    competencies = f.get('competencies') or []
-    technologies = f.get('technologies') or []
-    times = f.get('times') or {}
+    goal_line = goal if goal else "не сформулирована преподавателем — сформулируй сам, исходя из темы"
+    tasks = [
+        ('Образовательная задача', (f.get('taskEducational') or '').strip()),
+        ('Развивающая задача', (f.get('taskDeveloping') or '').strip()),
+        ('Воспитательная задача', (f.get('taskUpbringing') or '').strip()),
+    ]
+    tasks_block = "\n".join(f"{n}: {t or 'не сформулирована — сформулируй сам'}" for n, t in tasks)
 
-    comp_block = "\n".join(f"- {c}" for c in competencies) if competencies else "не выбраны"
-    tech_block = ", ".join(technologies) if technologies else "не выбраны"
-    goal_line = goal if goal else "цель не сформулирована преподавателем — сформулируй её сам, исходя из темы"
+    return f"""Ты опытный методист-педагог. Составь содержание технологической карты учебного занятия на русском языке.
 
-    stage_lines = []
-    for key, name in LESSON_CARD_STAGES:
-        mins = times.get(key) or 0
-        stage_lines.append(f'"{key}" — этап «{name}», {mins} мин')
-    stages_block = "\n".join(stage_lines)
+{_lesson_card_context(f)}
+Цель занятия: {goal_line}
+{tasks_block}
 
-    return f"""Ты опытный методист-педагог СПО. Составь содержание карточки урока на русском языке.
+Этапы занятия (ключ — это id этапа):
+{_lesson_card_stages_block(f, False)}
 
-Дисциплина: {discipline}
-Класс / группа: {group}
-Тема урока: {topic}
-Цель урока: {goal_line}
-Время урока: {duration} минут
-Тип занятия: {lesson_type}
-Формируемые компетенции:
-{comp_block}
-Технологии обучения: {tech_block}
-
-Этапы урока с отведённым временем:
-{stages_block}
-
-Для КАЖДОГО этапа напиши содержание: конкретные действия преподавателя и обучающихся, применяемые приёмы и методы, уместные именно для темы «{topic}» и дисциплины «{discipline}». Учитывай тип занятия ({lesson_type}) и выбранные технологии обучения. Объём каждого этапа — 2-5 содержательных предложений, соразмерно отведённому времени. Без общих фраз и без markdown-разметки.
+Для КАЖДОГО этапа напиши два текста: «teacher» — конкретные действия преподавателя, «student» — конкретные действия обучающихся и в конце форма организации (например, «Форма: фронтальная»). Учитывай тему «{topic}», тип и форму занятия, технологии и цель этапа. Объём — 2-4 предложения на каждый текст, соразмерно времени этапа. Без общих фраз и без markdown-разметки. Уже сформулированные преподавателем цель и задачи сохрани по смыслу, пустые сформулируй сам.
 
 Верни ответ СТРОГО в формате JSON без markdown, пояснений и текста до/после:
-{{"goal": "сформулированная цель урока одним предложением", "stages": {{"s1": "текст", "s2": "текст", "s3": "текст", "s4": "текст", "s5": "текст", "s6": "текст", "s7": "текст"}}}}"""
+{LESSON_CARD_JSON_FORMAT}"""
 
 
 def build_task_card_prompt(f: dict) -> str:
@@ -637,49 +659,28 @@ def build_task_card_prompt(f: dict) -> str:
 
 
 def build_lesson_card_refine_prompt(f: dict, instruction: str) -> str:
-    discipline = (f.get('discipline') or '').strip() or 'дисциплина не указана'
-    group = (f.get('group') or '').strip() or 'группа не указана'
-    topic = (f.get('topic') or '').strip() or 'тема не указана'
-    duration = str(f.get('duration') or '45')
-    lesson_type = (f.get('lessonType') or 'Теоретическое занятие').strip()
-    competencies = f.get('competencies') or []
-    technologies = f.get('technologies') or []
-    times = f.get('times') or {}
-    goal = (f.get('goal') or '').strip()
-    contents = f.get('contents') or {}
+    goal = (f.get('goal') or '').strip() or '(не сформулирована)'
+    tasks_block = "\n".join([
+        f"Образовательная задача: {(f.get('taskEducational') or '').strip() or '(пусто)'}",
+        f"Развивающая задача: {(f.get('taskDeveloping') or '').strip() or '(пусто)'}",
+        f"Воспитательная задача: {(f.get('taskUpbringing') or '').strip() or '(пусто)'}",
+    ])
 
-    comp_block = "\n".join(f"- {c}" for c in competencies) if competencies else "не выбраны"
-    tech_block = ", ".join(technologies) if technologies else "не выбраны"
+    return f"""Ты опытный методист-педагог. Вот текущая технологическая карта учебного занятия:
 
-    stage_lines = []
-    for key, name in LESSON_CARD_STAGES:
-        mins = times.get(key) or 0
-        text = (contents.get(key) or '').strip() or '(пусто)'
-        stage_lines.append(f'"{key}" — этап «{name}», {mins} мин. Текущий текст: {text}')
-    stages_block = "\n".join(stage_lines)
+{_lesson_card_context(f)}
+Текущая цель: {goal}
+{tasks_block}
 
-    return f"""Ты опытный методист-педагог СПО. Вот текущая карточка урока:
+Этапы занятия (ключ — это id этапа) и их текущее содержание:
+{_lesson_card_stages_block(f, True)}
 
-Дисциплина: {discipline}
-Класс / группа: {group}
-Тема урока: {topic}
-Время урока: {duration} минут
-Тип занятия: {lesson_type}
-Формируемые компетенции:
-{comp_block}
-Технологии обучения: {tech_block}
+Преподаватель просит доработать карту по инструкции: «{instruction}»
 
-Текущая цель урока: {goal or '(не сформулирована)'}
-
-Текущее содержание этапов:
-{stages_block}
-
-Преподаватель просит доработать карточку по инструкции: «{instruction}»
-
-Обнови содержание этапов и/или цель урока в соответствии с инструкцией, сохраняя структуру из 7 этапов и их названия. Если инструкция касается конкретного этапа — измени в первую очередь его, но верни ВСЕ этапы целиком (не только изменённый). Без markdown-разметки.
+Обнови цель, задачи и/или содержание этапов в соответствии с инструкцией. Если инструкция касается конкретного этапа — измени в первую очередь его, но верни ВСЕ этапы целиком с теми же id (не только изменённый), а также цель и все три задачи. Без markdown-разметки.
 
 Верни ответ СТРОГО в формате JSON без markdown, пояснений и текста до/после:
-{{"goal": "обновлённая или прежняя цель урока одним предложением", "stages": {{"s1": "текст", "s2": "текст", "s3": "текст", "s4": "текст", "s5": "текст", "s6": "текст", "s7": "текст"}}}}"""
+{LESSON_CARD_JSON_FORMAT}"""
 
 
 def build_task_card_refine_prompt(f: dict, instruction: str) -> str:
@@ -2035,6 +2036,7 @@ def process(event: dict, context) -> dict:
 
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({
                 'goal': parsed.get('goal') or '',
+                'tasks': parsed.get('tasks') or {},
                 'stages': parsed.get('stages') or {},
             }, ensure_ascii=False)}
 
@@ -2093,6 +2095,7 @@ def process(event: dict, context) -> dict:
 
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({
                 'goal': parsed.get('goal') or '',
+                'tasks': parsed.get('tasks') or {},
                 'stages': parsed.get('stages') or {},
             }, ensure_ascii=False)}
 
