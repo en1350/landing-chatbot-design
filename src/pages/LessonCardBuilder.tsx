@@ -89,6 +89,7 @@ const LessonCardBuilder = () => {
   const [stages, setStages] = usePersistedState<Stage[]>("lc2_stages", () => makeDefaultStages("45"));
   const [ovz, setOvz] = usePersistedState<string[]>("lc2_ovz", []);
 
+  const [tab, setTab] = useState<"form" | "preview">("form");
   const [loading, setLoading] = useState(false);
   const [prefilled, setPrefilled] = useState(false);
   const [refineOpen, setRefineOpen] = useState(false);
@@ -434,8 +435,33 @@ const LessonCardBuilder = () => {
             </div>
           )}
 
-          <div className="grid gap-6 lg:grid-cols-2">
-            <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm no-print">
+          <div className="flex gap-1 border-b border-border mb-6 no-print" role="tablist">
+            {([
+              ["form", "📝 Заполнение"],
+              ["preview", "👁 Предпросмотр"],
+            ] as const).map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                role="tab"
+                aria-selected={tab === key}
+                onClick={() => {
+                  setTab(key);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className={`px-5 py-2.5 text-sm font-semibold border-b-[3px] -mb-px transition-colors ${
+                  tab === key
+                    ? "border-primary text-primary"
+                    : "border-transparent text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <div>
+            <div className={`max-w-3xl mx-auto rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm no-print ${tab === "form" ? "" : "hidden"}`}>
               <h2 className="font-display text-lg font-bold mb-3 pb-2 border-b-2 border-primary/15">📋 Общие сведения</h2>
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Тип образовательного учреждения">
@@ -767,16 +793,23 @@ const LessonCardBuilder = () => {
                 </div>
               )}
 
+              <Button variant="secondary" className="w-full mt-4 gap-2" onClick={() => { setTab("preview"); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
+                <Icon name="Eye" size={16} />
+                Перейти к предпросмотру
+              </Button>
+
               <Button variant="ghost" className="w-full mt-2.5 gap-2 text-muted-foreground" onClick={handleReset}>
                 <Icon name="RotateCcw" size={15} />
                 Сбросить поля
               </Button>
             </div>
 
-            <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm">
-              <h2 className="font-display text-lg font-bold mb-4 no-print">👁️ Предпросмотр карты</h2>
-              <LessonCardPreview data={previewData} />
-              <div className="mt-4 flex flex-wrap gap-2 no-print">
+            <div className={`rounded-2xl border border-border bg-card p-4 sm:p-5 md:p-6 shadow-sm ${tab === "preview" ? "" : "hidden"}`}>
+              <div className="mb-4 flex flex-wrap gap-2 no-print">
+                <Button variant="outline" className="gap-1.5" onClick={() => setTab("form")}>
+                  <Icon name="Pencil" size={15} />
+                  Редактировать
+                </Button>
                 <Button variant="outline" className="gap-1.5" onClick={() => window.print()}>
                   <Icon name="Printer" size={15} />
                   Печать / PDF
@@ -794,6 +827,7 @@ const LessonCardBuilder = () => {
                   Копировать
                 </Button>
               </div>
+              <LessonCardPreview data={previewData} />
             </div>
           </div>
         </div>
