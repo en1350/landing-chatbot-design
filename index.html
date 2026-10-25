@@ -49,6 +49,28 @@
       <script src="https://cdn.poehali.dev/intertnal/js/ve-2.0.0-rc.2.min.js" defer=""></script>
       <script src="https://cdn.poehali.dev/intertnal/js/pp-min-2.js"></script>
 
+    <script>
+      (function () {
+        var KEY = "ym_opt_out";
+        var IDS = [113679744, 101026698];
+        var msg = "";
+        try {
+          var q = new URLSearchParams(location.search);
+          if (q.get("ym_off") === "1") { localStorage.setItem(KEY, "1"); msg = "Яндекс.Метрика отключена в этом браузере. Ваши визиты больше не учитываются."; }
+          if (q.get("ym_on") === "1") { localStorage.removeItem(KEY); msg = "Яндекс.Метрика снова включена в этом браузере."; }
+          if (msg) {
+            q.delete("ym_off"); q.delete("ym_on");
+            var qs = q.toString();
+            history.replaceState(null, "", location.pathname + (qs ? "?" + qs : "") + location.hash);
+            setTimeout(function () { alert(msg); }, 300);
+          }
+          if (localStorage.getItem(KEY) === "1") {
+            IDS.forEach(function (id) { window["disableYaCounter" + id] = true; });
+            window.ym = function () {};
+          }
+        } catch (e) {}
+      })();
+    </script>
     <!-- Yandex.Metrika counter -->
     <script type="text/javascript">
         (function(m,e,t,r,i,k,a){
