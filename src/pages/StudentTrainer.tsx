@@ -44,6 +44,7 @@ type TrainerKey =
   | "code-duel"
   | "sets-python-js"
   | "os-processes"
+  | "os-memory"
   | "data-analysis-ai"
   | "binary-search"
   | "linear-complexity"
@@ -80,7 +81,7 @@ interface TrainerItem {
   paid?: boolean;
 }
 
-const ASSET_VERSION = "20261024g";
+const ASSET_VERSION = "20261024h";
 
 const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "ip-diagnostics": "/ip-diagnostics.html",
@@ -92,6 +93,7 @@ const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "python-java-types": "/python-java-types.html",
   "os-components": "/os-components.html",
   "os-processes": "/os-processes.html",
+  "os-memory": "/os-memory.html",
   "media-access": "/media-access-methods.html",
   "media-access-test": "/media-access-test.html",
   "digital-info": "/computer-digital-info.html",
@@ -366,6 +368,14 @@ const TRAINERS: TrainerItem[] = [
     title: "Управление процессами",
     description: "Теория про состояния, планирование и тупики, разбор вывода ps и top, тест на 10 вопросов и сертификат",
     accent: "#667eea",
+  },
+  {
+    key: "os-memory",
+    category: "os",
+    icon: "🧠",
+    title: "Управление памятью",
+    description: "Фрагментация, страничная организация, TLB и виртуальная память: теория, симулятор выделения памяти, 8 задач, итоговый тест и сертификат",
+    accent: "#3b82f6",
   },
   {
     key: "media-access",

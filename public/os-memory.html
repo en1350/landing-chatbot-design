@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ОС и Среды: Управление памятью | Интерактивный урок</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --primary: #3b82f6;
+            --accent: #06b6d4;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: rgba(148, 163, 184, 0.2);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.15) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.15) 0%, transparent 20%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            padding: 20px 5%;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(15, 23, 42, 0.8);
+        }
+        .logo { font-size: 1.5rem; font-weight: 800; background: linear-gradient(to right, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .progress-bar { width: 200px; height: 8px; background: var(--card-bg); border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); width: 0%; transition: width 0.5s ease; }
+        main { flex: 1; padding: 40px 5%; max-width: 1000px; margin: 0 auto; width: 100%; }
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        h2 { margin-bottom: 20px; color: var(--accent); font-size: 1.8rem; }
+        h3 { margin: 20px 0 10px; color: var(--text); }
+        p { line-height: 1.6; color: var(--text-muted); margin-bottom: 15px; }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4); }
+        .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .btn-secondary:hover { background: rgba(255,255,255,0.05); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 4px;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+        }
+        .mem-block {
+            aspect-ratio: 1;
+            background: #334155;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: #94a3b8;
+            transition: all 0.3s;
+        }
+        .mem-block.allocated { background: var(--primary); color: white; font-weight: bold; }
+        .mem-block.fragmented { background: var(--danger); color: white; }
+        .option {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+        .option:hover:not(:disabled) { background: rgba(59, 130, 246, 0.1); border-color: var(--primary); }
+        .option:disabled { cursor: default; color: var(--text); }
+        .option.correct { background: rgba(16, 185, 129, 0.2); border-color: var(--success); }
+        .option.wrong { background: rgba(239, 68, 68, 0.2); border-color: var(--danger); }
+        .explanation {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(6, 182, 212, 0.1);
+            border-left: 4px solid var(--accent);
+            border-radius: 4px;
+            display: none;
+            color: var(--text);
+            line-height: 1.6;
+        }
+        .certificate {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 2px solid var(--accent);
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .certificate::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(6, 182, 212, 0.05) 10px, rgba(6, 182, 212, 0.05) 20px);
+            pointer-events: none;
+        }
+        .cert-title { font-size: 2.5rem; font-weight: 800; color: var(--accent); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
+        .cert-name { font-size: 2rem; color: white; margin: 20px 0; font-family: 'Courier New', monospace; border-bottom: 1px solid var(--border); display: inline-block; padding: 0 20px 5px; max-width: 100%; word-break: break-word; }
+        .cert-grade { font-size: 4rem; font-weight: 900; color: var(--success); margin: 20px 0; text-shadow: 0 0 20px rgba(16, 185, 129, 0.5); }
+        .hidden { display: none !important; }
+        @media (max-width: 600px) {
+            main { padding: 20px 4%; }
+            .card { padding: 18px; }
+            .progress-bar { width: 120px; }
+            .cert-title { font-size: 1.8rem; }
+            .memory-grid { gap: 2px; padding: 8px; }
+            .mem-block { font-size: 0.55rem; }
+            #nameInput { width: 100% !important; }
+        }
+        @media print {
+            body * { visibility: hidden; }
+            #certificate-section, #certificate-section * { visibility: visible; }
+            #certificate-section { position: absolute; left: 0; top: 0; width: 100%; border: none; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">OS: Memory Management</div>
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <span id="progress-text" style="font-size: 0.9rem; color: var(--text-muted);">Прогресс: 0%</span>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    </div>
+</header>
+
+<main id="app"></main>
+
+<script>
+    const lessonData = {
+        theory: [
+            { title: "1. Основные понятия", text: "Управление памятью — это функция ОС, отвечающая за выделение и освобождение оперативной памяти для процессов. Основные задачи: отслеживание занятой/свободной памяти, выделение памяти по запросу, защита памяти одного процесса от другого." },
+            { title: "2. Фрагментация", text: "<b>Внутренняя:</b> потеря памяти внутри выделенного блока (например, процессу нужно 3 КБ, а выделяется страница 4 КБ).<br><b>Внешняя:</b> свободная память есть, но она разбита на мелкие несмежные участки, и большой процесс не может быть загружен." },
+            { title: "3. Страничная организация (Paging)", text: "Физическая память делится на <b>фреймы</b> (frames), а логическая память процесса — на <b>страницы</b> (pages) одинакового размера (обычно 4 КБ). Таблица страниц (Page Table) сопоставляет виртуальные адреса физическим." },
+            { title: "4. TLB и Виртуальная память", text: "<b>TLB (Translation Lookaside Buffer)</b> — это аппаратный кэш для таблицы страниц, ускоряющий преобразование адресов. <b>Виртуальная память</b> позволяет использовать диск как расширение ОЗУ, подгружая страницы по требованию (page fault)." }
+        ],
+        practice: [
+            { level: 1, q: "Если размер страницы равен 4 КБ (4096 байт), сколько страниц потребуется для процесса размером 10 КБ?", options: ["2", "3", "4", "5"], correct: 1, explanation: "10 КБ / 4 КБ = 2.5. Страницы не могут быть дробными, поэтому процесс займет 3 полные страницы (12 КБ). Это пример внутренней фрагментации." },
+            { level: 2, q: "Как называется ситуация, когда свободной памяти в сумме достаточно, но нет непрерывного блока нужного размера?", options: ["Внутренняя фрагментация", "Внешняя фрагментация", "Page Fault", "Thrashing"], correct: 1, explanation: "Это классическое определение внешней фрагментации. Решается методом уплотнения (compaction) или страничной организацией." },
+            { level: 3, q: "Виртуальный адрес: Номер страницы = 3, Смещение = 150. Размер страницы = 1000. Физический фрейм для страницы 3 равен 5. Чему равен физический адрес?", options: ["3150", "5000", "5150", "1500"], correct: 2, explanation: "Физический адрес = (Номер фрейма * Размер страницы) + Смещение = (5 * 1000) + 150 = 5150." },
+            { level: 4, q: "Какой алгоритм замещения страниц удаляет ту страницу, которая не использовалась дольше всего?", options: ["FIFO", "LRU (Least Recently Used)", "Optimal", "Random"], correct: 1, explanation: "LRU (Least Recently Used) заменяет страницу, к которой не было обращений наиболее длительное время." },
+            { level: 5, q: "Дана память с отверстиями: 100КБ, 500КБ, 200КБ, 300КБ. Поступает запрос на 250КБ. Какой блок выберет алгоритм Best Fit?", options: ["100КБ", "500КБ", "200КБ", "300КБ"], correct: 3, explanation: "Best Fit выбирает наименьшее свободное отверстие, в которое помещается запрос. Из подходящих (500 и 300) наименьшим является 300КБ." },
+            { level: 6, q: "Что происходит при 'Page Fault' (страничном отказе)?", options: ["Процесс завершается с ошибкой", "ОС загружает требуемую страницу с диска в ОЗУ", "TLB очищается полностью", "Выделяется новый физический фрейм без загрузки данных"], correct: 1, explanation: "Page Fault — это прерывание, при котором ОС находит нужные данные на диске (в файле подкачки), загружает их в свободный фрейм ОЗУ и обновляет таблицу страниц." },
+            { level: 7, q: "Сколько бит требуется для адресации смещения внутри страницы размером 8 КБ?", options: ["8", "10", "12", "13"], correct: 3, explanation: "8 КБ = 8192 байта = 2^13. Следовательно, для адресации каждого байта внутри страницы требуется 13 бит." },
+            { level: 8, q: "Что такое 'Thrashing' (трешинг)?", options: ["Быстрое очищение диска", "Ситуация, когда система тратит больше времени на подкачку страниц, чем на выполнение процессов", "Сбой в работе TLB", "Переполнение стека вызовов"], correct: 1, explanation: "Трешинг возникает, когда степень многопрограммности слишком высока, процессы постоянно генерируют page faults, и диск работает на пределе, а CPU простаивает." }
+        ],
+        test: [
+            { q: "Какой компонент аппаратно ускоряет преобразование виртуальных адресов в физические?", options: ["ALU", "TLB", "DMA", "PCIe"], correct: 1, explanation: "TLB (Translation Lookaside Buffer) — это ассоциативный кэш для записей таблицы страниц." },
+            { q: "При каком методе размещения процессов возникает внешняя фрагментация?", options: ["Страничный (Paging)", "Сегментный (Segmentation)", "Оба метода", "Ни при одном"], correct: 1, explanation: "При сегментации выделяются блоки переменной длины, что со временем приводит к внешней фрагментации. Страничный метод устраняет её." },
+            { q: "Если размер логического адреса 32 бита, а размер страницы 4 КБ, сколько бит отводится под номер страницы?", options: ["12", "16", "20", "32"], correct: 2, explanation: "Смещение = 12 бит (4 КБ = 2^12). Номер страницы = 32 - 12 = 20 бит." },
+            { q: "Какая структура данных хранит соответствие виртуальных страниц физическим фреймам?", options: ["Дескриптор процесса (PCB)", "Таблица страниц (Page Table)", "TLB", "Очередь готовых процессов"], correct: 1, explanation: "Таблица страниц (Page Table) является основной структурой для этого соответствия." },
+            { q: "Что такое 'Working Set' (рабочее множество) процесса?", options: ["Набор всех файлов процесса на диске", "Набор страниц, активно используемых процессом за определенный интервал времени", "Список всех потоков процесса", "Размер стека вызовов"], correct: 1, explanation: "Рабочее множество — это набор страниц, к которым процесс обращался в течение последних Δ тактов. Используется для предотвращения трешинга." }
+        ]
+    };
+
+    let state = {
+        step: 'intro',
+        practiceLevel: 0,
+        testQuestion: 0,
+        score: 0,
+        maxScore: 13,
+        answers: [],
+        userName: 'Студент'
+    };
+
+    const app = document.getElementById('app');
+
+    function esc(s) {
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function render() {
+        updateProgress();
+        app.innerHTML = '';
+        switch (state.step) {
+            case 'intro': renderIntro(); break;
+            case 'theory': renderTheory(); break;
+            case 'simulator': renderSimulator(); break;
+            case 'practice': renderPractice(); break;
+            case 'test': renderTest(); break;
+            case 'results': renderResults(); break;
+        }
+        window.scrollTo(0, 0);
+    }
+
+    function updateProgress() {
+        let pct = 0;
+        if (state.step === 'theory') pct = 15;
+        else if (state.step === 'simulator') pct = 30;
+        else if (state.step === 'practice') pct = 30 + (state.practiceLevel / 8) * 40;
+        else if (state.step === 'test') pct = 75;
+        else if (state.step === 'results') pct = 100;
+        document.getElementById('progress-fill').style.width = pct + '%';
+        document.getElementById('progress-text').innerText = 'Прогресс: ' + Math.round(pct) + '%';
+    }
+
+    function renderIntro() {
+        app.innerHTML = `
+            <div class="card" style="text-align: center; padding: 60px 20px;">
+                <h1 style="font-size: 3rem; margin-bottom: 20px; background: linear-gradient(to right, #3b82f6, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Управление памятью</h1>
+                <p style="font-size: 1.2rem; max-width: 600px; margin: 0 auto 40px;">Интерактивный модуль дисциплины "Операционные системы и среды". Изучите теорию, поэкспериментируйте в симуляторе, решите 8 задач возрастающей сложности и пройдите итоговый тест.</p>
+                <input type="text" id="nameInput" placeholder="Введите ваше имя для сертификата" value="Студент" style="padding: 15px; border-radius: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.3); color: white; width: 300px; margin-bottom: 20px; text-align: center; font-size: 1.1rem;">
+                <br>
+                <button class="btn btn-primary" onclick="startLesson()">Начать обучение 🚀</button>
+            </div>
+        `;
+    }
+
+    function startLesson() {
+        const name = document.getElementById('nameInput').value;
+        if (name.trim()) state.userName = name.trim();
+        state.step = 'theory';
+        render();
+    }
+
+    function renderTheory() {
+        let html = `<div class="card"><h2>📚 Теоретический блок</h2>`;
+        lessonData.theory.forEach(t => {
+            html += `<h3>${t.title}</h3><p>${t.text}</p>`;
+        });
+        html += `<div style="margin-top: 30px; text-align: right;"><button class="btn btn-primary" onclick="state.step='simulator'; render();">Перейти к симулятору ➡️</button></div></div>`;
+        app.innerHTML = html;
+    }
+
+    function renderSimulator() {
+        app.innerHTML = `
+            <div class="card">
+                <h2>🖥️ Симулятор: Внешняя фрагментация</h2>
+                <p>Попробуйте выделить память для процессов. Память состоит из 10 блоков по 100 КБ. Используйте алгоритм <b>First Fit</b> (первый подходящий).</p>
+                <div class="memory-grid" id="memGrid">
+                    ${Array(10).fill(0).map((_, i) => `<div class="mem-block" id="block-${i}" data-status="free">${i}</div>`).join('')}
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 20px;">
+                    <input type="number" id="allocSize" placeholder="Размер (1-10 блоков)" min="1" max="10" value="3" style="padding: 10px; border-radius: 6px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; width: 200px;">
+                    <button class="btn btn-primary" onclick="allocateMemory()">Выделить память</button>
+                    <button class="btn btn-secondary" onclick="freeMemory()">Очистить случайный блок</button>
+                    <button class="btn btn-danger" onclick="resetMemory()">Сброс</button>
+                </div>
+                <div id="simMessage" style="padding: 15px; border-radius: 8px; display: none;"></div>
+                <div style="margin-top: 30px; text-align: right;">
+                    <button class="btn btn-primary" onclick="state.step='practice'; state.practiceLevel=0; render();">Перейти к практике ➡️</button>
+                </div>
+            </div>
+        `;
+        window.memState = Array(10).fill(null);
+    }
+
+    function allocateMemory() {
+        const size = parseInt(document.getElementById('allocSize').value);
+        const msg = document.getElementById('simMessage');
+        let allocated = false;
+
+        if (isNaN(size) || size < 1 || size > 10) {
+            msg.style.display = 'block';
+            msg.style.background = 'rgba(239, 68, 68, 0.2)';
+            msg.style.color = '#fca5a5';
+            msg.innerText = '❌ Введите размер от 1 до 10 блоков.';
+            return;
+        }
+
+        for (let i = 0; i <= 10 - size; i++) {
+            let canFit = true;
+            for (let j = 0; j < size; j++) {
+                if (window.memState[i + j] !== null) {
+                    canFit = false;
+                    break;
+                }
+            }
+            if (canFit) {
+                const pName = `P${Math.floor(Math.random() * 100)}`;
+                for (let j = 0; j < size; j++) {
+                    window.memState[i + j] = pName;
+                    const el = document.getElementById(`block-${i + j}`);
+                    el.classList.add('allocated');
+                    el.innerText = pName;
+                }
+                allocated = true;
+                break;
+            }
+        }
+
+        msg.style.display = 'block';
+        if (allocated) {
+            msg.style.background = 'rgba(16, 185, 129, 0.2)';
+            msg.style.color = '#10b981';
+            msg.innerText = `✅ Успешно выделено ${size} блоков.`;
+        } else {
+            const freeTotal = window.memState.filter(x => x === null).length;
+            msg.style.background = 'rgba(239, 68, 68, 0.2)';
+            msg.style.color = '#fca5a5';
+            if (freeTotal >= size) {
+                msg.innerText = `⚠️ ОШИБКА: Внешняя фрагментация! Свободно ${freeTotal} блоков, но нет ${size} непрерывных.`;
+            } else {
+                msg.innerText = `❌ ОШИБКА: Недостаточно общей свободной памяти (свободно: ${freeTotal}).`;
+            }
+        }
+    }
+
+    function freeMemory() {
+        const allocatedIndices = window.memState.map((val, idx) => val !== null ? idx : -1).filter(i => i !== -1);
+        if (allocatedIndices.length === 0) return;
+        const randomIdx = allocatedIndices[Math.floor(Math.random() * allocatedIndices.length)];
+        const pName = window.memState[randomIdx];
+        window.memState = window.memState.map(val => val === pName ? null : val);
+        for (let i = 0; i < 10; i++) {
+            const el = document.getElementById(`block-${i}`);
+            if (window.memState[i] === null) {
+                el.classList.remove('allocated');
+                el.innerText = i;
+            }
+        }
+        document.getElementById('simMessage').style.display = 'none';
+    }
+
+    function resetMemory() {
+        window.memState = Array(10).fill(null);
+        for (let i = 0; i < 10; i++) {
+            const el = document.getElementById(`block-${i}`);
+            el.classList.remove('allocated');
+            el.innerText = i;
+        }
+        document.getElementById('simMessage').style.display = 'none';
+    }
+
+    function renderPractice() {
+        const task = lessonData.practice[state.practiceLevel];
+        app.innerHTML = `
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                    <span style="color: var(--accent); font-weight: bold;">Практика: Уровень ${state.practiceLevel + 1} из 8</span>
+                    <span style="color: var(--text-muted);">Счет: ${state.score}</span>
+                </div>
+                <h3>${task.q}</h3>
+                <div id="options-container">
+                    ${task.options.map((opt, idx) => `
+                        <button class="option" onclick="checkPracticeAnswer(${idx})">${opt}</button>
+                    `).join('')}
+                </div>
+                <div id="practice-explanation" class="explanation">
+                    <strong>Разбор:</strong> ${task.explanation}
+                    <br><br>
+                    <button class="btn btn-primary" onclick="nextPracticeLevel()">Следующий уровень ➡️</button>
+                </div>
+            </div>
+        `;
+    }
+
+    function checkPracticeAnswer(selectedIdx) {
+        const task = lessonData.practice[state.practiceLevel];
+        const isCorrect = selectedIdx === task.correct;
+        document.querySelectorAll('.option').forEach((btn, idx) => {
+            btn.disabled = true;
+            if (idx === task.correct) btn.classList.add('correct');
+            else if (idx === selectedIdx && !isCorrect) btn.classList.add('wrong');
+        });
+        if (isCorrect) state.score++;
+        state.answers.push({
+            section: 'Практика',
+            question: task.q,
+            userAnswer: task.options[selectedIdx],
+            correctAnswer: task.options[task.correct],
+            isCorrect: isCorrect,
+            explanation: task.explanation
+        });
+        document.getElementById('practice-explanation').style.display = 'block';
+    }
+
+    function nextPracticeLevel() {
+        if (state.practiceLevel < 7) {
+            state.practiceLevel++;
+            render();
+        } else {
+            state.step = 'test';
+            state.testQuestion = 0;
+            render();
+        }
+    }
+
+    function renderTest() {
+        const task = lessonData.test[state.testQuestion];
+        app.innerHTML = `
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                    <span style="color: var(--accent); font-weight: bold;">Итоговый тест: Вопрос ${state.testQuestion + 1} из 5</span>
+                    <span style="color: var(--text-muted);">Счет: ${state.score}</span>
+                </div>
+                <h3>${task.q}</h3>
+                <div id="options-container">
+                    ${task.options.map((opt, idx) => `
+                        <button class="option" onclick="checkTestAnswer(${idx})">${opt}</button>
+                    `).join('')}
+                </div>
+                <div id="test-explanation" class="explanation">
+                    <strong>Разбор:</strong> ${task.explanation}
+                    <br><br>
+                    <button class="btn btn-primary" onclick="nextTestQuestion()">Далее ➡️</button>
+                </div>
+            </div>
+        `;
+    }
+
+    function checkTestAnswer(selectedIdx) {
+        const task = lessonData.test[state.testQuestion];
+        const isCorrect = selectedIdx === task.correct;
+        document.querySelectorAll('.option').forEach((btn, idx) => {
+            btn.disabled = true;
+            if (idx === task.correct) btn.classList.add('correct');
+            else if (idx === selectedIdx && !isCorrect) btn.classList.add('wrong');
+        });
+        if (isCorrect) state.score++;
+        state.answers.push({
+            section: 'Тест',
+            question: task.q,
+            userAnswer: task.options[selectedIdx],
+            correctAnswer: task.options[task.correct],
+            isCorrect: isCorrect,
+            explanation: task.explanation
+        });
+        document.getElementById('test-explanation').style.display = 'block';
+    }
+
+    function nextTestQuestion() {
+        if (state.testQuestion < 4) {
+            state.testQuestion++;
+            render();
+        } else {
+            state.step = 'results';
+            render();
+        }
+    }
+
+    function renderResults() {
+        const percentage = Math.round((state.score / state.maxScore) * 100);
+        let grade = 2;
+        let gradeColor = 'var(--danger)';
+        let gradeText = 'Неудовлетворительно';
+
+        if (percentage >= 90) { grade = 5; gradeColor = 'var(--success)'; gradeText = 'Отлично'; }
+        else if (percentage >= 75) { grade = 4; gradeColor = 'var(--accent)'; gradeText = 'Хорошо'; }
+        else if (percentage >= 60) { grade = 3; gradeColor = '#f59e0b'; gradeText = 'Удовлетворительно'; }
+
+        const wrongAnswers = state.answers.filter(a => !a.isCorrect);
+
+        app.innerHTML = `
+            <div class="card" id="certificate-section">
+                <div class="certificate">
+                    <div style="font-size: 1rem; color: var(--text-muted); letter-spacing: 3px; margin-bottom: 10px;">СЕРТИФИКАТ ОБ ОКОНЧАНИИ МОДУЛЯ</div>
+                    <div class="cert-title">ОС и Среды</div>
+                    <div style="color: var(--text-muted); margin-bottom: 20px;">Управление памятью (Memory Management)</div>
+                    <div style="color: var(--text);">Настоящим подтверждается, что</div>
+                    <div class="cert-name">${esc(state.userName)}</div>
+                    <div style="color: var(--text);">успешно завершил(а) интерактивный модуль</div>
+                    <div style="margin: 30px 0;">
+                        <div style="font-size: 1.2rem; color: var(--text-muted);">Итоговая оценка</div>
+                        <div class="cert-grade" style="color: ${gradeColor}">${grade}</div>
+                        <div style="color: var(--text-muted);">${gradeText} (${state.score} из ${state.maxScore} баллов)</div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 0.9rem; color: var(--text-muted);">
+                        <div>Дата: ${new Date().toLocaleDateString('ru-RU')}</div>
+                        <div>ID: ${Math.random().toString(36).substr(2, 9).toUpperCase()}</div>
+                    </div>
+                </div>
+                <div class="no-print" style="text-align: center; margin-top: 20px;">
+                    <button class="btn btn-primary" onclick="window.print()">🖨️ Распечатать / Сохранить как PDF</button>
+                    <button class="btn btn-secondary" onclick="location.reload()" style="margin-left: 10px;">🔄 Пройти заново</button>
+                </div>
+            </div>
+
+            ${wrongAnswers.length > 0 ? `
+            <div class="card no-print">
+                <h2>🔍 Работа над ошибками</h2>
+                <p>Рекомендуем повторить следующие темы:</p>
+                ${wrongAnswers.map(a => `
+                    <div style="margin-bottom: 20px; padding: 15px; background: rgba(239, 68, 68, 0.1); border-radius: 8px; border-left: 4px solid var(--danger);">
+                        <strong style="color: #fca5a5;">[${a.section}]</strong> ${a.question}<br>
+                        <span style="color: var(--text-muted);">Ваш ответ:</span> <span style="text-decoration: line-through;">${a.userAnswer}</span><br>
+                        <span style="color: var(--success);">Правильный ответ:</span> ${a.correctAnswer}<br>
+                        <em style="color: var(--accent); display: block; margin-top: 5px;">💡 ${a.explanation}</em>
+                    </div>
+                `).join('')}
+            </div>
+            ` : `
+            <div class="card no-print">
+                <h2 style="color: var(--success);">🎉 Идеальный результат!</h2>
+                <p>Вы не допустили ни одной ошибки. Материал усвоен на отлично!</p>
+            </div>
+            `}
+        `;
+    }
+
+    render();
+</script>
+
+</body>
+</html>
