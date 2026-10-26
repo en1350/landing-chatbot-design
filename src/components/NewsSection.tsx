@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Icon from "@/components/ui/icon";
 import { adminGet } from "@/lib/adminApi";
+import SiteDemo from "@/components/demo/SiteDemo";
 
 interface NewsItem {
   id: number;
@@ -22,12 +23,13 @@ const NewsSection = () => {
 
   return (
     <section className="container pb-4">
-      <div className="mx-auto max-w-5xl overflow-hidden rounded-xl border border-primary/20 bg-card shadow-md animate-fade-in sm:rounded-2xl">
+      <div className="mx-auto grid max-w-5xl gap-4 lg:grid-cols-5 lg:items-stretch">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-primary/20 bg-card shadow-md animate-fade-in sm:rounded-2xl lg:col-span-2">
         <div className="flex items-center gap-2 bg-primary px-4 py-3 text-primary-foreground sm:px-5">
           <Icon name="Newspaper" size={18} />
           <h2 className="font-display font-semibold">Новости сайта</h2>
         </div>
-        <div className="max-h-56 overflow-y-auto sm:max-h-64 divide-y divide-border">
+        <div className="max-h-56 overflow-y-auto divide-y divide-border lg:h-0 lg:max-h-none lg:flex-1">
           {items.map((n) => (
             <article key={n.id} className="px-4 py-3 sm:px-5 sm:py-4">
               <div className="text-xs text-muted-foreground mb-1">
@@ -42,6 +44,10 @@ const NewsSection = () => {
           )}
           {!loaded && <p className="px-5 py-6 text-sm text-muted-foreground">Загрузка...</p>}
         </div>
+      </div>
+      <div className="lg:col-span-3 flex">
+        <SiteDemo />
+      </div>
       </div>
     </section>
   );
