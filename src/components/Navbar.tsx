@@ -94,8 +94,7 @@ const Navbar = ({
 
   const openExperience = () => {
     setOpen(false);
-    if (user) setExperienceOpen(true);
-    else onOpenAuth();
+    setExperienceOpen(true);
   };
 
   const handleClick = (key: string) => {
@@ -266,7 +265,12 @@ const Navbar = ({
           </SheetContent>
         </Sheet>
       </div>
-      <ExperienceModal open={experienceOpen} onClose={() => setExperienceOpen(false)} />
+      <ExperienceModal
+        open={experienceOpen}
+        onClose={() => setExperienceOpen(false)}
+        onNeedAuth={onOpenAuth}
+        onNeedUpgrade={onOpenPricing}
+      />
     </header>
   );
 };

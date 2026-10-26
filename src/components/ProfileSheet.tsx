@@ -9,6 +9,7 @@ import { downloadTxt } from "@/lib/download";
 import PlanCards, { PLAN_FEATURES } from "@/components/PlanCards";
 import UpgradeModal from "@/components/UpgradeModal";
 import ChangePasswordForm from "@/components/ChangePasswordForm";
+import { toast } from "sonner";
 
 interface ProfileSheetProps {
   open: boolean;
@@ -22,6 +23,8 @@ interface SavedMaterial {
   title: string;
   created_at: string;
 }
+
+const EXPERIENCE_URL = "https://functions.poehali.dev/46eba19d-23e4-44a2-89d2-4e0a4064268c";
 
 const USAGE_LABELS: Record<string, string> = {
   lesson: "Генератор уроков",
@@ -88,6 +91,27 @@ const ProfileSheet = ({ open, onClose, onNeedAuth }: ProfileSheetProps) => {
       }
     } finally {
       setDownloadingId(null);
+    }
+  };
+
+  const [publishingId, setPublishingId] = useState<number | null>(null);
+
+  const handlePublish = async (id: number) => {
+    if (!token) return;
+    setPublishingId(id);
+    try {
+      const res = await fetch(EXPERIENCE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Authorization": token },
+        body: JSON.stringify({ action: "publish_material", id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Не удалось опубликовать");
+      toast.success("Опубликовано в ленте опыта");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Не удалось опубликовать");
+    } finally {
+      setPublishingId(null);
     }
   };
 
@@ -258,7 +282,7 @@ const ProfileSheet = ({ open, onClose, onNeedAuth }: ProfileSheetProps) => {
               ) : (
                 <div className="space-y-2">
                   {materials.map((m) => (
-                    <div key={m.id} className="flex items-center gap-2 rounded-lg border border-border p-3">
+                    <div key={m.id} className="flex flex-wrap items-center gap-2 rounded-lg border border-border p-3">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{m.title}</p>
                         <p className="text-xs text-muted-foreground">
@@ -294,6 +318,14 @@ const ProfileSheet = ({ open, onClose, onNeedAuth }: ProfileSheetProps) => {
                         title="Удалить"
                       >
                         <Icon name="Trash2" size={15} />
+                      </button>
+                      <button
+                        onClick={() => handlePublish(m.id)}
+                        disabled={publishingId === m.id}
+                        className="flex h-8 w-full basis-full items-center justify-center gap-1.5 rounded-md border border-border text-xs font-medium hover:bg-accent transition-colors disabled:opacity-60"
+                      >
+                        <Icon name={publishingId === m.id ? "Loader2" : "Share2"} size={14} className={publishingId === m.id ? "animate-spin" : ""} />
+                        Опубликовать в ленте опыта
                       </button>
                     </div>
                   ))}
