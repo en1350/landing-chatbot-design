@@ -17,6 +17,7 @@ import PmTaskBuilder from "./pages/PmTaskBuilder";
 import KosBuilder from "@/pages/KosBuilder";
 import ProjectBuilder from "./pages/ProjectBuilder";
 import InfographicBuilder from "./pages/InfographicBuilder";
+import Unsubscribe from "./pages/Unsubscribe";
 import GameCardBuilder from "./pages/GameCardBuilder";
 import PresentationBuilder from "./pages/PresentationBuilder";
 import ExtracurricularAnalytics from "./pages/ExtracurricularAnalytics";
@@ -50,6 +51,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/unsubscribe" element={<Unsubscribe />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
               <Route path="/trenazher-dlya-uchenikov" element={<StudentTrainer />} />
               <Route path="/analitika-kachestva" element={<QualityAnalytics />} />

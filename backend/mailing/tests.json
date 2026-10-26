@@ -1,0 +1,8 @@
+{
+  "tests": [
+    {"name": "OPTIONS preflight", "method": "OPTIONS", "path": "/", "expectedStatus": 200},
+    {"name": "Guests have no access", "method": "GET", "path": "/", "expectedStatus": 403, "expectedBody": {"error": "string"}, "bodyMatcher": "partial"},
+    {"name": "Bad unsubscribe link", "method": "GET", "path": "/?unsubscribe=nope", "expectedStatus": 404, "expectedBody": {"error": "string"}, "bodyMatcher": "partial"},
+    {"name": "Guests cannot send", "method": "POST", "path": "/", "body": {"action": "send", "subject": "a", "text": "b", "origin": "https://x.ru"}, "expectedStatus": 403, "expectedBody": {"error": "string"}, "bodyMatcher": "partial"}
+  ]
+}

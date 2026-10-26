@@ -9,6 +9,7 @@ import StatsTab from "@/components/admin/StatsTab";
 import NewsTab from "@/components/admin/NewsTab";
 import FeedbackTab from "@/components/admin/FeedbackTab";
 import ExperienceTab from "@/components/admin/ExperienceTab";
+import MailingTab from "@/components/admin/MailingTab";
 
 const Admin = () => {
   const { token, user } = useAuth();
@@ -50,6 +51,7 @@ const Admin = () => {
           <TabsTrigger value="news">Новости</TabsTrigger>
           <TabsTrigger value="feedback">Отзывы</TabsTrigger>
           <TabsTrigger value="experience">Модерация ленты опыта</TabsTrigger>
+          <TabsTrigger value="mailing">Рассылка</TabsTrigger>
         </TabsList>
         <TabsContent value="stats">
           <StatsTab token={token} />
@@ -62,6 +64,9 @@ const Admin = () => {
         </TabsContent>
         <TabsContent value="experience">
           <ExperienceTab token={token} />
+        </TabsContent>
+        <TabsContent value="mailing">
+          <MailingTab token={token} />
         </TabsContent>
       </Tabs>
     </div>
