@@ -12,6 +12,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { useChatUnread } from "@/hooks/use-chat-unread";
 import NavDropdown, { NavItem } from "@/components/NavDropdown";
+import ExperienceModal from "@/components/ExperienceModal";
 
 interface NavbarProps {
   onOpenNotebook: () => void;
@@ -76,6 +77,7 @@ const Navbar = ({
   onOpenPricing,
 }: NavbarProps) => {
   const [open, setOpen] = useState(false);
+  const [experienceOpen, setExperienceOpen] = useState(false);
   const { user, token } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const chatUnread = useChatUnread();
@@ -89,6 +91,12 @@ const Navbar = ({
       .then(() => setIsAdmin(true))
       .catch(() => setIsAdmin(false));
   }, [user, token]);
+
+  const openExperience = () => {
+    setOpen(false);
+    if (user) setExperienceOpen(true);
+    else onOpenAuth();
+  };
 
   const handleClick = (key: string) => {
     setOpen(false);
@@ -125,6 +133,12 @@ const Navbar = ({
           <NavDropdown label="Тренажёры для учеников" shortLabel="Тренажёры" items={TRAINERS_MENU} />
           <NavDropdown label="Дополнительные сервисы" shortLabel="Сервисы" items={extraMenu} />
           <NavDropdown label="IT Тренажеры для ОВЗ" shortLabel="ОВЗ" items={OVZ_MENU} />
+          <button
+            onClick={openExperience}
+            className="story-link px-3 py-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+          >
+            Трансляция опыта
+          </button>
           {user && (
             <Link
               to="/chat"
@@ -216,6 +230,13 @@ const Navbar = ({
             ))}
 
             <div className="mt-6 flex flex-col">
+              <button
+                onClick={openExperience}
+                className="flex items-center gap-3 px-2 py-3 rounded-lg text-left text-base font-semibold text-primary hover:bg-accent transition-colors"
+              >
+                <Icon name="Presentation" size={18} />
+                Трансляция опыта
+              </button>
               {user && (
                 <Link
                   to="/chat"
@@ -245,6 +266,7 @@ const Navbar = ({
           </SheetContent>
         </Sheet>
       </div>
+      <ExperienceModal open={experienceOpen} onClose={() => setExperienceOpen(false)} />
     </header>
   );
 };
