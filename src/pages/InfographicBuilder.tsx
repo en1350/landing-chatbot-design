@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import AntiplagiatModal from "@/components/AntiplagiatModal";
 import ProfileSheet from "@/components/ProfileSheet";
 import AuthModal from "@/components/AuthModal";
 import UpgradeModal from "@/components/UpgradeModal";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, AUTH_URL } from "@/context/AuthContext";
 import { usePersistedState } from "@/hooks/use-persisted-state";
 import { toast } from "sonner";
 
@@ -45,7 +45,8 @@ const STYLES = [
 ];
 
 const InfographicBuilder = () => {
-  const { canUsePaid: isPaid, token, user } = useAuth();
+  const { isPaid, token, user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [decomposerOpen, setDecomposerOpen] = useState(false);
   const [randomizerOpen, setRandomizerOpen] = useState(false);
@@ -59,6 +60,69 @@ const InfographicBuilder = () => {
   const [style, setStyle] = usePersistedState("infographic_style", "flat");
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [savedId, setSavedId] = useState<number | null>(null);
+
+  const authPost = async (payload: Record<string, unknown>) => {
+    const res = await fetch(AUTH_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...(token ? { "X-Authorization": token } : {}) },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Ошибка сохранения");
+    return data;
+  };
+
+  useEffect(() => {
+    const id = Number(searchParams.get("open"));
+    if (!id || !token) return;
+    setSearchParams({}, { replace: true });
+    (async () => {
+      try {
+        const data = await authPost({ action: "get_material", id });
+        const parsed = JSON.parse(data.content || "{}");
+        if (!parsed.image) throw new Error("Не удалось открыть инфографику");
+        setSubject(parsed.subject || "");
+        setTopic(parsed.topic || "");
+        setStyle(parsed.style || "flat");
+        setImage(parsed.image);
+        setSavedId(id);
+        toast.success("Инфографика открыта из личного кабинета");
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Не удалось открыть инфографику");
+      }
+    })();
+  }, [searchParams, token]);
+
+  const save = async () => {
+    if (!image) return;
+    if (!user || !token) {
+      setAuthOpen(true);
+      return;
+    }
+    if (image.startsWith("data:")) {
+      toast.error("Не удалось сохранить картинку, создайте инфографику заново");
+      return;
+    }
+    setSaving(true);
+    try {
+      const title = `Инфографика: ${topic.trim() || subject}`;
+      const content = JSON.stringify({ subject, topic: topic.trim(), style, image });
+      if (savedId) {
+        await authPost({ action: "update_material", id: savedId, title, content });
+        toast.success("Изменения сохранены в личном кабинете");
+      } else {
+        const res = await authPost({ action: "save_material", type: "infographic", title, content });
+        setSavedId(res.id);
+        toast.success("Инфографика сохранена в личном кабинете, вкладка «Материалы»");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Не удалось сохранить");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const generate = async () => {
     if (!user) {
@@ -83,6 +147,7 @@ const InfographicBuilder = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Не удалось создать инфографику");
       setImage(data.cdn_url || data.image);
+      setSavedId(null);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Не удалось создать инфографику");
     } finally {
@@ -197,6 +262,10 @@ const InfographicBuilder = () => {
                     <Button onClick={download}>
                       <Icon name="Download" size={16} />
                       Скачать
+                    </Button>
+                    <Button variant="outline" onClick={save} disabled={saving}>
+                      <Icon name={saving ? "Loader" : "FolderPlus"} size={16} className={saving ? "animate-spin" : ""} />
+                      {savedId ? "Обновить в кабинете" : "В кабинет"}
                     </Button>
                     <Button variant="outline" onClick={generate}>
                       <Icon name="RefreshCw" size={16} />

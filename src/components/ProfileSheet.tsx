@@ -265,13 +265,13 @@ const ProfileSheet = ({ open, onClose, onNeedAuth }: ProfileSheetProps) => {
                           {new Date(m.created_at).toLocaleDateString("ru-RU")}
                         </p>
                       </div>
-                      {m.type === "presentation" || m.type === "project" ? (
+                      {m.type === "presentation" || m.type === "project" || m.type === "infographic" ? (
                         <a
-                          href={m.type === "project" ? `/generator-proektov?open=${m.id}` : `/generator-prezentaciy?open=${m.id}`}
+                          href={m.type === "project" ? `/generator-proektov?open=${m.id}` : m.type === "infographic" ? `/generator-infografiki?open=${m.id}` : `/generator-prezentaciy?open=${m.id}`}
                           className="flex h-8 items-center gap-1.5 rounded-md px-2 text-xs font-medium hover:bg-accent transition-colors shrink-0"
-                          title={m.type === "project" ? "Открыть план проекта" : "Открыть, скачать PPTX или PDF"}
+                          title={m.type === "project" ? "Открыть план проекта" : m.type === "infographic" ? "Открыть и скачать инфографику" : "Открыть, скачать PPTX или PDF"}
                         >
-                          <Icon name={m.type === "project" ? "FolderKanban" : "Presentation"} size={15} />
+                          <Icon name={m.type === "project" ? "FolderKanban" : m.type === "infographic" ? "ChartPie" : "Presentation"} size={15} />
                           Открыть
                         </a>
                       ) : (
