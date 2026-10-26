@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 import ChatWidget from "@/components/ChatWidget";
+import SiteDemo from "@/components/demo/SiteDemo";
 
 const Hero = () => {
   return (
@@ -17,8 +18,9 @@ const Hero = () => {
 
       <div className="container relative pt-6 pb-6 md:pb-8">
         <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 items-start max-w-5xl mx-auto animate-fade-in" style={{ animationDelay: "0.15s" }}>
-          <div id="chat-anchor" className="flex justify-center lg:justify-end w-full scroll-mt-24 order-2 lg:order-1">
+          <div id="chat-anchor" className="flex flex-col items-center lg:items-end gap-6 w-full scroll-mt-24 order-2 lg:order-1">
             <ChatWidget />
+            <SiteDemo />
           </div>
           <div className="w-full max-w-xl mx-auto lg:mx-0 order-1 lg:order-2">
             <Link to="/trenazher-dlya-uchenikov" className="group block w-full cursor-pointer" aria-label="Открыть тренажёры для учеников">
