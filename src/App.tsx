@@ -16,6 +16,7 @@ import TaskCardBuilder from "./pages/TaskCardBuilder";
 import PmTaskBuilder from "./pages/PmTaskBuilder";
 import KosBuilder from "@/pages/KosBuilder";
 import ProjectBuilder from "./pages/ProjectBuilder";
+import InfographicBuilder from "./pages/InfographicBuilder";
 import GameCardBuilder from "./pages/GameCardBuilder";
 import PresentationBuilder from "./pages/PresentationBuilder";
 import ExtracurricularAnalytics from "./pages/ExtracurricularAnalytics";
@@ -55,6 +56,7 @@ const App = () => (
               <Route path="/kachestvo-znaniy" element={<QualityAnalysisTool />} />
               <Route path="/konstruktor-uroka" element={<LessonCardBuilder />} />
               <Route path="/konstruktor-zadaniy" element={<TaskCardBuilder />} />
+              <Route path="/generator-infografiki" element={<InfographicBuilder />} />
               <Route path="/generator-proektov" element={<ProjectBuilder />} />
               <Route path="/generator-zadaniy-pm" element={<PmTaskBuilder />} />
               <Route path="/konstruktor-kos" element={<KosBuilder />} />

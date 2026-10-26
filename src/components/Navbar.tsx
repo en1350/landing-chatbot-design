@@ -34,6 +34,7 @@ const GENERATORS_MENU: NavItem[] = [
   { label: "Мастер-классы", to: "/konstruktor-masterklassov", icon: "Sparkles" },
   { label: "Задания по ПМ", to: "/generator-zadaniy-pm", icon: "Briefcase" },
   { label: "Генератор проектов", to: "/generator-proektov", icon: "FolderKanban" },
+  { label: "Генератор инфографики", to: "/generator-infografiki", icon: "ChartPie" },
 ];
 
 const REPORTS_MENU: NavItem[] = [

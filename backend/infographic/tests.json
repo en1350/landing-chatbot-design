@@ -1,0 +1,7 @@
+{
+  "tests": [
+    {"name": "OPTIONS preflight", "method": "OPTIONS", "path": "/", "expectedStatus": 200},
+    {"name": "GET not allowed", "method": "GET", "path": "/", "expectedStatus": 405, "expectedBody": {"error": "string"}, "bodyMatcher": "partial"},
+    {"name": "Requires subscription", "method": "POST", "path": "/", "body": {"subject": "Биология", "topic": "Клетка", "style": "flat"}, "expectedStatus": 403, "expectedBody": {"error": "string"}, "bodyMatcher": "partial"}
+  ]
+}
