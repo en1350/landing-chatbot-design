@@ -2,7 +2,9 @@ import base64
 import json
 import os
 import re
+import smtplib
 import uuid
+from email.mime.text import MIMEText
 from urllib.parse import quote
 import boto3
 import psycopg2
@@ -45,6 +47,61 @@ def get_user(cur, event):
         (token,),
     )
     return cur.fetchone()
+
+
+def send_email(to_email, subject, text):
+    host = os.environ.get('SMTP_HOST')
+    port = int(os.environ.get('SMTP_PORT', '465'))
+    login = os.environ.get('SMTP_LOGIN')
+    password = os.environ.get('SMTP_PASSWORD')
+    if not host or not login or not password or not to_email:
+        return
+    msg = MIMEText(text, 'plain', 'utf-8')
+    msg['Subject'] = subject
+    msg['From'] = login
+    msg['To'] = to_email
+    if port == 465:
+        with smtplib.SMTP_SSL(host, port, timeout=10) as server:
+            server.login(login, password)
+            server.sendmail(login, [to_email], msg.as_string())
+    else:
+        with smtplib.SMTP(host, port, timeout=10) as server:
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            server.login(login, password)
+            server.sendmail(login, [to_email], msg.as_string())
+
+
+def notify_author(cur, post_id, approved, reason):
+    cur.execute(
+        f"SELECT u.email, p.author_name, p.title FROM {SCHEMA}.experience_posts p "
+        f"JOIN {SCHEMA}.users u ON u.id = p.user_id WHERE p.id = %s",
+        (post_id,),
+    )
+    row = cur.fetchone()
+    if not row:
+        return
+    to_email, author, title = row
+    if approved:
+        subject = 'Ваша публикация одобрена в ленте опыта УрокАИ'
+        text = (
+            f"Здравствуйте, {author}!\n\n"
+            f"Ваша публикация «{title}» прошла проверку и теперь доступна всем в разделе «Трансляция опыта».\n\n"
+            f"Спасибо, что делитесь опытом с коллегами!"
+        )
+    else:
+        subject = 'Ваша публикация не прошла проверку в ленте опыта УрокАИ'
+        text = (
+            f"Здравствуйте, {author}!\n\n"
+            f"К сожалению, публикация «{title}» не была одобрена для ленты опыта.\n\n"
+            f"Причина: {reason or 'не указана'}\n\n"
+            f"Вы можете доработать материал и опубликовать его снова."
+        )
+    try:
+        send_email(to_email, subject, text)
+    except Exception:
+        pass
 
 
 def is_paid(cur, user_id):
@@ -157,6 +214,7 @@ def handler(event: dict, context) -> dict:
                     reason = (body.get('reason') or '').strip()[:500]
                     cur.execute(f"UPDATE {SCHEMA}.experience_posts SET status = 'rejected', reject_reason = %s WHERE id = %s", (reason, post_id))
                 conn.commit()
+                notify_author(cur, post_id, action == 'approve', None if action == 'approve' else reason)
                 return resp(200, {'ok': True})
 
             if action == 'like':
