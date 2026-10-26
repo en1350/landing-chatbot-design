@@ -82,7 +82,7 @@ export async function exportPptx(data: PresentationData, theme: StyleTheme) {
       );
       const imgX = (LAYOUT.padX + 8 + bodyW + LAYOUT.gap) * PX;
       if (sl.imageUrl) {
-        slide.addImage({ data: sl.imageUrl, x: imgX, y: bodyTop * PX, w: LAYOUT.imageW * PX, h: imgH * PX, sizing: { type: "cover", w: LAYOUT.imageW * PX, h: imgH * PX } });
+        slide.addImage({ data: sl.imageUrl, x: imgX, y: bodyTop * PX, w: LAYOUT.imageW * PX, h: imgH * PX, sizing: { type: sl.imageFit === "contain" ? "contain" : "cover", w: LAYOUT.imageW * PX, h: imgH * PX } });
       } else if (sl.image) {
         slide.addShape(pptx.ShapeType.roundRect, {
           x: imgX, y: bodyTop * PX, w: LAYOUT.imageW * PX, h: imgH * PX, fill: { color: "FFFFFF", transparency: 100 }, line: { color: hex(theme.accent), width: 2, dashType: "dash" }, rectRadius: 0.15,

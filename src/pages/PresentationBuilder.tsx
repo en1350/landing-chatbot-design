@@ -22,6 +22,8 @@ import {
   parsePresentation,
   serializePresentation,
 } from "@/components/presentation/savedPresentations";
+import InfographicPickerModal from "@/components/presentation/InfographicPickerModal";
+import { toDataUrl } from "@/components/presentation/savedPresentations";
 import SlideView from "@/components/presentation/SlideView";
 import ScaledSlide from "@/components/presentation/ScaledSlide";
 import { exportPdf, exportPptx } from "@/components/presentation/exportPresentation";
@@ -86,6 +88,22 @@ const PresentationBuilder = () => {
   const [loadingList, setLoadingList] = useState(false);
   const [openingId, setOpeningId] = useState<number | null>(null);
   const lastSavedRef = useRef("");
+  const [pickerSlide, setPickerSlide] = useState<number | null>(null);
+
+  const insertInfographic = async (index: number, title: string, url: string) => {
+    const dataUrl = await toDataUrl(url);
+    setDeck((d) =>
+      d
+        ? {
+            ...d,
+            slides: d.slides.map((sl, i) =>
+              i === index ? { ...sl, image: sl.image || title, imageUrl: dataUrl, cdnUrl: url, imageFit: "contain" } : sl
+            ),
+          }
+        : d
+    );
+    toast.success("Инфографика добавлена на слайд");
+  };
   const [searchParams, setSearchParams] = useSearchParams();
 
   const authPost = useCallback(
@@ -382,7 +400,7 @@ const PresentationBuilder = () => {
         }
         if (idx === -1) return { ...sl, imageUrl: undefined, cdnUrl: undefined };
         used.add(idx);
-        return { ...sl, imageUrl: pool[idx].imageUrl, cdnUrl: pool[idx].cdnUrl };
+        return { ...sl, imageUrl: pool[idx].imageUrl, cdnUrl: pool[idx].cdnUrl, imageFit: pool[idx].imageFit };
       });
 
       setDeck({ ...deck, slides });
@@ -669,6 +687,17 @@ const PresentationBuilder = () => {
                             {sl.imageUrl ? "Другая иллюстрация" : "Создать иллюстрацию"}
                           </Button>
                         )}
+                        {i !== 0 && i !== deck.slides.length - 1 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="mt-1 h-7 gap-1.5 px-2 text-xs"
+                            onClick={() => (user ? setPickerSlide(i) : setAuthOpen(true))}
+                          >
+                            <Icon name="ChartPie" size={13} />
+                            Вставить инфографику
+                          </Button>
+                        )}
                         {sl.notes && (
                           <p className="mt-1.5 text-xs text-muted-foreground leading-snug">
                             <b>Заметки:</b> {sl.notes}
@@ -748,6 +777,14 @@ const PresentationBuilder = () => {
         onNeedAuth={() => {
           setProfileOpen(false);
           setAuthOpen(true);
+        }}
+      />
+      <InfographicPickerModal
+        open={pickerSlide !== null}
+        onClose={() => setPickerSlide(null)}
+        onPick={(title, url) => {
+          if (pickerSlide !== null) void insertInfographic(pickerSlide, title, url);
+          setPickerSlide(null);
         }}
       />
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />

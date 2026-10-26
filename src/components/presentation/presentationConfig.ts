@@ -5,6 +5,7 @@ export interface Slide {
   image: string;
   imageUrl?: string;
   cdnUrl?: string;
+  imageFit?: "contain";
 }
 
 export interface PresentationData {

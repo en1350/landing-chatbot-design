@@ -16,6 +16,7 @@ export const serializePresentation = (deck: PresentationData, style: StyleKey): 
       bullets: sl.bullets,
       notes: sl.notes,
       image: sl.image,
+      imageFit: sl.imageFit,
       imageUrl: sl.cdnUrl || (sl.imageUrl && sl.imageUrl.startsWith("http") ? sl.imageUrl : undefined),
     })),
   });
@@ -52,6 +53,7 @@ export const parsePresentation = async (
           notes: String(sl.notes || ""),
           image: String(sl.image || ""),
           cdnUrl,
+          imageFit: sl.imageFit === "contain" ? ("contain" as const) : undefined,
           imageUrl: cdnUrl ? await toDataUrl(cdnUrl) : undefined,
         };
       })

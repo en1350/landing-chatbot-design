@@ -98,7 +98,7 @@ const SlideView = ({ slide, index, total, deckTitle, theme }: Props) => {
             src={slide.imageUrl}
             alt=""
             crossOrigin="anonymous"
-            style={{ width: LAYOUT.imageW, height: imgH, flexShrink: 0, objectFit: "cover", borderRadius: 18, border: `3px solid ${theme.accent}` }}
+            style={{ width: LAYOUT.imageW, height: imgH, flexShrink: 0, objectFit: slide.imageFit === "contain" ? "contain" : "cover", background: slide.imageFit === "contain" ? "#FFFFFF" : undefined, borderRadius: 18, border: `3px solid ${theme.accent}` }}
           />
         ) : (
           slide.image && (
