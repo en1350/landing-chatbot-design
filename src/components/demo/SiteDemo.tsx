@@ -94,6 +94,15 @@ const SiteDemo = () => {
           <span>{step.result}</span>
         </div>
 
+        {step.image && (
+          <img
+            src={step.image}
+            alt={`Пример: ${step.title}`}
+            loading="lazy"
+            className="mt-3 h-32 w-full rounded-xl border border-border object-cover object-top"
+          />
+        )}
+
         {step.to && (
           <Link
             to={step.to}

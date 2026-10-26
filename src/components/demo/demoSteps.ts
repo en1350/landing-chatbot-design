@@ -4,6 +4,7 @@ export interface DemoStep {
   text: string;
   actions: string[];
   result: string;
+  image?: string;
   to?: string;
   toLabel?: string;
 }
@@ -74,5 +75,15 @@ export const DEMO_STEPS: DemoStep[] = [
     result: "Ошибки, оценка и готовый комментарий для обратной связи. Доступно по подписке.",
     to: "/#notebook",
     toLabel: "К проверке тетради",
+  },
+  {
+    icon: "MessageCircle",
+    title: "Чат педагогов",
+    text: "Чат виден зарегистрированным пользователям. Задайте вопрос по портфолио или обменяйтесь опытом с коллегами.",
+    actions: ["Войдите в аккаунт и откройте пункт «Чат»", "Напишите сообщение и нажмите стрелку", "Читайте советы коллег"],
+    result: "Обсуждаем только рабочие моменты. Запрещены политика, религия, реклама и нецензурная брань.",
+    image: "https://cdn.poehali.dev/projects/3a27d5a9-016a-43ab-946d-4c4fe8129705/bucket/e53b8005-b0ce-4469-9816-c2120975ca8c.png",
+    to: "/chat",
+    toLabel: "Открыть чат",
   },
 ];
