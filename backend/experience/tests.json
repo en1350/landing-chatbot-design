@@ -2,6 +2,7 @@
   "tests": [
     {"name": "OPTIONS preflight", "method": "OPTIONS", "path": "/", "expectedStatus": 200},
     {"name": "Guests can view feed", "method": "GET", "path": "/", "expectedStatus": 200, "expectedBody": {"posts": []}, "bodyMatcher": "partial"},
-    {"name": "Guests cannot post", "method": "POST", "path": "/", "body": {"title": "x", "description": "y"}, "expectedStatus": 401, "expectedBody": {"error": "string"}, "bodyMatcher": "partial"}
+    {"name": "Guests cannot post", "method": "POST", "path": "/", "body": {"title": "x", "description": "y"}, "expectedStatus": 401, "expectedBody": {"error": "string"}, "bodyMatcher": "partial"},
+    {"name": "Guests cannot open moderation", "method": "GET", "path": "/?moderation=1", "expectedStatus": 403, "expectedBody": {"error": "string"}, "bodyMatcher": "partial"}
   ]
 }

@@ -107,7 +107,7 @@ const ProfileSheet = ({ open, onClose, onNeedAuth }: ProfileSheetProps) => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Не удалось опубликовать");
-      toast.success("Опубликовано в ленте опыта");
+      toast.success("Отправлено на проверку, после одобрения появится в ленте опыта");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Не удалось опубликовать");
     } finally {

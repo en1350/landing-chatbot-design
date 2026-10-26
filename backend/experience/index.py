@@ -144,6 +144,21 @@ def handler(event: dict, context) -> dict:
                 conn.commit()
                 return resp(200, {'hidden': True})
 
+            if action in ('approve', 'reject'):
+                if not is_admin(email):
+                    return resp(403, {'error': 'Только администратор может модерировать'})
+                try:
+                    post_id = int(body.get('id'))
+                except (TypeError, ValueError):
+                    return resp(400, {'error': 'Не указана публикация'})
+                if action == 'approve':
+                    cur.execute(f"UPDATE {SCHEMA}.experience_posts SET status = 'approved', reject_reason = NULL WHERE id = %s", (post_id,))
+                else:
+                    reason = (body.get('reason') or '').strip()[:500]
+                    cur.execute(f"UPDATE {SCHEMA}.experience_posts SET status = 'rejected', reject_reason = %s WHERE id = %s", (reason, post_id))
+                conn.commit()
+                return resp(200, {'ok': True})
+
             if action == 'like':
                 if not paid:
                     return resp(403, {'error': 'Лайки доступны по платной подписке'})
@@ -209,8 +224,8 @@ def handler(event: dict, context) -> dict:
                     return resp(404, {'error': 'Материал не найден'})
                 kind, image_url, description = material_to_post(*row)
                 cur.execute(
-                    f"INSERT INTO {SCHEMA}.experience_posts (user_id, author_name, kind, title, description, image_url) "
-                    f"VALUES (%s, %s, %s, %s, %s, %s) RETURNING id",
+                    f"INSERT INTO {SCHEMA}.experience_posts (user_id, author_name, kind, title, description, image_url, status) "
+                    f"VALUES (%s, %s, %s, %s, %s, %s, 'pending') RETURNING id",
                     (user_id, author, kind, row[1][:200], description[:3000], image_url),
                 )
                 new_id = cur.fetchone()[0]
@@ -234,8 +249,8 @@ def handler(event: dict, context) -> dict:
             if not description and not file_url:
                 return resp(400, {'error': 'Добавьте описание или прикрепите файл'})
             cur.execute(
-                f"INSERT INTO {SCHEMA}.experience_posts (user_id, author_name, kind, title, description, file_url, file_name) "
-                f"VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id, created_at",
+                f"INSERT INTO {SCHEMA}.experience_posts (user_id, author_name, kind, title, description, file_url, file_name, status) "
+                f"VALUES (%s, %s, %s, %s, %s, %s, %s, 'pending') RETURNING id, created_at",
                 (user_id, author, kind, title, description, file_url, file_name),
             )
             new_id, created_at = cur.fetchone()
@@ -243,6 +258,19 @@ def handler(event: dict, context) -> dict:
             return resp(200, {'id': new_id, 'created_at': created_at})
 
         params = event.get('queryStringParameters') or {}
+        if params.get('moderation'):
+            if not user_id or not is_admin(email):
+                return resp(403, {'error': 'Только для администратора'})
+            cur.execute(
+                f"SELECT id, user_id, author_name, kind, title, description, file_url, file_name, created_at, image_url "
+                f"FROM {SCHEMA}.experience_posts WHERE status = 'pending' AND is_hidden = false ORDER BY id ASC LIMIT 100"
+            )
+            queue = [
+                {'id': r[0], 'user_id': r[1], 'author': r[2], 'kind': r[3], 'title': r[4], 'description': r[5],
+                 'file_url': r[6], 'file_name': r[7], 'created_at': r[8], 'image_url': r[9]}
+                for r in cur.fetchall()
+            ]
+            return resp(200, {'posts': queue})
         if params.get('post_id'):
             try:
                 pid = int(params['post_id'])
@@ -260,14 +288,15 @@ def handler(event: dict, context) -> dict:
             f"SELECT p.id, p.user_id, p.author_name, p.kind, p.title, p.description, p.file_url, p.file_name, p.created_at, p.image_url, "
             f"(SELECT COUNT(*) FROM {SCHEMA}.experience_likes l WHERE l.post_id = p.id), "
             f"(SELECT COUNT(*) FROM {SCHEMA}.experience_comments c WHERE c.post_id = p.id AND c.is_hidden = false), "
-            f"EXISTS (SELECT 1 FROM {SCHEMA}.experience_likes l2 WHERE l2.post_id = p.id AND l2.user_id = %s) "
-            f"FROM {SCHEMA}.experience_posts p WHERE p.is_hidden = false ORDER BY p.id DESC LIMIT 100",
-            (user_id or 0,),
+            f"EXISTS (SELECT 1 FROM {SCHEMA}.experience_likes l2 WHERE l2.post_id = p.id AND l2.user_id = %s), "
+            f"p.status, p.reject_reason "
+            f"FROM {SCHEMA}.experience_posts p WHERE p.is_hidden = false AND (p.status = 'approved' OR p.user_id = %s) ORDER BY p.id DESC LIMIT 100",
+            (user_id or 0, user_id or 0),
         )
         posts = [
             {'id': r[0], 'user_id': r[1], 'author': r[2], 'kind': r[3], 'title': r[4], 'description': r[5],
              'file_url': r[6], 'file_name': r[7], 'created_at': r[8], 'image_url': r[9],
-             'likes': r[10], 'comments': r[11], 'liked': r[12]}
+             'likes': r[10], 'comments': r[11], 'liked': r[12], 'status': r[13], 'reject_reason': r[14]}
             for r in cur.fetchall()
         ]
         return resp(200, {'posts': posts, 'me': user_id, 'paid': paid, 'is_admin': bool(user_id) and is_admin(email)})

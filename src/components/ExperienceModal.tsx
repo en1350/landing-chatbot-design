@@ -25,6 +25,8 @@ interface Post {
   likes: number;
   comments: number;
   liked: boolean;
+  status: "pending" | "approved" | "rejected";
+  reject_reason: string | null;
 }
 
 interface Comment {
@@ -130,7 +132,7 @@ const ExperienceModal = ({ open, onClose, onNeedAuth, onNeedUpgrade }: Props) =>
       const res = await fetch(EXPERIENCE_URL, { method: "POST", headers, body: JSON.stringify(payload) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Не удалось опубликовать");
-      toast.success("Опубликовано в ленте опыта");
+      toast.success("Отправлено на проверку. После одобрения администратором публикация появится в ленте");
       setTitle("");
       setDescription("");
       setFile(null);
@@ -333,6 +335,16 @@ const ExperienceModal = ({ open, onClose, onNeedAuth, onNeedUpgrade }: Props) =>
                     </button>
                   )}
                 </div>
+                {p.status === "pending" && (
+                  <p className="mt-2 rounded-md bg-amber-100 px-3 py-1.5 text-xs font-medium text-amber-900">
+                    На проверке у администратора, видна только вам
+                  </p>
+                )}
+                {p.status === "rejected" && (
+                  <p className="mt-2 rounded-md bg-red-100 px-3 py-1.5 text-xs font-medium text-red-900">
+                    Отклонено{p.reject_reason ? `: ${p.reject_reason}` : ""}
+                  </p>
+                )}
                 {p.description && <p className="mt-2 whitespace-pre-wrap text-sm">{p.description}</p>}
                 {p.image_url && (
                   <img src={p.image_url} alt={p.title} loading="lazy" className="mt-3 w-full max-w-md rounded-lg border border-border" />
@@ -348,6 +360,7 @@ const ExperienceModal = ({ open, onClose, onNeedAuth, onNeedUpgrade }: Props) =>
                     <span className="max-w-[16rem] truncate">{p.file_name || "Скачать файл"}</span>
                   </a>
                 )}
+                {p.status === "approved" && (
                 <div className="mt-3 flex items-center gap-1 border-t border-border pt-2">
                   <button
                     onClick={() => toggleLike(p.id)}
@@ -365,7 +378,8 @@ const ExperienceModal = ({ open, onClose, onNeedAuth, onNeedUpgrade }: Props) =>
                     {p.comments}
                   </button>
                 </div>
-                {openComments === p.id && (
+                )}
+                {p.status === "approved" && openComments === p.id && (
                   <div className="mt-2 space-y-2">
                     {commentsLoading ? (
                       <Icon name="Loader2" size={18} className="animate-spin text-muted-foreground" />
