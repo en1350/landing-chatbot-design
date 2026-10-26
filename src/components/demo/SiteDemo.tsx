@@ -21,7 +21,7 @@ const SiteDemo = () => {
   }, [playing, index, last]);
 
   return (
-    <div className="rounded-2xl border border-border bg-card shadow-xl shadow-primary/5 overflow-hidden w-full max-w-md">
+    <div className="rounded-2xl border border-border bg-card shadow-md overflow-hidden w-full flex flex-col">
       <div className="flex items-center justify-between gap-2 px-4 py-3 bg-coral text-coral-foreground">
         <span className="flex items-center gap-2 font-display text-sm font-bold">
           <Icon name="PlayCircle" size={17} />
@@ -63,7 +63,7 @@ const SiteDemo = () => {
         ))}
       </div>
 
-      <div key={index} className="px-4 py-4 h-[22rem] overflow-y-auto animate-fade-in">
+      <div key={index} className="px-4 py-4 h-[22rem] lg:h-0 lg:min-h-[18rem] flex-1 overflow-y-auto animate-fade-in">
         <div className="flex items-center gap-3">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <Icon name={step.icon} size={22} />
