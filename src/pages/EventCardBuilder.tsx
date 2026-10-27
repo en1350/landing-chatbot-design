@@ -562,7 +562,7 @@ const EventCardBuilder = () => {
 
               <Button variant="ghost" className="w-full mt-2 gap-1.5 text-muted-foreground" onClick={resetForm}>
                 <Icon name="RotateCcw" size={14} />
-                Сбросить форму
+                Очистить
               </Button>
             </div>
 

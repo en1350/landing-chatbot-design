@@ -355,7 +355,7 @@ const LessonCardBuilder = () => {
   };
 
   const handleReset = () => {
-    if (!window.confirm("Сбросить все поля формы?")) return;
+    if (!window.confirm("Очистить все поля формы?")) return;
     setPm("");
     setMdk("");
     setDiscipline("");
@@ -800,7 +800,7 @@ const LessonCardBuilder = () => {
 
               <Button variant="ghost" className="w-full mt-2.5 gap-2 text-muted-foreground" onClick={handleReset}>
                 <Icon name="RotateCcw" size={15} />
-                Сбросить поля
+                Очистить
               </Button>
             </div>
 

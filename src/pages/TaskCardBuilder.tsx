@@ -69,6 +69,24 @@ const TaskCardBuilder = () => {
     setPrefilled(true);
   }, []);
 
+  const clearAll = () => {
+    if (!window.confirm("Очистить все поля?")) return;
+    setDiscipline("");
+    setGroup("");
+    setTopic("");
+    setGoal("");
+    setTask("");
+    setCriteria("");
+    setTime(TIME_OPTIONS[0]);
+    setTaskType(TASK_TYPES[0]);
+    setSelfAssessment("Да");
+    setCompetencies([]);
+    setExtraCompetencies([]);
+    setOvz([]);
+    setRefineInstruction("");
+    setRefineError(null);
+  };
+
   const allCompetencies = useMemo(
     () => [...competencies, ...extraCompetencies],
     [competencies, extraCompetencies]
@@ -426,6 +444,11 @@ const TaskCardBuilder = () => {
                   ИИ-наполнение доступно по подписке. Форму можно заполнить вручную и распечатать бесплатно.
                 </p>
               )}
+
+              <Button variant="ghost" className="w-full mt-2 gap-2 text-muted-foreground" onClick={clearAll}>
+                <Icon name="RotateCcw" size={15} />
+                Очистить
+              </Button>
 
               {!refineOpen ? (
                 <Button

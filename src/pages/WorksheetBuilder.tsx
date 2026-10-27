@@ -135,6 +135,21 @@ const WorksheetBuilder = () => {
     }
   };
 
+  const clearAll = () => {
+    if (!window.confirm("Очистить все поля и задания?")) return;
+    setTopic("");
+    setDiscipline("");
+    setGroup("");
+    setTeacher("");
+    setPlanText("");
+    setFileName("");
+    setLevel(LEVELS[1]);
+    setTaskCount("5");
+    setTasks([createTask()]);
+    setRefineInstruction("");
+    setRefineError(null);
+  };
+
   const clearFile = () => {
     setPlanText("");
     setFileName("");
@@ -348,6 +363,11 @@ const WorksheetBuilder = () => {
               <Button onClick={generate} disabled={loading} className="w-full gap-2">
                 <Icon name={loading ? "Loader" : "Sparkles"} size={16} className={loading ? "animate-spin" : ""} />
                 {loading ? "ИИ составляет задания..." : "Составить задания с ИИ"}
+              </Button>
+
+              <Button type="button" variant="ghost" className="w-full gap-2 text-muted-foreground" onClick={clearAll}>
+                <Icon name="RotateCcw" size={15} />
+                Очистить
               </Button>
 
               <div className="space-y-3 border-t border-border pt-5">

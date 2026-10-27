@@ -238,7 +238,7 @@ const RpdBuilder = () => {
               </Button>
               <Button variant="outline" className="gap-1.5 text-destructive" onClick={clearAll}>
                 <Icon name="Trash2" size={15} />
-                Очистить всё
+                Очистить
               </Button>
             </div>
             <RpdPreview data={data} />

@@ -125,6 +125,7 @@ const GameCardBuilder = () => {
   };
 
   const resetAll = () => {
+    if (!window.confirm("Очистить все поля?")) return;
     setTopic("");
     setScenario("");
     setOvz([]);
@@ -306,7 +307,7 @@ const GameCardBuilder = () => {
               )}
               <Button variant="ghost" className="w-full mt-2 gap-2 text-muted-foreground" onClick={resetAll}>
                 <Icon name="RotateCcw" size={15} />
-                Сбросить
+                Очистить
               </Button>
             </div>
 
