@@ -22,7 +22,7 @@ const NewsSection = () => {
 
   return (
     <section className="container pb-4">
-      <div className="mx-auto max-w-5xl overflow-hidden rounded-xl border border-primary/20 bg-card shadow-md animate-fade-in sm:rounded-2xl">
+      <div className="overflow-hidden rounded-xl border border-primary/20 bg-card shadow-md animate-fade-in sm:rounded-2xl">
         <div className="flex items-center gap-2 bg-primary px-4 py-3 text-primary-foreground sm:px-5">
           <Icon name="Newspaper" size={18} />
           <h2 className="font-display font-semibold">Новости сайта</h2>

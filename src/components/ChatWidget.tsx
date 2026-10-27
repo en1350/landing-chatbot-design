@@ -61,7 +61,7 @@ const ChatWidget = () => {
   };
 
   return (
-    <div className="rounded-2xl border border-border bg-card shadow-xl shadow-primary/5 overflow-hidden w-full max-w-md">
+    <div className="rounded-2xl border border-border bg-card shadow-xl shadow-primary/5 overflow-hidden w-full">
       <div className="flex items-center gap-2.5 px-4 py-3 bg-primary text-primary-foreground">
         <span className="relative flex h-2.5 w-2.5">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75" />
