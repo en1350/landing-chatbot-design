@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 import Icon from "@/components/ui/icon";
+import { Link } from "@/lib/router-compat";
 
 interface Props {
   icon: string;
@@ -73,6 +74,15 @@ const TrainerFullscreen = ({ icon, title, onClose, children }: Props) => {
   return (
     <div ref={rootRef} className={`fixed inset-0 z-[60] flex flex-col bg-background text-foreground ${dark ? "dark" : ""}`}>
       <div className="flex items-center gap-3 border-b border-border bg-card px-3 py-2 sm:px-4">
+        <Link to="/" title="На главную" className="flex shrink-0 items-center gap-2 rounded-lg pr-1 transition-opacity hover:opacity-80">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+            <Icon name="GraduationCap" size={17} />
+          </span>
+          <span className="font-display text-base font-bold tracking-tight">
+            Урок<span className="text-coral">АИ</span>
+          </span>
+        </Link>
+        <span className="h-5 w-px shrink-0 bg-border" />
         <button
           onClick={onClose}
           className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
