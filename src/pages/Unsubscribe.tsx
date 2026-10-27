@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "@/lib/router-compat";
 import { Button } from "@/components/ui/button";
 import Icon from "@/components/ui/icon";
 
@@ -26,7 +26,12 @@ const Unsubscribe = () => {
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
-        {status === "loading" && <Icon name="Loader2" size={32} className="mx-auto animate-spin text-muted-foreground" />}
+        {status === "loading" && (
+          <>
+            <Icon name="Loader2" size={32} className="mx-auto animate-spin text-muted-foreground" />
+            <span className="sr-only">Отписка от рассылки УрокАИ…</span>
+          </>
+        )}
         {status === "ok" && (
           <>
             <Icon name="MailCheck" size={40} className="mx-auto mb-3 text-primary" />

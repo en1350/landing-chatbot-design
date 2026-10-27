@@ -11,18 +11,23 @@ interface UsageContextValue {
 const UsageContext = createContext<UsageContextValue | null>(null);
 
 export function UsageProvider({ children }: { children: ReactNode }) {
-  const [servicesCount, setServicesCount] = useState<number>(() => {
-    try {
-      const raw = localStorage.getItem(SERVICES_KEY);
-      return raw ? Number(raw) : SERVICES_BASE;
-    } catch {
-      return SERVICES_BASE;
-    }
-  });
+  const [servicesCount, setServicesCount] = useState<number>(SERVICES_BASE);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
+    try {
+      const raw = localStorage.getItem(SERVICES_KEY);
+      if (raw) setServicesCount(Number(raw));
+    } catch {
+      /* ignore */
+    }
+    setLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!loaded) return;
     localStorage.setItem(SERVICES_KEY, String(servicesCount));
-  }, [servicesCount]);
+  }, [servicesCount, loaded]);
 
   const incrementServices = () => setServicesCount((c) => c + 1);
 

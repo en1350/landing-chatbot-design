@@ -13,13 +13,15 @@ const DARK_KEY = "urokai_trainer_dark";
 const TrainerFullscreen = ({ icon, title, onClose, children }: Props) => {
   const rootRef = useRef<HTMLDivElement>(null);
   const [isNativeFullscreen, setIsNativeFullscreen] = useState(false);
-  const [dark, setDark] = useState(() => {
+  const [dark, setDark] = useState(false);
+
+  useEffect(() => {
     try {
-      return localStorage.getItem(DARK_KEY) === "1";
+      setDark(localStorage.getItem(DARK_KEY) === "1");
     } catch {
-      return false;
+      /* storage недоступен */
     }
-  });
+  }, []);
 
   const toggleDark = () => {
     setDark((v) => {

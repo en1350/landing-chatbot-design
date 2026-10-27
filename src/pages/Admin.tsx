@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import Icon from "@/components/ui/icon";
@@ -12,16 +12,17 @@ import ExperienceTab from "@/components/admin/ExperienceTab";
 import MailingTab from "@/components/admin/MailingTab";
 
 const Admin = () => {
-  const { token, user } = useAuth();
+  const { token, user, loading } = useAuth();
   const [allowed, setAllowed] = useState<boolean | null>(null);
 
   useEffect(() => {
+    if (loading) return;
     if (!token) {
       setAllowed(false);
       return;
     }
     adminGet("check", token).then(() => setAllowed(true)).catch(() => setAllowed(false));
-  }, [token, user]);
+  }, [token, user, loading]);
 
   if (allowed === null) return <div className="p-8 text-muted-foreground">Загрузка...</div>;
 

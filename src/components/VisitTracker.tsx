@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "@/lib/router-compat";
 import { adminPost } from "@/lib/adminApi";
 
 const VISITOR_KEY = "urokai_visitor_id";

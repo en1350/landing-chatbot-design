@@ -71,7 +71,7 @@ async function apiRequest(action: string, payload: Record<string, unknown> = {},
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
+  const [token, setToken] = useState<string | null>(null);
   const [plan, setPlan] = useState<SubscriptionPlan>("free");
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -88,6 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     const currentToken = localStorage.getItem(TOKEN_KEY);
+    if (currentToken) setToken(currentToken);
     if (!currentToken) {
       setUser(null);
       setPlan("free");

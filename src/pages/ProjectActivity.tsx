@@ -1,6 +1,6 @@
 import PaywallLock from "@/components/PaywallLock";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -77,28 +77,41 @@ const ProjectActivity = () => {
   const [authOpen, setAuthOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
-  const [rows, setRows] = useState<ActivityRow[]>(loadRows);
-  const [report, setReport] = useState(() => localStorage.getItem(REPORT_KEY) || "");
+  const [rows, setRows] = useState<ActivityRow[]>([]);
+  const [report, setReport] = useState("");
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [tab, setTab] = useState("table");
+  const [storageLoaded, setStorageLoaded] = useState(false);
 
   useEffect(() => {
+    setRows(loadRows());
+    try {
+      setReport(localStorage.getItem(REPORT_KEY) || "");
+    } catch {
+      /* хранилище недоступно */
+    }
+    setStorageLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!storageLoaded) return;
     try {
       localStorage.setItem(ROWS_KEY, JSON.stringify(rows));
     } catch {
       /* хранилище недоступно */
     }
-  }, [rows]);
+  }, [rows, storageLoaded]);
 
   useEffect(() => {
+    if (!storageLoaded) return;
     try {
       if (report) localStorage.setItem(REPORT_KEY, report);
       else localStorage.removeItem(REPORT_KEY);
     } catch {
       /* хранилище недоступно */
     }
-  }, [report]);
+  }, [report, storageLoaded]);
 
   const setField = (k: keyof typeof emptyForm, v: string) => setForm((p) => ({ ...p, [k]: v }));
 

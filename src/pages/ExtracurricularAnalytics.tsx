@@ -1,6 +1,6 @@
 import PaywallLock from "@/components/PaywallLock";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -50,31 +50,45 @@ const ExtracurricularAnalytics = () => {
   const [authOpen, setAuthOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
-  const [rows, setRows] = useState<EventRow[]>(loadStoredRows);
-  const [report, setReport] = useState(() => localStorage.getItem(REPORT_KEY) || "");
+  const [rows, setRows] = useState<EventRow[]>([]);
+  const [report, setReport] = useState("");
   const [loading, setLoading] = useState(false);
-  const [plan, setPlan] = useState(() => localStorage.getItem(PLAN_KEY) || "");
+  const [plan, setPlan] = useState("");
   const [planPeriod, setPlanPeriod] = useState(PLAN_PERIODS[3]);
   const [planLoading, setPlanLoading] = useState(false);
   const [planSaving, setPlanSaving] = useState(false);
   const [planSaved, setPlanSaved] = useState(false);
+  const [storageLoaded, setStorageLoaded] = useState(false);
 
   useEffect(() => {
+    setRows(loadStoredRows());
+    try {
+      setReport(localStorage.getItem(REPORT_KEY) || "");
+      setPlan(localStorage.getItem(PLAN_KEY) || "");
+    } catch {
+      /* хранилище недоступно */
+    }
+    setStorageLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!storageLoaded) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
     } catch {
       /* хранилище переполнено или недоступно */
     }
-  }, [rows]);
+  }, [rows, storageLoaded]);
 
   useEffect(() => {
+    if (!storageLoaded) return;
     try {
       if (report) localStorage.setItem(REPORT_KEY, report);
       else localStorage.removeItem(REPORT_KEY);
     } catch {
       /* хранилище недоступно */
     }
-  }, [report]);
+  }, [report, storageLoaded]);
 
   const [year, setYear] = useState(YEARS[1]);
   const [date, setDate] = useState("");
@@ -112,13 +126,14 @@ const ExtracurricularAnalytics = () => {
   };
 
   useEffect(() => {
+    if (!storageLoaded) return;
     try {
       if (plan) localStorage.setItem(PLAN_KEY, plan);
       else localStorage.removeItem(PLAN_KEY);
     } catch {
       /* хранилище недоступно */
     }
-  }, [plan]);
+  }, [plan, storageLoaded]);
 
   const removeRow = (id: string) => setRows((prev) => prev.filter((r) => r.id !== id));
 

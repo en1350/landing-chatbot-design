@@ -1,2 +1,0 @@
-ALTER TABLE t_p75689129_landing_chatbot_desi.processed_payments ADD COLUMN IF NOT EXISTS plan TEXT;
-ALTER TABLE t_p75689129_landing_chatbot_desi.processed_payments ADD COLUMN IF NOT EXISTS amount NUMERIC(10,2);

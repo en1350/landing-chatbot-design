@@ -293,9 +293,9 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
         type === "lesson"
           ? { ...lessonFields, competencies: lessonFields.competencies.join(", ") }
           : type === "game"
-          ? gameFields
+          ? { ...gameFields }
           : type === "intensive"
-          ? intensiveFields
+          ? { ...intensiveFields }
           : type === "quiz"
           ? { ...quizFields, questionTypes: quizFields.questionTypes.join(",") }
           : { ...taskFields, competencies: taskFields.competencies.join(", ") };

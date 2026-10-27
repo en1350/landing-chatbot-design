@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import Icon from "@/components/ui/icon";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { useAuth, AUTH_URL } from "@/context/AuthContext";
 
 interface Item {
