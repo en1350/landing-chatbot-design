@@ -52,6 +52,7 @@ type TrainerKey =
   | "set-theory"
   | "internet-ai"
   | "information-security"
+  | "lists-graphs-trees"
   | "modeling-luntik"
   | "multimedia-slide-ovz"
   | "executor-algorithms-ovz"
@@ -113,6 +114,7 @@ const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "set-theory": "/set-theory.html",
   "internet-ai": "/internet-ai.html",
   "information-security": "/information-security.html",
+  "lists-graphs-trees": "/lists-graphs-trees.html",
   "modeling-luntik": "/modeling-luntik.html",
   "multimedia-slide-ovz": "/multimedia-slide-ovz.html",
   "executor-algorithms-ovz": "/executor-algorithms-ovz.html",
@@ -247,6 +249,14 @@ const TRAINERS: TrainerItem[] = [
     title: "Информационная безопасность",
     description: "Теория о CIA-триаде, угрозах и методах защиты, анализатор паролей, пример фишинга, 5 практических заданий, тест на 10 вопросов, рефлексия и разбор ошибок",
     accent: "#1e40af",
+  },
+  {
+    key: "lists-graphs-trees",
+    category: "informatics",
+    icon: "🌳",
+    title: "Списки, графы, деревья",
+    description: "Теория о структурах данных, конструктор графов и деревьев на холсте, 10 практических заданий, тест на 10 вопросов, рефлексия и разбор ошибок",
+    accent: "#2563eb",
   },
   {
     key: "set-theory",

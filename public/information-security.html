@@ -338,7 +338,7 @@
     <header>
         <h1>🛡️ Информационная безопасность</h1>
         <p>Интерактивный урок по Информатике</p>
-        <div class="author">Автор: Еленка Великолепная • 27 октября 2026</div>
+        <div class="author" id="lessonDate"></div>
     </header>
 
     <nav>
@@ -560,11 +560,17 @@
     </section>
 
     <footer>
-        <p>© 2026 • Интерактивный урок «Информационная безопасность» • Автор: Еленка Великолепная</p>
+        <p>© <span id="footerYear"></span> • Интерактивный урок «Информационная безопасность»</p>
     </footer>
 </div>
 
 <script>
+(function () {
+    var d = new Date();
+    document.getElementById('lessonDate').textContent = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+    document.getElementById('footerYear').textContent = d.getFullYear();
+})();
+
 document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
