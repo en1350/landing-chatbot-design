@@ -51,6 +51,7 @@ type TrainerKey =
   | "quadratic-complexity"
   | "set-theory"
   | "internet-ai"
+  | "information-security"
   | "modeling-luntik"
   | "multimedia-slide-ovz"
   | "executor-algorithms-ovz"
@@ -111,6 +112,7 @@ const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "quadratic-complexity": "/quadratic-complexity.html",
   "set-theory": "/set-theory.html",
   "internet-ai": "/internet-ai.html",
+  "information-security": "/information-security.html",
   "modeling-luntik": "/modeling-luntik.html",
   "multimedia-slide-ovz": "/multimedia-slide-ovz.html",
   "executor-algorithms-ovz": "/executor-algorithms-ovz.html",
@@ -237,6 +239,14 @@ const TRAINERS: TrainerItem[] = [
     title: "Интернет и ИИ",
     description: "Теория о сервисах интернета и ИИ, симуляторы DNS и промптов, квиз на 10 вопросов и цифровой сертификат с разбором ошибок",
     accent: "#00f0ff",
+  },
+  {
+    key: "information-security",
+    category: "informatics",
+    icon: "🛡️",
+    title: "Информационная безопасность",
+    description: "Теория о CIA-триаде, угрозах и методах защиты, анализатор паролей, пример фишинга, 5 практических заданий, тест на 10 вопросов, рефлексия и разбор ошибок",
+    accent: "#1e40af",
   },
   {
     key: "set-theory",

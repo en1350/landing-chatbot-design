@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Интерактивный урок: Информационная безопасность</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: 'Segoe UI', Tahoma, sans-serif;
+        background: linear-gradient(135deg, #e5e7eb 0%, #bae6fd 50%, #1e40af 100%);
+        min-height: 100vh;
+        color: #1f2937;
+        padding: 20px;
+    }
+    .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(30, 64, 175, 0.3);
+        overflow: hidden;
+    }
+    header {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        color: white;
+        padding: 40px 30px;
+        text-align: center;
+    }
+    header h1 { font-size: 2.2em; margin-bottom: 10px; }
+    header p { opacity: 0.9; font-size: 1.1em; }
+    .author {
+        margin-top: 10px;
+        font-style: italic;
+        color: #bae6fd;
+    }
+    nav {
+        background: #f3f4f6;
+        padding: 15px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+        border-bottom: 3px solid #3b82f6;
+    }
+    nav button {
+        background: #ffffff;
+        border: 2px solid #7dd3fc;
+        color: #1e40af;
+        padding: 10px 18px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s;
+        font-size: 0.95em;
+    }
+    nav button:hover, nav button.active {
+        background: linear-gradient(135deg, #3b82f6, #1e40af);
+        color: white;
+        border-color: #1e40af;
+        transform: translateY(-2px);
+    }
+    .section {
+        padding: 40px 30px;
+        display: none;
+        animation: fadeIn 0.5s;
+    }
+    .section.active { display: block; }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    h2 {
+        color: #1e3a8a;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 3px solid #7dd3fc;
+        font-size: 1.8em;
+    }
+    h3 { color: #1e40af; margin: 20px 0 10px; }
+    p, li { line-height: 1.7; margin-bottom: 10px; }
+    .card {
+        background: linear-gradient(135deg, #f3f4f6, #e0f2fe);
+        border-left: 5px solid #3b82f6;
+        padding: 20px;
+        margin: 15px 0;
+        border-radius: 10px;
+    }
+    .card.warning { border-left-color: #64748b; background: linear-gradient(135deg, #f1f5f9, #e2e8f0); }
+    .card.info { border-left-color: #7dd3fc; }
+    .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+        margin: 20px 0;
+    }
+    .principle {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(30, 64, 175, 0.1);
+        border-top: 4px solid #3b82f6;
+        transition: transform 0.3s;
+    }
+    .principle:hover { transform: translateY(-5px); }
+    .principle h4 { color: #1e3a8a; margin-bottom: 10px; }
+    .principle .icon { font-size: 2em; margin-bottom: 10px; }
+    ul, ol { padding-left: 25px; }
+    .threat-list li {
+        background: #f8fafc;
+        padding: 10px 15px;
+        margin: 8px 0;
+        border-radius: 8px;
+        border-left: 3px solid #64748b;
+    }
+    .simulator {
+        background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+        padding: 25px;
+        border-radius: 15px;
+        margin: 20px 0;
+    }
+    .password-input {
+        width: 100%;
+        padding: 12px;
+        font-size: 1.1em;
+        border: 2px solid #7dd3fc;
+        border-radius: 8px;
+        margin: 10px 0;
+    }
+    .strength-bar {
+        height: 25px;
+        background: #e5e7eb;
+        border-radius: 12px;
+        overflow: hidden;
+        margin: 15px 0;
+    }
+    .strength-fill {
+        height: 100%;
+        width: 0%;
+        transition: all 0.5s;
+        text-align: center;
+        color: white;
+        line-height: 25px;
+        font-weight: bold;
+    }
+    .check-list { list-style: none; padding: 0; }
+    .check-list li {
+        padding: 8px 12px;
+        margin: 5px 0;
+        border-radius: 6px;
+        background: #f1f5f9;
+    }
+    .check-list li.pass { background: #dbeafe; color: #1e3a8a; }
+    .check-list li.fail { background: #fee2e2; color: #991b1b; }
+    .task {
+        background: #f8fafc;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 12px;
+        border: 2px solid #bae6fd;
+    }
+    .task-header {
+        background: linear-gradient(135deg, #1e40af, #3b82f6);
+        color: white;
+        padding: 10px 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        font-weight: bold;
+    }
+    textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #7dd3fc;
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 1em;
+        resize: vertical;
+        min-height: 80px;
+    }
+    textarea:focus { outline: none; border-color: #1e40af; }
+    .btn {
+        background: linear-gradient(135deg, #3b82f6, #1e40af);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1em;
+        font-weight: 600;
+        margin-top: 10px;
+        transition: transform 0.2s, opacity 0.3s;
+    }
+    .btn:hover { transform: scale(1.05); }
+    .btn:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+        transform: none;
+    }
+    .feedback {
+        margin-top: 15px;
+        padding: 15px;
+        border-radius: 8px;
+        display: none;
+    }
+    .feedback.show { display: block; animation: fadeIn 0.4s; }
+    .feedback.success { background: #dbeafe; border-left: 4px solid #1e40af; color: #1e3a8a; }
+    .feedback.error { background: #fee2e2; border-left: 4px solid #991b1b; color: #991b1b; }
+    .feedback.hint { background: #f1f5f9; border-left: 4px solid #64748b; color: #1f2937; }
+    .question {
+        background: white;
+        padding: 20px;
+        margin: 15px 0;
+        border-radius: 12px;
+        box-shadow: 0 3px 10px rgba(30, 64, 175, 0.08);
+        border-left: 4px solid #3b82f6;
+    }
+    .question-text { font-weight: 600; margin-bottom: 12px; color: #1e3a8a; }
+    .options label {
+        display: block;
+        padding: 10px 15px;
+        margin: 6px 0;
+        background: #f3f4f6;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 2px solid transparent;
+    }
+    .options label:hover { background: #e0f2fe; border-color: #7dd3fc; }
+    .options input[type="radio"] { margin-right: 10px; }
+    .options label.correct { background: #dbeafe; border-color: #1e40af; }
+    .options label.wrong { background: #fee2e2; border-color: #991b1b; }
+    .result-box {
+        background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+        color: white;
+        padding: 25px;
+        border-radius: 15px;
+        text-align: center;
+        margin: 20px 0;
+    }
+    .result-box .score { font-size: 3em; font-weight: bold; margin: 10px 0; }
+
+    .smiley-container {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin: 30px 0;
+    }
+    .smiley-item {
+        background: white;
+        border: 3px solid #bae6fd;
+        border-radius: 15px;
+        padding: 20px 15px;
+        width: 150px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 4px 6px rgba(30, 64, 175, 0.1);
+    }
+    .smiley-item:hover {
+        transform: translateY(-10px) scale(1.05);
+        border-color: #3b82f6;
+        box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+    }
+    .smiley-item.selected {
+        border-color: #1e40af;
+        background: linear-gradient(135deg, #dbeafe, #bae6fd);
+        transform: scale(1.1);
+        box-shadow: 0 0 25px rgba(30, 64, 175, 0.4);
+        animation: pulse 1.5s infinite;
+    }
+    .smiley-item .smiley {
+        font-size: 3.5em;
+        margin-bottom: 10px;
+        transition: transform 0.3s;
+        display: block;
+    }
+    .smiley-item:hover .smiley {
+        transform: rotate(15deg) scale(1.2);
+    }
+    .smiley-item.selected .smiley {
+        animation: bounce 1s infinite;
+    }
+    .smiley-item span {
+        display: block;
+        font-size: 0.9em;
+        font-weight: 600;
+        color: #1e3a8a;
+        line-height: 1.3;
+    }
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(30, 64, 175, 0.4); }
+        70% { box-shadow: 0 0 0 15px rgba(30, 64, 175, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(30, 64, 175, 0); }
+    }
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+    }
+    .reflection-text-display {
+        text-align: center;
+        font-size: 1.15em;
+        color: #1e40af;
+        font-weight: 600;
+        margin: 20px 0;
+        min-height: 30px;
+    }
+
+    .error-item {
+        background: #fef2f2;
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 10px;
+        border-left: 4px solid #991b1b;
+    }
+    .error-item.correct-item {
+        background: #dbeafe;
+        border-left-color: #1e40af;
+    }
+    .error-item h4 { color: #1e3a8a; margin-bottom: 8px; }
+    footer {
+        background: #1e3a8a;
+        color: white;
+        text-align: center;
+        padding: 20px;
+    }
+    @media (max-width: 600px) {
+        header h1 { font-size: 1.5em; }
+        .section { padding: 20px 15px; }
+        nav button { padding: 8px 12px; font-size: 0.85em; }
+        .smiley-item { width: 120px; padding: 15px 10px; }
+        .smiley-item .smiley { font-size: 2.5em; }
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>🛡️ Информационная безопасность</h1>
+        <p>Интерактивный урок по Информатике</p>
+        <div class="author">Автор: Еленка Великолепная • 27 октября 2026</div>
+    </header>
+
+    <nav>
+        <button class="nav-btn active" data-target="theory">📚 Теория</button>
+        <button class="nav-btn" data-target="simulation">💻 Симуляция</button>
+        <button class="nav-btn" data-target="practice">✍️ Практика</button>
+        <button class="nav-btn" data-target="test">📝 Тест</button>
+        <button class="nav-btn" data-target="reflection">💭 Рефлексия</button>
+        <button class="nav-btn" data-target="errors">🔍 Разбор ошибок</button>
+    </nav>
+
+    <section id="theory" class="section active">
+        <h2>📚 Теоретический материал</h2>
+        <div class="card info">
+            <p><b>Информационная безопасность (ИБ)</b> — это состояние защищённости информации и инфраструктуры от случайных или умышленных воздействий, которые могут нанести ущерб владельцу или пользователю информации.</p>
+        </div>
+
+        <h3>🔑 Три кита информационной безопасности (CIA-триада)</h3>
+        <div class="grid-3">
+            <div class="principle">
+                <div class="icon">🔒</div>
+                <h4>Конфиденциальность</h4>
+                <p>Обеспечение доступа к информации только авторизованным пользователям. Никто посторонний не должен прочитать ваши данные.</p>
+            </div>
+            <div class="principle">
+                <div class="icon">✅</div>
+                <h4>Целостность</h4>
+                <p>Информация не может быть изменена несанкционированно. Данные должны оставаться точными и полными.</p>
+            </div>
+            <div class="principle">
+                <div class="icon">⚡</div>
+                <h4>Доступность</h4>
+                <p>Авторизованные пользователи должны получать доступ к информации, когда это необходимо.</p>
+            </div>
+        </div>
+
+        <h3>⚠️ Основные угрозы информационной безопасности</h3>
+        <ul class="threat-list">
+            <li><b>Вирусы и вредоносное ПО</b> — программы, повреждающие данные или нарушающие работу системы.</li>
+            <li><b>Фишинг</b> — мошенничество с целью получения паролей и личных данных через поддельные сайты и письма.</li>
+            <li><b>DDoS-атаки</b> — перегрузка сервера запросами с целью вывести его из строя.</li>
+            <li><b>Социальная инженерия</b> — манипуляция людьми для получения конфиденциальной информации.</li>
+            <li><b>Перехват трафика</b> — чтение передаваемых данных в сетях (особенно в публичных Wi-Fi).</li>
+            <li><b>Утечки данных</b> — несанкционированный доступ к базам данных организаций.</li>
+        </ul>
+
+        <h3>🛡️ Методы защиты информации</h3>
+        <div class="card">
+            <ul>
+                <li><b>Криптография</b> — шифрование данных (симметричное, асимметричное, хеширование).</li>
+                <li><b>Антивирусные программы</b> — обнаружение и удаление вредоносного кода.</li>
+                <li><b>Межсетевые экраны (firewall)</b> — контроль сетевого трафика.</li>
+                <li><b>Двухфакторная аутентификация (2FA)</b> — дополнительный код при входе.</li>
+                <li><b>Резервное копирование</b> — создание копий данных на случай их потери.</li>
+                <li><b>Надёжные пароли</b> — длинные, сложные, уникальные для каждого сервиса.</li>
+            </ul>
+        </div>
+
+        <div class="card warning">
+            <p>💡 <b>Помните:</b> Самый слабый элемент системы безопасности — это человек. Соблюдение правил цифровой гигиены так же важно, как и технические средства защиты.</p>
+        </div>
+    </section>
+
+    <section id="simulation" class="section">
+        <h2>💻 Симуляция: Анализатор надёжности пароля</h2>
+        <p>Введите пароль и посмотрите, как оценивается его надёжность. Симулятор проверит длину, наличие цифр, букв разного регистра и спецсимволов.</p>
+
+        <div class="simulator">
+            <label><b>Введите пароль для проверки:</b></label>
+            <input type="text" id="passwordInput" class="password-input" placeholder="Например: MyP@ssw0rd_2026!">
+
+            <div class="strength-bar">
+                <div class="strength-fill" id="strengthFill">—</div>
+            </div>
+
+            <h4>Критерии проверки:</h4>
+            <ul class="check-list" id="checkList">
+                <li id="c1" class="fail">❌ Длина не менее 8 символов</li>
+                <li id="c2" class="fail">❌ Содержит строчные буквы (a-z)</li>
+                <li id="c3" class="fail">❌ Содержит заглавные буквы (A-Z)</li>
+                <li id="c4" class="fail">❌ Содержит цифры (0-9)</li>
+                <li id="c5" class="fail">❌ Содержит спецсимволы (!@#$%...)</li>
+            </ul>
+
+            <div id="passwordAdvice" class="feedback hint" style="display:none;"></div>
+        </div>
+
+        <div class="card info">
+            <h4>🎯 Симуляция фишингового письма</h4>
+            <p>Нажмите кнопку, чтобы увидеть пример фишингового письма и попробовать определить его признаки:</p>
+            <button class="btn" onclick="showPhishing()">Показать пример фишинга</button>
+            <div id="phishingExample" style="display:none; margin-top:15px;">
+                <div style="background:#fef2f2; padding:15px; border-radius:10px; border-left:4px solid #991b1b;">
+                    <p><b>От:</b> support@bank-secure-login.com</p>
+                    <p><b>Тема:</b> ⚠️ Срочно! Ваш счёт будет заблокирован!</p>
+                    <p><b>Текст:</b> "Уважаемый клиент! В целях безопасности срочно перейдите по ссылке http://bank-secure-login.com/verify и введите свои данные. Иначе ваш счёт будет заблокирован в течение 1 часа!"</p>
+                </div>
+                <div class="feedback hint" style="display:block; margin-top:10px;">
+                    <b>🚩 Признаки фишинга:</b>
+                    <ul>
+                        <li>Срочность и давление ("срочно", "в течение 1 часа")</li>
+                        <li>Подозрительный адрес отправителя (не официальный домен банка)</li>
+                        <li>Ссылка ведёт на неизвестный сайт</li>
+                        <li>Запрос личных данных через письмо</li>
+                        <li>Отсутствие персонализации ("уважаемый клиент")</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="practice" class="section">
+        <h2>✍️ Практические задания</h2>
+        <p>Выполните 5 заданий, чтобы закрепить материал. После ввода ответа нажмите «Проверить».</p>
+
+        <div class="task">
+            <div class="task-header">Задание 1. Определите принцип CIA</div>
+            <p>Банк шифрует данные клиентов, чтобы посторонние не могли их прочитать. Какой принцип CIA-триады здесь реализуется?</p>
+            <input type="text" class="password-input" id="p1" placeholder="Ваш ответ">
+            <button class="btn" onclick="checkPractice(1)">Проверить</button>
+            <button class="btn" style="background:#64748b;" onclick="showHint(1)">Подсказка</button>
+            <div class="feedback" id="fb1"></div>
+        </div>
+
+        <div class="task">
+            <div class="task-header">Задание 2. Анализ пароля</div>
+            <p>Почему пароль «12345678» является ненадёжным? Назовите минимум 2 причины.</p>
+            <textarea id="p2" placeholder="Ваш ответ..."></textarea>
+            <button class="btn" onclick="checkPractice(2)">Проверить</button>
+            <button class="btn" style="background:#64748b;" onclick="showHint(2)">Подсказка</button>
+            <div class="feedback" id="fb2"></div>
+        </div>
+
+        <div class="task">
+            <div class="task-header">Задание 3. Фишинг</div>
+            <p>Вам пришло письмо: «Поздравляем! Вы выиграли iPhone! Перейдите по ссылке и оплатите доставку 500 руб.». Это фишинг или нет? Обоснуйте.</p>
+            <textarea id="p3" placeholder="Ваш ответ..."></textarea>
+            <button class="btn" onclick="checkPractice(3)">Проверить</button>
+            <button class="btn" style="background:#64748b;" onclick="showHint(3)">Подсказка</button>
+            <div class="feedback" id="fb3"></div>
+        </div>
+
+        <div class="task">
+            <div class="task-header">Задание 4. Методы защиты</div>
+            <p>Перечислите 3 метода защиты информации от несанкционированного доступа.</p>
+            <textarea id="p4" placeholder="Ваш ответ..."></textarea>
+            <button class="btn" onclick="checkPractice(4)">Проверить</button>
+            <button class="btn" style="background:#64748b;" onclick="showHint(4)">Подсказка</button>
+            <div class="feedback" id="fb4"></div>
+        </div>
+
+        <div class="task">
+            <div class="task-header">Задание 5. Ситуационная задача</div>
+            <p>Ученик подключился к публичному Wi-Fi в кафе и вошёл в свой банковский аккаунт. Какие риски он создал и как следовало поступить?</p>
+            <textarea id="p5" placeholder="Ваш ответ..."></textarea>
+            <button class="btn" onclick="checkPractice(5)">Проверить</button>
+            <button class="btn" style="background:#64748b;" onclick="showHint(5)">Подсказка</button>
+            <div class="feedback" id="fb5"></div>
+        </div>
+    </section>
+
+    <section id="test" class="section">
+        <h2>📝 Тест на закрепление (10 вопросов)</h2>
+        <p>Выберите один правильный ответ в каждом вопросе. После завершения нажмите «Завершить тест».</p>
+
+        <div id="questionsContainer"></div>
+        <button class="btn" onclick="finishTest()" style="font-size:1.1em; padding:15px 30px; width: 100%; margin-top: 20px;">✅ Завершить тест</button>
+        <div id="testResult"></div>
+    </section>
+
+    <section id="reflection" class="section">
+        <h2>💭 Рефлексия</h2>
+        <p style="text-align: center; font-size: 1.1em; color: #1e3a8a; margin-bottom: 10px;">
+            Как вы оцениваете своё понимание темы «Информационная безопасность» после этого урока?
+        </p>
+        <p style="text-align: center; color: #64748b; margin-bottom: 30px;">Нажмите на смайлик, который лучше всего описывает ваше состояние:</p>
+
+        <div class="smiley-container">
+            <div class="smiley-item" onclick="selectSmiley(this, 1, 'Ничего не понятно, нужно изучить тему заново 😕')">
+                <span class="smiley">😕</span>
+                <span>Ничего не понятно</span>
+            </div>
+            <div class="smiley-item" onclick="selectSmiley(this, 2, 'Есть вопросы, нужно повторить теорию 😐')">
+                <span class="smiley">😐</span>
+                <span>Есть вопросы</span>
+            </div>
+            <div class="smiley-item" onclick="selectSmiley(this, 3, 'В целом понятно, но нужна практика 🙂')">
+                <span class="smiley">🙂</span>
+                <span>В целом понятно</span>
+            </div>
+            <div class="smiley-item" onclick="selectSmiley(this, 4, 'Хорошо усвоил материал, готов к практике 😃')">
+                <span class="smiley">😃</span>
+                <span>Хорошо усвоил</span>
+            </div>
+            <div class="smiley-item" onclick="selectSmiley(this, 5, 'Отлично! Всё понятно, тема покорена! 🤩')">
+                <span class="smiley">🤩</span>
+                <span>Всё отлично!</span>
+            </div>
+        </div>
+
+        <div id="reflectionText" class="reflection-text-display"></div>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <button class="btn" id="saveReflectionBtn" onclick="saveReflection()" disabled style="opacity: 0.5; cursor: not-allowed; min-width: 250px;">
+                💾 Сохранить оценку
+            </button>
+        </div>
+        <div class="feedback" id="reflectionFb"></div>
+    </section>
+
+    <section id="errors" class="section">
+        <h2>🔍 Разбор ошибок</h2>
+        <p>Здесь отображаются ваши ответы на задания и тест. Сначала пройдите тест и практические задания.</p>
+        <div id="errorAnalysis">
+            <div class="card info">
+                <p>📌 После завершения теста здесь появятся подробные разборы всех вопросов с правильными ответами и пояснениями.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>© 2026 • Интерактивный урок «Информационная безопасность» • Автор: Еленка Великолепная</p>
+    </footer>
+</div>
+
+<script>
+document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.target).classList.add('active');
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    });
+});
+
+const pwInput = document.getElementById('passwordInput');
+pwInput.addEventListener('input', () => {
+    const pw = pwInput.value;
+    const checks = [
+        {id: 'c1', ok: pw.length >= 8, txt: 'Длина не менее 8 символов'},
+        {id: 'c2', ok: /[a-z]/.test(pw), txt: 'Содержит строчные буквы (a-z)'},
+        {id: 'c3', ok: /[A-Z]/.test(pw), txt: 'Содержит заглавные буквы (A-Z)'},
+        {id: 'c4', ok: /[0-9]/.test(pw), txt: 'Содержит цифры (0-9)'},
+        {id: 'c5', ok: /[^A-Za-z0-9]/.test(pw), txt: 'Содержит спецсимволы (!@#$%...)'}
+    ];
+    let score = 0;
+    checks.forEach(c => {
+        const el = document.getElementById(c.id);
+        if (c.ok) { el.className = 'pass'; el.textContent = '✅ ' + c.txt; score++; }
+        else { el.className = 'fail'; el.textContent = '❌ ' + c.txt; }
+    });
+    const fill = document.getElementById('strengthFill');
+    const pct = (score / 5) * 100;
+    fill.style.width = pct + '%';
+    const advice = document.getElementById('passwordAdvice');
+    advice.style.display = 'block';
+    if (pw.length === 0) { fill.textContent = '—'; fill.style.background = '#9ca3af'; advice.textContent = ''; }
+    else if (score <= 2) { fill.textContent = 'Слабый'; fill.style.background = '#dc2626'; advice.textContent = '⚠️ Пароль очень слабый. Его легко взломать. Добавьте цифры, заглавные буквы и спецсимволы.'; }
+    else if (score <= 3) { fill.textContent = 'Средний'; fill.style.background = '#f59e0b'; advice.textContent = '⚡ Пароль средней надёжности. Можно улучшить, добавив разные типы символов.'; }
+    else if (score === 4) { fill.textContent = 'Хороший'; fill.style.background = '#3b82f6'; advice.textContent = '✅ Хороший пароль! Добавьте ещё один тип символов для максимальной надёжности.'; }
+    else { fill.textContent = 'Отличный!'; fill.style.background = '#1e40af'; advice.textContent = '🛡️ Отличный надёжный пароль! Его очень сложно взломать.'; }
+});
+
+function showPhishing() {
+    document.getElementById('phishingExample').style.display = 'block';
+}
+
+const practiceAnswers = {
+    1: {
+        keywords: ['конфиденциальность'],
+        correct: 'Правильно! Это конфиденциальность — защита от прочтения посторонними.',
+        wrong: 'Не совсем. Подумайте: данные шифруются, чтобы никто посторонний не мог их прочитать. Это принцип конфиденциальности.',
+        hint: 'Подсказка: CIA-триада — Конфиденциальность, Целостность, Доступность. Шифрование от кого защищает?'
+    },
+    2: {
+        keywords: ['цифр', 'прост', 'попул', 'коротк', 'словар', 'угад'],
+        correct: 'Отлично! Вы верно определили слабые стороны этого пароля.',
+        wrong: 'Добавьте ещё причин. Пароль «12345678» — это последовательность цифр, он короткий, содержится в словарях паролей и легко угадывается.',
+        hint: 'Подсказка: подумайте о длине, разнообразии символов и популярности.'
+    },
+    3: {
+        keywords: ['фишинг', 'мошен', 'обман', 'да'],
+        correct: 'Верно! Это классический фишинг: обещание выигрыша, ссылка на неизвестный сайт, запрос оплаты.',
+        wrong: 'Это фишинг. Признаки: неожиданное «поздравление», требование оплаты, переход по неизвестной ссылке.',
+        hint: 'Подсказка: если вам обещают бесплатный приз, но просят заплатить — это всегда подозрительно.'
+    },
+    4: {
+        keywords: ['шифр', 'пароль', 'антивирус', 'firewall', 'брандмауэр', 'межсетев', '2fa', 'двухфактор', 'резервн', 'копир'],
+        correct: 'Отлично! Вы назвали правильные методы защиты.',
+        wrong: 'Недостаточно методов. Вспомните: шифрование, пароли, антивирусы, межсетевые экраны, 2FA, резервное копирование.',
+        hint: 'Подсказка: технические (шифрование, firewall) и организационные (пароли, 2FA) методы.'
+    },
+    5: {
+        keywords: ['перехват', 'открыт', 'wi-fi', 'вай-фай', 'vpn', 'риски', 'безопас'],
+        correct: 'Отлично! Вы верно определили риски и предложили правильное решение.',
+        wrong: 'В публичном Wi-Fi трафик может быть перехвачен. Риски: кража данных, паролей. Решение: использовать VPN или мобильный интернет, не входить в банки через публичные сети.',
+        hint: 'Подсказка: публичный Wi-Fi не шифрует трафик. Что может произойти с данными?'
+    }
+};
+
+function checkPractice(n) {
+    const input = document.getElementById('p' + n);
+    const val = input.value.trim().toLowerCase();
+    const fb = document.getElementById('fb' + n);
+    const data = practiceAnswers[n];
+    if (!val) {
+        fb.className = 'feedback error show';
+        fb.textContent = '⚠️ Введите ответ!';
+        return;
+    }
+    const found = data.keywords.some(k => val.includes(k));
+    if (found) {
+        fb.className = 'feedback success show';
+        fb.innerHTML = '✅ ' + data.correct;
+        storeAnswer('practice', n, val, true);
+    } else {
+        fb.className = 'feedback error show';
+        fb.innerHTML = '❌ ' + data.wrong;
+        storeAnswer('practice', n, val, false);
+    }
+}
+function showHint(n) {
+    const fb = document.getElementById('fb' + n);
+    fb.className = 'feedback hint show';
+    fb.textContent = practiceAnswers[n].hint;
+}
+
+const questions = [
+    {q: 'Что означает буква «C» в CIA-триаде?', opts: ['Целостность (Consistency)', 'Конфиденциальность (Confidentiality)', 'Централизация (Centralization)', 'Контроль (Control)'], a: 1},
+    {q: 'Какой из паролей самый надёжный?', opts: ['12345678', 'password', 'Qwerty123', 'P@ssw0rd_2026!'], a: 3},
+    {q: 'Что такое фишинг?', opts: ['Вид компьютерной игры', 'Мошенничество для получения личных данных', 'Тип антивируса', 'Метод шифрования'], a: 1},
+    {q: 'Для чего нужен межсетевой экран (firewall)?', opts: ['Для шифрования файлов', 'Для контроля сетевого трафика', 'Для создания резервных копий', 'Для ускорения интернета'], a: 1},
+    {q: 'Что такое двухфакторная аутентификация (2FA)?', opts: ['Два одинаковых пароля', 'Вход по отпечатку пальца', 'Дополнительная проверка (код, приложение) после пароля', 'Два разных логина'], a: 2},
+    {q: 'Какой тип вредоносного ПО шифрует файлы и требует выкуп?', opts: ['Троян', 'Вирус', 'Рансомвер (вымогатель)', 'Шпионская программа'], a: 2},
+    {q: 'Почему опасно использовать публичный Wi-Fi для банковских операций?', opts: ['Он слишком медленный', 'Трафик может быть перехвачен', 'Он платный', 'Банк блокирует такие подключения'], a: 1},
+    {q: 'Что такое социальная инженерия?', opts: ['Изучение общества', 'Манипуляция людьми для получения информации', 'Разработка соцсетей', 'Вид хакерской атаки на серверы'], a: 1},
+    {q: 'Какое действие НЕ повышает информационную безопасность?', opts: ['Использование уникальных паролей', 'Обновление ПО', 'Использование одного пароля для всех сервисов', 'Резервное копирование'], a: 2},
+    {q: 'Что такое криптография?', opts: ['Наука о шифровании информации', 'Вид компьютерного вируса', 'Метод удаления данных', 'Тип сетевого подключения'], a: 0}
+];
+
+let userAnswers = [];
+const qc = document.getElementById('questionsContainer');
+questions.forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'question';
+    div.innerHTML = `<div class="question-text">${i+1}. ${item.q}</div><div class="options" id="opts${i}"></div>`;
+    qc.appendChild(div);
+    const optsDiv = div.querySelector('.options');
+    item.opts.forEach((opt, j) => {
+        const lbl = document.createElement('label');
+        lbl.innerHTML = `<input type="radio" name="q${i}" value="${j}"> ${opt}`;
+        optsDiv.appendChild(lbl);
+    });
+});
+
+function finishTest() {
+    userAnswers = [];
+    let score = 0;
+    questions.forEach((item, i) => {
+        const sel = document.querySelector(`input[name="q${i}"]:checked`);
+        const userAns = sel ? parseInt(sel.value) : -1;
+        const correct = userAns === item.a;
+        if (correct) score++;
+        userAnswers.push({q: i, user: userAns, correct: item.a, isCorrect: correct});
+        const opts = document.querySelectorAll(`#opts${i} label`);
+        opts.forEach((lbl, j) => {
+            lbl.classList.remove('correct', 'wrong');
+            if (j === item.a) lbl.classList.add('correct');
+            else if (j === userAns && !correct) lbl.classList.add('wrong');
+        });
+    });
+    const res = document.getElementById('testResult');
+    let msg = '';
+    if (score >= 9) msg = '🏆 Превосходно! Вы настоящий эксперт!';
+    else if (score >= 7) msg = '👍 Отлично! Хорошие знания!';
+    else if (score >= 5) msg = '✅ Неплохо, но есть что повторить.';
+    else msg = '📚 Стоит вернуться к теории.';
+    res.innerHTML = `<div class="result-box"><div>Ваш результат:</div><div class="score">${score} / 10</div><div>${msg}</div></div>`;
+    buildErrorAnalysis();
+}
+
+const answersStore = { practice: {}, test: [] };
+function storeAnswer(type, id, val, isCorrect) {
+    if (type === 'practice') answersStore.practice[id] = {val, isCorrect};
+}
+
+function buildErrorAnalysis() {
+    const container = document.getElementById('errorAnalysis');
+    let html = '<h3 style="color:#1e3a8a; margin-top:20px;">📋 Разбор тестовых вопросов</h3>';
+    questions.forEach((item, i) => {
+        const ans = userAnswers[i];
+        const cls = ans.isCorrect ? 'correct-item' : 'error-item';
+        const icon = ans.isCorrect ? '✅' : '❌';
+        const userTxt = ans.user === -1 ? 'Нет ответа' : item.opts[ans.user];
+        html += `<div class="${cls}">
+            <h4>${icon} Вопрос ${i+1}: ${item.q}</h4>
+            <p><b>Ваш ответ:</b> ${userTxt}</p>
+            <p><b>Правильный ответ:</b> ${item.opts[item.a]}</p>
+            <p><b>Пояснение:</b> ${getExplanation(i)}</p>
+        </div>`;
+    });
+    html += '<h3 style="color:#1e3a8a; margin-top:25px;">✍️ Практические задания</h3>';
+    for (let i = 1; i <= 5; i++) {
+        const p = answersStore.practice[i];
+        if (p) {
+            const cls = p.isCorrect ? 'correct-item' : 'error-item';
+            const icon = p.isCorrect ? '✅' : '❌';
+            html += `<div class="${cls}">
+                <h4>${icon} Задание ${i}</h4>
+                <p><b>Ваш ответ:</b> ${p.val}</p>
+                <p><b>Ожидаемый ответ:</b> ${practiceAnswers[i].correct}</p>
+            </div>`;
+        } else {
+            html += `<div class="error-item"><h4>⚠️ Задание ${i}</h4><p>Вы не выполнили это задание.</p></div>`;
+        }
+    }
+    container.innerHTML = html;
+}
+
+function getExplanation(i) {
+    const exps = [
+        'C в CIA — это Confidentiality (конфиденциальность).',
+        'Надёжный пароль содержит буквы разного регистра, цифры и спецсимволы.',
+        'Фишинг — это мошенничество для кражи личных данных через поддельные сообщения.',
+        'Firewall контролирует входящий и исходящий сетевой трафик по заданным правилам.',
+        '2FA — дополнительный код (SMS, приложение) после ввода пароля.',
+        'Рансомвер шифрует файлы пользователя и требует выкуп за расшифровку.',
+        'В публичном Wi-Fi трафик не шифруется и может быть перехвачен злоумышленниками.',
+        'Социальная инженерия — манипуляция людьми, а не техническая атака.',
+        'Один пароль для всех сервисов — риск: при взломе одного теряются все аккаунты.',
+        'Криптография — наука о шифровании и защите информации.'
+    ];
+    return exps[i];
+}
+
+let selectedSmileyScore = 0;
+let selectedSmileyText = '';
+
+function selectSmiley(element, score, text) {
+    document.querySelectorAll('.smiley-item').forEach(item => {
+        item.classList.remove('selected');
+    });
+
+    element.classList.add('selected');
+
+    selectedSmileyScore = score;
+    selectedSmileyText = text;
+
+    const textDiv = document.getElementById('reflectionText');
+    textDiv.textContent = text;
+    textDiv.style.animation = 'none';
+    textDiv.offsetHeight;
+    textDiv.style.animation = 'fadeIn 0.5s';
+
+    const btn = document.getElementById('saveReflectionBtn');
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
+}
+
+function saveReflection() {
+    const fb = document.getElementById('reflectionFb');
+    fb.className = 'feedback success show';
+    fb.innerHTML = `💾 <b>Спасибо за обратную связь!</b><br>Вы выбрали оценку: ${selectedSmileyText}<br>Ваши данные успешно сохранены в системе.`;
+
+    const btn = document.getElementById('saveReflectionBtn');
+    btn.textContent = '✅ Сохранено!';
+    btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+}
+</script>
+</body>
+</html>
