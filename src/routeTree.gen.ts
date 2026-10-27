@@ -31,6 +31,8 @@ import { Route as MiniTestPedagogovRouteImport } from './routes/mini-test-pedago
 import { Route as PolzovatelskoeSoglashenieRouteImport } from './routes/polzovatelskoe-soglashenie'
 import { Route as ProektnayaDeyatelnostRouteImport } from './routes/proektnaya-deyatelnost'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TrenazherDlyaUchenikovRouteImport } from './routes/trenazher-dlya-uchenikov'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
@@ -150,6 +152,16 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TrenazherDlyaUchenikovRoute = TrenazherDlyaUchenikovRouteImport.update({
   id: '/trenazher-dlya-uchenikov',
   path: '/trenazher-dlya-uchenikov',
@@ -195,6 +207,8 @@ export interface FileRoutesByFullPath {
   '/polzovatelskoe-soglashenie': typeof PolzovatelskoeSoglashenieRoute
   '/proektnaya-deyatelnost': typeof ProektnayaDeyatelnostRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/trenazher-dlya-uchenikov': typeof TrenazherDlyaUchenikovRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/verify-email': typeof VerifyEmailRoute
@@ -223,6 +237,8 @@ export interface FileRoutesByTo {
   '/polzovatelskoe-soglashenie': typeof PolzovatelskoeSoglashenieRoute
   '/proektnaya-deyatelnost': typeof ProektnayaDeyatelnostRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/trenazher-dlya-uchenikov': typeof TrenazherDlyaUchenikovRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/verify-email': typeof VerifyEmailRoute
@@ -252,6 +268,8 @@ export interface FileRoutesById {
   '/polzovatelskoe-soglashenie': typeof PolzovatelskoeSoglashenieRoute
   '/proektnaya-deyatelnost': typeof ProektnayaDeyatelnostRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/trenazher-dlya-uchenikov': typeof TrenazherDlyaUchenikovRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/verify-email': typeof VerifyEmailRoute
@@ -282,6 +300,8 @@ export interface FileRouteTypes {
     | '/polzovatelskoe-soglashenie'
     | '/proektnaya-deyatelnost'
     | '/reset-password'
+    | '/robots.txt'
+    | '/sitemap.xml'
     | '/trenazher-dlya-uchenikov'
     | '/unsubscribe'
     | '/verify-email'
@@ -310,6 +330,8 @@ export interface FileRouteTypes {
     | '/polzovatelskoe-soglashenie'
     | '/proektnaya-deyatelnost'
     | '/reset-password'
+    | '/robots.txt'
+    | '/sitemap.xml'
     | '/trenazher-dlya-uchenikov'
     | '/unsubscribe'
     | '/verify-email'
@@ -338,6 +360,8 @@ export interface FileRouteTypes {
     | '/polzovatelskoe-soglashenie'
     | '/proektnaya-deyatelnost'
     | '/reset-password'
+    | '/robots.txt'
+    | '/sitemap.xml'
     | '/trenazher-dlya-uchenikov'
     | '/unsubscribe'
     | '/verify-email'
@@ -367,6 +391,8 @@ export interface RootRouteChildren {
   PolzovatelskoeSoglashenieRoute: typeof PolzovatelskoeSoglashenieRoute
   ProektnayaDeyatelnostRoute: typeof ProektnayaDeyatelnostRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TrenazherDlyaUchenikovRoute: typeof TrenazherDlyaUchenikovRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
@@ -529,6 +555,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/trenazher-dlya-uchenikov': {
       id: '/trenazher-dlya-uchenikov'
       path: '/trenazher-dlya-uchenikov'
@@ -583,6 +623,8 @@ const rootRouteChildren: RootRouteChildren = {
   PolzovatelskoeSoglashenieRoute: PolzovatelskoeSoglashenieRoute,
   ProektnayaDeyatelnostRoute: ProektnayaDeyatelnostRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TrenazherDlyaUchenikovRoute: TrenazherDlyaUchenikovRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   VerifyEmailRoute: VerifyEmailRoute,
