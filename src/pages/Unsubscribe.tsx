@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "@/lib/router-compat";
 import { Button } from "@/components/ui/button";
 import Icon from "@/components/ui/icon";
+import SiteLogoLink from "@/components/SiteLogoLink";
 
 const MAILING_URL = "https://functions.poehali.dev/0ecbd677-330a-4808-9ab2-dbbc21d157f7";
 
@@ -24,7 +25,10 @@ const Unsubscribe = () => {
   }, [token]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <div className="relative flex min-h-screen items-center justify-center p-4">
+      <div className="absolute left-4 top-4 sm:left-6 sm:top-5">
+        <SiteLogoLink />
+      </div>
       <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
         {status === "loading" && (
           <>

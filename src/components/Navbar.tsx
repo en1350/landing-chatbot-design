@@ -117,14 +117,22 @@ const Navbar = ({
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/85 backdrop-blur-md">
       <div className="container flex h-16 items-center justify-between">
-        <a href="#top" className="flex items-center gap-2.5 shrink-0">
+        <Link
+          to="/"
+          title="На главную"
+          aria-label="УрокАИ — на главную"
+          onClick={() => {
+            if (window.location.pathname === "/") window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          className="flex items-center gap-2.5 shrink-0"
+        >
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
             <Icon name="GraduationCap" size={19} />
           </span>
           <span className="font-display text-lg font-bold tracking-tight">
             Урок<span className="text-coral">АИ</span>
           </span>
-        </a>
+        </Link>
 
         <nav className="hidden lg:flex items-center gap-0.5">
           <NavDropdown label="Генераторы для педагога" shortLabel="Генераторы" items={GENERATORS_MENU} />

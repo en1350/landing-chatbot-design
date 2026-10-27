@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import SiteLogoLink from "@/components/SiteLogoLink";
 import Icon from "@/components/ui/icon";
 import { useAuth } from "@/context/AuthContext";
 import { adminGet } from "@/lib/adminApi";
@@ -28,7 +29,10 @@ const Admin = () => {
 
   if (!allowed || !token) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-6 text-center">
+      <div className="relative min-h-screen flex flex-col items-center justify-center gap-4 p-6 text-center">
+        <div className="absolute left-4 top-4 sm:left-6 sm:top-5">
+          <SiteLogoLink />
+        </div>
         <Icon name="Lock" size={40} className="text-muted-foreground" />
         <p className="text-lg">Доступ только для администратора. Войдите под своим аккаунтом на главной странице.</p>
         <Button asChild>
@@ -41,7 +45,10 @@ const Admin = () => {
   return (
     <div className="container py-8 max-w-4xl">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="font-display text-2xl md:text-3xl font-bold">Панель администратора</h1>
+        <div className="flex min-w-0 items-center gap-4">
+          <SiteLogoLink />
+          <h1 className="font-display text-2xl md:text-3xl font-bold">Панель администратора</h1>
+        </div>
         <Button asChild variant="outline" size="sm">
           <Link to="/">На сайт</Link>
         </Button>

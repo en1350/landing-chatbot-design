@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Icon from "@/components/ui/icon";
 import { useAuth } from "@/context/AuthContext";
+import SiteLogoLink from "@/components/SiteLogoLink";
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
@@ -47,7 +48,10 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+    <div className="relative min-h-screen flex items-center justify-center bg-background px-4">
+      <div className="absolute left-4 top-4 sm:left-6 sm:top-5">
+        <SiteLogoLink />
+      </div>
       <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 shadow-lg">
         <div className="flex items-center gap-2 mb-6">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
