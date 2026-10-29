@@ -422,6 +422,10 @@ try {
             };
             return {
                 used: () => used,
+                raw: function(message, defaultValue) {
+                    const res = ask(window.prompt, [String(message), defaultValue === undefined ? "" : String(defaultValue)]);
+                    return res === undefined ? null : res;
+                },
                 alert: function(...args) {
                     used = true;
                     logs.push((quiet ? "" : "🔔 alert: ") + args.map(fmt).join(' '));
@@ -451,6 +455,106 @@ try {
             if (moduleName === 'process') return NodeEmulator.process;
             throw new Error(`Cannot find module '${moduleName}'`);
         }
+
+        function makeNodeRuntime(logs, dlg) {
+            const tasks = [];
+            const out = (t) => {
+                const text = String(t);
+                logs.push(text.endsWith('\n') ? text.slice(0, -1) : text);
+                return true;
+            };
+            const proc = Object.assign({}, NodeEmulator.process, { stdin: {}, stdout: { write: out }, stderr: { write: out } });
+            let readlineUsed = false;
+
+            function createInterface() {
+                readlineUsed = true;
+                const handlers = {};
+                let closed = false;
+                let promptText = '> ';
+                let promptCalled = false;
+                let loopScheduled = false;
+                const emit = (ev, ...args) => (handlers[ev] || []).slice().forEach((h) => h(...args));
+                const finishOnCancel = (shown) => {
+                    logs.push(shown + '(ввод отменён)');
+                    rl.close();
+                };
+                const readLoop = () => {
+                    if (closed || promptCalled) return;
+                    const res = dlg.raw('Введите строку (Отмена — завершить ввод):');
+                    if (res === null) { rl.close(); return; }
+                    logs.push(res);
+                    emit('line', res);
+                    tasks.push(readLoop);
+                };
+                const rl = {
+                    question(q, a2, a3) {
+                        const callback = typeof a2 === 'function' ? a2 : a3;
+                        const text = String(q);
+                        tasks.push(() => {
+                            if (closed) return;
+                            const res = dlg.raw(text);
+                            if (res === null) { finishOnCancel(text); return; }
+                            logs.push(text + res);
+                            if (callback) callback(res);
+                        });
+                    },
+                    setPrompt(t) { promptText = String(t); },
+                    getPrompt() { return promptText; },
+                    prompt() {
+                        promptCalled = true;
+                        tasks.push(() => {
+                            if (closed) return;
+                            const res = dlg.raw(promptText);
+                            if (res === null) { finishOnCancel(promptText); return; }
+                            logs.push(promptText + res);
+                            emit('line', res);
+                        });
+                    },
+                    on(ev, handler) {
+                        (handlers[ev] = handlers[ev] || []).push(handler);
+                        if (ev === 'line' && !loopScheduled) {
+                            loopScheduled = true;
+                            tasks.push(readLoop);
+                        }
+                        return rl;
+                    },
+                    write(t) { out(t); },
+                    pause() { return rl; },
+                    resume() { return rl; },
+                    close() {
+                        if (closed) return;
+                        closed = true;
+                        emit('close');
+                    }
+                };
+                rl.once = rl.on;
+                rl.addListener = rl.on;
+                return rl;
+            }
+
+            const readline = { createInterface };
+
+            return {
+                process: proc,
+                require(name) {
+                    if (name === 'readline') return readline;
+                    if (name === 'process') return proc;
+                    return nodeRequire(name);
+                },
+                drain() {
+                    let guard = 0;
+                    while (tasks.length) {
+                        if (++guard > 200) {
+                            logs.push("⚠️ Слишком много запросов ввода подряд — выполнение остановлено.");
+                            break;
+                        }
+                        tasks.shift()();
+                    }
+                },
+                used: () => readlineUsed
+            };
+        }
+
 
 
         const previewFrame = document.getElementById('browser-preview');
@@ -547,9 +651,12 @@ try {
                         const confirm = __dlg.confirm;
                         ${code}
                     `;
+                    const rt = makeNodeRuntime(logs, d);
                     const func = new Function('__nodeRequire', '__nodeProcess', '__dlg', wrappedCode);
-                    const result = func(nodeRequire, NodeEmulator.process, d);
+                    const result = func(rt.require, rt.process, d);
+                    rt.drain();
                     if (d.used()) logs.push("ℹ️ В настоящем Node.js функций alert, prompt и confirm нет — там используют console.log и модуль readline. Здесь они работают для удобства.");
+                    if (rt.used()) logs.push("ℹ️ Модуль readline эмулирован: каждый вопрос показывается в окошке для ввода, а «Отмена» завершает ввод.");
                     if (result !== undefined) logs.push("=> " + (typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result)));
                 }
                 output.innerText = logs.join('\n') || "Код выполнен (нет вывода в консоль)";
