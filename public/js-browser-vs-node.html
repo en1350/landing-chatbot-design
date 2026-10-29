@@ -502,17 +502,27 @@ try {
 
             try {
                 if (environment === 'browser') {
-                    const func = new Function(code);
-                    const result = func();
+                    const __alert = function(...args) {
+                        logs.push("🔔 alert: " + args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' '));
+                    };
+                    const func = new Function('alert', code);
+                    const result = func(__alert);
                     if (result !== undefined) logs.push("=> " + (typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result)));
                 } else if (environment === 'node') {
+                    let alertUsed = false;
+                    const __alert = function(...args) {
+                        alertUsed = true;
+                        logs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' '));
+                    };
                     const wrappedCode = `
                         const require = __nodeRequire;
                         const process = __nodeProcess;
+                        const alert = __alert;
                         ${code}
                     `;
-                    const func = new Function('__nodeRequire', '__nodeProcess', wrappedCode);
-                    const result = func(nodeRequire, NodeEmulator.process);
+                    const func = new Function('__nodeRequire', '__nodeProcess', '__alert', wrappedCode);
+                    const result = func(nodeRequire, NodeEmulator.process, __alert);
+                    if (alertUsed) logs.push("ℹ️ В настоящем Node.js функции alert нет — там используют console.log. Здесь результат alert показан для удобства.");
                     if (result !== undefined) logs.push("=> " + (typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result)));
                 }
                 output.innerText = logs.join('\n') || "Код выполнен (нет вывода в консоль)";
