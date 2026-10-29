@@ -414,6 +414,37 @@ try {
             }
         };
 
+        function makeDialogs(logs, quiet) {
+            let used = false;
+            const fmt = (a) => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a);
+            const ask = (fn, args) => {
+                try { return fn.apply(window, args); } catch (e) { return undefined; }
+            };
+            return {
+                used: () => used,
+                alert: function(...args) {
+                    used = true;
+                    logs.push((quiet ? "" : "🔔 alert: ") + args.map(fmt).join(' '));
+                },
+                prompt: function(message, defaultValue) {
+                    used = true;
+                    const q = message === undefined ? "" : String(message);
+                    const res = ask(window.prompt, [q, defaultValue === undefined ? "" : String(defaultValue)]);
+                    const value = res === undefined ? null : res;
+                    logs.push("⌨️ prompt: " + q + " → " + (value === null ? "отмена (null)" : JSON.stringify(value)));
+                    return value;
+                },
+                confirm: function(message) {
+                    used = true;
+                    const q = message === undefined ? "" : String(message);
+                    const res = ask(window.confirm, [q]);
+                    const value = res === true;
+                    logs.push("❓ confirm: " + q + " → " + (value ? "OK (true)" : "Отмена (false)"));
+                    return value;
+                }
+            };
+        }
+
         function nodeRequire(moduleName) {
             if (moduleName === 'fs') return NodeEmulator.fs;
             if (moduleName === 'path') return NodeEmulator.path;
@@ -502,27 +533,23 @@ try {
 
             try {
                 if (environment === 'browser') {
-                    const __alert = function(...args) {
-                        logs.push("🔔 alert: " + args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' '));
-                    };
-                    const func = new Function('alert', code);
-                    const result = func(__alert);
+                    const d = makeDialogs(logs, false);
+                    const func = new Function('alert', 'prompt', 'confirm', code);
+                    const result = func(d.alert, d.prompt, d.confirm);
                     if (result !== undefined) logs.push("=> " + (typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result)));
                 } else if (environment === 'node') {
-                    let alertUsed = false;
-                    const __alert = function(...args) {
-                        alertUsed = true;
-                        logs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' '));
-                    };
+                    const d = makeDialogs(logs, true);
                     const wrappedCode = `
                         const require = __nodeRequire;
                         const process = __nodeProcess;
-                        const alert = __alert;
+                        const alert = __dlg.alert;
+                        const prompt = __dlg.prompt;
+                        const confirm = __dlg.confirm;
                         ${code}
                     `;
-                    const func = new Function('__nodeRequire', '__nodeProcess', '__alert', wrappedCode);
-                    const result = func(nodeRequire, NodeEmulator.process, __alert);
-                    if (alertUsed) logs.push("ℹ️ В настоящем Node.js функции alert нет — там используют console.log. Здесь результат alert показан для удобства.");
+                    const func = new Function('__nodeRequire', '__nodeProcess', '__dlg', wrappedCode);
+                    const result = func(nodeRequire, NodeEmulator.process, d);
+                    if (d.used()) logs.push("ℹ️ В настоящем Node.js функций alert, prompt и confirm нет — там используют console.log и модуль readline. Здесь они работают для удобства.");
                     if (result !== undefined) logs.push("=> " + (typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result)));
                 }
                 output.innerText = logs.join('\n') || "Код выполнен (нет вывода в консоль)";
