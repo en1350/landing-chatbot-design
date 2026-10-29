@@ -40,6 +40,7 @@ type TrainerKey =
   | "text-processors"
   | "tcpip-addresses"
   | "network-equipment"
+  | "osi-tcpip-models"
   | "linear-programs"
   | "code-duel"
   | "sets-python-js"
@@ -104,6 +105,7 @@ const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "text-processors": "/text-processors.html",
   "tcpip-addresses": "/tcpip-addresses.html",
   "network-equipment": "/network-equipment.html",
+  "osi-tcpip-models": "/osi-tcpip-models.html",
   "linear-programs": "/linear-programs.html",
   "code-duel": "/code-duel.html",
   "sets-python-js": "/sets-python-js.html",
@@ -466,6 +468,14 @@ const TRAINERS: TrainerItem[] = [
     title: "Коммуникационное оборудование сетей",
     description: "Теория про хаб, коммутатор, маршрутизатор и межсетевой экран, симулятор «Собери сеть», тест на 10 вопросов и сертификат",
     accent: "#2C5364",
+  },
+  {
+    key: "osi-tcpip-models",
+    category: "networks",
+    icon: "🌐",
+    title: "Сетевые модели OSI и TCP/IP",
+    description: "Теория про 7 уровней OSI и 4 уровня TCP/IP, анимация прохождения данных, сопоставление протоколов, тест на 10 вопросов и сертификат",
+    accent: "#4F46E5",
   },
   {
     key: "linear-programs",

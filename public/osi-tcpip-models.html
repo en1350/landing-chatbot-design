@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Сетевые модели — Интерактивное занятие</title>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+        --bg: #f8fafc;
+        --bg-2: #ffffff;
+        --card: #ffffff;
+        --accent: #4f46e5;
+        --accent-2: #7c3aed;
+        --success: #10b981;
+        --warn: #f59e0b;
+        --danger: #ef4444;
+        --text: #1e293b;
+        --muted: #64748b;
+        --border: #e2e8f0;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    }
+    body {
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+        color: var(--text);
+        min-height: 100vh;
+        line-height: 1.6;
+    }
+    .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+
+    .hero {
+        text-align: center;
+        padding: 40px 20px 30px;
+        background: radial-gradient(circle at top, rgba(79,70,229,0.08), transparent 60%);
+    }
+    .hero h1 {
+        font-size: clamp(28px, 5vw, 42px);
+        background: linear-gradient(90deg, #4f46e5, #7c3aed, #db2777);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        margin-bottom: 10px;
+    }
+    .hero p { color: var(--muted); font-size: 17px; max-width: 600px; margin: 0 auto; }
+
+    .tabs-nav {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 0;
+        margin: 20px 0 0 0;
+        border-bottom: 2px solid var(--border);
+        scrollbar-width: thin;
+    }
+    .tabs-nav::-webkit-scrollbar { height: 4px; }
+    .tabs-nav::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .tab-btn {
+        background: transparent;
+        border: none;
+        padding: 14px 20px;
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--muted);
+        border-bottom: 3px solid transparent;
+        transition: 0.3s;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .tab-btn:hover { color: var(--accent); background: rgba(79,70,229,0.04); border-radius: 8px 8px 0 0; }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    .tab-pane {
+        display: none;
+        animation: fadeIn 0.4s ease;
+        padding-top: 20px;
+    }
+    .tab-pane.active { display: block; }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .content-card {
+        background: var(--card);
+        border-radius: 16px;
+        padding: 30px;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+    }
+    .content-card h2 {
+        font-size: 24px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--accent);
+    }
+
+    .theory-intro {
+        background: #eef2ff;
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        border-left: 4px solid var(--accent);
+        color: #312e81;
+    }
+    .model-comparison {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 20px;
+    }
+    .model-card {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+    }
+    .model-card h3 { color: var(--accent); margin-bottom: 15px; font-size: 18px; }
+    .layer-list { list-style: none; }
+    .layer-item {
+        background: var(--bg-2);
+        padding: 12px;
+        margin-bottom: 8px;
+        border-radius: 8px;
+        border-left: 3px solid var(--accent);
+        cursor: pointer;
+        transition: 0.3s;
+        border: 1px solid var(--border);
+        border-left-width: 4px;
+    }
+    .layer-item:hover { background: #eef2ff; transform: translateX(4px); }
+    .layer-item .layer-num {
+        display: inline-block;
+        background: var(--accent);
+        color: white;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 24px;
+        font-size: 12px;
+        font-weight: bold;
+        margin-right: 10px;
+    }
+    .layer-item .layer-details {
+        display: none;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid var(--border);
+        font-size: 14px;
+        color: var(--muted);
+    }
+    .layer-item.open .layer-details { display: block; }
+
+    .sim-container {
+        background: #f1f5f9;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    .sim-svg {
+        width: 100%;
+        height: 450px;
+        background: #ffffff;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+    }
+    .sim-controls { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+    .btn {
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: 0.3s;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(79,102,229,0.3); }
+    .btn.secondary { background: #ffffff; color: var(--text); border: 1px solid var(--border); }
+    .btn.secondary:hover { background: #f8fafc; }
+    .sim-log {
+        background: #1e293b;
+        color: #4ade80;
+        font-family: 'Consolas', monospace;
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 15px;
+        font-size: 13px;
+        min-height: 120px;
+        max-height: 180px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+    }
+
+    .practice-task {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .drag-container { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 15px; }
+    .drag-source, .drag-target { flex: 1; min-width: 250px; }
+    .drag-item {
+        background: var(--accent);
+        color: white;
+        padding: 10px 15px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        cursor: move;
+        user-select: none;
+        transition: 0.2s;
+        font-weight: 500;
+    }
+    .drag-item:hover { transform: scale(1.03); box-shadow: 0 4px 10px rgba(79,102,229,0.3); }
+    .drag-item.dragging { opacity: 0.5; }
+    .drop-zone {
+        background: var(--bg-2);
+        border: 2px dashed #cbd5e1;
+        border-radius: 8px;
+        padding: 15px;
+        min-height: 60px;
+        margin-bottom: 10px;
+        transition: 0.3s;
+        font-weight: 600;
+        color: var(--muted);
+    }
+    .drop-zone.over { border-color: var(--accent); background: #eef2ff; color: var(--accent); }
+    .drop-zone.correct { border-color: var(--success); background: #ecfdf5; color: #047857; border-style: solid; }
+    .drop-zone.wrong { border-color: var(--danger); background: #fef2f2; color: #b91c1c; border-style: solid; }
+
+    .quiz-question {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 16px;
+    }
+    .quiz-question h4 { margin-bottom: 12px; color: var(--text); font-size: 16px; }
+    .quiz-option {
+        display: block;
+        background: var(--bg-2);
+        border: 1px solid var(--border);
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        transition: 0.2s;
+        font-size: 14px;
+    }
+    .quiz-option:hover { border-color: var(--accent); background: #f8fafc; }
+    .quiz-option input { margin-right: 10px; }
+    .quiz-option.correct { background: #ecfdf5; border-color: var(--success); color: #047857; }
+    .quiz-option.wrong { background: #fef2f2; border-color: var(--danger); color: #b91c1c; }
+    .quiz-result {
+        margin-top: 20px;
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+        font-size: 18px;
+        font-weight: 600;
+        display: none;
+    }
+    .error-analysis {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 20px;
+        display: none;
+    }
+    .error-item {
+        background: #ffffff;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        border-left: 4px solid var(--danger);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .error-item .q-text { font-weight: 600; margin-bottom: 8px; color: var(--text); }
+    .error-item .your-answer { color: var(--danger); font-size: 14px; }
+    .error-item .correct-answer { color: var(--success); font-size: 14px; font-weight: 600; }
+    .progress-bar {
+        background: #e2e8f0;
+        height: 10px;
+        border-radius: 5px;
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        width: 0%;
+        transition: width 0.5s;
+    }
+
+    .mood-buttons { display: flex; gap: 15px; justify-content: center; margin: 20px 0; flex-wrap: wrap; }
+    .mood-btn {
+        font-size: 40px;
+        background: var(--bg-2);
+        border: 2px solid var(--border);
+        border-radius: 16px;
+        width: 90px;
+        height: 90px;
+        cursor: pointer;
+        transition: 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .mood-btn:hover { transform: scale(1.1); border-color: var(--accent); background: #eef2ff; }
+    .mood-btn.selected {
+        border-color: var(--success);
+        background: #ecfdf5;
+        box-shadow: 0 0 15px rgba(16,185,129,0.2);
+    }
+    .reflection-text {
+        width: 100%;
+        background: var(--bg-2);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 12px;
+        color: var(--text);
+        font-family: inherit;
+        font-size: 14px;
+        resize: vertical;
+        min-height: 100px;
+    }
+    .reflection-text:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,102,229,0.1); }
+    .reflection-feedback {
+        margin-top: 15px;
+        padding: 15px;
+        border-radius: 8px;
+        background: #ecfdf5;
+        border: 1px solid var(--success);
+        color: #047857;
+        display: none;
+    }
+
+    .certificate {
+        background: linear-gradient(135deg, #1e3a8a 0%, #4f46e5 100%);
+        border: 3px solid #fbbf24;
+        border-radius: 16px;
+        padding: 40px;
+        text-align: center;
+        margin-top: 20px;
+        display: none;
+        position: relative;
+        overflow: hidden;
+        color: white;
+    }
+    .certificate::before {
+        content: '';
+        position: absolute;
+        top: -50%; left: -50%; width: 200%; height: 200%;
+        background: radial-gradient(circle, rgba(251,191,36,0.15) 0%, transparent 70%);
+        animation: rotate 20s linear infinite;
+    }
+    @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .certificate-content { position: relative; z-index: 1; }
+    .certificate h3 { font-size: 32px; color: #fbbf24; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+    .certificate .cert-subtitle { font-size: 16px; color: #e0e7ff; margin-bottom: 20px; }
+    .certificate .cert-name {
+        font-size: 26px; color: white; margin: 20px auto; padding: 15px;
+        border-top: 2px solid #fbbf24; border-bottom: 2px solid #fbbf24;
+        max-width: 500px; font-weight: bold;
+    }
+    .certificate .cert-grade { font-size: 48px; color: #fbbf24; margin: 10px 0; font-weight: bold; }
+    .certificate .cert-details { font-size: 14px; color: #cbd5e1; margin-top: 20px; line-height: 1.8; }
+
+    .name-input {
+        width: 100%; max-width: 400px;
+        background: var(--bg-2); border: 1px solid var(--border);
+        border-radius: 8px; padding: 12px;
+        color: var(--text); font-size: 16px;
+        margin: 20px auto; display: block;
+    }
+    .name-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,102,229,0.1); }
+
+    footer { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 14px; }
+
+    @media (max-width: 768px) {
+        .content-card { padding: 20px; }
+        .model-comparison { grid-template-columns: 1fr; }
+        .mood-btn { width: 70px; height: 70px; font-size: 32px; }
+        .certificate { padding: 20px; }
+        .certificate h3 { font-size: 24px; }
+        .certificate .cert-name { font-size: 20px; }
+        .certificate .cert-grade { font-size: 36px; }
+    }
+</style>
+</head>
+<body>
+
+<div class="hero">
+    <h1>🌐 Сетевые модели OSI и TCP/IP</h1>
+    <p>Интерактивное занятие: теория, симуляции, практика, тест и сертификат</p>
+</div>
+
+<div class="container">
+
+    <div class="tabs-nav">
+        <button class="tab-btn active" onclick="openTab('theory', this)">📚 Теория</button>
+        <button class="tab-btn" onclick="openTab('simulation', this)">🎬 Симуляция</button>
+        <button class="tab-btn" onclick="openTab('practice', this)">🔧 Практика</button>
+        <button class="tab-btn" onclick="openTab('quiz', this)">✅ Тест</button>
+        <button class="tab-btn" onclick="openTab('reflection', this)">💭 Рефлексия</button>
+        <button class="tab-btn" onclick="openTab('certificate', this)">🏆 Сертификат</button>
+    </div>
+
+    <div id="theory" class="tab-pane active">
+        <div class="content-card">
+            <h2>Теоретический разбор сетевых моделей</h2>
+            <div class="theory-intro">
+                <p><b>Сетевая модель</b> — это абстрактная структура, описывающая процесс передачи данных в сети. Она разделяет сложную задачу коммуникации на уровни, каждый из которых выполняет определённую функцию.</p>
+            </div>
+
+            <div class="model-comparison">
+                <div class="model-card">
+                    <h3>📊 Модель OSI (7 уровней)</h3>
+                    <p style="color: var(--muted); margin-bottom: 15px; font-size: 14px;">Разработана ISO в 1984 году. Нажмите на уровень для подробностей.</p>
+                    <ul class="layer-list">
+                        <li class="layer-item" onclick="this.classList.toggle('open')">
+                            <span class="layer-num">7</span><b>Прикладной (Application)</b>
+                            <div class="layer-details">Взаимодействие приложений с пользователем. Протоколы: HTTP, FTP, SMTP, DNS.</div>
+                        </li>
+                        <li class="layer-item" onclick="this.classList.toggle('open')">
+                            <span class="layer-num">6</span><b>Представления (Presentation)</b>
+                            <div class="layer-details">Кодирование, шифрование и сжатие данных. Форматы: JPEG, SSL/TLS.</div>
+                        </li>
+                        <li class="layer-item" onclick="this.classList.toggle('open')">
+                            <span class="layer-num">5</span><b>Сеансовый (Session)</b>
+                            <div class="layer-details">Управление сеансами связи: установка, поддержание, завершение.</div>
+                        </li>
+                        <li class="layer-item" onclick="this.classList.toggle('open')">
+                            <span class="layer-num">4</span><b>Транспортный (Transport)</b>
+                            <div class="layer-details">Надёжная доставка данных. Протоколы: TCP (надёжный), UDP (быстрый). Единица: сегмент.</div>
+                        </li>
+                        <li class="layer-item" onclick="this.classList.toggle('open')">
+                            <span class="layer-num">3</span><b>Сетевой (Network)</b>
+                            <div class="layer-details">Маршрутизация пакетов. Протоколы: IP, ICMP, OSPF. Устройства: маршрутизаторы.</div>
+                        </li>
+                        <li class="layer-item" onclick="this.classList.toggle('open')">
+                            <span class="layer-num">2</span><b>Канальный (Data Link)</b>
+                            <div class="layer-details">Передача кадров в одной сети. Протоколы: Ethernet, Wi-Fi. Устройства: коммутаторы.</div>
+                        </li>
+                        <li class="layer-item" onclick="this.classList.toggle('open')">
+                            <span class="layer-num">1</span><b>Физический (Physical)</b>
+                            <div class="layer-details">Передача битов через физическую среду. Кабели, сигналы.</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="model-card">
+                    <h3>🔗 Модель TCP/IP (4 уровня)</h3>
+                    <p style="color: var(--muted); margin-bottom: 15px; font-size: 14px;">Де-факто стандарт Интернета. Нажмите на уровень для подробностей.</p>
+                    <ul class="layer-list">
+                        <li class="layer-item" onclick="this.classList.toggle('open')">
+                            <span class="layer-num">4</span><b>Прикладной (Application)</b>
+                            <div class="layer-details">Объединяет уровни 5-7 OSI. Протоколы: HTTP, FTP, DNS, DHCP.</div>
+                        </li>
+                        <li class="layer-item" onclick="this.classList.toggle('open')">
+                            <span class="layer-num">3</span><b>Транспортный (Transport)</b>
+                            <div class="layer-details">Аналог уровня 4 OSI. TCP и UDP.</div>
+                        </li>
+                        <li class="layer-item" onclick="this.classList.toggle('open')">
+                            <span class="layer-num">2</span><b>Интернет (Internet)</b>
+                            <div class="layer-details">Аналог уровня 3 OSI. Основной протокол — IP (IPv4, IPv6). Маршрутизация.</div>
+                        </li>
+                        <li class="layer-item" onclick="this.classList.toggle('open')">
+                            <span class="layer-num">1</span><b>Сетевого доступа (Network Access)</b>
+                            <div class="layer-details">Объединяет уровни 1-2 OSI. Ethernet, Wi-Fi, PPP.</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="simulation" class="tab-pane">
+        <div class="content-card">
+            <h2>Симуляция: прохождение данных через уровни</h2>
+            <p style="color: var(--muted); margin-bottom: 15px;">Наблюдайте, как сообщение проходит через все уровни модели OSI при отправке и получении.</p>
+            <div class="sim-container">
+                <svg id="simSvg" class="sim-svg" viewBox="0 0 1000 450" preserveAspectRatio="xMidYMid meet"></svg>
+                <div class="sim-controls">
+                    <button class="btn" onclick="runSimulation()">▶ Запустить симуляцию</button>
+                    <button class="btn secondary" onclick="resetSimulation()">↺ Сброс</button>
+                </div>
+                <div id="simLog" class="sim-log">Нажмите «Запустить» для начала симуляции...</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="practice" class="tab-pane">
+        <div class="content-card">
+            <h2>Практические задания</h2>
+            <p style="color: var(--muted); margin-bottom: 20px;">Распределите протоколы по соответствующим уровням модели OSI.</p>
+            <div class="practice-task">
+                <h4>🎯 Задание: Перетащите или нажмите для выбора</h4>
+                <div class="drag-container">
+                    <div class="drag-source">
+                        <h5 style="margin-bottom: 10px; color: var(--muted);">Протоколы:</h5>
+                        <div id="protocolList">
+                            <div class="drag-item" draggable="true" data-protocol="HTTP" data-level="7">HTTP</div>
+                            <div class="drag-item" draggable="true" data-protocol="TCP" data-level="4">TCP</div>
+                            <div class="drag-item" draggable="true" data-protocol="IP" data-level="3">IP</div>
+                            <div class="drag-item" draggable="true" data-protocol="Ethernet" data-level="2">Ethernet</div>
+                            <div class="drag-item" draggable="true" data-protocol="DNS" data-level="7">DNS</div>
+                            <div class="drag-item" draggable="true" data-protocol="UDP" data-level="4">UDP</div>
+                        </div>
+                    </div>
+                    <div class="drag-target">
+                        <h5 style="margin-bottom: 10px; color: var(--muted);">Уровни OSI:</h5>
+                        <div class="drop-zone" data-level="7" data-name="Прикладной (7)">Прикладной (7)</div>
+                        <div class="drop-zone" data-level="4" data-name="Транспортный (4)">Транспортный (4)</div>
+                        <div class="drop-zone" data-level="3" data-name="Сетевой (3)">Сетевой (3)</div>
+                        <div class="drop-zone" data-level="2" data-name="Канальный (2)">Канальный (2)</div>
+                    </div>
+                </div>
+                <button class="btn" onclick="checkPractice()" style="margin-top: 15px;">✔ Проверить</button>
+                <div id="practiceResult" style="margin-top: 15px; padding: 15px; border-radius: 8px; display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="quiz" class="tab-pane">
+        <div class="content-card">
+            <h2>Тестовые задания</h2>
+            <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+            <div id="quizContainer"></div>
+            <button class="btn" onclick="checkQuiz()" style="margin-top: 15px;">✔ Завершить тест</button>
+            <div id="quizResult" class="quiz-result"></div>
+            <div id="errorAnalysis" class="error-analysis"></div>
+        </div>
+    </div>
+
+    <div id="reflection" class="tab-pane">
+        <div class="content-card">
+            <h2>Рефлексия</h2>
+            <p style="color: var(--muted); margin-bottom: 10px;">Оцените, насколько понятным было занятие.</p>
+            <div class="mood-buttons">
+                <button class="mood-btn" onclick="selectMood(this, 'Отлично! Тема усвоена')" title="Всё понятно">😄</button>
+                <button class="mood-btn" onclick="selectMood(this, 'Хорошо, но есть вопросы')" title="В целом понятно">🙂</button>
+                <button class="mood-btn" onclick="selectMood(this, 'Нужно повторить материал')" title="Сложно">😐</button>
+                <button class="mood-btn" onclick="selectMood(this, 'Тема непонятна')" title="Не понятно">😕</button>
+            </div>
+            <textarea id="reflectionText" class="reflection-text" placeholder="Что было самым интересным? Что осталось непонятным?"></textarea>
+            <button class="btn" onclick="submitReflection()" style="margin-top: 15px;">💾 Сохранить отзыв</button>
+            <div id="reflectionFeedback" class="reflection-feedback"></div>
+        </div>
+    </div>
+
+    <div id="certificate" class="tab-pane">
+        <div class="content-card">
+            <h2>Сертификат об прохождении</h2>
+            <p style="color: var(--muted); margin-bottom: 15px;">Введите ваше имя для получения сертификата (необходимо сначала пройти тест):</p>
+            <input type="text" id="studentName" class="name-input" placeholder="Ваше имя и фамилия">
+            <button class="btn" onclick="generateCertificate()" style="display: block; margin: 0 auto;">🏆 Получить сертификат</button>
+
+            <div id="certificateDisplay" class="certificate">
+                <div class="certificate-content">
+                    <h3>🏆 СЕРТИФИКАТ</h3>
+                    <div class="cert-subtitle">об успешном прохождении интерактивного занятия</div>
+                    <div style="font-size: 20px; margin: 10px 0; font-weight: 600;">«Сетевые модели OSI и TCP/IP»</div>
+                    <div class="cert-name" id="certName">Имя студента</div>
+                    <div style="font-size: 15px; color: #e0e7ff;">Дисциплина: Компьютерные сети</div>
+                    <div class="cert-grade" id="certGrade">5</div>
+                    <div style="font-size: 18px; color: #fbbf24; font-weight: 600;" id="certGradeText">Отлично</div>
+                    <div class="cert-details">
+                        <div id="certDate">Дата: </div>
+                        <div id="certScore">Результат теста: </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<footer>
+    © Интерактивное занятие по компьютерным сетям. Создано для образовательных целей.
+</footer>
+
+<script>
+function openTab(tabId, btn) {
+    document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+    document.getElementById(tabId).classList.add('active');
+    btn.classList.add('active');
+
+    if (tabId === 'simulation' && document.getElementById('simSvg').innerHTML === '') {
+        drawOSIModel();
+    }
+}
+
+let simRunning = false;
+
+const osiLayers = [
+    { num: 7, name: 'Application', y: 30, color: '#ec4899' },
+    { num: 6, name: 'Presentation', y: 85, color: '#f43f5e' },
+    { num: 5, name: 'Session', y: 140, color: '#f97316' },
+    { num: 4, name: 'Transport', y: 195, color: '#eab308' },
+    { num: 3, name: 'Network', y: 250, color: '#22c55e' },
+    { num: 2, name: 'Data Link', y: 305, color: '#06b6d4' },
+    { num: 1, name: 'Physical', y: 360, color: '#6366f1' }
+];
+
+const simSteps = [
+    { phase: 'send', layer: 7, text: '[Уровень 7 - Application] Пользователь вводит URL сайта' },
+    { phase: 'send', layer: 6, text: '[Уровень 6 - Presentation] Данные кодируются (UTF-8, SSL)' },
+    { phase: 'send', layer: 5, text: '[Уровень 5 - Session] Устанавливается сеанс связи' },
+    { phase: 'send', layer: 4, text: '[Уровень 4 - Transport] Добавляется TCP-заголовок (порты)' },
+    { phase: 'send', layer: 3, text: '[Уровень 3 - Network] Добавляется IP-заголовок (адреса)' },
+    { phase: 'send', layer: 2, text: '[Уровень 2 - Data Link] Формируется Ethernet-кадр (MAC)' },
+    { phase: 'send', layer: 1, text: '[Уровень 1 - Physical] Биты передаются в физическую среду' },
+    { phase: 'transmit', text: '📡 Сигнал передаётся по сети...' },
+    { phase: 'receive', layer: 1, text: '[Уровень 1 - Physical] Биты приняты из среды' },
+    { phase: 'receive', layer: 2, text: '[Уровень 2 - Data Link] Проверка кадра, извлечение MAC' },
+    { phase: 'receive', layer: 3, text: '[Уровень 3 - Network] Анализ IP-адреса, маршрутизация' },
+    { phase: 'receive', layer: 4, text: '[Уровень 4 - Transport] Сборка сегмента, проверка TCP' },
+    { phase: 'receive', layer: 5, text: '[Уровень 5 - Session] Управление сеансом' },
+    { phase: 'receive', layer: 6, text: '[Уровень 6 - Presentation] Декодирование данных' },
+    { phase: 'receive', layer: 7, text: '[Уровень 7 - Application] Данные переданы приложению ✓' }
+];
+
+function drawOSIModel() {
+    const svg = document.getElementById('simSvg');
+    svg.innerHTML = '';
+
+    const senderGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    senderGroup.setAttribute('id', 'sender');
+    const senderLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    senderLabel.setAttribute('x', 150); senderLabel.setAttribute('y', 20);
+    senderLabel.setAttribute('text-anchor', 'middle'); senderLabel.setAttribute('fill', '#1e293b');
+    senderLabel.setAttribute('font-size', '16'); senderLabel.setAttribute('font-weight', 'bold');
+    senderLabel.textContent = 'ОТПРАВИТЕЛЬ';
+    senderGroup.appendChild(senderLabel);
+
+    osiLayers.forEach(layer => {
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('x', 50); rect.setAttribute('y', layer.y);
+        rect.setAttribute('width', 200); rect.setAttribute('height', 45);
+        rect.setAttribute('rx', 8); rect.setAttribute('fill', layer.color);
+        rect.setAttribute('opacity', '0.2'); rect.setAttribute('id', `sender-layer-${layer.num}`);
+        senderGroup.appendChild(rect);
+
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', 150); text.setAttribute('y', layer.y + 28);
+        text.setAttribute('text-anchor', 'middle'); text.setAttribute('fill', '#1e293b');
+        text.setAttribute('font-size', '13'); text.setAttribute('font-weight', '600');
+        text.textContent = `${layer.num}. ${layer.name}`;
+        senderGroup.appendChild(text);
+    });
+    svg.appendChild(senderGroup);
+
+    const receiverGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    receiverGroup.setAttribute('id', 'receiver');
+    const receiverLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    receiverLabel.setAttribute('x', 850); receiverLabel.setAttribute('y', 20);
+    receiverLabel.setAttribute('text-anchor', 'middle'); receiverLabel.setAttribute('fill', '#1e293b');
+    receiverLabel.setAttribute('font-size', '16'); receiverLabel.setAttribute('font-weight', 'bold');
+    receiverLabel.textContent = 'ПОЛУЧАТЕЛЬ';
+    receiverGroup.appendChild(receiverLabel);
+
+    osiLayers.forEach(layer => {
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('x', 750); rect.setAttribute('y', layer.y);
+        rect.setAttribute('width', 200); rect.setAttribute('height', 45);
+        rect.setAttribute('rx', 8); rect.setAttribute('fill', layer.color);
+        rect.setAttribute('opacity', '0.2'); rect.setAttribute('id', `receiver-layer-${layer.num}`);
+        receiverGroup.appendChild(rect);
+
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', 850); text.setAttribute('y', layer.y + 28);
+        text.setAttribute('text-anchor', 'middle'); text.setAttribute('fill', '#1e293b');
+        text.setAttribute('font-size', '13'); text.setAttribute('font-weight', '600');
+        text.textContent = `${layer.num}. ${layer.name}`;
+        receiverGroup.appendChild(text);
+    });
+    svg.appendChild(receiverGroup);
+
+    const network = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    network.setAttribute('x', 400); network.setAttribute('y', 380);
+    network.setAttribute('width', 200); network.setAttribute('height', 50);
+    network.setAttribute('rx', 8); network.setAttribute('fill', '#f1f5f9');
+    network.setAttribute('stroke', '#6366f1'); network.setAttribute('stroke-width', '2');
+    network.setAttribute('id', 'network');
+    svg.appendChild(network);
+
+    const networkText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    networkText.setAttribute('x', 500); networkText.setAttribute('y', 410);
+    networkText.setAttribute('text-anchor', 'middle'); networkText.setAttribute('fill', '#64748b');
+    networkText.setAttribute('font-size', '14'); networkText.setAttribute('font-weight', 'bold');
+    networkText.textContent = 'СЕТЬ';
+    svg.appendChild(networkText);
+}
+
+function highlightLayer(side, layerNum, active) {
+    const rect = document.getElementById(`${side}-layer-${layerNum}`);
+    if (rect) {
+        rect.setAttribute('opacity', active ? '0.9' : '0.2');
+        rect.setAttribute('stroke', active ? '#f59e0b' : 'none');
+        rect.setAttribute('stroke-width', active ? '3' : '0');
+    }
+}
+
+function animatePacket(fromX, fromY, toX, toY, callback) {
+    const svg = document.getElementById('simSvg');
+    const packet = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    packet.setAttribute('r', 10); packet.setAttribute('fill', '#f59e0b');
+    packet.setAttribute('cx', fromX); packet.setAttribute('cy', fromY);
+    svg.appendChild(packet);
+
+    const duration = 600; const start = performance.now();
+    function step(timestamp) {
+        const progress = Math.min((timestamp - start) / duration, 1);
+        packet.setAttribute('cx', fromX + (toX - fromX) * progress);
+        packet.setAttribute('cy', fromY + (toY - fromY) * progress);
+        if (progress < 1) requestAnimationFrame(step);
+        else { svg.removeChild(packet); callback && callback(); }
+    }
+    requestAnimationFrame(step);
+}
+
+function runSimulation() {
+    if (simRunning) return;
+    simRunning = true;
+    resetSimulation();
+    simRunning = true;
+    const log = document.getElementById('simLog');
+    log.textContent = '';
+    let stepIndex = 0;
+
+    function executeStep() {
+        if (stepIndex >= simSteps.length) {
+            log.textContent += '\n✅ Симуляция завершена! Данные успешно доставлены.';
+            simRunning = false;
+            return;
+        }
+        const step = simSteps[stepIndex];
+        log.textContent += step.text + '\n';
+        log.scrollTop = log.scrollHeight;
+
+        if (step.phase === 'send') {
+            highlightLayer('sender', step.layer, true);
+            setTimeout(() => { highlightLayer('sender', step.layer, false); stepIndex++; setTimeout(executeStep, 300); }, 700);
+        } else if (step.phase === 'receive') {
+            highlightLayer('receiver', step.layer, true);
+            setTimeout(() => { highlightLayer('receiver', step.layer, false); stepIndex++; setTimeout(executeStep, 300); }, 700);
+        } else if (step.phase === 'transmit') {
+            const network = document.getElementById('network');
+            network.setAttribute('fill', '#e0e7ff');
+            animatePacket(250, 405, 750, 405, () => {
+                network.setAttribute('fill', '#f1f5f9');
+                stepIndex++; setTimeout(executeStep, 300);
+            });
+        }
+    }
+    executeStep();
+}
+
+function resetSimulation() {
+    drawOSIModel();
+    document.getElementById('simLog').textContent = 'Готово к запуску. Нажмите «Запустить».';
+    simRunning = false;
+}
+
+let draggedItem = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+    const items = document.querySelectorAll('.drag-item');
+    const zones = document.querySelectorAll('.drop-zone');
+
+    items.forEach(item => {
+        item.addEventListener('dragstart', (e) => { draggedItem = item; setTimeout(() => item.classList.add('dragging'), 0); });
+        item.addEventListener('dragend', () => { item.classList.remove('dragging'); });
+        item.addEventListener('click', () => {
+            if (draggedItem === item) { draggedItem = null; item.style.outline = 'none'; }
+            else { if (draggedItem) draggedItem.style.outline = 'none'; draggedItem = item; item.style.outline = '3px solid #f59e0b'; }
+        });
+    });
+
+    zones.forEach(zone => {
+        zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('over'); });
+        zone.addEventListener('dragleave', () => { zone.classList.remove('over'); });
+        zone.addEventListener('drop', (e) => {
+            e.preventDefault(); zone.classList.remove('over');
+            if (draggedItem) { zone.appendChild(draggedItem); draggedItem.style.outline = 'none'; draggedItem = null; }
+        });
+        zone.addEventListener('click', () => {
+            if (draggedItem) { zone.appendChild(draggedItem); draggedItem.style.outline = 'none'; draggedItem = null; }
+        });
+    });
+    drawOSIModel();
+});
+
+function checkPractice() {
+    const zones = document.querySelectorAll('.drop-zone');
+    let correct = 0, total = 0;
+    zones.forEach(zone => {
+        const level = parseInt(zone.dataset.level);
+        zone.classList.remove('correct', 'wrong');
+        zone.querySelectorAll('.drag-item').forEach(item => {
+            total++;
+            if (parseInt(item.dataset.level) === level) { correct++; zone.classList.add('correct'); }
+            else { zone.classList.add('wrong'); }
+        });
+    });
+
+    const result = document.getElementById('practiceResult');
+    result.style.display = 'block';
+    if (total === 0) {
+        result.style.background = '#fffbeb'; result.style.border = '1px solid #fcd34d'; result.style.color = '#92400e';
+        result.innerHTML = '⚠️ Перетащите хотя бы один протокол в зоны.';
+    } else if (correct === total) {
+        result.style.background = '#ecfdf5'; result.style.border = '1px solid var(--success)'; result.style.color = '#047857';
+        result.innerHTML = `✅ Отлично! Все ${correct} протоколов распределены верно!`;
+    } else {
+        result.style.background = '#fffbeb'; result.style.border = '1px solid #fcd34d'; result.style.color = '#92400e';
+        result.innerHTML = `⚠️ Правильно: ${correct} из ${total}. Красные зоны — ошибки.`;
+    }
+}
+
+const quizData = [
+    { q: '1. Сколько уровней в модели OSI?', options: ['4', '5', '7', '6'], correct: 2 },
+    { q: '2. На каком уровне модели OSI работает протокол IP?', options: ['Транспортный (4)', 'Сетевой (3)', 'Канальный (2)', 'Прикладной (7)'], correct: 1 },
+    { q: '3. Какой протокол обеспечивает надёжную доставку данных с установлением соединения?', options: ['UDP', 'IP', 'TCP', 'ICMP'], correct: 2 },
+    { q: '4. Модель TCP/IP состоит из:', options: ['7 уровней', '5 уровней', '4 уровней', '3 уровней'], correct: 2 },
+    { q: '5. Какое устройство работает на канальном уровне (L2)?', options: ['Маршрутизатор', 'Коммутатор', 'Концентратор', 'Шлюз'], correct: 1 },
+    { q: '6. Протокол HTTP работает на уровне:', options: ['Транспортном', 'Сетевом', 'Канальном', 'Прикладном'], correct: 3 },
+    { q: '7. Единицей данных на сетевом уровне (L3) является:', options: ['Бит', 'Кадр', 'Пакет', 'Сегмент'], correct: 2 },
+    { q: '8. Какой уровень OSI отвечает за кодирование и шифрование данных?', options: ['Прикладной (7)', 'Представления (6)', 'Сеансовый (5)', 'Транспортный (4)'], correct: 1 },
+    { q: '9. Модель OSI была разработана:', options: ['IETF', 'ISO', 'IEEE', 'ANSI'], correct: 1 },
+    { q: '10. Протокол Ethernet работает на уровне:', options: ['Физическом (1)', 'Канальном (2)', 'Сетевом (3)', 'Транспортном (4)'], correct: 1 }
+];
+
+let quizScore = 0;
+
+function renderQuiz() {
+    const container = document.getElementById('quizContainer');
+    container.innerHTML = '';
+    quizData.forEach((item, idx) => {
+        const div = document.createElement('div');
+        div.className = 'quiz-question';
+        div.innerHTML = `<h4>${item.q}</h4>`;
+        item.options.forEach((opt, oi) => {
+            const label = document.createElement('label');
+            label.className = 'quiz-option';
+            label.innerHTML = `<input type="radio" name="q${idx}" value="${oi}"> ${opt}`;
+            div.appendChild(label);
+        });
+        container.appendChild(div);
+    });
+}
+
+function checkQuiz() {
+    quizScore = 0;
+    const errors = [];
+    quizData.forEach((item, idx) => {
+        const selected = document.querySelector(`input[name="q${idx}"]:checked`);
+        const options = document.querySelectorAll(`input[name="q${idx}"]`);
+        options.forEach((opt, oi) => {
+            const label = opt.parentElement;
+            label.classList.remove('correct', 'wrong');
+            if (oi === item.correct) label.classList.add('correct');
+            if (selected && parseInt(selected.value) === oi && oi !== item.correct) label.classList.add('wrong');
+        });
+        if (selected && parseInt(selected.value) === item.correct) quizScore++;
+        else errors.push({ question: item.q, yourAnswer: selected ? item.options[parseInt(selected.value)] : 'Не выбрано', correctAnswer: item.options[item.correct] });
+    });
+
+    const percent = Math.round((quizScore / quizData.length) * 100);
+    document.getElementById('progressFill').style.width = percent + '%';
+
+    const res = document.getElementById('quizResult');
+    res.style.display = 'block';
+    let grade = 0, gradeText = '', color = '', bg = '';
+    if (percent >= 90) { grade = 5; gradeText = 'Отлично'; color = '#047857'; bg = '#ecfdf5'; }
+    else if (percent >= 75) { grade = 4; gradeText = 'Хорошо'; color = '#047857'; bg = '#ecfdf5'; }
+    else if (percent >= 60) { grade = 3; gradeText = 'Удовлетворительно'; color = '#92400e'; bg = '#fffbeb'; }
+    else { grade = 2; gradeText = 'Неудовлетворительно'; color = '#b91c1c'; bg = '#fef2f2'; }
+
+    res.textContent = `Результат: ${quizScore}/${quizData.length} (${percent}%) — Оценка: ${grade} (${gradeText})`;
+    res.style.color = color; res.style.background = bg; res.style.border = `1px solid ${color}`;
+
+    const errorDiv = document.getElementById('errorAnalysis');
+    if (errors.length > 0) {
+        errorDiv.style.display = 'block';
+        errorDiv.style.background = ''; errorDiv.style.borderColor = '';
+        errorDiv.innerHTML = '<h3 style="color: var(--danger); margin-bottom: 15px;">📋 Разбор ошибок:</h3>';
+        errors.forEach(err => {
+            const item = document.createElement('div');
+            item.className = 'error-item';
+            item.innerHTML = `<div class="q-text">${err.question}</div><div class="your-answer">❌ Ваш ответ: ${err.yourAnswer}</div><div class="correct-answer">✅ Правильный ответ: ${err.correctAnswer}</div>`;
+            errorDiv.appendChild(item);
+        });
+    } else {
+        errorDiv.style.display = 'block';
+        errorDiv.style.background = '#ecfdf5'; errorDiv.style.borderColor = 'var(--success)';
+        errorDiv.innerHTML = '<h3 style="color: var(--success); text-align: center;">🎉 Ошибок нет! Отличная работа!</h3>';
+    }
+}
+
+let selectedMood = null, selectedMoodText = '';
+function selectMood(btn, text) {
+    document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedMood = btn.textContent; selectedMoodText = text;
+}
+function submitReflection() {
+    const fb = document.getElementById('reflectionFeedback');
+    if (!selectedMood) {
+        fb.style.display = 'block'; fb.style.background = '#fffbeb'; fb.style.borderColor = '#fcd34d'; fb.style.color = '#92400e';
+        fb.innerHTML = '⚠️ Пожалуйста, выберите настроение.'; return;
+    }
+    fb.style.display = 'block'; fb.style.background = '#ecfdf5'; fb.style.borderColor = '#10b981'; fb.style.color = '#047857';
+    fb.innerHTML = `✅ Спасибо за отзыв! Настроение: ${selectedMood} — <i>${selectedMoodText}</i><br><small>Ваш комментарий сохранён.</small>`;
+}
+
+function generateCertificate() {
+    const name = document.getElementById('studentName').value.trim();
+    if (!name) { alert('Пожалуйста, введите ваше имя.'); return; }
+    if (quizScore === 0) { alert('Сначала пройдите тест!'); return; }
+
+    const percent = Math.round((quizScore / quizData.length) * 100);
+    let grade = 0, gradeText = '';
+    if (percent >= 90) { grade = 5; gradeText = 'Отлично'; }
+    else if (percent >= 75) { grade = 4; gradeText = 'Хорошо'; }
+    else if (percent >= 60) { grade = 3; gradeText = 'Удовлетворительно'; }
+    else { grade = 2; gradeText = 'Неудовлетворительно'; }
+
+    document.getElementById('certName').textContent = name;
+    document.getElementById('certGrade').textContent = grade;
+    document.getElementById('certGradeText').textContent = gradeText;
+    document.getElementById('certDate').textContent = `Дата: ${new Date().toLocaleDateString('ru-RU')}`;
+    document.getElementById('certScore').textContent = `Результат теста: ${quizScore}/${quizData.length} (${percent}%)`;
+
+    document.getElementById('certificateDisplay').style.display = 'block';
+    document.getElementById('certificateDisplay').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    renderQuiz();
+});
+</script>
+</body>
+</html>

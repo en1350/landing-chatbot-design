@@ -32,7 +32,7 @@ export const SITEMAP_LESSONS = [
   "ip-diagnostics", "it-lab-ovz", "it-project-simulator", "js-browser-vs-node",
   "lan-simulator", "linear-complexity", "linear-programs", "lists-graphs-trees",
   "media-access-methods", "media-access-test", "modeling-luntik", "multimedia-slide-ovz",
-  "network-equipment", "number-systems-ovz", "os-components", "os-memory", "os-processes",
+  "network-equipment", "number-systems-ovz", "osi-tcpip-models", "os-components", "os-memory", "os-processes",
   "pc-builder", "pedagogical-row", "python-java-types", "python-js-simulator",
   "quadratic-complexity", "set-theory", "sets-python-js", "subnet-calculator",
   "tcpip-addresses", "text-processors",
