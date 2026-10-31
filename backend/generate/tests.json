@@ -512,6 +512,21 @@
       "expectedStatus": 403,
       "expectedBody": {},
       "bodyMatcher": "partial"
+    },
+    {
+      "name": "Mini plan without topic returns 400",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "mini_plan",
+        "subject": "",
+        "topic": ""
+      },
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
     }
   ]
 }

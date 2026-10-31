@@ -13,6 +13,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useChatUnread } from "@/hooks/use-chat-unread";
 import NavDropdown, { NavItem } from "@/components/NavDropdown";
 import ExperienceModal from "@/components/ExperienceModal";
+import MiniPlanModal from "@/components/MiniPlanModal";
 
 interface NavbarProps {
   onOpenNotebook: () => void;
@@ -78,6 +79,7 @@ const Navbar = ({
 }: NavbarProps) => {
   const [open, setOpen] = useState(false);
   const [experienceOpen, setExperienceOpen] = useState(false);
+  const [miniPlanOpen, setMiniPlanOpen] = useState(false);
   const { user, token } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const chatUnread = useChatUnread();
@@ -106,6 +108,7 @@ const Navbar = ({
   };
 
   const extraMenu: NavItem[] = [
+    { label: "Мини-конструктор урока", icon: "Sparkles", onClick: () => { setOpen(false); setMiniPlanOpen(true); } },
     { label: "Декомпозитор компетенций", icon: "Network", onClick: () => handleClick("decomposer") },
     { label: "Рандомайзер", icon: "Shuffle", onClick: () => handleClick("randomizer") },
     { label: "Антиплагиат", icon: "ShieldCheck", onClick: () => handleClick("antiplagiat") },
@@ -273,6 +276,7 @@ const Navbar = ({
           </SheetContent>
         </Sheet>
       </div>
+      <MiniPlanModal open={miniPlanOpen} onClose={() => setMiniPlanOpen(false)} />
       <ExperienceModal
         open={experienceOpen}
         onClose={() => setExperienceOpen(false)}

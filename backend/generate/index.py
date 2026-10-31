@@ -1982,6 +1982,54 @@ def process(event: dict, context) -> dict:
 
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps(result, ensure_ascii=False)}
 
+        elif action == 'mini_plan':
+            def clip(v, n):
+                return str(v or '').strip()[:n]
+
+            subject = clip(body.get('subject'), 100)
+            topic = clip(body.get('topic'), 200)
+            fmt = clip(body.get('format'), 20) or 'Урок'
+            duration = clip(body.get('time'), 20) or '15 минут'
+            goal = clip(body.get('goal'), 500)
+            reflection = clip(body.get('reflection'), 300)
+            with_ovz = bool(body.get('ovz'))
+
+            if not subject or not topic:
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите предмет и тему'}, ensure_ascii=False)}
+
+            ovz_part = (
+                '"ovz": ["4-5 конкретных приёмов адаптации именно под эту тему для обучающихся с ОВЗ"]'
+                if with_ovz else '"ovz": []'
+            )
+            prompt = f"""Составь краткий план занятия для педагога.
+Предмет: {subject}
+Тема: {topic}
+Формат: {fmt}
+Длительность: {duration}
+Цель: {goal or 'сформулируй сам по теме'}
+Рефлексия: {reflection or 'предложи сам'}
+
+Верни ответ СТРОГО в виде JSON без markdown и пояснений:
+{{"title": "название занятия", "goal": "чёткая цель", "stages": [{{"name": "этап", "minutes": 5, "description": "что делают педагог и дети"}}], "reflection": "как подвести итоги", {ovz_part}}}
+Сумма минут по этапам должна равняться длительности. Этапов от 3 до 6. Пиши по-русски."""
+
+            raw = call_ai([
+                {'role': 'system', 'content': 'Ты педагог-методист. Отвечай только валидным JSON на русском языке.'},
+                {'role': 'user', 'content': prompt},
+            ], temperature=0.6)
+
+            cleaned = raw.strip()
+            if cleaned.startswith('```'):
+                cleaned = cleaned.strip('`')
+                if cleaned.lower().startswith('json'):
+                    cleaned = cleaned[4:]
+            try:
+                result = json.loads(cleaned)
+            except json.JSONDecodeError:
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ вернул некорректный формат, попробуйте снова'}, ensure_ascii=False)}
+
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps(result, ensure_ascii=False)}
+
         elif action == 'correction_plan':
             if not is_user_paid(event):
                 return {'statusCode': 403, 'headers': cors_headers(), 'body': json.dumps({'error': 'План коррекционной работы доступен только по платной подписке'})}
