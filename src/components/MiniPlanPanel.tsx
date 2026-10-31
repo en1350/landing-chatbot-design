@@ -3,6 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import Icon from "@/components/ui/icon";
+import { useAuth } from "@/context/AuthContext";
+import AuthModal from "@/components/AuthModal";
+import UpgradeModal from "@/components/UpgradeModal";
 
 const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
 
@@ -40,6 +43,10 @@ const MiniPlanPanel = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [plan, setPlan] = useState<MiniPlan | null>(null);
+  const [limitReached, setLimitReached] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const { token } = useAuth();
 
   const generate = async () => {
     if (!subject.trim() || !topic.trim()) {
@@ -51,11 +58,16 @@ const MiniPlanPanel = () => {
     try {
       const res = await fetch(GENERATE_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(token ? { "X-Authorization": token } : {}) },
         body: JSON.stringify({ action: "mini_plan", subject, topic, format, time, goal, reflection, ovz }),
       });
       const data = await res.json();
+      if (res.status === 429 && data.code === "guest_limit") {
+        setLimitReached(true);
+        return;
+      }
       if (!res.ok) throw new Error(data.error || "Не удалось составить план");
+      setLimitReached(false);
       setPlan(data as MiniPlan);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Не удалось составить план");
@@ -137,6 +149,24 @@ const MiniPlanPanel = () => {
         </Button>
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
+      {limitReached && (
+        <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 animate-fade-in">
+          <p className="text-sm font-semibold">Бесплатный запрос на сегодня использован</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Войдите в личный кабинет или оформите подписку, чтобы составлять планы без ограничений.
+          </p>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <Button className="h-10 gap-2" onClick={() => setAuthOpen(true)}>
+              <Icon name="LogIn" size={16} />
+              Войти
+            </Button>
+            <Button variant="outline" className="h-10 gap-2" onClick={() => setUpgradeOpen(true)}>
+              <Icon name="Crown" size={16} />
+              Подписка
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
 
     {plan && (
@@ -177,6 +207,15 @@ const MiniPlanPanel = () => {
         )}
       </div>
     )}
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
+      <UpgradeModal
+        open={upgradeOpen}
+        onClose={() => setUpgradeOpen(false)}
+        onNeedAuth={() => {
+          setUpgradeOpen(false);
+          setAuthOpen(true);
+        }}
+      />
     </>
   );
 };

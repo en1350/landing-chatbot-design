@@ -113,6 +113,64 @@ def refund_credit():
         pass
 
 
+GUEST_DAILY_LIMIT = 1
+
+
+def is_logged_in(event) -> bool:
+    token = get_token(event)
+    if not token:
+        return False
+    conn = None
+    try:
+        conn = psycopg2.connect(os.environ['DATABASE_URL'])
+        cur = conn.cursor()
+        cur.execute(f"SELECT 1 FROM {SCHEMA}.sessions WHERE token = %s AND expires_at > now()", (token,))
+        return cur.fetchone() is not None
+    except Exception:
+        return False
+    finally:
+        if conn:
+            conn.close()
+
+
+def guest_ip_hash(event) -> str:
+    import hashlib
+    ip = ((event.get('requestContext') or {}).get('identity') or {}).get('sourceIp') or 'unknown'
+    return hashlib.sha256(ip.encode('utf-8')).hexdigest()
+
+
+def guest_take_slot(ip_hash: str) -> bool:
+    conn = psycopg2.connect(os.environ['DATABASE_URL'])
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            f"INSERT INTO {SCHEMA}.mini_plan_guest_usage (ip_hash, day, used) VALUES (%s, (now() AT TIME ZONE 'UTC')::date, 1) "
+            f"ON CONFLICT (ip_hash, day) DO UPDATE SET used = {SCHEMA}.mini_plan_guest_usage.used + 1, updated_at = now() "
+            f"WHERE {SCHEMA}.mini_plan_guest_usage.used < %s RETURNING used",
+            (ip_hash, GUEST_DAILY_LIMIT)
+        )
+        row = cur.fetchone()
+        conn.commit()
+        return row is not None
+    finally:
+        conn.close()
+
+
+def guest_release_slot(ip_hash: str):
+    try:
+        conn = psycopg2.connect(os.environ['DATABASE_URL'])
+        cur = conn.cursor()
+        cur.execute(
+            f"UPDATE {SCHEMA}.mini_plan_guest_usage SET used = GREATEST(used - 1, 0) "
+            f"WHERE ip_hash = %s AND day = (now() AT TIME ZONE 'UTC')::date",
+            (ip_hash,)
+        )
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass
+
+
 def call_ai(messages: list, temperature: float = 0.7, model: str = MODEL) -> str:
     api_key = os.environ['AITUNNEL_API_KEY']
     payload = json.dumps({
@@ -1997,6 +2055,12 @@ def process(event: dict, context) -> dict:
             if not subject or not topic:
                 return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите предмет и тему'}, ensure_ascii=False)}
 
+            guest_hash = None
+            if not is_logged_in(event):
+                guest_hash = guest_ip_hash(event)
+                if not guest_take_slot(guest_hash):
+                    return {'statusCode': 429, 'headers': cors_headers(), 'body': json.dumps({'error': 'Бесплатный запрос на сегодня уже использован', 'code': 'guest_limit'}, ensure_ascii=False)}
+
             ovz_part = (
                 '"ovz": ["4-5 конкретных приёмов адаптации именно под эту тему для обучающихся с ОВЗ"]'
                 if with_ovz else '"ovz": []'
@@ -2013,10 +2077,15 @@ def process(event: dict, context) -> dict:
 {{"title": "название занятия", "goal": "чёткая цель", "stages": [{{"name": "этап", "minutes": 5, "description": "что делают педагог и дети"}}], "reflection": "как подвести итоги", {ovz_part}}}
 Сумма минут по этапам должна равняться длительности. Этапов от 3 до 6. Пиши по-русски."""
 
-            raw = call_ai([
-                {'role': 'system', 'content': 'Ты педагог-методист. Отвечай только валидным JSON на русском языке.'},
-                {'role': 'user', 'content': prompt},
-            ], temperature=0.6)
+            try:
+                raw = call_ai([
+                    {'role': 'system', 'content': 'Ты педагог-методист. Отвечай только валидным JSON на русском языке.'},
+                    {'role': 'user', 'content': prompt},
+                ], temperature=0.6)
+            except Exception:
+                if guest_hash:
+                    guest_release_slot(guest_hash)
+                raise
 
             cleaned = raw.strip()
             if cleaned.startswith('```'):
@@ -2026,6 +2095,8 @@ def process(event: dict, context) -> dict:
             try:
                 result = json.loads(cleaned)
             except json.JSONDecodeError:
+                if guest_hash:
+                    guest_release_slot(guest_hash)
                 return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ вернул некорректный формат, попробуйте снова'}, ensure_ascii=False)}
 
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps(result, ensure_ascii=False)}
