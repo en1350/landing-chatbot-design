@@ -1,6 +1,7 @@
 import { Link } from "@/lib/router-compat";
 import Icon from "@/components/ui/icon";
 import MiniPlanPanel from "@/components/MiniPlanPanel";
+import SiteDemo from "@/components/demo/SiteDemo";
 
 const Hero = () => {
   return (
@@ -19,6 +20,9 @@ const Hero = () => {
             </div>
           </div>
           <div className="w-full order-1 lg:order-2">
+            <div className="mb-4 flex">
+              <SiteDemo />
+            </div>
             <a
               href="/pedagogical-row.html"
               target="_blank"
