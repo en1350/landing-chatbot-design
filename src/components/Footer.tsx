@@ -70,7 +70,7 @@ const Footer = ({ onOpenProfile, onOpenRandomizer, onOpenAntiplagiat }: FooterPr
                 Коррекционная работа
               </Link>
             </li>
-            <li><a href="#chat-anchor" className="hover:text-foreground transition-colors">ИИ-помощник</a></li>
+            <li><a href="#chat-anchor" className="hover:text-foreground transition-colors">Мини-конструктор урока</a></li>
             <li>
               <button onClick={onOpenProfile} className="hover:text-foreground transition-colors">
                 Тарифы

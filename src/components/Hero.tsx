@@ -1,6 +1,6 @@
 import { Link } from "@/lib/router-compat";
 import Icon from "@/components/ui/icon";
-import ChatWidget from "@/components/ChatWidget";
+import MiniPlanPanel from "@/components/MiniPlanPanel";
 
 const Hero = () => {
   return (
@@ -8,7 +8,15 @@ const Hero = () => {
       <div className="container relative pt-6 pb-6 md:pb-8">
         <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 items-start animate-fade-in" style={{ animationDelay: "0.15s" }}>
           <div id="chat-anchor" className="flex justify-center w-full scroll-mt-24 order-2 lg:order-1">
-            <ChatWidget />
+            <div className="rounded-2xl border border-border bg-card shadow-xl shadow-primary/5 overflow-hidden w-full">
+              <div className="flex items-center gap-2.5 px-4 py-3 bg-primary text-primary-foreground">
+                <span className="text-lg">✨</span>
+                <span className="font-display text-sm font-bold">Мини-конструктор урока · бесплатно</span>
+              </div>
+              <div className="p-4">
+                <MiniPlanPanel />
+              </div>
+            </div>
           </div>
           <div className="w-full order-1 lg:order-2">
             <Link to="/trenazher-dlya-uchenikov" className="group block w-full cursor-pointer" aria-label="Открыть тренажёры для учеников">
