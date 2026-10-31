@@ -64,19 +64,25 @@ const MiniPlanPanel = () => {
     }
   };
 
-  const copy = async () => {
+  const download = () => {
     if (!plan) return;
-    const lines = [
-      `${format}: ${plan.title}`,
-      `Предмет: ${subject}`,
-      `Цель: ${plan.goal}`,
-      "",
-      ...plan.stages.map((s, i) => `${i + 1}. ${s.name} (${s.minutes} мин) — ${s.description}`),
-      "",
-      `Рефлексия: ${plan.reflection}`,
-    ];
-    if (plan.ovz?.length) lines.push("", "Адаптация для ОВЗ:", ...plan.ovz.map((o) => `- ${o}`));
-    await navigator.clipboard.writeText(lines.join("\n"));
+    const esc = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const stages = plan.stages
+      .map((s, i) => `<p><b>${i + 1}. ${esc(s.name)}</b> (${s.minutes} мин)<br/>${esc(s.description)}</p>`)
+      .join("");
+    const ovzBlock = plan.ovz?.length
+      ? `<h3>Адаптация для обучающихся с ОВЗ</h3><ul>${plan.ovz.map((o) => `<li>${esc(o)}</li>`).join("")}</ul>`
+      : "";
+    const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${esc(plan.title)}</title></head><body style="font-family:Calibri,Arial,sans-serif;font-size:12pt"><h2>${esc(format)}: ${esc(plan.title)}</h2><p><b>Предмет:</b> ${esc(subject)}<br/><b>Время:</b> ${esc(time)}</p><p><b>Цель:</b> ${esc(plan.goal)}</p><h3>Ход занятия</h3>${stages}<p><b>Рефлексия:</b> ${esc(plan.reflection)}</p>${ovzBlock}</body></html>`;
+    const blob = new Blob(["\ufeff", html], { type: "application/msword" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `plan-${(topic || "uroka").trim().slice(0, 40).replace(/[\\/:*?"<>|\s]+/g, "-")}.doc`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -190,9 +196,9 @@ const MiniPlanPanel = () => {
             </ul>
           </div>
         )}
-        <Button variant="outline" className="w-full h-10 gap-2" onClick={copy}>
-          <Icon name="Copy" size={16} />
-          Скопировать план
+        <Button variant="outline" className="w-full h-10 gap-2" onClick={download}>
+          <Icon name="Download" size={16} />
+          Скачать план
         </Button>
       </div>
     )}
