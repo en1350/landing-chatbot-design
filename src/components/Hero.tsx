@@ -19,18 +19,11 @@ const Hero = () => {
             </div>
           </div>
           <div className="w-full order-1 lg:order-2">
-            <Link to="/trenazher-dlya-uchenikov" className="group block w-full cursor-pointer" aria-label="Открыть тренажёры для учеников">
-              <img
-                src="https://cdn.poehali.dev/projects/3a27d5a9-016a-43ab-946d-4c4fe8129705/bucket/ad2cfcda-8fef-49ee-b33d-b5336f3b406e.png"
-                alt="IT-тренажёры с сертификатом для учеников"
-                className="w-full rounded-3xl shadow-xl shadow-primary/10 transition-transform duration-300 group-hover:scale-[1.02]"
-              />
-            </Link>
             <a
               href="/pedagogical-row.html"
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-4 flex items-center justify-center gap-2 rounded-2xl border border-primary/30 bg-primary/5 px-5 py-3 font-semibold text-primary hover:bg-primary/10 transition-colors"
+              className="flex items-center justify-center gap-2 rounded-2xl border border-primary/30 bg-primary/5 px-5 py-3 font-semibold text-primary hover:bg-primary/10 transition-colors"
             >
               <span className="text-xl">🎓</span>
               Играть в «Педагогический ряд»
