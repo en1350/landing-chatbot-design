@@ -19,10 +19,10 @@ interface UpgradeModalProps {
 type PlanKey = "single" | "month" | "quarter" | "year";
 
 const PLAN_OPTIONS: { key: PlanKey; price: string; period: string; perMonth?: string; badge?: string }[] = [
-  { key: "single", price: "17 ₽", period: "1 использование", perMonth: "разовая оплата" },
-  { key: "month", price: "199 ₽", period: "1 месяц" },
-  { key: "quarter", price: "477 ₽", period: "3 месяца", perMonth: "159 ₽ / мес" },
-  { key: "year", price: "1668 ₽", period: "12 месяцев", perMonth: "139 ₽ / мес", badge: "Выгоднее на 30%" },
+  { key: "single", price: "19 ₽", period: "1 использование", perMonth: "разовая оплата" },
+  { key: "month", price: "278 ₽", period: "1 месяц" },
+  { key: "quarter", price: "620 ₽", period: "3 месяца", perMonth: "207 ₽ / мес" },
+  { key: "year", price: "2085 ₽", period: "12 месяцев", perMonth: "174 ₽ / мес", badge: "Выгоднее на 37%" },
 ];
 
 const UpgradeModal = ({ open, onClose, onNeedAuth }: UpgradeModalProps) => {

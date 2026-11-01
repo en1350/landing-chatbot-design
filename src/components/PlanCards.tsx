@@ -27,10 +27,10 @@ interface PlanItem {
 }
 
 const PLANS: PlanItem[] = [
-  { name: "Разово", price: "17 ₽", period: "/ 1 использование" },
-  { name: "Месяц", price: "199 ₽", period: "/ месяц" },
-  { name: "3 месяца", price: "477 ₽", period: "/ 3 месяца", perMonth: "≈ 159 ₽ в месяц", badge: "Выгоднее на 20%" },
-  { name: "12 месяцев", price: "1668 ₽", period: "/ год", perMonth: "≈ 139 ₽ в месяц", badge: "Выгоднее на 30%", highlight: true },
+  { name: "Разово", price: "19 ₽", period: "/ 1 использование" },
+  { name: "Месяц", price: "278 ₽", period: "/ месяц" },
+  { name: "3 месяца", price: "620 ₽", period: "/ 3 месяца", perMonth: "≈ 207 ₽ в месяц", badge: "Выгоднее на 26%" },
+  { name: "12 месяцев", price: "2085 ₽", period: "/ год", perMonth: "≈ 174 ₽ в месяц", badge: "Выгоднее на 37%", highlight: true },
 ];
 
 const PlanCards = ({ onSelect, compact = false }: PlanCardsProps) => {
@@ -77,7 +77,7 @@ const PlanCards = ({ onSelect, compact = false }: PlanCardsProps) => {
             disabled={isPaid}
           >
             <Icon name="Sparkles" size={16} />
-            {isPaid ? "Уже подключено" : p.name === "Разово" ? "Оплатить 17 ₽" : "Выбрать"}
+            {isPaid ? "Уже подключено" : p.name === "Разово" ? "Оплатить 19 ₽" : "Выбрать"}
           </Button>
         </div>
       ))}
