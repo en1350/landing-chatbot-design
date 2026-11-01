@@ -146,6 +146,13 @@ export const CATEGORIES: CategoryItem[] = [
     accent: "#8B5CF6",
   },
   {
+    key: "ovz",
+    icon: "♿",
+    title: "Для учащихся с ОВЗ",
+    description: "Инклюзивные уроки с озвучиванием, крупным шрифтом, тёмной темой и режимами для слабовидящих",
+    accent: "#0057B8",
+  },
+  {
     key: "ege",
     icon: "🎓",
     title: "ЕГЭ по информатике",
