@@ -274,6 +274,10 @@ try {
 
             <div class="controls">
                 <button id="btn-run-js" class="btn-js">▶ Запустить</button>
+                <select id="js-mode" title="Способ запуска кода" style="padding:8px 10px;border-radius:6px;border:1px solid #444;background:#1e1e1e;color:#eee;font:inherit;">
+                    <option value="function">new Function()</option>
+                    <option value="eval">eval()</option>
+                </select>
                 <button class="btn-clear" data-clear="js-output">Очистить</button>
                 <button class="btn-clear" onclick="resetCode('js-code')">Возврат кода</button>
             </div>
@@ -485,8 +489,14 @@ try {
             };
 
             try {
-                const func = new Function(code);
-                const result = func();
+                const mode = document.getElementById('js-mode').value;
+                let result;
+                if (mode === 'eval') {
+                    result = (0, eval)(code);
+                } else {
+                    const func = new Function(code);
+                    result = func();
+                }
                 if (result !== undefined) {
                     logs.push("=> " + (typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result)));
                 }
