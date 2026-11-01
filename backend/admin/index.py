@@ -203,12 +203,19 @@ def handler(event: dict, context) -> dict:
                 )
                 geo_paid = [{'country': r[0], 'count': r[1]} for r in cur.fetchall()]
                 cur.execute(
+                    f"SELECT coalesce(u.country, 'Не определено'), coalesce(u.city, 'Не определён'), count(*) FROM {SCHEMA}.users u WHERE u.id IN ("
+                    f"SELECT user_id FROM {SCHEMA}.processed_payments WHERE {since('created_at')} UNION "
+                    f"SELECT user_id FROM {SCHEMA}.subscriptions WHERE plan <> 'free' AND {since('started_at')}) "
+                    f"GROUP BY 1, 2 ORDER BY 3 DESC LIMIT 15"
+                )
+                geo_paid_cities = [{'country': r[0], 'city': r[1], 'count': r[2]} for r in cur.fetchall()]
+                cur.execute(
                     f"SELECT coalesce(country, 'Не определено'), coalesce(city, 'Не определён'), count(DISTINCT visitor_id) "
                     f"FROM {SCHEMA}.site_visits WHERE {since('created_at')} "
                     f"GROUP BY 1, 2 ORDER BY 3 DESC LIMIT 15"
                 )
                 geo_cities = [{'country': r[0], 'city': r[1], 'count': r[2]} for r in cur.fetchall()]
-                return resp(200, {'visitors': geo_visitors, 'registered': geo_registered, 'paid': geo_paid, 'cities': geo_cities})
+                return resp(200, {'visitors': geo_visitors, 'registered': geo_registered, 'paid': geo_paid, 'paid_cities': geo_paid_cities, 'cities': geo_cities})
 
             if action == 'news_all':
                 cur.execute(

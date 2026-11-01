@@ -6,6 +6,7 @@ interface Geo {
   visitors: { country: string; count: number }[];
   registered: { country: string; count: number }[];
   paid: { country: string; count: number }[];
+  paid_cities: { country: string; city: string; count: number }[];
   cities: { country: string; city: string; count: number }[];
 }
 
@@ -164,6 +165,20 @@ const StatsTab = ({ token }: { token: string }) => {
               <GeoList title="Зарегистрированные по странам" items={geo.registered} />
               <GeoList title="Оплатившие по странам" items={geo.paid} />
             </div>
+            <Card className="p-4 mt-4">
+              <h3 className="font-semibold mb-3">Города, откуда пришла оплата</h3>
+              <ul className="space-y-2 text-sm">
+                {(geo.paid_cities || []).map((c) => (
+                  <li key={`${c.country}-${c.city}`} className="flex justify-between gap-3">
+                    <span className="truncate">
+                      {c.city}, {c.country}
+                    </span>
+                    <span className="font-semibold">{c.count}</span>
+                  </li>
+                ))}
+                {(geo.paid_cities || []).length === 0 && <li className="text-muted-foreground">Пока нет данных</li>}
+              </ul>
+            </Card>
             <Card className="p-4 mt-4">
               <h3 className="font-semibold mb-3">Города посетителей</h3>
               <ul className="space-y-2 text-sm">
