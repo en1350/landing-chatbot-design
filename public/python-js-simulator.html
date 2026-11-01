@@ -230,6 +230,32 @@ print("Квадраты:", squared)
 
 import os
 print("Директория в песочнице:", os.getcwd())
+
+
+def get_first(items):
+    return items[0] if items else None
+
+
+def calc_sum(items):
+    total = 0
+    for x in items:
+        total += x
+    return total
+
+
+def create_user(name, age):
+    return {"name": name, "age": age}
+
+
+def check_adult(user):
+    return user["age"] >= 18
+
+
+user = create_user("Анна", 20)
+print("get_first:", get_first(numbers))
+print("calc_sum:", calc_sum(numbers))
+print("create_user:", user)
+print("check_adult:", check_adult(user))
                 </textarea>
             </div>
 
@@ -267,6 +293,28 @@ try {
     console.error("❌ Ошибка:", e.message);
     console.info("ℹ️ В браузере нет модуля 'fs'.");
 }
+
+function getFirst(items) {
+    return items.length ? items[0] : null;
+}
+
+function calcSum(items) {
+    return items.reduce((total, x) => total + x, 0);
+}
+
+function createUser(name, age) {
+    return { name, age };
+}
+
+function checkAdult(user) {
+    return user.age >= 18;
+}
+
+const user = createUser("Анна", 20);
+console.log("getFirst:", getFirst(numbers));
+console.log("calcSum:", calcSum(numbers));
+console.log("createUser:", user);
+console.log("checkAdult:", checkAdult(user));
                 </textarea>
             </div>
 
