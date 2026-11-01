@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { Link } from "@/lib/router-compat";
 import Icon from "@/components/ui/icon";
+import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
 
 interface FooterProps {
   onOpenProfile: () => void;
@@ -8,6 +10,7 @@ interface FooterProps {
 }
 
 const Footer = ({ onOpenProfile, onOpenRandomizer, onOpenAntiplagiat }: FooterProps) => {
+  const [privacyOpen, setPrivacyOpen] = useState(false);
   return (
     <footer className="border-t border-border/60 bg-secondary/30">
       <div className="container py-8 sm:py-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -88,7 +91,7 @@ const Footer = ({ onOpenProfile, onOpenRandomizer, onOpenAntiplagiat }: FooterPr
               </button>
             </li>
             <li>
-              <button onClick={onOpenProfile} className="hover:text-foreground transition-colors">
+              <button onClick={() => setPrivacyOpen(true)} className="hover:text-foreground transition-colors">
                 Политика данных
               </button>
             </li>
@@ -121,6 +124,7 @@ const Footer = ({ onOpenProfile, onOpenRandomizer, onOpenAntiplagiat }: FooterPr
           © {new Date().getFullYear()} УрокАИ. Все права защищены.
         </p>
       </div>
+      <PrivacyPolicyModal open={privacyOpen} onClose={() => setPrivacyOpen(false)} />
     </footer>
   );
 };
