@@ -6,28 +6,26 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import Icon from "@/components/ui/icon";
 import { useAuth, AUTH_URL, GeneratorType } from "@/context/AuthContext";
 import { useUsage } from "@/context/UsageContext";
 import { downloadTxt, downloadDocx } from "@/lib/download";
 import { saveLessonCardPrefill, matchTechnologies } from "@/components/lesson-card/prefill";
 import { saveTaskCardPrefill, COMPONENT_TO_TASK_TYPE } from "@/components/task-card/taskCardConfig";
-import OvzSelect from "@/components/OvzSelect";
 import { saveGameCardPrefill, matchPeopleBucket } from "@/components/game-card/gameCardConfig";
 import { saveEventPrefill, mapIntensiveToEvent } from "@/components/event-card/eventCardConfig";
-
-const GENERATE_URL = "https://functions.poehali.dev/8dda2da8-746c-4e90-9562-b008e2c1a132";
+import GeneratorFields from "@/components/generator-modal/GeneratorFields";
+import GeneratorFormFooter from "@/components/generator-modal/GeneratorFormFooter";
+import GeneratorResult from "@/components/generator-modal/GeneratorResult";
+import {
+  META,
+  LessonFields,
+  GameFields,
+  IntensiveFields,
+  TaskFields,
+  QuizFields,
+  requestGeneration,
+  requestRefine,
+} from "@/components/generator-modal/types";
 
 interface GeneratorModalProps {
   open: boolean;
@@ -35,156 +33,6 @@ interface GeneratorModalProps {
   type: GeneratorType | null;
   onNeedUpgrade: () => void;
   onNeedAuth: () => void;
-}
-
-const META: Record<GeneratorType, { title: string; icon: string; resultLabel: string }> = {
-  lesson: { title: "Генератор уроков", icon: "📘", resultLabel: "план урока" },
-  game: { title: "Генератор игры", icon: "🎲", resultLabel: "сценарий игры" },
-  intensive: { title: "Генератор интенсивов и мастер-классов", icon: "🚀", resultLabel: "программа мероприятия" },
-  task: { title: "Генератор заданий", icon: "📝", resultLabel: "комплект заданий" },
-  quiz: { title: "Генератор тестовых заданий", icon: "✅", resultLabel: "тест" },
-  antiplagiat: { title: "Антиплагиат", icon: "🔍", resultLabel: "заключение" },
-};
-
-interface LessonFields {
-  subject: string;
-  topic: string;
-  goal: string;
-  tasks: string;
-  technology: string;
-  ageCount: string;
-  duration: "45" | "90";
-  lessonType: "theory" | "practice";
-  competencies: string[];
-  regionalComponent: string;
-  professionalOrientation: string;
-}
-
-interface GameFields {
-  subject: string;
-  duration: "5" | "15" | "45";
-  peopleCount: string;
-  regionalComponent: string;
-  professionalOrientation: string;
-}
-
-interface IntensiveFields {
-  topic: string;
-  audience: "schoolchildren" | "students" | "adults";
-  duration: "15min" | "30min" | "45min" | "90min" | "1day" | "2days";
-  format: "intensive" | "masterclass" | "workshop" | "hackathon" | "project_lab" | "immersive";
-  goal: string;
-  regionalComponent: string;
-  professionalOrientation: string;
-}
-
-interface TaskFields {
-  subject: string;
-  topic: string;
-  goal: string;
-  component: "cognitive" | "creative" | "critical" | "communicative" | "balanced";
-  competencies: string[];
-  regionalComponent: string;
-  professionalOrientation: string;
-}
-
-interface QuizFields {
-  subject: string;
-  topic: string;
-  questionCount: string;
-  difficulty: "easy" | "medium" | "hard" | "mixed";
-  questionTypes: string[];
-  regionalComponent: string;
-  professionalOrientation: string;
-}
-
-const AUDIENCE_OPTIONS: { value: IntensiveFields["audience"]; label: string }[] = [
-  { value: "schoolchildren", label: "Школьники" },
-  { value: "students", label: "Студенты" },
-  { value: "adults", label: "Взрослые" },
-];
-
-const INTENSIVE_DURATION_OPTIONS: { value: IntensiveFields["duration"]; label: string }[] = [
-  { value: "15min", label: "15 минут" },
-  { value: "30min", label: "30 минут" },
-  { value: "45min", label: "45 минут" },
-  { value: "90min", label: "90 минут" },
-  { value: "1day", label: "1 день" },
-  { value: "2days", label: "2 дня" },
-];
-
-const FORMAT_OPTIONS: { value: IntensiveFields["format"]; label: string }[] = [
-  { value: "intensive", label: "Интенсив" },
-  { value: "masterclass", label: "Мастер-класс" },
-  { value: "workshop", label: "Воркшоп" },
-  { value: "hackathon", label: "Хакатон" },
-  { value: "project_lab", label: "Проектная лаборатория" },
-  { value: "immersive", label: "Иммерсивный интенсив" },
-];
-
-const LESSON_TYPE_OPTIONS: { value: LessonFields["lessonType"]; label: string }[] = [
-  { value: "theory", label: "Теоретическое занятие" },
-  { value: "practice", label: "Практическое занятие" },
-];
-
-const COMPONENT_OPTIONS: { value: TaskFields["component"]; label: string }[] = [
-  { value: "balanced", label: "Все компоненты сбалансированно" },
-  { value: "cognitive", label: "Когнитивный компонент" },
-  { value: "creative", label: "Креативный компонент" },
-  { value: "critical", label: "Критический компонент" },
-  { value: "communicative", label: "Коммуникативный компонент" },
-];
-
-const QUIZ_DIFFICULTY_OPTIONS: { value: QuizFields["difficulty"]; label: string }[] = [
-  { value: "mixed", label: "Смешанный (базовый + средний + продвинутый)" },
-  { value: "easy", label: "Базовый" },
-  { value: "medium", label: "Средний" },
-  { value: "hard", label: "Продвинутый" },
-];
-
-const QUIZ_TYPE_OPTIONS: { value: string; label: string }[] = [
-  { value: "single", label: "Выбор одного ответа" },
-  { value: "multiple", label: "Выбор нескольких ответов" },
-  { value: "matching", label: "Установление соответствия" },
-  { value: "sequence", label: "Установление последовательности" },
-];
-
-const COMPETENCY_OPTIONS: string[] = [
-  "Применение современных средств поиска, анализа и интерпретации информации",
-  "ИИ-грамотность",
-  "ИКТ-грамотность",
-  "Решение сложных и комплексных задач",
-  "Работа в команде и распределение ролей в проекте",
-  "Стратегическая коммуникация",
-  "Мобильность, адаптивность и гибкость",
-  "Применение знаний по правовой и финансовой грамотности в различных жизненных ситуациях",
-  "Осуществление устной и письменной коммуникации на государственном языке",
-  "Проявление гражданско-патриотической позиции, демонстрация осознанного поведения",
-  "Применение знаний об изменении климата, принципы бережливого производства",
-  "Укрепление здоровья в процессе профессиональной деятельности",
-  "Оценка и самооценка собственной деятельности",
-];
-
-async function requestGeneration(type: GeneratorType, fields: Record<string, string>): Promise<string> {
-  const res = await fetch(GENERATE_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "generate", type, fields }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "Не удалось сгенерировать материал");
-  return data.content as string;
-}
-
-async function requestRefine(content: string, instruction: string): Promise<string> {
-  const res = await fetch(GENERATE_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "refine", content, instruction }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "Не удалось доработать материал");
-  return data.content as string;
 }
 
 const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: GeneratorModalProps) => {
@@ -495,693 +343,61 @@ const GeneratorModal = ({ open, onClose, type, onNeedUpgrade, onNeedAuth }: Gene
 
         {!result ? (
           <div className="space-y-4 mt-2">
-            {type === "lesson" && (
-              <>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Тип занятия</label>
-                  <Select
-                    value={lessonFields.lessonType}
-                    onValueChange={(v: LessonFields["lessonType"]) => setLessonFields((s) => ({ ...s, lessonType: v }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LESSON_TYPE_OPTIONS.map((o) => (
-                        <SelectItem key={o.value} value={o.value}>
-                          {o.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Предмет/дисциплина</label>
-                  <Input
-                    value={lessonFields.subject}
-                    onChange={(e) => setLessonFields((s) => ({ ...s, subject: e.target.value }))}
-                    placeholder="Например: Биология, Математика, История..."
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Тема</label>
-                  <Input
-                    value={lessonFields.topic}
-                    onChange={(e) => setLessonFields((s) => ({ ...s, topic: e.target.value }))}
-                    placeholder="Например: Фотосинтез, Дроби..."
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Цель</label>
-                  <Input
-                    value={lessonFields.goal}
-                    onChange={(e) => setLessonFields((s) => ({ ...s, goal: e.target.value }))}
-                    placeholder="Например: сформировать понимание процесса фотосинтеза"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Задачи</label>
-                  <Textarea
-                    value={lessonFields.tasks}
-                    onChange={(e) => setLessonFields((s) => ({ ...s, tasks: e.target.value }))}
-                    placeholder="Каждую задачу с новой строки или через запятую"
-                    rows={3}
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Технология обучения</label>
-                  <Input
-                    value={lessonFields.technology}
-                    onChange={(e) => setLessonFields((s) => ({ ...s, technology: e.target.value }))}
-                    placeholder="Например: проблемное обучение, смешанное обучение"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Возраст / количество человек</label>
-                  <Input
-                    value={lessonFields.ageCount}
-                    onChange={(e) => setLessonFields((s) => ({ ...s, ageCount: e.target.value }))}
-                    placeholder="Например: 7 класс, 25 человек"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Время урока</label>
-                  <Select
-                    value={lessonFields.duration}
-                    onValueChange={(v: "45" | "90") => setLessonFields((s) => ({ ...s, duration: v }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="45">45 минут</SelectItem>
-                      <SelectItem value="90">90 минут</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">ОК / УУД (необязательно)</label>
-                  <div className="space-y-2 rounded-lg border border-border p-3 max-h-52 overflow-y-auto">
-                    {COMPETENCY_OPTIONS.map((c) => (
-                      <label key={c} className="flex items-start gap-2 text-sm cursor-pointer">
-                        <Checkbox
-                          className="mt-0.5"
-                          checked={lessonFields.competencies.includes(c)}
-                          onCheckedChange={(checked) =>
-                            setLessonFields((s) => ({
-                              ...s,
-                              competencies: checked
-                                ? [...s.competencies, c]
-                                : s.competencies.filter((x) => x !== c),
-                            }))
-                          }
-                        />
-                        {c}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Региональный компонент</label>
-                  <Input
-                    value={lessonFields.regionalComponent}
-                    onChange={(e) => setLessonFields((s) => ({ ...s, regionalComponent: e.target.value }))}
-                    placeholder="Например: особенности региона, местные примеры (необязательно)"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Профессиональная направленность</label>
-                  <Input
-                    value={lessonFields.professionalOrientation}
-                    onChange={(e) => setLessonFields((s) => ({ ...s, professionalOrientation: e.target.value }))}
-                    placeholder="Например: инженерный класс, медицинский профиль (необязательно)"
-                  />
-                </div>
-              </>
-            )}
-
-            {type === "game" && (
-              <>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Тема урока</label>
-                  <Input
-                    value={gameFields.subject}
-                    onChange={(e) => setGameFields((s) => ({ ...s, subject: e.target.value }))}
-                    placeholder="Например: Прошедшее время в английском, Периодическая таблица..."
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Время</label>
-                  <Select
-                    value={gameFields.duration}
-                    onValueChange={(v: "5" | "15" | "45") => setGameFields((s) => ({ ...s, duration: v }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="5">5 минут</SelectItem>
-                      <SelectItem value="15">15 минут</SelectItem>
-                      <SelectItem value="45">45 минут</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Количество человек</label>
-                  <Input
-                    value={gameFields.peopleCount}
-                    onChange={(e) => setGameFields((s) => ({ ...s, peopleCount: e.target.value }))}
-                    placeholder="Например: 20"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Региональный компонент</label>
-                  <Input
-                    value={gameFields.regionalComponent}
-                    onChange={(e) => setGameFields((s) => ({ ...s, regionalComponent: e.target.value }))}
-                    placeholder="Например: особенности региона, местные примеры (необязательно)"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Профессиональная направленность</label>
-                  <Input
-                    value={gameFields.professionalOrientation}
-                    onChange={(e) => setGameFields((s) => ({ ...s, professionalOrientation: e.target.value }))}
-                    placeholder="Например: инженерный класс, медицинский профиль (необязательно)"
-                  />
-                </div>
-              </>
-            )}
-
-            {type === "intensive" && (
-              <>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Тема</label>
-                  <Input
-                    value={intensiveFields.topic}
-                    onChange={(e) => setIntensiveFields((s) => ({ ...s, topic: e.target.value }))}
-                    placeholder="Например: Критическое мышление, Основы дизайна..."
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Целевая аудитория</label>
-                  <Select
-                    value={intensiveFields.audience}
-                    onValueChange={(v: IntensiveFields["audience"]) => setIntensiveFields((s) => ({ ...s, audience: v }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {AUDIENCE_OPTIONS.map((o) => (
-                        <SelectItem key={o.value} value={o.value}>
-                          {o.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Продолжительность</label>
-                  <Select
-                    value={intensiveFields.duration}
-                    onValueChange={(v: IntensiveFields["duration"]) => setIntensiveFields((s) => ({ ...s, duration: v }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {INTENSIVE_DURATION_OPTIONS.map((o) => (
-                        <SelectItem key={o.value} value={o.value}>
-                          {o.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Формат</label>
-                  <Select
-                    value={intensiveFields.format}
-                    onValueChange={(v: IntensiveFields["format"]) => setIntensiveFields((s) => ({ ...s, format: v }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {FORMAT_OPTIONS.map((o) => (
-                        <SelectItem key={o.value} value={o.value}>
-                          {o.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Цель</label>
-                  <Input
-                    value={intensiveFields.goal}
-                    onChange={(e) => setIntensiveFields((s) => ({ ...s, goal: e.target.value }))}
-                    placeholder="Например: научить участников базовым принципам дизайна"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Региональный компонент</label>
-                  <Input
-                    value={intensiveFields.regionalComponent}
-                    onChange={(e) => setIntensiveFields((s) => ({ ...s, regionalComponent: e.target.value }))}
-                    placeholder="Например: особенности региона, местные примеры (необязательно)"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Профессиональная направленность</label>
-                  <Input
-                    value={intensiveFields.professionalOrientation}
-                    onChange={(e) => setIntensiveFields((s) => ({ ...s, professionalOrientation: e.target.value }))}
-                    placeholder="Например: инженерный класс, медицинский профиль (необязательно)"
-                  />
-                </div>
-              </>
-            )}
-
-            {type === "task" && (
-              <>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Предмет/дисциплина</label>
-                  <Input
-                    value={taskFields.subject}
-                    onChange={(e) => setTaskFields((s) => ({ ...s, subject: e.target.value }))}
-                    placeholder="Например: Математика, Литература..."
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Тема</label>
-                  <Input
-                    value={taskFields.topic}
-                    onChange={(e) => setTaskFields((s) => ({ ...s, topic: e.target.value }))}
-                    placeholder="Например: Квадратные уравнения"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Цель</label>
-                  <Input
-                    value={taskFields.goal}
-                    onChange={(e) => setTaskFields((s) => ({ ...s, goal: e.target.value }))}
-                    placeholder="Например: закрепить навык решения уравнений"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Акцент на компонент мышления</label>
-                  <Select
-                    value={taskFields.component}
-                    onValueChange={(v: TaskFields["component"]) => setTaskFields((s) => ({ ...s, component: v }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {COMPONENT_OPTIONS.map((o) => (
-                        <SelectItem key={o.value} value={o.value}>
-                          {o.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">ОК / УУД (необязательно)</label>
-                  <div className="space-y-2 rounded-lg border border-border p-3 max-h-52 overflow-y-auto">
-                    {COMPETENCY_OPTIONS.map((c) => (
-                      <label key={c} className="flex items-start gap-2 text-sm cursor-pointer">
-                        <Checkbox
-                          className="mt-0.5"
-                          checked={taskFields.competencies.includes(c)}
-                          onCheckedChange={(checked) =>
-                            setTaskFields((s) => ({
-                              ...s,
-                              competencies: checked
-                                ? [...s.competencies, c]
-                                : s.competencies.filter((x) => x !== c),
-                            }))
-                          }
-                        />
-                        {c}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Региональный компонент</label>
-                  <Input
-                    value={taskFields.regionalComponent}
-                    onChange={(e) => setTaskFields((s) => ({ ...s, regionalComponent: e.target.value }))}
-                    placeholder="Например: особенности региона, местные примеры (необязательно)"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Профессиональная направленность</label>
-                  <Input
-                    value={taskFields.professionalOrientation}
-                    onChange={(e) => setTaskFields((s) => ({ ...s, professionalOrientation: e.target.value }))}
-                    placeholder="Например: инженерный класс, медицинский профиль (необязательно)"
-                  />
-                </div>
-              </>
-            )}
-
-            {type === "quiz" && (
-              <>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Предмет/дисциплина</label>
-                  <Input
-                    value={quizFields.subject}
-                    onChange={(e) => setQuizFields((s) => ({ ...s, subject: e.target.value }))}
-                    placeholder="Например: Биология, Математика, История..."
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Тема</label>
-                  <Input
-                    value={quizFields.topic}
-                    onChange={(e) => setQuizFields((s) => ({ ...s, topic: e.target.value }))}
-                    placeholder="Например: Фотосинтез, Дроби..."
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Количество вопросов</label>
-                  <Input
-                    type="number"
-                    min={1}
-                    max={30}
-                    value={quizFields.questionCount}
-                    onChange={(e) => setQuizFields((s) => ({ ...s, questionCount: e.target.value }))}
-                    placeholder="Например: 10"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Уровень сложности</label>
-                  <Select
-                    value={quizFields.difficulty}
-                    onValueChange={(v: QuizFields["difficulty"]) => setQuizFields((s) => ({ ...s, difficulty: v }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {QUIZ_DIFFICULTY_OPTIONS.map((o) => (
-                        <SelectItem key={o.value} value={o.value}>
-                          {o.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Типы вопросов</label>
-                  <div className="space-y-2 rounded-lg border border-border p-3">
-                    {QUIZ_TYPE_OPTIONS.map((o) => (
-                      <label key={o.value} className="flex items-center gap-2 text-sm cursor-pointer">
-                        <Checkbox
-                          checked={quizFields.questionTypes.includes(o.value)}
-                          onCheckedChange={(checked) =>
-                            setQuizFields((s) => ({
-                              ...s,
-                              questionTypes: checked
-                                ? [...s.questionTypes, o.value]
-                                : s.questionTypes.filter((t) => t !== o.value),
-                            }))
-                          }
-                        />
-                        {o.label}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Региональный компонент</label>
-                  <Input
-                    value={quizFields.regionalComponent}
-                    onChange={(e) => setQuizFields((s) => ({ ...s, regionalComponent: e.target.value }))}
-                    placeholder="Например: особенности региона, местные примеры (необязательно)"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Профессиональная направленность</label>
-                  <Input
-                    value={quizFields.professionalOrientation}
-                    onChange={(e) => setQuizFields((s) => ({ ...s, professionalOrientation: e.target.value }))}
-                    placeholder="Например: инженерный класс, медицинский профиль (необязательно)"
-                  />
-                </div>
-              </>
-            )}
-
-            {type !== "antiplagiat" && <OvzSelect value={ovz} onChange={setOvz} disabled={loading} />}
-
-            {error && (
-              <p className="text-sm text-destructive flex items-center gap-1.5">
-                <Icon name="AlertCircle" size={14} />
-                {error}
-              </p>
-            )}
-
-            <Button
-              className="w-full h-11 bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
-              onClick={handleGenerate}
-              disabled={loading || (type === "quiz" && quizFields.questionTypes.length === 0)}
-            >
-              {loading ? (
-                <>
-                  <Icon name="Loader2" size={17} className="animate-spin" />
-                  ИИ генерирует материал...
-                </>
-              ) : !user ? (
-                <>
-                  <Icon name="LogIn" size={17} />
-                  Войти и сгенерировать
-                </>
-              ) : (
-                <>
-                  <Icon name="Wand2" size={17} />
-                  Сгенерировать с ИИ
-                </>
-              )}
-            </Button>
-
-            {type === "lesson" && (
-              <>
-                <Button
-                  variant="outline"
-                  className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
-                  onClick={handleOpenCardBuilder}
-                >
-                  <Icon name="LayoutTemplate" size={16} />
-                  Открыть в конструкторе карточки урока
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
-                  onClick={handleDownloadSelfAnalysis}
-                >
-                  <Icon name="ClipboardList" size={16} />
-                  Шаблон самоанализа по уроку
-                </Button>
-              </>
-            )}
-
-            {type === "task" && (
-              <Button
-                variant="outline"
-                className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
-                onClick={handleOpenTaskCardBuilder}
-              >
-                <Icon name="LayoutTemplate" size={16} />
-                Открыть в конструкторе заданий
-              </Button>
-            )}
-
-            {type === "game" && (
-              <Button
-                variant="outline"
-                className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
-                onClick={handleOpenGameBuilder}
-              >
-                <Icon name="LayoutTemplate" size={16} />
-                Открыть в конструкторе игры
-              </Button>
-            )}
-
-            {type === "intensive" && (
-              <Button
-                variant="outline"
-                className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
-                onClick={handleOpenEventBuilder}
-              >
-                <Icon name="LayoutTemplate" size={16} />
-                Открыть в конструкторе мастер-классов
-              </Button>
-            )}
+            <GeneratorFields
+              type={type}
+              lessonFields={lessonFields}
+              setLessonFields={setLessonFields}
+              gameFields={gameFields}
+              setGameFields={setGameFields}
+              intensiveFields={intensiveFields}
+              setIntensiveFields={setIntensiveFields}
+              taskFields={taskFields}
+              setTaskFields={setTaskFields}
+              quizFields={quizFields}
+              setQuizFields={setQuizFields}
+            />
+            <GeneratorFormFooter
+              type={type}
+              user={user}
+              ovz={ovz}
+              setOvz={setOvz}
+              loading={loading}
+              error={error}
+              quizFields={quizFields}
+              onGenerate={handleGenerate}
+              onOpenCardBuilder={handleOpenCardBuilder}
+              onDownloadSelfAnalysis={handleDownloadSelfAnalysis}
+              onOpenTaskCardBuilder={handleOpenTaskCardBuilder}
+              onOpenGameBuilder={handleOpenGameBuilder}
+              onOpenEventBuilder={handleOpenEventBuilder}
+            />
           </div>
         ) : (
-          <div className="mt-2 space-y-4 animate-fade-in">
-            <div className="rounded-xl border border-border bg-secondary/50 p-4 max-h-80 overflow-y-auto">
-              <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-2">
-                Готовый {meta.resultLabel}
-              </p>
-              <p className="text-sm leading-relaxed whitespace-pre-line">{result}</p>
-            </div>
-
-            {!refineOpen ? (
-              <Button
-                variant="outline"
-                className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
-                onClick={() => setRefineOpen(true)}
-              >
-                <Icon name="Sparkles" size={16} />
-                Доработать с ИИ
-              </Button>
-            ) : (
-              <div className="rounded-xl border border-primary/30 bg-primary/5 p-3.5 space-y-2.5 animate-fade-in">
-                <label className="text-sm font-medium block">Что доработать или исправить?</label>
-                <Textarea
-                  value={refineInstruction}
-                  onChange={(e) => setRefineInstruction(e.target.value)}
-                  placeholder="Например: добавь ещё один пример, сократи практическую часть, исправь ошибку в задаче 2..."
-                  rows={3}
-                />
-                {refineError && (
-                  <p className="text-sm text-destructive flex items-center gap-1.5">
-                    <Icon name="AlertCircle" size={14} />
-                    {refineError}
-                  </p>
-                )}
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => {
-                      setRefineOpen(false);
-                      setRefineInstruction("");
-                      setRefineError(null);
-                    }}
-                    disabled={refining}
-                  >
-                    Отмена
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="flex-1 gap-1.5 bg-primary hover:bg-primary/90"
-                    onClick={handleRefine}
-                    disabled={refining || !refineInstruction.trim()}
-                  >
-                    {refining ? (
-                      <Icon name="Loader2" size={15} className="animate-spin" />
-                    ) : (
-                      <Icon name="Sparkles" size={15} />
-                    )}
-                    Применить
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            <div className="flex gap-2">
-              <Button variant="outline" className="flex-1 gap-2" onClick={reset}>
-                <Icon name="RotateCcw" size={16} />
-                Заново
-              </Button>
-              <Button
-                variant="outline"
-                className="flex-1 gap-2"
-                onClick={handleSave}
-                disabled={saving || saved}
-              >
-                {saving ? (
-                  <Icon name="Loader2" size={16} className="animate-spin" />
-                ) : saved ? (
-                  <Icon name="CheckCircle2" size={16} className="text-primary" />
-                ) : (
-                  <Icon name="Save" size={16} />
-                )}
-                {saved ? "Сохранено" : "В кабинет"}
-              </Button>
-              <Button className="flex-1 gap-2 bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleDownload}>
-                <Icon name="Download" size={16} />
-                Скачать .txt
-              </Button>
-            </div>
-
-            {type === "quiz" && (
-              <Button
-                variant="outline"
-                className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
-                onClick={handleDownloadDocx}
-                disabled={downloadingDocx}
-              >
-                {downloadingDocx ? (
-                  <Icon name="Loader2" size={16} className="animate-spin" />
-                ) : (
-                  <Icon name="FileText" size={16} />
-                )}
-                Скачать в Word (.docx)
-              </Button>
-            )}
-
-            {type === "lesson" && (
-              <>
-                <Button
-                  variant="outline"
-                  className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
-                  onClick={handleOpenCardBuilder}
-                >
-                  <Icon name="LayoutTemplate" size={16} />
-                  Оформить карточку урока
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
-                  onClick={handleDownloadSelfAnalysis}
-                >
-                  <Icon name="ClipboardList" size={16} />
-                  Шаблон самоанализа по уроку
-                </Button>
-              </>
-            )}
-
-            {type === "task" && (
-              <Button
-                variant="outline"
-                className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
-                onClick={handleOpenTaskCardBuilder}
-              >
-                <Icon name="LayoutTemplate" size={16} />
-                Оформить карточку задания
-              </Button>
-            )}
-
-            {type === "game" && (
-              <Button
-                variant="outline"
-                className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
-                onClick={handleOpenGameBuilder}
-              >
-                <Icon name="LayoutTemplate" size={16} />
-                Оформить карточку игры
-              </Button>
-            )}
-
-            {type === "intensive" && (
-              <Button
-                variant="outline"
-                className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
-                onClick={handleOpenEventBuilder}
-              >
-                <Icon name="LayoutTemplate" size={16} />
-                Оформить карточку мастер-класса
-              </Button>
-            )}
-          </div>
+          <GeneratorResult
+            type={type}
+            resultLabel={meta.resultLabel}
+            result={result}
+            refineOpen={refineOpen}
+            setRefineOpen={setRefineOpen}
+            refineInstruction={refineInstruction}
+            setRefineInstruction={setRefineInstruction}
+            refineError={refineError}
+            setRefineError={setRefineError}
+            refining={refining}
+            saving={saving}
+            saved={saved}
+            downloadingDocx={downloadingDocx}
+            onRefine={handleRefine}
+            onReset={reset}
+            onSave={handleSave}
+            onDownload={handleDownload}
+            onDownloadDocx={handleDownloadDocx}
+            onOpenCardBuilder={handleOpenCardBuilder}
+            onDownloadSelfAnalysis={handleDownloadSelfAnalysis}
+            onOpenTaskCardBuilder={handleOpenTaskCardBuilder}
+            onOpenGameBuilder={handleOpenGameBuilder}
+            onOpenEventBuilder={handleOpenEventBuilder}
+          />
         )}
       </DialogContent>
     </Dialog>

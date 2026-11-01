@@ -2050,7 +2050,7 @@ def process(event: dict, context) -> dict:
             duration = clip(body.get('time'), 20) or '15 минут'
             goal = clip(body.get('goal'), 500)
             reflection = clip(body.get('reflection'), 300)
-            with_ovz = bool(body.get('ovz'))
+            use_ovz = bool(body.get('ovz'))
 
             if not subject or not topic:
                 return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Укажите предмет и тему'}, ensure_ascii=False)}
@@ -2063,7 +2063,7 @@ def process(event: dict, context) -> dict:
 
             ovz_part = (
                 '"ovz": ["4-5 конкретных приёмов адаптации именно под эту тему для обучающихся с ОВЗ"]'
-                if with_ovz else '"ovz": []'
+                if use_ovz else '"ovz": []'
             )
             prompt = f"""Составь краткий план занятия для педагога.
 Предмет: {subject}
