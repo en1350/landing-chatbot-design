@@ -66,6 +66,7 @@ const OVZ_MENU: NavItem[] = [
   { label: "Мультимедиа на слайде", to: "/trenazher-dlya-uchenikov?trainer=multimedia-slide-ovz", icon: "MonitorPlay" },
   { label: "Исполнитель и алгоритмы", to: "/trenazher-dlya-uchenikov?trainer=executor-algorithms-ovz", icon: "Target" },
   { label: "Системы счисления", to: "/trenazher-dlya-uchenikov?trainer=number-systems-ovz", icon: "Binary" },
+  { label: "Алгоритм построения числа R", to: "/trenazher-dlya-uchenikov?trainer=binary-r-ovz", icon: "Calculator" },
 ];
 
 const Navbar = ({
