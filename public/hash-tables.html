@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интерактивный урок: Хеш-таблицы (Python & JS)</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #10b981;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --code-bg: #1e293b;
+            --code-text: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            background: var(--primary-dark);
+            padding: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        nav button {
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            font-size: 1rem;
+            border-radius: 0.375rem;
+            transition: background 0.3s;
+        }
+
+        nav button:hover, nav button.active {
+            background: rgba(255, 255, 255, 0.2);
+            font-weight: bold;
+        }
+
+        main {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        section {
+            display: none;
+            background: var(--card);
+            padding: 2rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.5s;
+        }
+
+        section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 { color: var(--primary); border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
+        h3 { color: var(--primary-dark); margin-top: 1.5rem; }
+
+        .code-block {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: 'Courier New', Courier, monospace;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        .keyword { color: #c084fc; }
+        .string { color: #86efac; }
+        .function { color: #60a5fa; }
+
+        .sim-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .sim-controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        .sim-controls input {
+            padding: 0.5rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+        }
+
+        .sim-controls button {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .sim-controls button:hover { background: #059669; }
+
+        .hash-table-visual {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .bucket {
+            border: 2px solid var(--primary);
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            min-height: 80px;
+            background: #eff6ff;
+            position: relative;
+        }
+
+        .bucket-label {
+            position: absolute;
+            top: -12px;
+            left: 10px;
+            background: var(--primary);
+            color: white;
+            padding: 0 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .bucket-item {
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.25rem;
+            padding: 0.25rem;
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            animation: popIn 0.3s;
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0); }
+            to { transform: scale(1); }
+        }
+
+        .log-box {
+            background: #f1f5f9;
+            border-left: 4px solid var(--primary);
+            padding: 1rem;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+
+        .quiz-question {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 0.5rem;
+        }
+
+        .quiz-options label {
+            display: block;
+            margin: 0.5rem 0;
+            cursor: pointer;
+        }
+
+        .certificate {
+            display: none;
+            border: 10px double var(--primary);
+            padding: 2rem;
+            text-align: center;
+            background: #fff;
+            margin-top: 2rem;
+            position: relative;
+        }
+
+        .certificate::before {
+            content: "🏆";
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 1rem;
+        }
+
+        .certificate h2 {
+            border: none;
+            color: var(--primary-dark);
+            font-size: 2rem;
+            font-family: 'Georgia', serif;
+        }
+
+        .cert-name {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--secondary);
+            border-bottom: 2px solid var(--text);
+            display: inline-block;
+            padding: 0 1rem;
+            margin: 1rem 0;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 1rem;
+        }
+
+        .btn-primary:hover { background: var(--primary-dark); }
+
+        .analogy-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🧠 Принцип работы Хеш-таблицы</h1>
+    <p>Интерактивный курс: Теория, Симуляция, Практика (Python & JS)</p>
+</header>
+
+<nav>
+    <button class="active" onclick="showSection('theory')">1. Теория</button>
+    <button onclick="showSection('simulation')">2. Симуляция</button>
+    <button onclick="showSection('practice')">3. Практика</button>
+    <button onclick="showSection('quiz')">4. Тест и Сертификат</button>
+</nav>
+
+<main>
+    <section id="theory" class="active">
+        <h2>📚 Что такое хеш-таблица?</h2>
+        <p><strong>Хеш-таблица (Hash Table)</strong> — это структура данных, которая хранит пары «ключ-значение» и обеспечивает сверхбыстрый доступ к данным (в среднем за O(1)).</p>
+
+        <div class="analogy-box">
+            <strong>💡 Аналогия из жизни: Гардероб</strong><br>
+            Вы сдаете куртку (это <em>значение</em>). Вам дают номерок (это <em>ключ</em>).
+            Гардеробщик не ищет вашу куртку перебором всех вешалок. Он смотрит на номерок,
+            применяет простое правило (например, "номер 45 -> стеллаж 4, крючок 5") и мгновенно находит вашу вещь.
+            Это правило и есть <strong>хеш-функция</strong>.
+        </div>
+
+        <h3>Как это работает (3 шага):</h3>
+        <ol>
+            <li><strong>Хеширование:</strong> Ключ (например, строка "apple") преобразуется хеш-функцией в число (хеш-код).</li>
+            <li><strong>Индексация:</strong> Хеш-код делится по модулю на размер массива (`hash % size`), чтобы получить индекс ячейки (бакета).</li>
+            <li><strong>Сохранение:</strong> Значение помещается в ячейку с этим индексом. Если ячейка занята, возникает <em>коллизия</em>, которая решается методами цепочек (список в ячейке) или открытой адресации.</li>
+        </ol>
+
+        <h3>Реализация в языках программирования:</h3>
+        <div class="code-block">
+            <span class="comment"># Python: Словарь (dict)</span><br>
+            <span class="keyword">my_dict</span> = {<span class="string">"name"</span>: <span class="string">"Алексей"</span>, <span class="string">"age"</span>: 25}<br>
+            <span class="function">print</span>(my_dict[<span class="string">"name"</span>]) <span class="comment"># Вывод: Алексей</span>
+        </div>
+        <div class="code-block">
+            <span class="comment">// JavaScript: Объект или Map</span><br>
+            <span class="keyword">const</span> myMap = <span class="keyword">new</span> Map();<br>
+            myMap.<span class="function">set</span>(<span class="string">"name"</span>, <span class="string">"Алексей"</span>);<br>
+            console.<span class="function">log</span>(myMap.<span class="function">get</span>(<span class="string">"name"</span>)); <span class="comment">// Вывод: Алексей</span>
+        </div>
+    </section>
+
+    <section id="simulation">
+        <h2>⚙️ Интерактивная симуляция</h2>
+        <p>Введите ключ и значение, чтобы увидеть, как хеш-функция вычисляет индекс и помещает данные в "бакет" (ячейку). Размер таблицы = 5.</p>
+
+        <div class="sim-container">
+            <div class="sim-controls">
+                <div>
+                    <label>Ключ (строка):</label><br>
+                    <input type="text" id="simKey" placeholder="напр., cat" value="cat">
+                </div>
+                <div>
+                    <label>Значение:</label><br>
+                    <input type="text" id="simValue" placeholder="напр., 3" value="3">
+                </div>
+                <button onclick="simulateInsert()">Добавить в таблицу</button>
+                <button onclick="resetSimulation()" style="background: #ef4444;">Сброс</button>
+            </div>
+
+            <div class="log-box" id="simLog">Журнал действий: нажмите "Добавить в таблицу"</div>
+
+            <div class="hash-table-visual" id="hashTableVisual">
+            </div>
+        </div>
+    </section>
+
+    <section id="practice">
+        <h2>💻 Практические примеры и разбор</h2>
+        <p>Рассмотрим реальную задачу: <strong>Подсчет частоты слов в тексте</strong>. Это классическое применение хеш-таблиц.</p>
+
+        <h3>Реализация на Python</h3>
+        <div class="code-block">
+            <span class="keyword">def</span> <span class="function">count_words</span>(text):<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;word_counts = {} <span class="comment"># Создаем пустую хеш-таблицу</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">for</span> word <span class="keyword">in</span> text.split():<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> word <span class="keyword">in</span> word_counts:<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;word_counts[word] += 1 <span class="comment"># O(1) доступ!</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">else</span>:<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;word_counts[word] = 1<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> word_counts<br><br>
+            <span class="function">print</span>(count_words(<span class="string">"яблоко банан яблоко"</span>))<br>
+            <span class="comment"># Вывод: {'яблоко': 2, 'банан': 1}</span>
+        </div>
+
+        <h3>Реализация на JavaScript</h3>
+        <div class="code-block">
+            <span class="keyword">function</span> <span class="function">countWords</span>(text) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">const</span> wordCounts = <span class="keyword">new</span> Map(); <span class="comment">// Создаем хеш-таблицу</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">const</span> words = text.split(<span class="string">' '</span>);<br><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">for</span> (<span class="keyword">const</span> word <span class="keyword">of</span> words) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> (wordCounts.has(word)) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;wordCounts.set(word, wordCounts.get(word) + 1); <span class="comment">// O(1) доступ!</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} <span class="keyword">else</span> {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;wordCounts.set(word, 1);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> wordCounts;<br>
+            }<br><br>
+            console.log(countWords(<span class="string">"яблоко банан яблоко"</span>));<br>
+            <span class="comment">// Вывод: Map(2) { 'яблоко' => 2, 'банан' => 1 }</span>
+        </div>
+
+        <h3>🔍 Разбор сложности:</h3>
+        <ul>
+            <li><strong>Вставка (Insert):</strong> O(1) в среднем случае.</li>
+            <li><strong>Поиск (Get):</strong> O(1) в среднем случае.</li>
+            <li><strong>Худший случай:</strong> O(n), если все ключи дают одинаковый хеш (коллизия), превращая таблицу в связный список. Хорошая хеш-функция минимизирует этот риск.</li>
+        </ul>
+    </section>
+
+    <section id="quiz">
+        <h2>🎓 Проверка знаний и Сертификат</h2>
+        <p>Ответьте на 5 вопросов, чтобы получить оценку по 5-балльной системе и именную сертификат.</p>
+
+        <div id="quizContainer">
+            <div class="quiz-question">
+                <p><strong>1. Какова средняя временная сложность поиска элемента в хеш-таблице?</strong></p>
+                <div class="quiz-options">
+                    <label><input type="radio" name="q1" value="0"> O(n)</label>
+                    <label><input type="radio" name="q1" value="1"> O(1)</label>
+                    <label><input type="radio" name="q1" value="0"> O(log n)</label>
+                </div>
+            </div>
+
+            <div class="quiz-question">
+                <p><strong>2. Что делает хеш-функция?</strong></p>
+                <div class="quiz-options">
+                    <label><input type="radio" name="q2" value="0"> Шифрует данные для безопасности</label>
+                    <label><input type="radio" name="q2" value="1"> Преобразует ключ в числовой индекс</label>
+                    <label><input type="radio" name="q2" value="0"> Сортирует элементы по алфавиту</label>
+                </div>
+            </div>
+
+            <div class="quiz-question">
+                <p><strong>3. Как называется ситуация, когда два разных ключа получают одинаковый индекс?</strong></p>
+                <div class="quiz-options">
+                    <label><input type="radio" name="q3" value="1"> Коллизия</label>
+                    <label><input type="radio" name="q3" value="0"> Рекурсия</label>
+                    <label><input type="radio" name="q3" value="0"> Итерация</label>
+                </div>
+            </div>
+
+            <div class="quiz-question">
+                <p><strong>4. Какой аналог хеш-таблицы используется в Python?</strong></p>
+                <div class="quiz-options">
+                    <label><input type="radio" name="q4" value="0"> List (Список)</label>
+                    <label><input type="radio" name="q4" value="0"> Tuple (Кортеж)</label>
+                    <label><input type="radio" name="q4" value="1"> Dict (Словарь)</label>
+                </div>
+            </div>
+
+            <div class="quiz-question">
+                <p><strong>5. В JS для хранения пар ключ-значение с гарантией порядка и любыми типами ключей лучше использовать:</strong></p>
+                <div class="quiz-options">
+                    <label><input type="radio" name="q5" value="1"> Map</label>
+                    <label><input type="radio" name="q5" value="0"> Array</label>
+                    <label><input type="radio" name="q5" value="0"> Set</label>
+                </div>
+            </div>
+
+            <div style="margin-top: 1rem;">
+                <label><strong>Введите ваше имя для сертификата:</strong></label><br>
+                <input type="text" id="studentName" placeholder="Иван Иванов" style="padding: 0.5rem; width: 100%; max-width: 300px; margin-top: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.375rem;">
+            </div>
+
+            <button class="btn-primary" onclick="checkQuiz()">Завершить тест и получить оценку</button>
+        </div>
+
+        <div id="certificate" class="certificate">
+            <h2>СЕРТИФИКАТ</h2>
+            <p>Настоящим подтверждается, что</p>
+            <div class="cert-name" id="certNameDisplay">Имя Студента</div>
+            <p>успешно прошел(а) интерактивный курс</p>
+            <h3>"Принцип работы хеш-таблицы (Python & JS)"</h3>
+            <p style="font-size: 1.2rem; margin-top: 1.5rem;">
+                Итоговая оценка: <strong id="certScore" style="color: var(--primary); font-size: 1.5rem;">5/5</strong>
+            </p>
+            <p style="font-size: 0.9rem; color: #64748b; margin-top: 2rem;">
+                Дата выдачи: <span id="certDate"></span><br>
+                Подпись преподавателя: <em>Qwen AI Instructor</em>
+            </p>
+            <button class="btn-primary" onclick="window.print()" style="margin-top: 1rem;">🖨️ Распечатать сертификат</button>
+            <button class="btn-primary" onclick="location.reload()" style="background: #64748b; margin-left: 10px;">Пройти заново</button>
+        </div>
+    </section>
+</main>
+
+<script>
+    function showSection(sectionId) {
+        document.querySelectorAll('section').forEach(sec => sec.classList.remove('active'));
+        document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
+
+        document.getElementById(sectionId).classList.add('active');
+        event.target.classList.add('active');
+    }
+
+    const TABLE_SIZE = 5;
+    let hashTable = Array.from({ length: TABLE_SIZE }, () => []);
+
+    function initSimulation() {
+        const visual = document.getElementById('hashTableVisual');
+        visual.innerHTML = '';
+        for (let i = 0; i < TABLE_SIZE; i++) {
+            const bucket = document.createElement('div');
+            bucket.className = 'bucket';
+            bucket.id = `bucket-${i}`;
+            bucket.innerHTML = `<div class="bucket-label">Index ${i}</div>`;
+            visual.appendChild(bucket);
+        }
+    }
+
+    function simpleHash(key) {
+        let hash = 0;
+        for (let i = 0; i < key.length; i++) {
+            hash += key.charCodeAt(i);
+        }
+        return hash;
+    }
+
+    function simulateInsert() {
+        const key = document.getElementById('simKey').value.trim();
+        const value = document.getElementById('simValue').value.trim();
+        const log = document.getElementById('simLog');
+
+        if (!key || !value) {
+            log.textContent = "⚠️ Ошибка: Введите и ключ, и значение!";
+            return;
+        }
+
+        const hashCode = simpleHash(key);
+        const index = hashCode % TABLE_SIZE;
+
+        log.textContent = `🔄 Журнал действий:\n` +
+                          `1. Получен ключ: "${key}"\n` +
+                          `2. Вычислен хеш-код (сумма кодов символов): ${hashCode}\n` +
+                          `3. Вычислен индекс: ${hashCode} % ${TABLE_SIZE} = ${index}\n` +
+                          `4. Элемент ["${key}": "${value}"] помещен в бакет ${index}.`;
+
+        hashTable[index].push({ key, value });
+
+        const bucketEl = document.getElementById(`bucket-${index}`);
+        const itemEl = document.createElement('div');
+        itemEl.className = 'bucket-item';
+        itemEl.innerHTML = `<strong>${key}</strong>: ${value}`;
+        bucketEl.appendChild(itemEl);
+
+        bucketEl.style.background = '#bbf7d0';
+        setTimeout(() => {
+            bucketEl.style.background = '#eff6ff';
+        }, 500);
+    }
+
+    function resetSimulation() {
+        hashTable = Array.from({ length: TABLE_SIZE }, () => []);
+        document.getElementById('simLog').textContent = 'Журнал действий: таблица очищена.';
+        document.getElementById('simKey').value = 'cat';
+        document.getElementById('simValue').value = '3';
+        initSimulation();
+    }
+
+    initSimulation();
+
+    function checkQuiz() {
+        const name = document.getElementById('studentName').value.trim();
+        if (!name) {
+            alert("Пожалуйста, введите ваше имя для сертификата!");
+            return;
+        }
+
+        let score = 0;
+        for (let i = 1; i <= 5; i++) {
+            const selected = document.querySelector(`input[name="q${i}"]:checked`);
+            if (selected && selected.value === "1") {
+                score++;
+            }
+        }
+
+        document.getElementById('quizContainer').style.display = 'none';
+        const cert = document.getElementById('certificate');
+        cert.style.display = 'block';
+
+        document.getElementById('certNameDisplay').textContent = name;
+        document.getElementById('certScore').textContent = `${score}/5`;
+
+        const today = new Date();
+        document.getElementById('certDate').textContent = today.toLocaleDateString('ru-RU', {
+            year: 'numeric', month: 'long', day: 'numeric'
+        });
+
+        cert.scrollIntoView({ behavior: 'smooth' });
+    }
+</script>
+
+</body>
+</html>
