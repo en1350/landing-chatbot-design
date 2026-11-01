@@ -47,7 +47,8 @@ export type TrainerKey =
   | "js-browser-vs-node"
   | "python-js-simulator"
   | "html-css-js-simulator"
-  | "hash-tables";
+  | "hash-tables"
+  | "binary-r-ovz";
 
 export interface CategoryItem {
   key: CategoryKey;
@@ -112,6 +113,7 @@ export const IFRAME_SRC: Partial<Record<TrainerKey, string>> = {
   "python-js-simulator": "/python-js-simulator.html",
   "html-css-js-simulator": "/html-css-js-simulator.html",
   "hash-tables": "/hash-tables.html",
+  "binary-r-ovz": "/binary-r-ovz.html",
 };
 
 export const CATEGORIES: CategoryItem[] = [
@@ -225,6 +227,15 @@ export const TRAINERS: TrainerItem[] = [
     title: "Мультимедиа на слайде (для ОВЗ)",
     description: "Инклюзивный урок: простая теория, тренажёр слайда, 4 задания, тест на 6 вопросов, озвучивание, режимы для слабовидящих, дальтоников и дислексии, сертификат",
     accent: "#2980b9",
+    paid: true,
+  },
+  {
+    key: "binary-r-ovz",
+    category: "ovz",
+    icon: "🔢",
+    title: "Алгоритм построения числа R (для ОВЗ)",
+    description: "Инклюзивный урок: разбор алгоритма с двоичной записью, пошаговый симулятор с автопроигрыванием, таблица перебора, проверочный вопрос, озвучивание, крупный шрифт и тёмная тема",
+    accent: "#0057b8",
     paid: true,
   },
   {

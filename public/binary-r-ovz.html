@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Интерактивный урок: алгоритм построения числа R</title>
+<style>
+  :root{
+    --bg:#fffaf0; --fg:#1a1a1a; --accent:#0057b8; --accent2:#b80057;
+    --card:#ffffff; --border:#333; --good:#0a7a2e; --bad:#b00020;
+    --focus:#ff9800; --shadow:0 4px 10px rgba(0,0,0,.15);
+  }
+  [data-theme="dark"]{
+    --bg:#0f1419; --fg:#f5f5f5; --accent:#6cb4ff; --accent2:#ff8ab5;
+    --card:#1a2330; --border:#e0e0e0; --good:#66e08a; --bad:#ff7070;
+    --focus:#ffc107; --shadow:0 4px 10px rgba(0,0,0,.6);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:20px; font-family:'Verdana',Arial,sans-serif;
+    background:var(--bg); color:var(--fg); font-size:20px; line-height:1.7;
+    transition:background .3s, color .3s;
+  }
+  .container{max-width:1100px; margin:0 auto}
+  h1,h2,h3{line-height:1.3}
+  h1{font-size:2em; color:var(--accent); text-align:center; margin-bottom:10px}
+  h2{font-size:1.5em; color:var(--accent2); border-bottom:3px solid var(--accent); padding-bottom:6px; margin-top:30px}
+  .card{
+    background:var(--card); border:2px solid var(--border);
+    border-radius:12px; padding:20px; margin:18px 0; box-shadow:var(--shadow);
+  }
+  .toolbar{
+    display:flex; flex-wrap:wrap; gap:10px; justify-content:center;
+    background:var(--card); padding:12px; border-radius:12px;
+    border:2px solid var(--border); margin-bottom:20px;
+  }
+  button, input[type="number"]{
+    font-size:1.1em; padding:12px 18px; border-radius:8px;
+    border:2px solid var(--border); background:var(--card); color:var(--fg);
+    cursor:pointer; font-family:inherit; font-weight:bold;
+  }
+  button:hover, button:focus{outline:4px solid var(--focus); outline-offset:2px}
+  button.primary{background:var(--accent); color:#fff; border-color:var(--accent)}
+  button.good{background:var(--good); color:#fff; border-color:var(--good)}
+  button.bad{background:var(--bad); color:#fff; border-color:var(--bad)}
+  input[type="number"]{font-size:1.2em; width:140px; text-align:center}
+
+  .binary{
+    font-family:'Courier New',monospace; font-size:1.4em;
+    background:#fff3cd; color:#000; padding:8px 14px; border-radius:6px;
+    display:inline-block; letter-spacing:3px; font-weight:bold;
+    border:2px solid #c9a227;
+  }
+  [data-theme="dark"] .binary{background:#2a2a2a; color:#ffe082; border-color:#8a6d1f}
+
+  .step{
+    background:var(--card); border-left:6px solid var(--accent);
+    padding:14px 18px; margin:10px 0; border-radius:6px;
+  }
+  .step b{color:var(--accent2)}
+
+  .simulator{
+    background:linear-gradient(135deg,#eef5ff,#ffffff);
+    border:3px solid var(--accent); border-radius:14px; padding:22px;
+    margin:20px 0;
+  }
+  [data-theme="dark"] .simulator{background:linear-gradient(135deg,#1a2330,#0f1419)}
+
+  .result-box{
+    font-size:1.3em; padding:16px; border-radius:10px; margin-top:14px;
+    text-align:center; font-weight:bold;
+  }
+  .result-ok{background:#d4edda; color:#155724; border:3px solid var(--good)}
+  .result-no{background:#f8d7da; color:#721c24; border:3px solid var(--bad)}
+  [data-theme="dark"] .result-ok{background:#1e3a2a; color:#a6e8b8}
+  [data-theme="dark"] .result-no{background:#3a1e22; color:#ffb3b3}
+
+  .examples{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px}
+  .example{background:var(--card); border:2px dashed var(--accent2); border-radius:10px; padding:14px}
+
+  table{width:100%; border-collapse:collapse; margin:14px 0; font-size:1.05em}
+  th,td{border:2px solid var(--border); padding:10px; text-align:center}
+  th{background:var(--accent); color:#fff}
+  tr:nth-child(even) td{background:rgba(0,0,0,.04)}
+  [data-theme="dark"] tr:nth-child(even) td{background:rgba(255,255,255,.05)}
+
+  .highlight{background:var(--focus); color:#000; padding:2px 6px; border-radius:4px; font-weight:bold}
+  .answer{
+    font-size:1.6em; text-align:center; padding:20px;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    color:#fff; border-radius:12px; margin:20px 0; font-weight:bold;
+  }
+
+  .bin-display{
+    font-family:'Courier New',monospace; font-size:2em;
+    letter-spacing:6px; text-align:center; padding:18px;
+    background:#fff; color:#000; border:3px solid var(--accent);
+    border-radius:10px; margin:14px 0; min-height:70px;
+    word-break:break-all;
+  }
+  [data-theme="dark"] .bin-display{background:#0a0f14; color:#ffe082}
+  .bit{display:inline-block; transition:all .4s; padding:0 2px}
+  .bit.new{background:#ffe082; color:#000; border-radius:4px; transform:scale(1.2)}
+  .bit.replaced{background:#ff8ab5; color:#000; border-radius:4px}
+
+  .sr-only{position:absolute; left:-10000px; width:1px; height:1px; overflow:hidden}
+
+  .quiz{margin-top:20px}
+  .quiz-options{display:flex; flex-wrap:wrap; gap:10px; margin-top:10px}
+  .quiz-options button{flex:1; min-width:120px}
+
+  @media (max-width:600px){
+    body{font-size:18px; padding:10px}
+    h1{font-size:1.5em}
+    .bin-display{font-size:1.4em; letter-spacing:3px}
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="toolbar" role="toolbar" aria-label="Настройки доступности">
+    <button onclick="changeFontSize(2)" aria-label="Увеличить шрифт">🔍+ Шрифт</button>
+    <button onclick="changeFontSize(-2)" aria-label="Уменьшить шрифт">🔍− Шрифт</button>
+    <button onclick="toggleTheme()" aria-label="Переключить тему">🌓 Тема</button>
+    <button onclick="speakCurrent()" class="primary" aria-label="Озвучить текст">🔊 Озвучить</button>
+    <button onclick="stopSpeak()" class="bad" aria-label="Остановить озвучку">⏹ Стоп</button>
+  </div>
+
+  <h1>📘 Алгоритм построения числа R</h1>
+  <p style="text-align:center; font-size:1.1em"><i>Интерактивный урок с симулятором для учащихся с ОВЗ</i></p>
+
+  <div class="card" id="condition">
+    <h2>📌 Условие задачи</h2>
+    <p>На вход алгоритма подаётся натуральное число <b>N</b>. Алгоритм строит новое число <b>R</b>:</p>
+    <div class="step">
+      <b>Шаг 1.</b> Строится <span class="highlight">двоичная запись</span> числа N.
+    </div>
+    <div class="step">
+      <b>Шаг 2.</b> Считаем <span class="highlight">сумму цифр</span> двоичной записи (то есть количество единиц).
+    </div>
+    <div class="step">
+      <b>Шаг 3а.</b> Если сумма <b>чётная</b>:<br>
+      → дописываем справа <span class="binary">0</span>,<br>
+      → два левых разряда заменяем на <span class="binary">10</span>.
+    </div>
+    <div class="step">
+      <b>Шаг 3б.</b> Если сумма <b>нечётная</b>:<br>
+      → дописываем справа <span class="binary">1</span>,<br>
+      → два левых разряда заменяем на <span class="binary">11</span>.
+    </div>
+    <div class="step">
+      <b>Шаг 4.</b> Полученная двоичная запись переводится в десятичную систему — это и есть R.
+    </div>
+    <p><b>Вопрос:</b> укажите <span class="highlight">максимальное N</span>, при котором R ≤ 19.</p>
+  </div>
+
+  <div class="card" id="examples">
+    <h2>🔎 Разбор примеров из условия</h2>
+    <div class="examples">
+      <div class="example">
+        <h3>Пример 1: N = 6</h3>
+        <p>Двоичная запись: <span class="binary">110</span></p>
+        <p>Сумма цифр: 1+1+0 = <b>2 (чётная)</b></p>
+        <p>Дописываем 0: <span class="binary">1100</span></p>
+        <p>Заменяем два левых на 10: <span class="binary">1000</span></p>
+        <p>R = 1000₂ = <b>8</b> ✓</p>
+      </div>
+      <div class="example">
+        <h3>Пример 2: N = 4</h3>
+        <p>Двоичная запись: <span class="binary">100</span></p>
+        <p>Сумма цифр: 1+0+0 = <b>1 (нечётная)</b></p>
+        <p>Дописываем 1: <span class="binary">1001</span></p>
+        <p>Заменяем два левых на 11: <span class="binary">1101</span></p>
+        <p>R = 1101₂ = <b>13</b> ✓</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="simulator" id="simulator" aria-live="polite">
+    <h2>🧪 Симулятор алгоритма</h2>
+    <p>Введите натуральное число N (от 1 до 100) и нажмите «Выполнить»:</p>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:center">
+      <label for="inputN" class="sr-only">Введите число N</label>
+      <input type="number" id="inputN" min="1" max="100" value="6" aria-label="Число N">
+      <button onclick="runSimulation()" class="primary">▶ Выполнить пошагово</button>
+      <button onclick="autoPlay()" class="good">⏩ Автопроигрывание</button>
+    </div>
+    <div id="steps"></div>
+    <div class="bin-display" id="binDisplay" aria-label="Двоичная запись в процессе">—</div>
+    <div id="resultBox"></div>
+  </div>
+
+  <div class="card" id="solution">
+    <h2>📊 Решение задачи: перебор значений</h2>
+    <p>Нам нужно найти <b>максимальное N</b>, при котором R ≤ 19. Перебираем N и смотрим результат:</p>
+    <div style="overflow-x:auto">
+    <table>
+      <thead>
+        <tr><th>N</th><th>N (двоич.)</th><th>Сумма</th><th>Чётность</th><th>+бит</th><th>Замена</th><th>R (двоич.)</th><th>R</th><th>R ≤ 19?</th></tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+    </div>
+    <p><b>Анализ:</b> при N ≥ 16 (5 бит) результат всегда ≥ 32, то есть больше 19. Значит, ищем среди N от 1 до 15.</p>
+    <p>Среди подходящих (R ≤ 19) максимальное значение — <span class="highlight">N = 12</span>.</p>
+  </div>
+
+  <div class="answer" id="answer">
+    ✅ Ответ: <span id="answerValue">12</span>
+  </div>
+
+  <div class="card quiz" id="quiz">
+    <h2>🎯 Проверь себя</h2>
+    <p>Какое максимальное N даёт R ≤ 19?</p>
+    <div class="quiz-options">
+      <button onclick="checkAnswer(9)">9</button>
+      <button onclick="checkAnswer(12)">12</button>
+      <button onclick="checkAnswer(13)">13</button>
+      <button onclick="checkAnswer(15)">15</button>
+    </div>
+    <div id="quizResult" style="margin-top:14px; font-size:1.2em; font-weight:bold"></div>
+  </div>
+
+  <div class="card">
+    <h2>💡 Подсказки и пояснения</h2>
+    <div class="step"><b>Двоичная система</b> — это запись числа с помощью цифр 0 и 1. Например, 6₁₀ = 110₂.</div>
+    <div class="step"><b>Сумма цифр</b> в двоичной записи — это просто количество единиц. Для 110₂ это 1+1+0 = 2.</div>
+    <div class="step"><b>Чётное/нечётное</b>: число делится на 2 без остатка → чётное, иначе → нечётное.</div>
+    <div class="step"><b>Два левых разряда</b> — это две самые первые цифры слева в двоичной записи.</div>
+    <div class="step"><b>Перевод из двоичной в десятичную</b>: 1000₂ = 1·8 + 0·4 + 0·2 + 0·1 = 8.</div>
+  </div>
+
+</div>
+
+<script>
+let currentFontSize = 20;
+function changeFontSize(delta){
+  currentFontSize = Math.max(14, Math.min(32, currentFontSize + delta));
+  document.body.style.fontSize = currentFontSize + 'px';
+}
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme');
+  document.documentElement.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+}
+
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  stopSpeak();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'ru-RU'; u.rate = 0.9; u.pitch = 1;
+  speechSynthesis.speak(u);
+}
+function stopSpeak(){ if('speechSynthesis' in window) speechSynthesis.cancel(); }
+function speakCurrent(){
+  const text = document.querySelector('.container').innerText;
+  speak(text);
+}
+
+function process(N){
+  let bin = N.toString(2);
+  const sum = bin.split('').reduce((a,c)=>a+parseInt(c),0);
+  const even = sum % 2 === 0;
+  const addedBit = even ? '0' : '1';
+  const replacement = even ? '10' : '11';
+  const afterAdd = bin + addedBit;
+  const afterReplace = replacement + afterAdd.slice(2);
+  const R = parseInt(afterReplace, 2);
+  return {bin, sum, even, addedBit, replacement, afterAdd, afterReplace, R};
+}
+
+function runSimulation(){
+  const N = parseInt(document.getElementById('inputN').value);
+  if(!N || N < 1 || N > 100){ alert('Введите число от 1 до 100'); return; }
+  const r = process(N);
+  const stepsDiv = document.getElementById('steps');
+  stepsDiv.innerHTML = `
+    <div class="step"><b>Шаг 1.</b> Двоичная запись N=${N}: <span class="binary">${r.bin}</span></div>
+    <div class="step"><b>Шаг 2.</b> Сумма цифр: ${r.bin.split('').join('+')} = <b>${r.sum}</b> (${r.even?'чётная':'нечётная'})</div>
+    <div class="step"><b>Шаг 3.</b> Так как сумма ${r.even?'чётная → дописываем 0':'нечётная → дописываем 1'}: <span class="binary">${r.afterAdd}</span></div>
+    <div class="step"><b>Шаг 4.</b> Заменяем два левых разряда на <span class="binary">${r.replacement}</span>: <span class="binary">${r.afterReplace}</span></div>
+    <div class="step"><b>Шаг 5.</b> Переводим в десятичную: ${r.afterReplace}₂ = <b>${r.R}</b></div>
+  `;
+  document.getElementById('binDisplay').innerHTML = formatBin(r.afterReplace);
+  const box = document.getElementById('resultBox');
+  if(r.R <= 19){
+    box.className = 'result-box result-ok';
+    box.innerHTML = `✅ R = ${r.R} ≤ 19 — условие выполнено!`;
+  } else {
+    box.className = 'result-box result-no';
+    box.innerHTML = `❌ R = ${r.R} > 19 — условие НЕ выполнено.`;
+  }
+  speak(`N равно ${N}. Результат R равен ${r.R}. ${r.R<=19?'Условие выполнено.':'Условие не выполнено.'}`);
+}
+
+function formatBin(s){
+  return s.split('').map(c=>`<span class="bit">${c}</span>`).join('');
+}
+
+async function autoPlay(){
+  const N = parseInt(document.getElementById('inputN').value);
+  if(!N || N < 1 || N > 100){ alert('Введите число от 1 до 100'); return; }
+  const r = process(N);
+  const display = document.getElementById('binDisplay');
+  const stepsDiv = document.getElementById('steps');
+  stepsDiv.innerHTML = '';
+
+  const wait = ms => new Promise(res=>setTimeout(res,ms));
+
+  display.innerHTML = formatBin(r.bin);
+  stepsDiv.innerHTML += `<div class="step"><b>Шаг 1.</b> Двоичная запись N=${N}: <span class="binary">${r.bin}</span></div>`;
+  await wait(1200);
+
+  stepsDiv.innerHTML += `<div class="step"><b>Шаг 2.</b> Сумма = <b>${r.sum}</b> (${r.even?'чётная':'нечётная'})</div>`;
+  await wait(1200);
+
+  let html = r.bin.split('').map(c=>`<span class="bit">${c}</span>`).join('');
+  html += `<span class="bit new">${r.addedBit}</span>`;
+  display.innerHTML = html;
+  stepsDiv.innerHTML += `<div class="step"><b>Шаг 3.</b> Дописали <b>${r.addedBit}</b> справа: <span class="binary">${r.afterAdd}</span></div>`;
+  await wait(1400);
+
+  html = r.afterAdd.split('').map((c,i)=>{
+    if(i<2) return `<span class="bit replaced">${r.replacement[i]}</span>`;
+    return `<span class="bit">${c}</span>`;
+  }).join('');
+  display.innerHTML = html;
+  stepsDiv.innerHTML += `<div class="step"><b>Шаг 4.</b> Заменили два левых на <b>${r.replacement}</b>: <span class="binary">${r.afterReplace}</span></div>`;
+  await wait(1400);
+
+  display.innerHTML = formatBin(r.afterReplace);
+  stepsDiv.innerHTML += `<div class="step"><b>Шаг 5.</b> R = <b>${r.R}</b></div>`;
+  const box = document.getElementById('resultBox');
+  if(r.R <= 19){
+    box.className = 'result-box result-ok';
+    box.innerHTML = `✅ R = ${r.R} ≤ 19`;
+  } else {
+    box.className = 'result-box result-no';
+    box.innerHTML = `❌ R = ${r.R} > 19`;
+  }
+  speak(`Готово. Результат R равен ${r.R}.`);
+}
+
+function buildTable(){
+  const tbody = document.getElementById('tableBody');
+  let html = '';
+  for(let N=1; N<=15; N++){
+    const r = process(N);
+    const ok = r.R <= 19;
+    html += `<tr${ok?' style="background:#d4edda"':''}>
+      <td><b>${N}</b></td>
+      <td><span class="binary" style="font-size:1em">${r.bin}</span></td>
+      <td>${r.sum}</td>
+      <td>${r.even?'чёт':'нечёт'}</td>
+      <td>${r.addedBit}</td>
+      <td>${r.replacement}</td>
+      <td><span class="binary" style="font-size:1em">${r.afterReplace}</span></td>
+      <td><b>${r.R}</b></td>
+      <td>${ok?'✅':'❌'}</td>
+    </tr>`;
+  }
+  tbody.innerHTML = html;
+}
+
+function checkAnswer(v){
+  const box = document.getElementById('quizResult');
+  if(v === 12){
+    box.innerHTML = '🎉 Правильно! Ответ: 12';
+    box.style.color = 'var(--good)';
+    speak('Правильно! Ответ 12.');
+  } else {
+    box.innerHTML = '❌ Неверно. Попробуй ещё раз или посмотри разбор выше.';
+    box.style.color = 'var(--bad)';
+    speak('Неверно. Попробуй ещё раз.');
+  }
+}
+
+buildTable();
+</script>
+</body>
+</html>
