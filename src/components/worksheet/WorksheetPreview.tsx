@@ -35,13 +35,23 @@ const TaskBody = ({ task }: { task: WorksheetTask }) => {
           </tr>
         </thead>
         <tbody>
-          {Array.from({ length: task.rows }).map((_, r) => (
-            <tr key={r}>
-              {headers.map((_, c) => (
-                <td key={c} className="border border-black px-2 py-3" />
+          {task.cells && task.cells.length
+            ? task.cells.map((row, r) => (
+                <tr key={r}>
+                  {headers.map((_, c) => (
+                    <td key={c} className="border border-black px-2 py-1">
+                      {row[c] ?? ""}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            : Array.from({ length: task.rows }).map((_, r) => (
+                <tr key={r}>
+                  {headers.map((_, c) => (
+                    <td key={c} className="border border-black px-2 py-3" />
+                  ))}
+                </tr>
               ))}
-            </tr>
-          ))}
         </tbody>
       </table>
     );

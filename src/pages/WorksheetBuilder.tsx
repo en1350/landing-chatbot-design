@@ -143,6 +143,47 @@ const WorksheetBuilder = () => {
     }
   };
 
+  const tableFileRef = useRef<HTMLInputElement>(null);
+  const tableTargetRef = useRef<number | null>(null);
+
+  const parseCsv = (text: string) => {
+    const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter((l) => l.trim());
+    const sep = [";", "\t", ","].find((d) => lines[0]?.includes(d)) || ",";
+    return lines.map((l) => l.split(sep).map((c) => c.trim().replace(/^"|"$/g, "")));
+  };
+
+  const handleTableFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const id = tableTargetRef.current;
+    e.target.value = "";
+    if (!file || id === null) return;
+    const ext = file.name.toLowerCase().split(".").pop() || "";
+    if (!["xlsx", "csv", "txt"].includes(ext)) {
+      toast.error("Поддерживаются таблицы XLSX и CSV");
+      return;
+    }
+    try {
+      let raw: unknown[][];
+      if (ext === "xlsx") {
+        const { readSheet } = await import("read-excel-file/browser");
+        raw = (await readSheet(file)) as unknown[][];
+      } else {
+        raw = parseCsv(await readAsText(file));
+      }
+      const grid = raw
+        .map((r) => r.slice(0, 8).map((c) => (c === null || c === undefined ? "" : c instanceof Date ? c.toLocaleDateString("ru-RU") : String(c).trim())))
+        .filter((r) => r.some((c) => c));
+      if (grid.length < 1) throw new Error("В таблице нет данных");
+      const width = Math.max(...grid.map((r) => r.length));
+      const columns = Array.from({ length: width }, (_, i) => grid[0][i] || "");
+      const cells = grid.slice(1, 41).map((r) => Array.from({ length: width }, (_, i) => r[i] || ""));
+      updateTask(id, { type: "table", columns, cells, rows: Math.max(2, Math.min(8, cells.length || 2)) });
+      toast.success(`Таблица загружена: ${cells.length} строк, ${width} столбцов`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Не удалось прочитать таблицу");
+    }
+  };
+
   const clearAll = () => {
     if (!window.confirm("Очистить все поля и задания?")) return;
     setTopic("");
@@ -317,6 +358,7 @@ const WorksheetBuilder = () => {
             <div className="no-print space-y-5 rounded-2xl border border-border bg-card p-5 shadow-sm">
               <div>
                 <label className="mb-1.5 block text-sm font-semibold">План-конспект урока (необязательно)</label>
+                <input ref={tableFileRef} type="file" accept=".xlsx,.csv,.txt" className="hidden" onChange={handleTableFile} />
                 <input ref={fileRef} type="file" accept=".docx,.pdf,.txt" className="hidden" onChange={handleFile} />
                 {fileName ? (
                   <div className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-sm">
@@ -484,20 +526,50 @@ const WorksheetBuilder = () => {
                       />
                     )}
                     {task.type === "table" && (
-                      <div className="grid grid-cols-[1fr_90px] gap-2">
-                        <Input
-                          value={task.columns.join(", ")}
-                          onChange={(e) => updateTask(task.id, { columns: e.target.value.split(",").map((c) => c.trimStart()) })}
-                          placeholder="Столбцы через запятую"
-                        />
-                        <Input
-                          type="number"
-                          min={2}
-                          max={8}
-                          value={task.rows}
-                          onChange={(e) => updateTask(task.id, { rows: Math.max(2, Math.min(8, Number(e.target.value) || 3)) })}
-                          title="Число строк"
-                        />
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-[1fr_90px] gap-2">
+                          <Input
+                            value={task.columns.join(", ")}
+                            onChange={(e) => updateTask(task.id, { columns: e.target.value.split(",").map((c) => c.trimStart()) })}
+                            placeholder="Столбцы через запятую"
+                          />
+                          <Input
+                            type="number"
+                            min={2}
+                            max={8}
+                            value={task.rows}
+                            disabled={!!task.cells?.length}
+                            onChange={(e) => updateTask(task.id, { rows: Math.max(2, Math.min(8, Number(e.target.value) || 3)) })}
+                            title="Число строк"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="gap-1.5"
+                            onClick={() => {
+                              tableTargetRef.current = task.id;
+                              tableFileRef.current?.click();
+                            }}
+                          >
+                            <Icon name="Upload" size={14} />
+                            Загрузить таблицу
+                          </Button>
+                          {task.cells && task.cells.length > 0 && (
+                            <>
+                              <span className="text-xs text-muted-foreground">{task.cells.length} строк из файла</span>
+                              <button
+                                type="button"
+                                onClick={() => updateTask(task.id, { cells: undefined })}
+                                className="ml-auto text-xs text-destructive hover:underline"
+                              >
+                                Убрать данные
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>

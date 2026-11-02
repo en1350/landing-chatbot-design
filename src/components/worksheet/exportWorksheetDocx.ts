@@ -59,7 +59,9 @@ export async function exportWorksheetDocx(meta: WorksheetMeta, tasks: WorksheetT
           width: { size: 100, type: WidthType.PERCENTAGE },
           rows: [
             new TableRow({ children: headers.map((h) => cell(h, true)) }),
-            ...Array.from({ length: task.rows }).map(() => new TableRow({ height: { value: 500, rule: "atLeast" }, children: headers.map(() => cell("")) })),
+            ...(task.cells && task.cells.length
+              ? task.cells.map((row) => new TableRow({ children: headers.map((_, c) => cell(row[c] ?? "")) }))
+              : Array.from({ length: task.rows }).map(() => new TableRow({ height: { value: 500, rule: "atLeast" }, children: headers.map(() => cell("")) }))),
           ],
         })
       );

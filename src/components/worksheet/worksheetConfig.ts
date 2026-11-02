@@ -8,6 +8,7 @@ export interface WorksheetTask {
   options: string[];
   columns: string[];
   rows: number;
+  cells?: string[][];
 }
 
 export interface WorksheetMeta {
