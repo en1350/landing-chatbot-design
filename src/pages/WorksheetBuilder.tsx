@@ -79,6 +79,7 @@ const WorksheetBuilder = () => {
   const [refining, setRefining] = useState(false);
   const [refineError, setRefineError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [criteriaLoading, setCriteriaLoading] = useState(false);
   const [exportingDocx, setExportingDocx] = useState(false);
 
   const fileRef = useRef<HTMLInputElement>(null);
@@ -275,6 +276,42 @@ const WorksheetBuilder = () => {
     }
   };
 
+  const generateCriteria = async () => {
+    if (!guard()) return;
+    const filled = tasks.filter((t) => t.description.trim());
+    if (!filled.length) {
+      toast.error("Сначала добавьте задания с текстом условия");
+      return;
+    }
+    setCriteriaLoading(true);
+    try {
+      const res = await fetch(GENERATE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { "X-Authorization": token } : {}) },
+        body: JSON.stringify({
+          action: "worksheet_criteria",
+          fields: {
+            topic,
+            discipline,
+            group,
+            level,
+            planText,
+            strict,
+            tasks: filled.map((t) => ({ type: t.type, title: t.title, description: t.description })),
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Не удалось составить критерии");
+      setCriteria(data.criteria as string[]);
+      toast.success("Критерии составлены по заданиям — при необходимости отредактируйте");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Не удалось составить критерии");
+    } finally {
+      setCriteriaLoading(false);
+    }
+  };
+
   const refine = async () => {
     if (!guard()) return;
     if (!refineInstruction.trim()) return;
@@ -464,6 +501,10 @@ const WorksheetBuilder = () => {
                       Добавить
                     </Button>
                   </div>
+                  <Button type="button" variant="secondary" size="sm" className="w-full gap-1.5" onClick={generateCriteria} disabled={criteriaLoading}>
+                    <Icon name={criteriaLoading ? "Loader" : "Sparkles"} size={14} className={criteriaLoading ? "animate-spin" : ""} />
+                    {criteriaLoading ? "Составляю критерии..." : "Составить критерии по заданиям"}
+                  </Button>
                   {criteria.length === 0 && (
                     <p className="text-xs text-muted-foreground">Критериев пока нет — добавьте свои или составьте задания с ИИ.</p>
                   )}

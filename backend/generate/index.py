@@ -1549,6 +1549,23 @@ def normalize_criteria(parsed: dict) -> list:
     return [str(c).strip() for c in (parsed.get('criteria') or []) if str(c).strip()][:8]
 
 
+def build_worksheet_criteria_prompt(f: dict) -> str:
+    lines = []
+    for i, t in enumerate(f.get('tasks') or [], 1):
+        lines.append(f"{i}. [{t.get('type') or 'open'}] {(t.get('title') or '').strip()}: {(t.get('description') or '').strip()}")
+    return f"""Составь критерии оценки и самооценки для рабочего листа.
+
+{worksheet_context(f)}
+
+Задания рабочего листа:
+{chr(10).join(lines) or '(нет заданий)'}
+
+Дай 4-6 коротких критериев, которые привязаны к содержанию этих заданий и проверяют, чему обучающийся должен научиться. Каждый критерий — формулировка от первого лица или утверждение, которое обучающийся может отметить («Да / Частично / Нет»), например: «Верно назвал основные термины». Без нумерации и markdown-разметки.
+
+Верни ТОЛЬКО валидный JSON в формате:
+{{"criteria": ["критерий"]}}"""
+
+
 def normalize_worksheet(parsed: dict) -> list:
     tasks = []
     for t in parsed.get('tasks') or []:
@@ -2286,6 +2303,23 @@ def process(event: dict, context) -> dict:
             if not tasks:
                 return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ не вернул задания, попробуйте снова'})}
             return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'tasks': tasks, 'criteria': normalize_criteria(parsed) if (fields.get('withCriteria') and isinstance(parsed, dict)) else []}, ensure_ascii=False)}
+
+        elif action == 'worksheet_criteria':
+            fields = body.get('fields') or {}
+            if not (fields.get('tasks') or []):
+                return {'statusCode': 400, 'headers': cors_headers(), 'body': json.dumps({'error': 'Сначала добавьте задания'})}
+            raw = call_ai([
+                {'role': 'system', 'content': 'Ты профессиональный педагог-методист. Отвечаешь строго валидным JSON без markdown и пояснений, всегда на русском языке.'},
+                {'role': 'user', 'content': build_worksheet_criteria_prompt(fields)},
+            ], temperature=0.6)
+            try:
+                parsed = parse_ai_json(raw)
+            except (json.JSONDecodeError, IndexError):
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ вернул некорректный ответ, попробуйте снова'})}
+            criteria = normalize_criteria(parsed if isinstance(parsed, dict) else {})
+            if not criteria:
+                return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ не вернул критерии, попробуйте снова'})}
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'criteria': criteria}, ensure_ascii=False)}
 
         elif action == 'rpd':
             fields = body.get('fields') or {}
