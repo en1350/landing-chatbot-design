@@ -104,6 +104,11 @@ export async function exportWorksheetDocx(meta: WorksheetMeta, tasks: WorksheetT
   const a = document.createElement("a");
   a.href = url;
   a.download = `${filename}.docx`;
+  a.style.display = "none";
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 1000);
 }
