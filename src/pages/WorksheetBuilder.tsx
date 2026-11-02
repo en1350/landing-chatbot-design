@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Icon from "@/components/ui/icon";
@@ -66,6 +67,9 @@ const WorksheetBuilder = () => {
   const [reading, setReading] = useState(false);
   const [level, setLevel] = usePersistedState("worksheet_level", LEVELS[1]);
   const [taskCount, setTaskCount] = usePersistedState("worksheet_taskCount", "5");
+  const [strict, setStrict] = usePersistedState("worksheet_strict", false);
+  const [withCriteria, setWithCriteria] = usePersistedState("worksheet_withCriteria", false);
+  const [criteria, setCriteria] = usePersistedState<string[]>("worksheet_criteria", []);
   const [tasks, setTasks] = usePersistedState<WorksheetTask[]>("worksheet_tasks", [createTask()]);
 
   const [loading, setLoading] = useState(false);
@@ -145,6 +149,9 @@ const WorksheetBuilder = () => {
     setFileName("");
     setLevel(LEVELS[1]);
     setTaskCount("5");
+    setStrict(false);
+    setWithCriteria(false);
+    setCriteria([]);
     setTasks([createTask()]);
     setRefineInstruction("");
     setRefineError(null);
@@ -181,6 +188,8 @@ const WorksheetBuilder = () => {
           level,
           planText,
           taskCount,
+          strict,
+          withCriteria,
           ...(action === "worksheet_refine"
             ? {
                 tasks: tasks.map((t) => ({
@@ -195,7 +204,7 @@ const WorksheetBuilder = () => {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Не удалось составить задания");
-    return fromApi(data.tasks);
+    return { tasks: fromApi(data.tasks), criteria: (data.criteria || []) as string[] };
   };
 
   const generate = async () => {
@@ -204,9 +213,15 @@ const WorksheetBuilder = () => {
       toast.error("Укажите тему урока или загрузите план-конспект");
       return;
     }
+    if (strict && !planText.trim()) {
+      toast.error("Для режима «строго по документу» загрузите план-конспект");
+      return;
+    }
     setLoading(true);
     try {
-      setTasks(await callAi("worksheet"));
+      const result = await callAi("worksheet");
+      setTasks(result.tasks);
+      setCriteria(result.criteria);
       toast.success("Задания готовы — проверьте и при необходимости отредактируйте");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Не удалось составить задания");
@@ -221,7 +236,9 @@ const WorksheetBuilder = () => {
     setRefining(true);
     setRefineError(null);
     try {
-      setTasks(await callAi("worksheet_refine", refineInstruction.trim()));
+      const result = await callAi("worksheet_refine", refineInstruction.trim());
+      setTasks(result.tasks);
+      if (withCriteria) setCriteria(result.criteria);
       setRefineInstruction("");
       setRefineOpen(false);
       toast.success("Задания доработаны — проверьте изменения");
@@ -245,7 +262,7 @@ const WorksheetBuilder = () => {
     }
   };
 
-  const meta = { topic, group, teacher, planText };
+  const meta = { topic, group, teacher, planText, withCriteria, criteria };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -358,6 +375,17 @@ const WorksheetBuilder = () => {
                     </Select>
                   </div>
                 </div>
+              </div>
+
+              <div className="space-y-2.5">
+                <label className="flex cursor-pointer items-start gap-2.5 text-sm">
+                  <Checkbox checked={strict} onCheckedChange={(v) => setStrict(v === true)} className="mt-0.5" />
+                  <span>Строго по загруженному документу</span>
+                </label>
+                <label className="flex cursor-pointer items-start gap-2.5 text-sm">
+                  <Checkbox checked={withCriteria} onCheckedChange={(v) => setWithCriteria(v === true)} className="mt-0.5" />
+                  <span>Критерии оценки / самооценки</span>
+                </label>
               </div>
 
               <Button onClick={generate} disabled={loading} className="w-full gap-2">

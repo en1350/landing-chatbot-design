@@ -1489,13 +1489,22 @@ WORKSHEET_TYPES = {'open', 'choice', 'table'}
 def worksheet_context(f: dict) -> str:
     plan = (f.get('planText') or '').strip()[:6000]
     plan_line = f"\nПлан-конспект урока (опирайся на него):\n{plan}" if plan else ""
+    strict_line = ""
+    if f.get('strict') and plan:
+        strict_line = "\nСТРОГО по загруженному документу: используй только факты, термины, примеры и данные из плана-конспекта выше. Ничего не добавляй от себя и не выходи за рамки документа."
     return f"""Тема урока: {(f.get('topic') or 'не указана').strip()}
 Дисциплина: {(f.get('discipline') or 'не указана').strip()}
 Группа / класс: {(f.get('group') or 'не указана').strip()}
-Уровень сложности: {(f.get('level') or 'средний').strip()}{plan_line}"""
+Уровень сложности: {(f.get('level') or 'средний').strip()}{plan_line}{strict_line}"""
 
 
-WORKSHEET_JSON_FORMAT = """{"tasks": [{"title": "короткое название задания", "type": "open | choice | table", "description": "полный текст условия для обучающегося", "options": ["вариант ответа"], "columns": ["заголовок столбца"], "rows": 3}]}"""
+def worksheet_criteria_line(f: dict) -> str:
+    if not f.get('withCriteria'):
+        return ""
+    return "\nДобавь в JSON поле criteria — 4-6 коротких критериев оценки / самооценки работы обучающегося (например: «Выполнил все задания», «Верно использовал термины»), каждый как формулировка, которую ученик может отметить."
+
+
+WORKSHEET_JSON_FORMAT = """{"tasks": [{"title": "короткое название задания", "type": "open | choice | table", "description": "полный текст условия для обучающегося", "options": ["вариант ответа"], "columns": ["заголовок столбца"], "rows": 3}], "criteria": ["критерий оценки / самооценки"]}"""
 
 
 def build_worksheet_prompt(f: dict) -> str:
@@ -1511,7 +1520,7 @@ def build_worksheet_prompt(f: dict) -> str:
 Количество заданий: {count}
 Допустимые типы заданий: {', '.join(types)}
 Типы: open — открытый ответ на строках; choice — выбор правильного ответа (поле options содержит 3-4 варианта, пустым не оставляй); table — таблица для заполнения (поле columns содержит 2-4 заголовка, rows — число пустых строк от 2 до 6).
-Чередуй типы из допустимых, задания должны идти от простого к сложному, формулируй конкретно, на «вы». Без markdown-разметки.
+Чередуй типы из допустимых, задания должны идти от простого к сложному, формулируй конкретно, на «вы». Без markdown-разметки.{worksheet_criteria_line(f)}
 
 Верни ТОЛЬКО валидный JSON в формате:
 {WORKSHEET_JSON_FORMAT}"""
@@ -1530,10 +1539,14 @@ def build_worksheet_refine_prompt(f: dict, instruction: str) -> str:
 
 Инструкция преподавателя: {instruction}
 
-Верни ВСЕ задания целиком с учётом инструкции, сохраняя те, которых она не касается. Типы: open, choice (options 3-4 варианта), table (columns 2-4 заголовка, rows 2-6). Без markdown-разметки.
+Верни ВСЕ задания целиком с учётом инструкции, сохраняя те, которых она не касается. Типы: open, choice (options 3-4 варианта), table (columns 2-4 заголовка, rows 2-6). Без markdown-разметки.{worksheet_criteria_line(f)}
 
 Верни ТОЛЬКО валидный JSON в формате:
 {WORKSHEET_JSON_FORMAT}"""
+
+
+def normalize_criteria(parsed: dict) -> list:
+    return [str(c).strip() for c in (parsed.get('criteria') or []) if str(c).strip()][:8]
 
 
 def normalize_worksheet(parsed: dict) -> list:
@@ -2272,7 +2285,7 @@ def process(event: dict, context) -> dict:
             tasks = normalize_worksheet(parsed if isinstance(parsed, dict) else {})
             if not tasks:
                 return {'statusCode': 502, 'headers': cors_headers(), 'body': json.dumps({'error': 'ИИ не вернул задания, попробуйте снова'})}
-            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'tasks': tasks}, ensure_ascii=False)}
+            return {'statusCode': 200, 'headers': cors_headers(), 'body': json.dumps({'tasks': tasks, 'criteria': normalize_criteria(parsed) if (fields.get('withCriteria') and isinstance(parsed, dict)) else []}, ensure_ascii=False)}
 
         elif action == 'rpd':
             fields = body.get('fields') or {}

@@ -15,6 +15,8 @@ export interface WorksheetMeta {
   group: string;
   teacher: string;
   planText: string;
+  withCriteria: boolean;
+  criteria: string[];
 }
 
 export const TASK_TYPE_LABELS: Record<WorksheetTaskType, string> = {

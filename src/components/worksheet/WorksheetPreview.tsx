@@ -5,6 +5,13 @@ interface Props {
   tasks: WorksheetTask[];
 }
 
+const DEFAULT_CRITERIA = [
+  "Выполнил все задания",
+  "Ответы полные и точные",
+  "Верно использовал термины",
+  "Работу выполнил самостоятельно",
+];
+
 const LETTERS = ["А", "Б", "В", "Г", "Д", "Е"];
 
 const TaskBody = ({ task }: { task: WorksheetTask }) => {
@@ -92,6 +99,33 @@ const WorksheetPreview = ({ meta, tasks }: Props) => {
           </div>
         </div>
       ))}
+
+      {meta.withCriteria && (
+        <div className="mb-5" style={{ breakInside: "avoid" }}>
+          <h4 className="mb-2 text-[12pt] font-bold">Критерии оценки и самооценка</h4>
+          <table className="w-full border-collapse text-[11pt]">
+            <thead>
+              <tr>
+                <th className="border border-black bg-gray-100 px-2 py-1 text-left font-bold">Критерий</th>
+                <th className="w-24 border border-black bg-gray-100 px-2 py-1 font-bold">Да</th>
+                <th className="w-24 border border-black bg-gray-100 px-2 py-1 font-bold">Частично</th>
+                <th className="w-24 border border-black bg-gray-100 px-2 py-1 font-bold">Нет</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(meta.criteria.length ? meta.criteria : DEFAULT_CRITERIA).map((c, i) => (
+                <tr key={i}>
+                  <td className="border border-black px-2 py-1.5">{c}</td>
+                  <td className="border border-black px-2 py-1.5 text-center">☐</td>
+                  <td className="border border-black px-2 py-1.5 text-center">☐</td>
+                  <td className="border border-black px-2 py-1.5 text-center">☐</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="mt-2">Моя оценка: ________ &nbsp;&nbsp; Оценка преподавателя: ________</div>
+        </div>
+      )}
 
       <div className="mt-10 text-center text-[10pt] text-gray-500">Желаю успехов в выполнении работы!</div>
     </div>
