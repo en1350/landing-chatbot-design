@@ -1529,7 +1529,8 @@ def build_worksheet_prompt(f: dict) -> str:
 def build_worksheet_refine_prompt(f: dict, instruction: str) -> str:
     lines = []
     for i, t in enumerate(f.get('tasks') or [], 1):
-        lines.append(f"{i}. [{t.get('type') or 'open'}] {(t.get('title') or '').strip()}: {(t.get('description') or '').strip()}")
+        mark = " (содержит загруженную таблицу с данными — сохрани это задание, его тип table, название и столбцы без изменений)" if t.get('hasData') else ""
+        lines.append(f"{i}. [{t.get('type') or 'open'}] {(t.get('title') or '').strip()}{mark}: {(t.get('description') or '').strip()}")
     return f"""Ты дорабатываешь задания рабочего листа по запросу преподавателя.
 
 {worksheet_context(f)}

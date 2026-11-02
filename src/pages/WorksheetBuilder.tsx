@@ -242,6 +242,7 @@ const WorksheetBuilder = () => {
                   type: t.type,
                   title: t.title,
                   description: t.description,
+                  ...(t.cells?.length ? { hasData: true } : {}),
                 })),
               }
             : {}),
@@ -312,6 +313,27 @@ const WorksheetBuilder = () => {
     }
   };
 
+  const restoreTableData = (oldTasks: WorksheetTask[], newTasks: WorksheetTask[]) => {
+    const used = new Set<number>();
+    const norm = (v: string) => v.trim().toLowerCase();
+    const cols = (t: WorksheetTask) => t.columns.map(norm).join("|");
+    const result = [...newTasks];
+    oldTasks.forEach((old, oldIndex) => {
+      if (!old.cells?.length) return;
+      let idx = result.findIndex((n, i) => !used.has(i) && n.type === "table" && norm(n.title) === norm(old.title));
+      if (idx < 0) idx = result.findIndex((n, i) => !used.has(i) && n.type === "table" && cols(n) === cols(old));
+      if (idx < 0 && result[oldIndex] && !used.has(oldIndex) && result[oldIndex].type === "table") idx = oldIndex;
+      if (idx < 0) {
+        result.push({ ...old, id: createTask().id });
+        used.add(result.length - 1);
+        return;
+      }
+      used.add(idx);
+      result[idx] = { ...result[idx], columns: old.columns, cells: old.cells, rows: old.rows };
+    });
+    return result;
+  };
+
   const refine = async () => {
     if (!guard()) return;
     if (!refineInstruction.trim()) return;
@@ -319,7 +341,7 @@ const WorksheetBuilder = () => {
     setRefineError(null);
     try {
       const result = await callAi("worksheet_refine", refineInstruction.trim());
-      setTasks(result.tasks);
+      setTasks(restoreTableData(tasks, result.tasks));
       if (withCriteria) setCriteria(result.criteria);
       setRefineInstruction("");
       setRefineOpen(false);
