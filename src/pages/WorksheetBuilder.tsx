@@ -68,7 +68,6 @@ const WorksheetBuilder = () => {
   const [reading, setReading] = useState(false);
   const [level, setLevel] = usePersistedState("worksheet_level", LEVELS[1]);
   const [taskCount, setTaskCount] = usePersistedState("worksheet_taskCount", "5");
-  const [strict, setStrict] = usePersistedState("worksheet_strict", false);
   const [withCriteria, setWithCriteria] = usePersistedState("worksheet_withCriteria", false);
   const [criteria, setCriteria] = usePersistedState<string[]>("worksheet_criteria", []);
   const [tasks, setTasks] = usePersistedState<WorksheetTask[]>("worksheet_tasks", [createTask()]);
@@ -195,7 +194,6 @@ const WorksheetBuilder = () => {
     setFileName("");
     setLevel(LEVELS[1]);
     setTaskCount("5");
-    setStrict(false);
     setWithCriteria(false);
     setCriteria([]);
     setTasks([createTask()]);
@@ -234,7 +232,6 @@ const WorksheetBuilder = () => {
           level,
           planText,
           taskCount,
-          strict,
           withCriteria,
           ...(action === "worksheet_refine"
             ? {
@@ -258,10 +255,6 @@ const WorksheetBuilder = () => {
     if (!guard()) return;
     if (!topic.trim() && !planText.trim()) {
       toast.error("Укажите тему урока или загрузите план-конспект");
-      return;
-    }
-    if (strict && !planText.trim()) {
-      toast.error("Для режима «строго по документу» загрузите план-конспект");
       return;
     }
     setLoading(true);
@@ -297,7 +290,6 @@ const WorksheetBuilder = () => {
             group,
             level,
             planText,
-            strict,
             tasks: filled.map((t) => ({ type: t.type, title: t.title, description: t.description })),
           },
         }),
@@ -494,10 +486,6 @@ const WorksheetBuilder = () => {
               </div>
 
               <div className="space-y-2.5">
-                <label className="flex cursor-pointer items-start gap-2.5 text-sm">
-                  <Checkbox checked={strict} onCheckedChange={(v) => setStrict(v === true)} className="mt-0.5" />
-                  <span>Строго по загруженному документу</span>
-                </label>
                 <label className="flex cursor-pointer items-start gap-2.5 text-sm">
                   <Checkbox checked={withCriteria} onCheckedChange={(v) => setWithCriteria(v === true)} className="mt-0.5" />
                   <span>Критерии оценки / самооценки</span>

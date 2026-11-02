@@ -1489,13 +1489,10 @@ WORKSHEET_TYPES = {'open', 'choice', 'table'}
 def worksheet_context(f: dict) -> str:
     plan = (f.get('planText') or '').strip()[:6000]
     plan_line = f"\nПлан-конспект урока (опирайся на него):\n{plan}" if plan else ""
-    strict_line = ""
-    if f.get('strict') and plan:
-        strict_line = "\nСТРОГО по загруженному документу: используй только факты, термины, примеры и данные из плана-конспекта выше. Ничего не добавляй от себя и не выходи за рамки документа."
     return f"""Тема урока: {(f.get('topic') or 'не указана').strip()}
 Дисциплина: {(f.get('discipline') or 'не указана').strip()}
 Группа / класс: {(f.get('group') or 'не указана').strip()}
-Уровень сложности: {(f.get('level') or 'средний').strip()}{plan_line}{strict_line}"""
+Уровень сложности: {(f.get('level') or 'средний').strip()}{plan_line}"""
 
 
 def worksheet_criteria_line(f: dict) -> str:
