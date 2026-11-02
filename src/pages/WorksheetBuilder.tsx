@@ -18,6 +18,7 @@ import UpgradeModal from "@/components/UpgradeModal";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import WorksheetPreview from "@/components/worksheet/WorksheetPreview";
+import { exportWorksheetDocx } from "@/components/worksheet/exportWorksheetDocx";
 import { exportWorksheetPdf } from "@/components/worksheet/exportWorksheetPdf";
 import {
   LEVELS,
@@ -78,12 +79,15 @@ const WorksheetBuilder = () => {
   const [refining, setRefining] = useState(false);
   const [refineError, setRefineError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [exportingDocx, setExportingDocx] = useState(false);
 
   const fileRef = useRef<HTMLInputElement>(null);
   const sheetWrapRef = useRef<HTMLDivElement>(null);
 
   const updateTask = (id: number, patch: Partial<WorksheetTask>) =>
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+  const updateCriterion = (i: number, v: string) => setCriteria((p) => p.map((c, k) => (k === i ? v : c)));
+  const removeCriterion = (i: number) => setCriteria((p) => p.filter((_, k) => k !== i));
   const removeTask = (id: number) => setTasks((prev) => prev.filter((t) => t.id !== id));
   const moveTask = (id: number, dir: -1 | 1) =>
     setTasks((prev) => {
@@ -262,6 +266,17 @@ const WorksheetBuilder = () => {
     }
   };
 
+  const downloadDocx = async () => {
+    setExportingDocx(true);
+    try {
+      await exportWorksheetDocx(meta, tasks, `Рабочий лист — ${topic.trim() || "без темы"}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Не удалось сохранить Word");
+    } finally {
+      setExportingDocx(false);
+    }
+  };
+
   const meta = { topic, group, teacher, planText, withCriteria, criteria };
 
   return (
@@ -294,7 +309,7 @@ const WorksheetBuilder = () => {
             <h1 className="mt-2 mb-3 font-display text-2xl font-bold sm:text-3xl md:text-4xl">Конструктор рабочих листов</h1>
             <p className="text-muted-foreground">
               Загрузите план-конспект или укажите тему — ИИ составит задания для рабочего листа. Лист можно править
-              вручную и скачать в PDF.
+              вручную и скачать в PDF или Word.
             </p>
           </div>
 
@@ -398,6 +413,29 @@ const WorksheetBuilder = () => {
                 Очистить
               </Button>
 
+              {withCriteria && (
+                <div className="space-y-2 border-t border-border pt-5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold">Критерии оценки ({criteria.length})</span>
+                    <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={() => setCriteria((p) => [...p, ""])}>
+                      <Icon name="Plus" size={14} />
+                      Добавить
+                    </Button>
+                  </div>
+                  {criteria.length === 0 && (
+                    <p className="text-xs text-muted-foreground">Критериев пока нет — добавьте свои или составьте задания с ИИ.</p>
+                  )}
+                  {criteria.map((c, i) => (
+                    <div key={i} className="flex items-center gap-1.5">
+                      <Input value={c} onChange={(e) => updateCriterion(i, e.target.value)} placeholder="Например: Выполнил все задания" />
+                      <button type="button" onClick={() => removeCriterion(i)} className="rounded p-1.5 text-destructive hover:bg-accent">
+                        <Icon name="Trash2" size={15} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <div className="space-y-3 border-t border-border pt-5">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold">Задания листа ({tasks.length})</span>
@@ -472,6 +510,10 @@ const WorksheetBuilder = () => {
                 <Button onClick={downloadPdf} disabled={exporting} className="gap-2">
                   <Icon name={exporting ? "Loader" : "Download"} size={16} className={exporting ? "animate-spin" : ""} />
                   Скачать PDF
+                </Button>
+                <Button variant="outline" onClick={downloadDocx} disabled={exportingDocx} className="gap-2">
+                  <Icon name={exportingDocx ? "Loader" : "FileText"} size={16} className={exportingDocx ? "animate-spin" : ""} />
+                  Скачать Word
                 </Button>
                 <Button variant="outline" className="gap-2" onClick={() => window.print()}>
                   <Icon name="Printer" size={16} />

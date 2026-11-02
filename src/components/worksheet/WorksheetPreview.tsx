@@ -5,13 +5,6 @@ interface Props {
   tasks: WorksheetTask[];
 }
 
-const DEFAULT_CRITERIA = [
-  "Выполнил все задания",
-  "Ответы полные и точные",
-  "Верно использовал термины",
-  "Работу выполнил самостоятельно",
-];
-
 const LETTERS = ["А", "Б", "В", "Г", "Д", "Е"];
 
 const TaskBody = ({ task }: { task: WorksheetTask }) => {
@@ -113,7 +106,7 @@ const WorksheetPreview = ({ meta, tasks }: Props) => {
               </tr>
             </thead>
             <tbody>
-              {(meta.criteria.length ? meta.criteria : DEFAULT_CRITERIA).map((c, i) => (
+              {meta.criteria.filter((c) => c.trim()).map((c, i) => (
                 <tr key={i}>
                   <td className="border border-black px-2 py-1.5">{c}</td>
                   <td className="border border-black px-2 py-1.5 text-center">☐</td>
